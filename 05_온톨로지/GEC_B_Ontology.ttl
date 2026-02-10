@@ -1,0 +1,1695 @@
+@prefix brick: <https://brickschema.org/schema/Brick#> .
+@prefix bldg: <https://example.org/gec-b#> .
+@prefix bees: <https://example.org/bees#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix schema: <http://schema.org/> .
+@prefix ref: <https://brickschema.org/schema/Brick/ref#> .
+@prefix tag: <https://brickschema.org/schema/BrickTag#> .
+
+# =============================================================================
+# Samsung GEC B동 Brick Schema 온톨로지
+# =============================================================================
+# 프로젝트: 삼성물산 GEC B동 Brick Schema 기반 빌딩 온톨로지
+# 작성일: 2026-02-10
+# 버전: 1.3 (Phase 2 대안적 확보 반영 — 법규역추론+ESG실데이터+벤치마킹)
+# 기반: Brick Schema 1.3+
+# 범위: Location, Equipment, Point, System 전체 모델링
+# 데이터 출처: HOK 설계, AURUM, USGBC, 학술논문 16편+, ESG 보고서 PDF,
+#              DitchCarbon, OfficFind, Architizer, 라펜트, 특허 6건,
+#              건축법규 역추론, 유사건물 벤치마킹
+# =============================================================================
+# Phase 2 변경사항 (v1.2 → v1.3):
+#   - ESG 실데이터 추가 (PDF 직접 추출: 에너지 GJ, GHG tCO2e, 용수, 폐기물)
+#   - 본사(HQ) GHG 분리 데이터 반영 (~11,000 tCO2e/년)
+#   - 소방 시스템 추가 (스프링클러, 감지기, 소화전, 방재실 등)
+#   - 전기 시스템 확장 (수변전, 변압기, UPS, 비상발전기 상세)
+#   - 조명 시스템 추가 (DALI, 주광연동, 재실감지)
+#   - 보안 시스템 추가 (출입통제, CCTV, 주차관제)
+#   - HVAC 장비 추정 인스턴스 (칠러 3~4대, AHU 12~18대, DOAS, 냉각탑)
+#   - BMS 추정 (BACnet/IP, DDC 40~60대, ~10,000포인트)
+#   - 센서 유형별 추정 수량 (온도500+, CO2 150+, 재실300+)
+#   - 중수도 시스템 확장 (수도법 의무, 100~200톤/일)
+#   - 신재생에너지 추가 (태양광 PV 100~300kWp, 지열 가능성)
+# Phase 1.2 변경사항 (v1.1 → v1.2):
+#   - B동 15F 누락 수정 (14F~15F 오피스 확인)
+#   - 엘리베이터 모델링 추가 (승용32 + 비상화물5 = 37대)
+#   - DSF 루버/댐퍼 제어 상세 추가 (계절별 운전모드)
+#   - 수자원 시스템 확장 (용수 사용량 센서 개념)
+#   - 전기 시스템 스켈레톤 추가 (Electrical_System)
+#   - Phase 2 요청서 59건 참조 업데이트
+# Phase 1 변경사항 (v1.0 → v1.1):
+#   - LEED NC v2.2 / 45점/69점 확정 (이전 v2009 추정 수정)
+#   - G-SEED 최우수등급 확정 (이전 우수 수정)
+#   - 건물 구조(RC), 승강기(37대), 주차(1,403대) 추가
+#   - 삼성E&A GHG Scope1+2 데이터 반영 (DitchCarbon)
+#   - 에너지다소비건물 추정 메타데이터 추가
+#   - 건폐율/용적율/건축면적 등 건축물대장 데이터 추가
+#   - 우수 재활용 시스템(Rainwater Harvesting) 모델링 추가
+# =============================================================================
+
+# =============================================================================
+# BEES 커스텀 온톨로지 정의 (Brick 확장)
+# =============================================================================
+
+bees:Ontology a owl:Ontology ;
+    rdfs:label "BEES - Building Energy & Environment Schema for Samsung GEC B-dong" ;
+    rdfs:comment "삼성물산 GEC B동의 Brick Schema 기반 빌딩 온톨로지. 가압식 UFAD + 칠드실링 + 복사난방 3중 복합 시스템을 모델링." ;
+    owl:versionInfo "1.3" .
+
+# --- 커스텀 Equipment 클래스 ---
+
+bees:UFAD_System a owl:Class ;
+    rdfs:subClassOf brick:HVAC_System ;
+    rdfs:label "Underfloor Air Distribution System" ;
+    rdfs:comment "가압식 바닥공조 시스템. 이중바닥 하부 플레넘을 가압하여 바닥 디퓨저로 급기." .
+
+bees:Chilled_Ceiling_System a owl:Class ;
+    rdfs:subClassOf brick:HVAC_System ;
+    rdfs:label "Chilled Ceiling System" ;
+    rdfs:comment "칠드실링 복사냉방 시스템. 구리배관 내장 천장패널에 16도C 냉수 순환." .
+
+bees:Radiant_Heating_System a owl:Class ;
+    rdfs:subClassOf brick:HVAC_System ;
+    rdfs:label "Radiant Heating System" ;
+    rdfs:comment "복사난방 시스템. 온수 순환 복사패널." .
+
+bees:Double_Skin_Facade_System a owl:Class ;
+    rdfs:subClassOf brick:HVAC_System ;
+    rdfs:label "Double Skin Facade System" ;
+    rdfs:comment "이중외피 시스템. 서향 입면 적용, 야간냉각/자연환기." .
+
+bees:Night_Purge_System a owl:Class ;
+    rdfs:subClassOf brick:HVAC_System ;
+    rdfs:label "Night Purge Cooling System" ;
+    rdfs:comment "야간 외기냉방 시스템. 외기온도 조건부 댐퍼 개방으로 슬래브 축냉." .
+
+bees:Light_Shelf_System a owl:Class ;
+    rdfs:subClassOf brick:Lighting_System ;
+    rdfs:label "Tunable External Light Shelf System" ;
+    rdfs:comment "가변형 외부 라이트셀프 시스템. 계절별 태양열 조절 및 자연채광 수확." .
+
+bees:Rainwater_Harvesting_System a owl:Class ;
+    rdfs:subClassOf brick:Water_System ;
+    rdfs:label "Rainwater Harvesting System" ;
+    rdfs:comment "우수(빗물) 중수 재활용 시스템. 생태연못 용수 및 조경 관수." .
+
+bees:DSF_Louver a owl:Class ;
+    rdfs:subClassOf brick:Damper ;
+    rdfs:label "DSF Louver" ;
+    rdfs:comment "이중외피 루버. 계절별 개폐각도 제어로 자연환기/일사 조절." .
+
+bees:Floor_Diffuser a owl:Class ;
+    rdfs:subClassOf brick:Terminal_Unit ;
+    rdfs:label "Floor Diffuser" ;
+    rdfs:comment "바닥 디퓨저 (UFAD 취출구). 스월형/방향조절형." .
+
+bees:Chilled_Ceiling_Panel a owl:Class ;
+    rdfs:subClassOf brick:Terminal_Unit ;
+    rdfs:label "Chilled Ceiling Panel" ;
+    rdfs:comment "칠드실링 패널. 구리배관 내장, 16도C 냉수 순환." .
+
+bees:Radiant_Heating_Panel a owl:Class ;
+    rdfs:subClassOf brick:Terminal_Unit ;
+    rdfs:label "Radiant Heating Panel" ;
+    rdfs:comment "복사난방 패널. 온수 순환." .
+
+bees:Distribution_Header a owl:Class ;
+    rdfs:subClassOf brick:HVAC_Equipment ;
+    rdfs:label "Distribution Header" ;
+    rdfs:comment "냉온수 분배기 (칠드실링/복사난방 배관 분배)." .
+
+# --- 커스텀 Point 클래스 ---
+
+bees:Condensation_Sensor a owl:Class ;
+    rdfs:subClassOf brick:Sensor ;
+    rdfs:label "Condensation Sensor" ;
+    rdfs:comment "결로방지 센서. 칠드실링 패널 표면 결로 위험 감지." .
+
+bees:Slab_Temperature_Sensor a owl:Class ;
+    rdfs:subClassOf brick:Temperature_Sensor ;
+    rdfs:label "Slab Temperature Sensor" ;
+    rdfs:comment "슬래브 온도 센서. 야간 외기냉방 축냉 효과 모니터링." .
+
+bees:Light_Shelf_Angle_Command a owl:Class ;
+    rdfs:subClassOf brick:Command ;
+    rdfs:label "Light Shelf Angle Command" ;
+    rdfs:comment "라이트셀프 각도 제어 명령. 계절/시간별 최적 각도." .
+
+bees:DSF_Vent_Command a owl:Class ;
+    rdfs:subClassOf brick:Command ;
+    rdfs:label "Double Skin Facade Vent Command" ;
+    rdfs:comment "이중외피 환기 제어 명령." .
+
+bees:DSF_Louver_Position_Command a owl:Class ;
+    rdfs:subClassOf brick:Damper_Position_Command ;
+    rdfs:label "DSF Louver Position Command" ;
+    rdfs:comment "이중외피 루버 개폐 각도 명령. 계절별 최적화." .
+
+bees:DSF_Cavity_Temperature_Sensor a owl:Class ;
+    rdfs:subClassOf brick:Temperature_Sensor ;
+    rdfs:label "DSF Cavity Temperature Sensor" ;
+    rdfs:comment "이중외피 공동(캐비티) 내 온도 센서." .
+
+bees:Water_Usage_Sensor a owl:Class ;
+    rdfs:subClassOf brick:Water_Level_Sensor ;
+    rdfs:label "Water Usage Sensor" ;
+    rdfs:comment "용수 사용량 센서. 상수/중수/빗물 구분 계측." .
+
+bees:Energy_Cost_Sensor a owl:Class ;
+    rdfs:subClassOf brick:Sensor ;
+    rdfs:label "Energy Cost Sensor" ;
+    rdfs:comment "시장 에너지 비용 모니터링 센서." .
+
+# --- 커스텀 ESG 클래스 ---
+
+bees:GHG_Scope1_Emission a owl:Class ;
+    rdfs:subClassOf brick:Quantity ;
+    rdfs:label "GHG Scope 1 Emission" ;
+    rdfs:comment "온실가스 직접 배출량 (Scope 1)." .
+
+bees:GHG_Scope2_Emission a owl:Class ;
+    rdfs:subClassOf brick:Quantity ;
+    rdfs:label "GHG Scope 2 Emission" ;
+    rdfs:comment "온실가스 간접 배출량 (Scope 2, 전력/열 구매)." .
+
+bees:GHG_Total_Emission a owl:Class ;
+    rdfs:subClassOf brick:Quantity ;
+    rdfs:label "GHG Total Emission" ;
+    rdfs:comment "온실가스 총 배출량." .
+
+# --- 커스텀 System/Equipment 클래스 (Phase 2 추가) ---
+
+bees:Fire_Safety_System a owl:Class ;
+    rdfs:subClassOf brick:System ;
+    rdfs:label "Fire Safety System" ;
+    rdfs:comment "소방/방재 시스템. 스프링클러, 감지기, 소화전, 제연, 비상방송 등." .
+
+bees:Security_System a owl:Class ;
+    rdfs:subClassOf brick:System ;
+    rdfs:label "Security System" ;
+    rdfs:comment "보안 시스템. 출입통제, CCTV, 주차관제." .
+
+bees:Wastewater_Treatment_System a owl:Class ;
+    rdfs:subClassOf brick:Water_System ;
+    rdfs:label "Wastewater Treatment System" ;
+    rdfs:comment "중수도(중수 처리) 시스템. 수도법 의무 설치 (연면적 60,000m2 이상)." .
+
+bees:Solar_PV_System a owl:Class ;
+    rdfs:subClassOf brick:Electrical_System ;
+    rdfs:label "Solar Photovoltaic System" ;
+    rdfs:comment "태양광 발전 시스템." .
+
+bees:DALI_Lighting_System a owl:Class ;
+    rdfs:subClassOf brick:Lighting_System ;
+    rdfs:label "DALI Lighting Control System" ;
+    rdfs:comment "DALI 프로토콜 기반 디밍 조명 제어 시스템." .
+
+# --- 커스텀 속성 정의 ---
+
+bees:completionYear a owl:DatatypeProperty ;
+    rdfs:label "Completion Year" .
+
+bees:approvalDate a owl:DatatypeProperty ;
+    rdfs:label "Building Approval Date" .
+
+bees:buildingOwner a owl:DatatypeProperty ;
+    rdfs:label "Building Owner" .
+
+bees:tenant a owl:DatatypeProperty ;
+    rdfs:label "Tenant" .
+
+bees:occupantCount a owl:DatatypeProperty ;
+    rdfs:label "Occupant Count" .
+
+bees:grossFloorArea a owl:DatatypeProperty ;
+    rdfs:label "Gross Floor Area (m2)" .
+
+bees:buildingArea a owl:DatatypeProperty ;
+    rdfs:label "Building Area (m2)" .
+
+bees:siteArea a owl:DatatypeProperty ;
+    rdfs:label "Site Area (m2)" .
+
+bees:buildingCoverageRatio a owl:DatatypeProperty ;
+    rdfs:label "Building Coverage Ratio (%)" .
+
+bees:floorAreaRatio a owl:DatatypeProperty ;
+    rdfs:label "Floor Area Ratio (%)" .
+
+bees:structureType a owl:DatatypeProperty ;
+    rdfs:label "Structural Type" .
+
+bees:elevatorCount a owl:DatatypeProperty ;
+    rdfs:label "Elevator Count" .
+
+bees:parkingCount a owl:DatatypeProperty ;
+    rdfs:label "Parking Spaces Count" .
+
+bees:certification a owl:DatatypeProperty ;
+    rdfs:label "Building Certification" .
+
+bees:primaryEnergyConsumption a owl:DatatypeProperty ;
+    rdfs:label "Primary Energy Consumption (kWh/m2)" .
+
+bees:designArchitect a owl:DatatypeProperty ;
+    rdfs:label "Design Architect" .
+
+bees:localArchitect a owl:DatatypeProperty ;
+    rdfs:label "Local Architect" .
+
+bees:constructedBy a owl:DatatypeProperty ;
+    rdfs:label "Constructed By" .
+
+bees:chilledWaterTemp a owl:DatatypeProperty ;
+    rdfs:label "Chilled Water Temperature (degC)" .
+
+bees:leedVersion a owl:DatatypeProperty ;
+    rdfs:label "LEED Certification Version" .
+
+bees:leedScore a owl:DatatypeProperty ;
+    rdfs:label "LEED Score (points)" .
+
+bees:leedMaxScore a owl:DatatypeProperty ;
+    rdfs:label "LEED Maximum Score (points)" .
+
+bees:leedCertDate a owl:DatatypeProperty ;
+    rdfs:label "LEED Certification Date" .
+
+bees:landscapeArea a owl:DatatypeProperty ;
+    rdfs:label "Landscape Area (m2)" .
+
+bees:award a owl:DatatypeProperty ;
+    rdfs:label "Building Award" .
+
+bees:reportingEntity a owl:DatatypeProperty ;
+    rdfs:label "Reporting Entity" .
+
+bees:reportingYear a owl:DatatypeProperty ;
+    rdfs:label "Reporting Year" .
+
+bees:value a owl:DatatypeProperty ;
+    rdfs:label "Value" .
+
+bees:unit a owl:DatatypeProperty ;
+    rdfs:label "Unit" .
+
+bees:boundary a owl:DatatypeProperty ;
+    rdfs:label "Reporting Boundary" .
+
+bees:annualEnergyEstimate_kWh a owl:DatatypeProperty ;
+    rdfs:label "Annual Energy Estimate (kWh)" .
+
+bees:annualEnergyEstimate_TOE a owl:DatatypeProperty ;
+    rdfs:label "Annual Energy Estimate (TOE)" .
+
+bees:energyReductionRate a owl:DatatypeProperty ;
+    rdfs:label "Energy Reduction Rate (%)" .
+
+bees:elevatorType a owl:DatatypeProperty ;
+    rdfs:label "Elevator Type" .
+
+bees:dsfOperatingMode a owl:DatatypeProperty ;
+    rdfs:label "DSF Seasonal Operating Mode" .
+
+bees:waterSourceType a owl:DatatypeProperty ;
+    rdfs:label "Water Source Type (상수/중수/빗물)" .
+
+# --- 커스텀 속성 (Phase 2 추가) ---
+
+bees:hasConfidence a owl:DatatypeProperty ;
+    rdfs:label "Data Confidence Level" ;
+    rdfs:comment "데이터 신뢰도: confirmed(확인), estimated(추정), inferred(법규/기준 역추론)." .
+
+bees:estimatedRange a owl:DatatypeProperty ;
+    rdfs:label "Estimated Range" ;
+    rdfs:comment "추정 범위 (예: '3~5대', '1,500~1,700 RT')." .
+
+bees:inferenceSource a owl:DatatypeProperty ;
+    rdfs:label "Inference Source" ;
+    rdfs:comment "추정 근거 (예: '건축법규', '벤치마킹', '학술논문')." .
+
+bees:capacity a owl:DatatypeProperty ;
+    rdfs:label "Equipment Capacity" ;
+    rdfs:comment "설비 용량 (단위 포함 문자열)." .
+
+bees:protocol a owl:DatatypeProperty ;
+    rdfs:label "Communication Protocol" ;
+    rdfs:comment "통신 프로토콜 (예: BACnet IP, Modbus, DALI)." .
+
+# =============================================================================
+# SECTION 1: LOCATION 계층
+# =============================================================================
+
+# --- Site ---
+bldg:Samsung_GEC a brick:Site ;
+    rdfs:label "Samsung Global Engineering Center (GEC)" ;
+    rdfs:comment "서울특별시 강동구 상일로6길 26 (상일동 500). 국내 오피스 건축물 5위 규모." ;
+    bees:completionYear "2012" ;
+    bees:approvalDate "2012-03" ;
+    bees:siteArea "27604"^^xsd:decimal ;
+    bees:buildingArea "14506.35"^^xsd:decimal ;
+    bees:grossFloorArea "186023"^^xsd:decimal ;
+    bees:buildingCoverageRatio "52.55"^^xsd:decimal ;
+    bees:floorAreaRatio "364.38"^^xsd:decimal ;
+    bees:structureType "철근콘크리트 (RC)" ;
+    bees:elevatorCount "37"^^xsd:integer ;
+    bees:parkingCount "1403"^^xsd:integer ;
+    bees:designArchitect "HOK (국제설계공모 당선)" ;
+    bees:localArchitect "삼우종합건축사사무소 (손명기)" ;
+    bees:constructedBy "삼성엔지니어링(주) (박기석) - 직영시공" ;
+    bees:landscapeArea "8396"^^xsd:decimal ;
+    bees:award "2012 한국건축문화대상 준공건축물부문 우수상" ;
+    brick:hasPart bldg:GEC_Tower_A ,
+                  bldg:GEC_Tower_B ,
+                  bldg:GEC_Tower_C ,
+                  bldg:GEC_Podium .
+
+# --- Buildings ---
+bldg:GEC_Tower_A a brick:Building ;
+    rdfs:label "GEC Tower A (17층)" ;
+    bees:buildingOwner "삼성E&A (구 삼성엔지니어링)" ;
+    bees:occupantCount "2700"^^xsd:integer ;
+    rdfs:comment "17층, 삼성E&A 본사" ;
+    brick:isPartOf bldg:Samsung_GEC .
+
+bldg:GEC_Tower_B a brick:Building ;
+    rdfs:label "GEC Tower B (14층)" ;
+    rdfs:comment "14층 (4층/13층 없음), 삼성물산 건설부문 임차 (2018.03~)" ;
+    bees:buildingOwner "삼성E&A" ;
+    bees:tenant "삼성물산 건설부문" ;
+    bees:occupantCount "2000"^^xsd:integer ;
+    bees:grossFloorArea "61700"^^xsd:decimal ;
+    bees:certification "에너지효율등급 1등급" ,
+                       "녹색건축인증(G-SEED) 최우수등급 (LH, 2012.04.19)" ,
+                       "지능형건축물(IBS) 1등급" ,
+                       "초고속정보통신 특등급" ,
+                       "스마트그린빌딩 1등급" ;
+    bees:primaryEnergyConsumption "287.4"^^xsd:decimal ;
+    bees:energyReductionRate "40"^^xsd:decimal ;
+    bees:annualEnergyEstimate_kWh "17640000"^^xsd:decimal ;
+    bees:annualEnergyEstimate_TOE "1517"^^xsd:decimal ;
+    brick:isPartOf bldg:Samsung_GEC ;
+    brick:hasPart bldg:B_B4F ,
+                  bldg:B_B3F ,
+                  bldg:B_B2F ,
+                  bldg:B_B1F ,
+                  bldg:B_1F ,
+                  bldg:B_2F ,
+                  bldg:B_3F ,
+                  bldg:B_5F ,
+                  bldg:B_6F ,
+                  bldg:B_7F ,
+                  bldg:B_8F ,
+                  bldg:B_9F ,
+                  bldg:B_10F ,
+                  bldg:B_11F ,
+                  bldg:B_12F ,
+                  bldg:B_14F ,
+                  bldg:B_15F ,
+                  bldg:B_RF .
+
+bldg:GEC_Tower_C a brick:Building ;
+    rdfs:label "GEC Tower C - R&D Building (8층)" ;
+    rdfs:comment "8층, 삼성E&A R&D Building, LEED Gold" ;
+    bees:buildingOwner "삼성E&A" ;
+    bees:certification "LEED Gold" ;
+    bees:leedVersion "LEED NC v2.2" ;
+    bees:leedScore "45"^^xsd:integer ;
+    bees:leedMaxScore "69"^^xsd:integer ;
+    bees:leedCertDate "2012-05-23" ;
+    rdfs:seeAlso <https://www.usgbc.org/projects/samsung-global-engineering-center-towerc> ;
+    brick:isPartOf bldg:Samsung_GEC .
+
+bldg:GEC_Podium a brick:Building ;
+    rdfs:label "GEC Podium (3층)" ;
+    rdfs:comment "3층 포디움. 회의실, 식당, 삼성 기업 박물관. A/B/C동 브리지 연결." ;
+    brick:isPartOf bldg:Samsung_GEC .
+
+# --- B동 층 (Floor) ---
+bldg:B_B4F a brick:Floor ;
+    rdfs:label "B동 지하4층 (B4F)" ;
+    rdfs:comment "지하 주차장 (공통 구조, 자주식 1,403대 중 일부)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_B3F a brick:Floor ;
+    rdfs:label "B동 지하3층 (B3F)" ;
+    rdfs:comment "지하 주차장 (공통 구조)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_B2F a brick:Floor ;
+    rdfs:label "B동 지하2층 (B2F)" ;
+    rdfs:comment "지하 주차장/기계실 (공통 구조)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_B1F a brick:Floor ;
+    rdfs:label "B동 지하1층 (B1F)" ;
+    rdfs:comment "지하 (공통 구조, 선큰 연결, 직원식당 인접)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_1F a brick:Floor ;
+    rdfs:label "B동 1층 (포디움)" ;
+    rdfs:comment "전면광장, 분수대, 비오톱, 생태연못 인접" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_2F a brick:Floor ;
+    rdfs:label "B동 2층 (포디움)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_3F a brick:Floor ;
+    rdfs:label "B동 3층 (포디움)" ;
+    rdfs:comment "옥상정원 녹화 처리" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+# 4층 없음 (건너뛰기)
+
+bldg:B_5F a brick:Floor ;
+    rdfs:label "B동 5층 (오피스)" ;
+    rdfs:comment "4층 없음 - 5층부터 오피스. 기준층 임대면적 ~5,472m2, 전용면적 ~2,612m2 (전용율 47.73%)" ;
+    brick:isPartOf bldg:GEC_Tower_B ;
+    brick:hasPart bldg:B_5F_Interior_Zone ,
+                  bldg:B_5F_Perimeter_West ,
+                  bldg:B_5F_Perimeter_East ,
+                  bldg:B_5F_Perimeter_South ,
+                  bldg:B_5F_Perimeter_North .
+
+bldg:B_6F a brick:Floor ;
+    rdfs:label "B동 6층 (오피스)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_7F a brick:Floor ;
+    rdfs:label "B동 7층 (오피스)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_8F a brick:Floor ;
+    rdfs:label "B동 8층 (오피스)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_9F a brick:Floor ;
+    rdfs:label "B동 9층 (오피스)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_10F a brick:Floor ;
+    rdfs:label "B동 10층 (오피스)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_11F a brick:Floor ;
+    rdfs:label "B동 11층 (오피스)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_12F a brick:Floor ;
+    rdfs:label "B동 12층 (오피스)" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+# 13층 없음 (건너뛰기)
+
+bldg:B_14F a brick:Floor ;
+    rdfs:label "B동 14층 (오피스)" ;
+    rdfs:comment "13층 없음 - 14층 오피스" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_15F a brick:Floor ;
+    rdfs:label "B동 15층 (오피스)" ;
+    rdfs:comment "최상층 오피스" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+bldg:B_RF a brick:Floor ;
+    rdfs:label "B동 옥상 (RF)" ;
+    rdfs:comment "옥상녹화 정원, 기계실" ;
+    brick:isPartOf bldg:GEC_Tower_B .
+
+# --- B동 5F HVAC Zone (대표 기준층) ---
+bldg:B_5F_Interior_Zone a brick:HVAC_Zone ;
+    rdfs:label "B동 5F 내주부 존 (Interior)" ;
+    rdfs:comment "코어 제외 내부 영역. 일사 부하 없음. UFAD + 칠드실링." ;
+    brick:isPartOf bldg:B_5F .
+
+bldg:B_5F_Perimeter_West a brick:HVAC_Zone ;
+    rdfs:label "B동 5F 서향 외주부 존 (West Perimeter)" ;
+    rdfs:comment "서향 외주부. DSF + 칠드실링 + UFAD + 라이트셀프. 일사 부하 최대." ;
+    brick:isPartOf bldg:B_5F .
+
+bldg:B_5F_Perimeter_East a brick:HVAC_Zone ;
+    rdfs:label "B동 5F 동향 외주부 존 (East Perimeter)" ;
+    rdfs:comment "동향 외주부. 칠드실링 + UFAD." ;
+    brick:isPartOf bldg:B_5F .
+
+bldg:B_5F_Perimeter_South a brick:HVAC_Zone ;
+    rdfs:label "B동 5F 남향 외주부 존 (South Perimeter)" ;
+    rdfs:comment "남향 외주부. 칠드실링 + UFAD." ;
+    brick:isPartOf bldg:B_5F .
+
+bldg:B_5F_Perimeter_North a brick:HVAC_Zone ;
+    rdfs:label "B동 5F 북향 외주부 존 (North Perimeter)" ;
+    rdfs:comment "북향 외주부. 칠드실링 + UFAD." ;
+    brick:isPartOf bldg:B_5F .
+
+# =============================================================================
+# SECTION 2: SYSTEM 정의
+# =============================================================================
+
+bldg:HVAC_System a brick:HVAC_System ;
+    rdfs:label "GEC B동 HVAC 시스템" ;
+    rdfs:comment "3중 복합 공조: UFAD + 칠드실링 + 복사난방. 약 40% 에너지 절감 (HOK 설계)." ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:hasPart bldg:Chiller_Plant ,
+                  bldg:Boiler_Plant ,
+                  bldg:UFAD_System ,
+                  bldg:CC_System ,
+                  bldg:RH_System ,
+                  bldg:DSF_System ,
+                  bldg:NP_System .
+
+bldg:UFAD_System a bees:UFAD_System ;
+    rdfs:label "가압식 바닥공조 시스템 (UFAD)" ;
+    rdfs:comment "이중바닥 하부 가압 플레넘을 통한 바닥 급기. 급기온도 18~20도C. 환기효율 20%+ 향상." ;
+    brick:isPartOf bldg:HVAC_System .
+
+bldg:CC_System a bees:Chilled_Ceiling_System ;
+    rdfs:label "칠드실링 복사냉방 시스템" ;
+    rdfs:comment "구리배관 내장 천장패널, 16도C 냉수 순환 복사냉방. PMV -0.1~0.42 (MDPI 논문)." ;
+    bees:chilledWaterTemp "16"^^xsd:decimal ;
+    brick:isPartOf bldg:HVAC_System .
+
+bldg:RH_System a bees:Radiant_Heating_System ;
+    rdfs:label "복사난방 시스템" ;
+    rdfs:comment "온수 순환 복사패널 난방." ;
+    brick:isPartOf bldg:HVAC_System .
+
+bldg:DSF_System a bees:Double_Skin_Facade_System ;
+    rdfs:label "이중외피 시스템 (서향)" ;
+    rdfs:comment "서향 입면 이중외피. 야간냉각, 겨울 단열, 자연환기." ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPartOf bldg:HVAC_System .
+
+bldg:NP_System a bees:Night_Purge_System ;
+    rdfs:label "야간 외기냉방 시스템" ;
+    rdfs:comment "외기온도 조건부 댐퍼 개방으로 슬래브 축냉. 냉방부하 ~21% 절감 (학술논문)." ;
+    brick:isPartOf bldg:HVAC_System .
+
+bldg:Lighting_System a brick:Lighting_System ;
+    rdfs:label "GEC B동 조명 시스템" ;
+    brick:hasLocation bldg:GEC_Tower_B .
+
+bldg:LS_System a bees:Light_Shelf_System ;
+    rdfs:label "가변형 외부 라이트셀프 시스템" ;
+    rdfs:comment "일조량 수확. 여름 태양열 저감, 겨울 태양열 최대화. LEED IEQc8 자연채광." ;
+    brick:isPartOf bldg:Lighting_System .
+
+bldg:BAS a brick:Building_Automation_System ;
+    rdfs:label "자동화 디지털 네트워크 시스템" ;
+    rdfs:comment "외기/실내/에너지비용 통합 모니터링 및 연속적 자동 조정. 지능형건축물 1등급. BMS 제조사/프로토콜 미확인." ;
+    brick:hasLocation bldg:GEC_Tower_B .
+
+bldg:Water_System a brick:Water_System ;
+    rdfs:label "GEC 수자원 시스템" ;
+    brick:hasLocation bldg:Samsung_GEC ;
+    brick:hasPart bldg:Rainwater_System .
+
+bldg:Rainwater_System a bees:Rainwater_Harvesting_System ;
+    rdfs:label "우수(빗물) 중수 재활용 시스템" ;
+    rdfs:comment "빗물을 중수화하여 생태연못 용수 및 조경 관수로 활용. G-SEED/LEED WE 크레딧 연계. 처리용량/저장탱크 미확인 (Phase 2 요청 B-21)." ;
+    brick:isPartOf bldg:Water_System .
+
+bldg:Water_Usage_Meter a bees:Water_Usage_Sensor ;
+    rdfs:label "건물 용수 사용량 계측기" ;
+    rdfs:comment "상수/중수/빗물 구분 사용량. 연간/월별 데이터 미확보 (Phase 2 요청 G-5)." ;
+    bees:waterSourceType "상수, 중수(빗물)" ;
+    brick:isPointOf bldg:Water_System .
+
+# =============================================================================
+# SECTION 3: EQUIPMENT 계층 - 열원 장비
+# =============================================================================
+
+bldg:Chiller_Plant a brick:Chiller_Plant ;
+    rdfs:label "냉열원 플랜트" ;
+    rdfs:comment "칠러, 냉수펌프, 냉각수펌프, 냉각탑 (대수/용량 미확인 - Phase 2 요청)" ;
+    brick:isPartOf bldg:HVAC_System ;
+    brick:hasPart bldg:Chiller_1 ,
+                  bldg:CHW_Pump_1 ,
+                  bldg:CW_Pump_1 ,
+                  bldg:Cooling_Tower_1 .
+
+bldg:Chiller_1 a brick:Chiller ;
+    rdfs:label "칠러 #1" ;
+    rdfs:comment "대수/용량(RT)/종류/제조사 미확인. 칠드실링용 16도C + UFAD용 냉수 공급." ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+bldg:CHW_Pump_1 a brick:Chilled_Water_Pump ;
+    rdfs:label "냉수 순환펌프 #1" ;
+    rdfs:comment "변속펌프 (Variable Speed) 추정. 대수/유량/양정 미확인." ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+bldg:CW_Pump_1 a brick:Condenser_Water_Pump ;
+    rdfs:label "냉각수 순환펌프 #1" ;
+    rdfs:comment "대수/유량/양정 미확인." ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+bldg:Cooling_Tower_1 a brick:Cooling_Tower ;
+    rdfs:label "냉각탑 #1" ;
+    rdfs:comment "대수/용량/종류(개방/밀폐) 미확인." ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+bldg:Boiler_Plant a brick:Boiler ;
+    rdfs:label "온열원 플랜트" ;
+    rdfs:comment "보일러, 온수펌프 (대수/용량 미확인 - Phase 2 요청)" ;
+    brick:isPartOf bldg:HVAC_System ;
+    brick:hasPart bldg:Boiler_1 ,
+                  bldg:HW_Pump_1 .
+
+bldg:Boiler_1 a brick:Boiler ;
+    rdfs:label "보일러 #1" ;
+    rdfs:comment "대수/용량(kcal/h)/연료/제조사 미확인." ;
+    brick:isPartOf bldg:Boiler_Plant .
+
+bldg:HW_Pump_1 a brick:Hot_Water_Pump ;
+    rdfs:label "온수 순환펌프 #1" ;
+    rdfs:comment "대수/유량/양정 미확인." ;
+    brick:isPartOf bldg:Boiler_Plant .
+
+# =============================================================================
+# SECTION 4: EQUIPMENT 계층 - UFAD 시스템
+# =============================================================================
+
+bldg:AHU_UFAD_1 a brick:AHU ;
+    rdfs:label "UFAD 전용 AHU #1" ;
+    rdfs:comment "가압식 바닥공조용 공조기. 외기조화기(OAU) 포함 추정. 대수/풍량(CMH) 미확인." ;
+    brick:isPartOf bldg:UFAD_System ;
+    brick:feeds bldg:B_5F_Interior_Zone ,
+                bldg:B_5F_Perimeter_West ,
+                bldg:B_5F_Perimeter_East ,
+                bldg:B_5F_Perimeter_South ,
+                bldg:B_5F_Perimeter_North ;
+    brick:isFedBy bldg:Chiller_1 .
+
+bldg:Pressure_Controller_UFAD a brick:Controller ;
+    rdfs:label "UFAD 플레넘 압력 제어기" ;
+    rdfs:comment "바닥플레넘 정압 제어. 압력센서 피드백 → 급기팬 VFD 제어 (학술논문 확인)." ;
+    brick:isPartOf bldg:UFAD_System .
+
+bldg:Floor_Diffuser_5F_Int a bees:Floor_Diffuser ;
+    rdfs:label "5F 내주부 바닥 디퓨저" ;
+    rdfs:comment "내주부 디퓨저 그룹. 종류(스월/방향조절)/수량 미확인." ;
+    brick:hasLocation bldg:B_5F_Interior_Zone ;
+    brick:isFedBy bldg:AHU_UFAD_1 .
+
+bldg:Floor_Diffuser_5F_West a bees:Floor_Diffuser ;
+    rdfs:label "5F 서향 외주부 바닥 디퓨저" ;
+    rdfs:comment "서향 외주부 디퓨저 그룹. DSF 연계." ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isFedBy bldg:AHU_UFAD_1 .
+
+bldg:Floor_Diffuser_5F_East a bees:Floor_Diffuser ;
+    rdfs:label "5F 동향 외주부 바닥 디퓨저" ;
+    brick:hasLocation bldg:B_5F_Perimeter_East ;
+    brick:isFedBy bldg:AHU_UFAD_1 .
+
+# =============================================================================
+# SECTION 5: EQUIPMENT 계층 - 칠드실링 시스템
+# =============================================================================
+
+bldg:CC_Panel_5F_Int a bees:Chilled_Ceiling_Panel ;
+    rdfs:label "5F 내주부 칠드실링 패널" ;
+    rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
+    brick:hasLocation bldg:B_5F_Interior_Zone ;
+    brick:isFedBy bldg:Chiller_1 ;
+    brick:isPartOf bldg:CC_System .
+
+bldg:CC_Panel_5F_West a bees:Chilled_Ceiling_Panel ;
+    rdfs:label "5F 서향 칠드실링 패널" ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isFedBy bldg:Chiller_1 ;
+    brick:isPartOf bldg:CC_System .
+
+bldg:CC_Distribution_Header_5F a bees:Distribution_Header ;
+    rdfs:label "5F 칠드실링 분배기" ;
+    rdfs:comment "냉수 분배기. 각 존별 패널에 냉수 분배." ;
+    brick:isPartOf bldg:CC_System ;
+    brick:feeds bldg:CC_Panel_5F_Int ,
+                bldg:CC_Panel_5F_West .
+
+bldg:CC_Three_Way_Valve_5F a brick:Valve ;
+    rdfs:label "5F 칠드실링 3방밸브" ;
+    rdfs:comment "냉수 유량/온도 제어용 3방밸브. 결로방지 인터록 연계 (특허 확인)." ;
+    brick:isPartOf bldg:CC_System .
+
+# =============================================================================
+# SECTION 6: EQUIPMENT 계층 - 복사난방 시스템
+# =============================================================================
+
+bldg:RH_Panel_5F_Int a bees:Radiant_Heating_Panel ;
+    rdfs:label "5F 내주부 복사난방 패널" ;
+    rdfs:comment "온수 순환 복사난방 패널." ;
+    brick:hasLocation bldg:B_5F_Interior_Zone ;
+    brick:isFedBy bldg:Boiler_1 ;
+    brick:isPartOf bldg:RH_System .
+
+bldg:RH_Distribution_Header_5F a bees:Distribution_Header ;
+    rdfs:label "5F 복사난방 분배기" ;
+    brick:isPartOf bldg:RH_System ;
+    brick:feeds bldg:RH_Panel_5F_Int .
+
+bldg:RH_Three_Way_Valve_5F a brick:Valve ;
+    rdfs:label "5F 복사난방 3방밸브" ;
+    rdfs:comment "온수 유량 제어용 3방밸브." ;
+    brick:isPartOf bldg:RH_System .
+
+# =============================================================================
+# SECTION 7: EQUIPMENT 계층 - 이중외피 / 라이트셀프
+# =============================================================================
+
+bldg:DSF_West_Unit a brick:HVAC_Equipment ;
+    rdfs:label "서향 이중외피 유닛" ;
+    rdfs:comment "외측외피 + 내측외피. 내측 창문 개폐 가능. 야간냉각/자연환기." ;
+    bees:dsfOperatingMode "여름: 루버 개방→자연환기/야간냉각, 겨울: 루버 폐쇄→이중단열, 중간기: 부분개방→자연환기" ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPartOf bldg:DSF_System ;
+    brick:hasPart bldg:DSF_Louver_West ,
+                  bldg:DSF_Inner_Window_West .
+
+bldg:DSF_Louver_West a bees:DSF_Louver ;
+    rdfs:label "서향 이중외피 루버" ;
+    rdfs:comment "외측외피 루버. 개폐각도 제어로 일사/환기 조절. BMS 연동 여부 미확인 (Phase 2 요청 B-20)." ;
+    brick:isPartOf bldg:DSF_West_Unit .
+
+bldg:DSF_Inner_Window_West a brick:HVAC_Equipment ;
+    rdfs:label "서향 이중외피 내측 창문" ;
+    rdfs:comment "내측외피 개폐 가능 창문. 자연환기 연계." ;
+    brick:isPartOf bldg:DSF_West_Unit .
+
+bldg:Night_Purge_Damper a brick:Damper ;
+    rdfs:label "야간 외기냉방 댐퍼" ;
+    rdfs:comment "외기온도 조건부 개방. DSF 야간냉각과 연계." ;
+    brick:isPartOf bldg:NP_System .
+
+bldg:Light_Shelf_West a brick:Lighting_Equipment ;
+    rdfs:label "서향 가변형 라이트셀프" ;
+    rdfs:comment "일조량 수확. 여름 태양열 저감, 겨울 태양열 최대화. LEED IEQc8." ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPartOf bldg:LS_System .
+
+# =============================================================================
+# SECTION 7-1: EQUIPMENT 계층 - 엘리베이터 (Phase 1.2 추가)
+# =============================================================================
+
+bldg:Elevator_Group_Passenger a brick:Elevator ;
+    rdfs:label "승용 엘리베이터 그룹 (32대)" ;
+    rdfs:comment "B동 승용 엘리베이터 32대. 제조사/모델/속도/적재하중 미확인 (Phase 2 요청 A-7)." ;
+    bees:elevatorType "승용 (Passenger)" ;
+    brick:hasLocation bldg:GEC_Tower_B .
+
+bldg:Elevator_Group_Emergency a brick:Elevator ;
+    rdfs:label "비상/화물 엘리베이터 그룹 (5대)" ;
+    rdfs:comment "B동 비상/화물 엘리베이터 5대. 제조사/모델 미확인 (Phase 2 요청 A-7)." ;
+    bees:elevatorType "비상화물 (Emergency/Freight)" ;
+    brick:hasLocation bldg:GEC_Tower_B .
+
+# =============================================================================
+# SECTION 7-2: SYSTEM 계층 - 전기 시스템 스켈레톤 (Phase 1.2 추가)
+# =============================================================================
+
+bldg:Electrical_System a brick:Electrical_System ;
+    rdfs:label "GEC B동 전기 시스템" ;
+    rdfs:comment "수전/변압기/비상발전기/UPS 구성 미확인 (Phase 2 요청 D-1~D-7)." ;
+    brick:hasLocation bldg:GEC_Tower_B .
+
+bldg:Emergency_Generator a brick:Emergency_Generator ;
+    rdfs:label "비상발전기" ;
+    rdfs:comment "대수/용량(kVA/kW)/연료/설치위치 미확인 (Phase 2 요청 D-3)." ;
+    brick:isPartOf bldg:Electrical_System .
+
+# =============================================================================
+# SECTION 7-3: SYSTEM/EQUIPMENT - 소방 시스템 (Phase 2: 법규역추론)
+# =============================================================================
+# 근거: 소방시설법, 186,023m2 대형 건축물, 지상 17층
+
+bldg:Fire_Safety_System a bees:Fire_Safety_System ;
+    rdfs:label "GEC 소방/방재 시스템" ;
+    rdfs:comment "소방시설법 기반 필수 설비. 186,023m2 대형 건축물 의무 설치 항목 역추론." ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "소방시설법, 건축법규 역추론" ;
+    brick:hasLocation bldg:Samsung_GEC ;
+    brick:hasPart bldg:Sprinkler_System ,
+                  bldg:Fire_Detection_System ,
+                  bldg:Indoor_Fire_Hydrant ,
+                  bldg:Outdoor_Fire_Hydrant ,
+                  bldg:Emergency_Broadcast ,
+                  bldg:Smoke_Control_System .
+
+bldg:Sprinkler_System a brick:Equipment ;
+    rdfs:label "스프링클러 소화설비" ;
+    rdfs:comment "전층 습식 스프링클러. 소방시설법 의무 (연면적 6,000m2 이상). 헤드 수량 추정 10,000~15,000개." ;
+    bees:hasConfidence "inferred" ;
+    bees:estimatedRange "헤드 10,000~15,000개" ;
+    bees:inferenceSource "소방시설법" ;
+    brick:isPartOf bldg:Fire_Safety_System .
+
+bldg:Fire_Detection_System a brick:Equipment ;
+    rdfs:label "자동화재탐지설비 (R형)" ;
+    rdfs:comment "R형 수신기 + 감지기. 소방시설법 의무. 감지기 추정 5,000~8,000개 (열/연/연열복합)." ;
+    bees:hasConfidence "inferred" ;
+    bees:estimatedRange "감지기 5,000~8,000개" ;
+    bees:inferenceSource "소방시설법" ;
+    brick:isPartOf bldg:Fire_Safety_System .
+
+bldg:Indoor_Fire_Hydrant a brick:Equipment ;
+    rdfs:label "옥내소화전설비" ;
+    rdfs:comment "각 층 복도/로비 설치. 소방시설법 의무. 호스릴 포함 추정." ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "소방시설법" ;
+    brick:isPartOf bldg:Fire_Safety_System .
+
+bldg:Outdoor_Fire_Hydrant a brick:Equipment ;
+    rdfs:label "옥외소화전설비" ;
+    rdfs:comment "건물 외곽 설치. 소방시설법 의무." ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "소방시설법" ;
+    brick:isPartOf bldg:Fire_Safety_System .
+
+bldg:Emergency_Broadcast a brick:Equipment ;
+    rdfs:label "비상방송설비" ;
+    rdfs:comment "11층 이상 의무 설치. 각 층 스피커 + 방재실 앰프." ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "소방시설법 (11층 이상)" ;
+    brick:isPartOf bldg:Fire_Safety_System .
+
+bldg:Smoke_Control_System a brick:Equipment ;
+    rdfs:label "제연설비" ;
+    rdfs:comment "11층 이상 의무. 특별피난계단 부속실/비상용 승강기 승강장 급기가압 제연." ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "소방시설법 (11층 이상)" ;
+    brick:isPartOf bldg:Fire_Safety_System .
+
+bldg:Fire_Control_Room a brick:Location ;
+    rdfs:label "방재센터 (소방관제실)" ;
+    rdfs:comment "소방시설 통합 관제. 지하 또는 1층 추정. R형 수신기, 소방 그래픽 패널." ;
+    bees:hasConfidence "inferred" ;
+    brick:isPartOf bldg:Samsung_GEC .
+
+# =============================================================================
+# SECTION 7-4: EQUIPMENT - 전기 시스템 확장 (Phase 2: 법규역추론+벤치마킹)
+# =============================================================================
+
+# 기존 bldg:Electrical_System 에 추정 속성 보충
+bldg:Electrical_System
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "B동 수전 8,000~12,000 kVA" ;
+    bees:inferenceSource "전기사업법, 벤치마킹 원단위 130~200 kVA/1000m2" ;
+    brick:hasPart bldg:Transformer_Group ,
+                  bldg:UPS_System .
+
+bldg:Transformer_Group a brick:Transformer ;
+    rdfs:label "B동 변압기 그룹 (추정 5~8대)" ;
+    rdfs:comment "개별 용량 1,000~2,000 kVA. 전체 GEC 15~25대 중 B동 배분." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "5~8대, 개별 1,000~2,000 kVA" ;
+    bees:inferenceSource "벤치마킹 원단위 130~200 kVA/1000m2" ;
+    brick:isPartOf bldg:Electrical_System .
+
+# 기존 bldg:Emergency_Generator 에 추정 속성 보충
+bldg:Emergency_Generator
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "B동 1,000~1,700 kW" ;
+    bees:inferenceSource "전기사업법 (수전용량 15~20%), 벤치마킹" .
+
+bldg:UPS_System a brick:UPS ;
+    rdfs:label "무정전전원공급장치 (UPS)" ;
+    rdfs:comment "서버실/데이터센터 전원 보호. 추정 300~800 kVA (전체)." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "300~800 kVA" ;
+    bees:inferenceSource "벤치마킹" ;
+    brick:isPartOf bldg:Electrical_System .
+
+# =============================================================================
+# SECTION 7-5: SYSTEM/EQUIPMENT - 조명 시스템 상세 (Phase 2: 벤치마킹)
+# =============================================================================
+
+# 기존 bldg:Lighting_System 에 추정 속성 보충
+bldg:Lighting_System
+    bees:hasConfidence "estimated" ;
+    brick:hasPart bldg:DALI_System ,
+                  bldg:Daylight_Sensor_Group ,
+                  bldg:Occupancy_Sensor_Lighting_Group .
+
+bldg:DALI_System a bees:DALI_Lighting_System ;
+    rdfs:label "DALI 조명 제어 시스템 (추정)" ;
+    rdfs:comment "DALI 프로토콜 디밍 제어. 라이트셀프 연동 자연채광 연계. 추정 112~210개 조명 존." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "112~210 조명 존 (14층 x 층당 8~15존)" ;
+    bees:inferenceSource "LEED IEQc6.1, 벤치마킹" ;
+    brick:isPartOf bldg:Lighting_System .
+
+bldg:Daylight_Sensor_Group a brick:Luminance_Sensor ;
+    rdfs:label "주광 연동 조도 센서 그룹 (추정 50~100개)" ;
+    rdfs:comment "외주부 자연채광 연계 조도 센서. B동 추정 50~100개." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "50~100개" ;
+    bees:inferenceSource "라이트셀프 연동, LEED IEQc8" ;
+    brick:isPartOf bldg:Lighting_System .
+
+bldg:Occupancy_Sensor_Lighting_Group a brick:Occupancy_Sensor ;
+    rdfs:label "조명 연계 재실감지 센서 그룹 (추정 100~200개)" ;
+    rdfs:comment "재실 기반 조명 자동제어. B동 추정 100~200개. LEED IEQ 연계." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "100~200개" ;
+    bees:inferenceSource "LEED IEQ, 벤치마킹" ;
+    brick:isPartOf bldg:Lighting_System .
+
+# =============================================================================
+# SECTION 7-6: SYSTEM/EQUIPMENT - 보안 시스템 (Phase 2: 법규역추론)
+# =============================================================================
+
+bldg:Security_System a bees:Security_System ;
+    rdfs:label "GEC 보안/방범 시스템" ;
+    rdfs:comment "출입통제, CCTV, 주차관제. 대기업 본사 보안 수준." ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "대형 업무시설 보안 기준" ;
+    brick:hasLocation bldg:Samsung_GEC ;
+    brick:hasPart bldg:Access_Control_System ,
+                  bldg:CCTV_System ,
+                  bldg:Parking_Management_System .
+
+bldg:Access_Control_System a brick:Equipment ;
+    rdfs:label "출입통제 시스템" ;
+    rdfs:comment "카드키/생체인증 기반 출입통제. 각 층 + 주출입구 + 지하주차장." ;
+    bees:hasConfidence "inferred" ;
+    brick:isPartOf bldg:Security_System .
+
+bldg:CCTV_System a brick:Equipment ;
+    rdfs:label "CCTV 영상감시 시스템" ;
+    rdfs:comment "NVR 기반 IP카메라. 외곽, 로비, 주차장, 엘리베이터 내부." ;
+    bees:hasConfidence "inferred" ;
+    brick:isPartOf bldg:Security_System .
+
+bldg:Parking_Management_System a brick:Equipment ;
+    rdfs:label "주차관제 시스템" ;
+    rdfs:comment "1,403대 자주식 주차장 관제. LPR(차번인식) 추정." ;
+    bees:hasConfidence "inferred" ;
+    bees:estimatedRange "1,403대 관리" ;
+    brick:isPartOf bldg:Security_System .
+
+# =============================================================================
+# SECTION 7-7: EQUIPMENT - HVAC 추정 인스턴스 (Phase 2: 벤치마킹)
+# =============================================================================
+# 근거: 13_인증세부_벤치마킹_설비추론.md Part 3 추정 사양표
+
+# --- 칠러 추정 속성 보충 + 추가 인스턴스 ---
+bldg:Chiller_1
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "800~1,200 RT/대" ;
+    bees:capacity "GEC전체 4,000~5,000 RT, B동배분 ~1,500 RT" ;
+    bees:inferenceSource "벤치마킹 원단위 24 RT/1000m2" .
+
+bldg:Chiller_2 a brick:Chiller ;
+    rdfs:label "칠러 #2 (추정)" ;
+    rdfs:comment "추정 인스턴스. GEC 전체 4~6대 중 #2." ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+bldg:Chiller_3 a brick:Chiller ;
+    rdfs:label "칠러 #3 (추정)" ;
+    rdfs:comment "추정 인스턴스. GEC 전체 4~6대 중 #3." ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+bldg:Chiller_4 a brick:Chiller ;
+    rdfs:label "칠러 #4 (추정)" ;
+    rdfs:comment "추정 인스턴스. GEC 전체 4~6대 중 #4." ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+# --- Chiller_Plant 추정 확장 ---
+bldg:Chiller_Plant
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "칠러 4~6대, 냉각탑 4~6대" ;
+    brick:hasPart bldg:Chiller_2 ,
+                  bldg:Chiller_3 ,
+                  bldg:Chiller_4 ,
+                  bldg:Cooling_Tower_2 ,
+                  bldg:Cooling_Tower_3 ,
+                  bldg:CC_Pump_1 .
+
+# --- 냉각탑 추정 보충 + 추가 ---
+bldg:Cooling_Tower_1
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "4~6대, 총 5,000~6,500 CRT" ;
+    bees:inferenceSource "칠러 용량 x 1.25" .
+
+bldg:Cooling_Tower_2 a brick:Cooling_Tower ;
+    rdfs:label "냉각탑 #2 (추정)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+bldg:Cooling_Tower_3 a brick:Cooling_Tower ;
+    rdfs:label "냉각탑 #3 (추정)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:Chiller_Plant .
+
+# --- 보일러 추정 보충 + 추가 ---
+bldg:Boiler_1
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "GEC 전체 3~5대, 총 9,000~11,000 Mcal/h" ;
+    bees:capacity "B동 배분 ~3,000~3,700 Mcal/h" ;
+    bees:inferenceSource "벤치마킹, 복사난방 효율 반영" .
+
+bldg:Boiler_2 a brick:Boiler ;
+    rdfs:label "보일러 #2 (추정)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:Boiler_Plant .
+
+bldg:Boiler_Plant
+    brick:hasPart bldg:Boiler_2 .
+
+# --- AHU 추정 보충 + 추가 ---
+bldg:AHU_UFAD_1
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "B동 12~18대, 풍량 10,000~25,000 CMH/대" ;
+    bees:inferenceSource "벤치마킹, 층당 1~2대" .
+
+bldg:AHU_UFAD_2 a brick:AHU ;
+    rdfs:label "UFAD 전용 AHU #2 (추정)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:UFAD_System .
+
+bldg:AHU_UFAD_3 a brick:AHU ;
+    rdfs:label "UFAD 전용 AHU #3 (추정)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:UFAD_System .
+
+# --- OAU/DOAS (외기조화기) 추정 ---
+bldg:DOAS_1 a brick:AHU ;
+    rdfs:label "외기조화기 (DOAS/OAU) #1" ;
+    rdfs:comment "UFAD 시스템 외기 100% 처리. B동 3~5대 추정. 풍량 15,000~30,000 CMH/대." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "3~5대, 15,000~30,000 CMH/대" ;
+    bees:inferenceSource "UFAD 필수 외기처리" ;
+    brick:isPartOf bldg:UFAD_System .
+
+bldg:DOAS_2 a brick:AHU ;
+    rdfs:label "외기조화기 (DOAS/OAU) #2 (추정)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:UFAD_System .
+
+# --- UFAD_System 추정 확장 ---
+bldg:UFAD_System
+    brick:hasPart bldg:AHU_UFAD_2 ,
+                  bldg:AHU_UFAD_3 ,
+                  bldg:DOAS_1 ,
+                  bldg:DOAS_2 .
+
+# --- 칠드실링 전용 펌프 ---
+bldg:CC_Pump_1 a brick:Chilled_Water_Pump ;
+    rdfs:label "칠드실링 전용 냉수 순환펌프 #1" ;
+    rdfs:comment "CC 독립 냉수루프 (16도C 별도). B동 2~4대 추정." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "2~4대" ;
+    bees:inferenceSource "칠드실링 독립 냉수루프" ;
+    brick:isPartOf bldg:CC_System .
+
+# --- FCU (특수실) ---
+bldg:FCU_Group a brick:Fan_Coil_Unit ;
+    rdfs:label "팬코일유닛 그룹 (특수실)" ;
+    rdfs:comment "회의실, 서버실 등 특수 공간 개별 제어. B동 10~30대 추정." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "10~30대" ;
+    bees:inferenceSource "특수실 개별 제어 표준" ;
+    brick:hasLocation bldg:GEC_Tower_B .
+
+# =============================================================================
+# SECTION 7-8: BMS 추정 상세 (Phase 2: 벤치마킹)
+# =============================================================================
+
+# 기존 bldg:BAS 에 추정 속성 보충
+bldg:BAS
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "DDC 50~80대, ~10,000 포인트 (B동)" ;
+    bees:protocol "BACnet IP/MSTP (추정)" ;
+    bees:inferenceSource "IBS 1등급 기준, 벤치마킹 0.16 포인트/m2" .
+
+bldg:DDC_Controller_Group a brick:Controller ;
+    rdfs:label "DDC 컨트롤러 그룹 (추정 50~80대)" ;
+    rdfs:comment "Direct Digital Controller. 층당 4~6대 x 14층. AHU/조명/소방 제어." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "50~80대" ;
+    bees:inferenceSource "IBS 1등급, 벤치마킹" ;
+    brick:isPartOf bldg:BAS .
+
+# --- BMS 센서 수량 추정 그룹 ---
+bldg:Temp_Sensor_Group a brick:Temperature_Sensor ;
+    rdfs:label "온도 센서 그룹 (추정 300~500개, B동)" ;
+    rdfs:comment "존별 1~2개 + 배관/덕트 포함." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "300~500개" ;
+    brick:isPointOf bldg:BAS .
+
+bldg:Humidity_Sensor_Group a brick:Humidity_Sensor ;
+    rdfs:label "습도 센서 그룹 (추정 50~100개, B동)" ;
+    rdfs:comment "AHU + 대표 존 설치." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "50~100개" ;
+    brick:isPointOf bldg:BAS .
+
+bldg:CO2_Sensor_Group a brick:CO2_Sensor ;
+    rdfs:label "CO2 센서 그룹 (추정 30~60개, B동)" ;
+    rdfs:comment "DCV 제어용. LEED IEQc1 + ASHRAE 62.1 요구." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "30~60개" ;
+    bees:inferenceSource "LEED IEQc1, ASHRAE 62.1" ;
+    brick:isPointOf bldg:BAS .
+
+bldg:Occ_Sensor_Group a brick:Occupancy_Sensor ;
+    rdfs:label "재실감지 센서 그룹 (추정 100~200개, B동)" ;
+    rdfs:comment "조명/공조 연계 재실 감지." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "100~200개" ;
+    bees:inferenceSource "LEED IEQ, 벤치마킹" ;
+    brick:isPointOf bldg:BAS .
+
+bldg:VFD_Group a brick:VFD ;
+    rdfs:label "VFD 인버터 그룹 (추정 20~40대, B동)" ;
+    rdfs:comment "펌프/팬 가변속 제어. 에너지 절감 핵심 장비." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "20~40대" ;
+    bees:inferenceSource "에너지효율 1등급 기준" ;
+    brick:isPointOf bldg:BAS .
+
+# =============================================================================
+# SECTION 7-9: EQUIPMENT - 중수도 시스템 확장 (Phase 2: 법규역추론)
+# =============================================================================
+
+bldg:Wastewater_Treatment a bees:Wastewater_Treatment_System ;
+    rdfs:label "중수도 처리 시스템" ;
+    rdfs:comment "수도법 의무 설치 (연면적 60,000m2 이상). 처리용량 100~200톤/일 추정. 빗물+잡배수 중수처리." ;
+    bees:hasConfidence "inferred" ;
+    bees:estimatedRange "100~200톤/일" ;
+    bees:inferenceSource "수도법 시행령 제34조 (연면적 60,000m2 이상 의무)" ;
+    brick:isPartOf bldg:Water_System .
+
+bldg:Water_System
+    brick:hasPart bldg:Wastewater_Treatment .
+
+# =============================================================================
+# SECTION 7-10: EQUIPMENT - 신재생에너지 (Phase 2: 벤치마킹)
+# =============================================================================
+
+bldg:Solar_PV_System a bees:Solar_PV_System ;
+    rdfs:label "태양광 발전 시스템 (추정)" ;
+    rdfs:comment "GEC 옥상 설치 추정 50~200 kWp. 삼성E&A 전사 태양광 1,893kW 중 GEC 배분. LEED EAc2 득점 근거." ;
+    bees:hasConfidence "estimated" ;
+    bees:estimatedRange "50~200 kWp" ;
+    bees:inferenceSource "LEED EAc2, 삼성E&A 전사 태양광 1,893kW" ;
+    brick:hasLocation bldg:B_RF .
+
+# =============================================================================
+# SECTION 8: POINT 계층 - UFAD 센서/제어
+# =============================================================================
+
+bldg:SAT_UFAD_1 a brick:Supply_Air_Temperature_Sensor ;
+    rdfs:label "UFAD 급기온도 센서" ;
+    rdfs:comment "급기 온도 18~20도C 범위 제어 (학술논문 확인)" ;
+    brick:isPointOf bldg:AHU_UFAD_1 .
+
+bldg:RAT_UFAD_1 a brick:Return_Air_Temperature_Sensor ;
+    rdfs:label "UFAD 환기온도 센서" ;
+    rdfs:comment "온도 성층화 모니터링" ;
+    brick:isPointOf bldg:AHU_UFAD_1 .
+
+bldg:Plenum_Pressure_Sensor_5F a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "5F 플레넘 정압 센서" ;
+    rdfs:comment "가압식 UFAD 핵심 제어 포인트. 플레넘 내 정압 측정 (학술논문 확인)." ;
+    brick:hasLocation bldg:B_5F ;
+    brick:isPointOf bldg:UFAD_System .
+
+bldg:Slab_Temp_5F a bees:Slab_Temperature_Sensor ;
+    rdfs:label "5F 슬래브 온도 센서" ;
+    rdfs:comment "야간 외기냉방 축냉 효과 모니터링" ;
+    brick:hasLocation bldg:B_5F ;
+    brick:isPointOf bldg:NP_System .
+
+bldg:Plenum_Pressure_SP_5F a brick:Pressure_Setpoint ;
+    rdfs:label "5F 플레넘 압력 설정값" ;
+    brick:isPointOf bldg:Pressure_Controller_UFAD .
+
+bldg:SAT_SP_UFAD a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "UFAD 급기온도 설정값" ;
+    rdfs:comment "18~20도C 범위" ;
+    brick:isPointOf bldg:AHU_UFAD_1 .
+
+bldg:Fan_Speed_CMD_UFAD a brick:Fan_Speed_Command ;
+    rdfs:label "UFAD 급기팬 속도 명령" ;
+    rdfs:comment "VFD 기반 풍량 제어. 플레넘 압력 피드백." ;
+    brick:isPointOf bldg:AHU_UFAD_1 .
+
+bldg:Damper_CMD_UFAD a brick:Damper_Position_Command ;
+    rdfs:label "UFAD 외기 댐퍼 명령" ;
+    brick:isPointOf bldg:AHU_UFAD_1 .
+
+# =============================================================================
+# SECTION 9: POINT 계층 - 칠드실링 센서/제어
+# =============================================================================
+
+bldg:CHWST_CC a brick:Chilled_Water_Supply_Temperature_Sensor ;
+    rdfs:label "칠드실링 냉수 공급온도 센서" ;
+    rdfs:comment "목표 16도C 제어" ;
+    brick:isPointOf bldg:CC_System .
+
+bldg:CHWRT_CC a brick:Chilled_Water_Return_Temperature_Sensor ;
+    rdfs:label "칠드실링 냉수 환수온도 센서" ;
+    brick:isPointOf bldg:CC_System .
+
+bldg:CHW_Flow_CC a brick:Water_Flow_Sensor ;
+    rdfs:label "칠드실링 냉수 유량 센서" ;
+    rdfs:comment "변유량 제어 모니터링" ;
+    brick:isPointOf bldg:CC_System .
+
+bldg:Dew_Point_Temp_5F a brick:Dew_Point_Temperature_Sensor ;
+    rdfs:label "5F 노점온도 센서" ;
+    rdfs:comment "결로방지 인터록 핵심. 노점온도 감시 → 냉수밸브 차단/유량 조절 (특허 확인)." ;
+    brick:hasLocation bldg:B_5F ;
+    brick:isPointOf bldg:CC_System .
+
+bldg:Condensation_Sensor_5F a bees:Condensation_Sensor ;
+    rdfs:label "5F 결로방지 센서" ;
+    rdfs:comment "칠드실링 패널 표면 결로 위험 감지" ;
+    brick:hasLocation bldg:B_5F ;
+    brick:isPointOf bldg:CC_System .
+
+bldg:Surface_Temp_CC_5F a brick:Inside_Face_Surface_Temperature_Sensor ;
+    rdfs:label "5F 칠드실링 패널 표면온도 센서" ;
+    rdfs:comment "복사패널 표면온도 모니터링. 결로방지 연계." ;
+    brick:isPointOf bldg:CC_Panel_5F_Int .
+
+bldg:CHW_Temp_SP_CC a brick:Chilled_Water_Supply_Temperature_Setpoint ;
+    rdfs:label "칠드실링 냉수 온도 설정값" ;
+    rdfs:comment "외기리셋 + 실내온도 피드백으로 결정" ;
+    brick:isPointOf bldg:CC_System .
+
+bldg:CC_Valve_CMD_5F a brick:Valve_Command ;
+    rdfs:label "5F 칠드실링 밸브 명령" ;
+    rdfs:comment "3방밸브 제어. 결로방지 인터록 포함 (특허 확인)." ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_5F .
+
+# =============================================================================
+# SECTION 10: POINT 계층 - 복사난방 센서/제어
+# =============================================================================
+
+bldg:HWST_RH a brick:Hot_Water_Supply_Temperature_Sensor ;
+    rdfs:label "복사난방 온수 공급온도 센서" ;
+    brick:isPointOf bldg:RH_System .
+
+bldg:HWRT_RH a brick:Hot_Water_Return_Temperature_Sensor ;
+    rdfs:label "복사난방 온수 환수온도 센서" ;
+    brick:isPointOf bldg:RH_System .
+
+bldg:RH_Valve_CMD_5F a brick:Valve_Command ;
+    rdfs:label "5F 복사난방 밸브 명령" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_5F .
+
+# =============================================================================
+# SECTION 11: POINT 계층 - 존별 실내 센서 (5F 대표)
+# =============================================================================
+
+# --- 5F 내주부 존 ---
+bldg:ZAT_5F_Int a brick:Zone_Air_Temperature_Sensor ;
+    rdfs:label "5F 내주부 존 온도 센서" ;
+    brick:hasLocation bldg:B_5F_Interior_Zone ;
+    brick:isPointOf bldg:B_5F_Interior_Zone .
+
+bldg:ZAH_5F_Int a brick:Zone_Air_Humidity_Sensor ;
+    rdfs:label "5F 내주부 존 습도 센서" ;
+    brick:hasLocation bldg:B_5F_Interior_Zone ;
+    brick:isPointOf bldg:B_5F_Interior_Zone .
+
+bldg:CO2_5F_Int a brick:CO2_Sensor ;
+    rdfs:label "5F 내주부 CO2 센서" ;
+    rdfs:comment "DCV(Demand Controlled Ventilation) 환기량 제어. LEED IEQp1 ASHRAE 62.1 환기 요구." ;
+    brick:hasLocation bldg:B_5F_Interior_Zone ;
+    brick:isPointOf bldg:B_5F_Interior_Zone .
+
+bldg:Occ_5F_Int a brick:Occupancy_Sensor ;
+    rdfs:label "5F 내주부 재실 감지 센서" ;
+    rdfs:comment "LEED IEQ 연계, 조명/환기 제어" ;
+    brick:hasLocation bldg:B_5F_Interior_Zone ;
+    brick:isPointOf bldg:B_5F_Interior_Zone .
+
+bldg:ZAT_SP_5F_Int a brick:Zone_Air_Temperature_Setpoint ;
+    rdfs:label "5F 내주부 존 온도 설정값" ;
+    brick:isPointOf bldg:B_5F_Interior_Zone .
+
+# --- 5F 서향 외주부 존 ---
+bldg:ZAT_5F_West a brick:Zone_Air_Temperature_Sensor ;
+    rdfs:label "5F 서향 외주부 존 온도 센서" ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPointOf bldg:B_5F_Perimeter_West .
+
+bldg:ZAH_5F_West a brick:Zone_Air_Humidity_Sensor ;
+    rdfs:label "5F 서향 외주부 존 습도 센서" ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPointOf bldg:B_5F_Perimeter_West .
+
+bldg:Lux_5F_West a brick:Illuminance_Sensor ;
+    rdfs:label "5F 서향 조도 센서" ;
+    rdfs:comment "라이트셀프 제어 연계. LEED IEQc8 자연채광." ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPointOf bldg:B_5F_Perimeter_West .
+
+# =============================================================================
+# SECTION 12: POINT 계층 - 외기 센서
+# =============================================================================
+
+bldg:OAT a brick:Outside_Air_Temperature_Sensor ;
+    rdfs:label "외기 온도 센서" ;
+    rdfs:comment "외기리셋 제어, Night Purge 조건, DSF 제어" ;
+    brick:hasLocation bldg:Samsung_GEC ;
+    brick:isPointOf bldg:BAS .
+
+bldg:OAH a brick:Outside_Air_Humidity_Sensor ;
+    rdfs:label "외기 습도 센서" ;
+    brick:hasLocation bldg:Samsung_GEC ;
+    brick:isPointOf bldg:BAS .
+
+bldg:Solar_Radiation a brick:Solar_Radiance_Sensor ;
+    rdfs:label "일사량 센서" ;
+    rdfs:comment "자동제어 연계 - 라이트셀프 각도, DSF 환기 제어" ;
+    brick:hasLocation bldg:Samsung_GEC ;
+    brick:isPointOf bldg:BAS .
+
+# =============================================================================
+# SECTION 13: POINT 계층 - 에너지 모니터링
+# =============================================================================
+
+bldg:Building_Power_Meter a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 전체 전력 계측기" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Energy_Cost_Sensor a bees:Energy_Cost_Sensor ;
+    rdfs:label "시장 에너지 비용 센서" ;
+    rdfs:comment "자동화 디지털 네트워크에서 시장 에너지 비용 모니터링 확인됨." ;
+    brick:isPointOf bldg:BAS .
+
+# =============================================================================
+# SECTION 14: POINT 계층 - 이중외피 / 라이트셀프 제어
+# =============================================================================
+
+bldg:LS_Angle_CMD a bees:Light_Shelf_Angle_Command ;
+    rdfs:label "라이트셀프 각도 명령" ;
+    rdfs:comment "계절/시간별 최적 각도 제어. 일사량 센서 연계." ;
+    brick:isPointOf bldg:Light_Shelf_West .
+
+bldg:DSF_Vent_CMD a bees:DSF_Vent_Command ;
+    rdfs:label "이중외피 환기 명령" ;
+    rdfs:comment "서향 이중외피 환기 제어. 외기온도/일사량 연계." ;
+    brick:isPointOf bldg:DSF_West_Unit .
+
+bldg:DSF_Louver_CMD a bees:DSF_Louver_Position_Command ;
+    rdfs:label "이중외피 루버 개폐 명령" ;
+    rdfs:comment "루버 개폐각도 제어. 여름 개방(환기), 겨울 폐쇄(단열), 중간기 부분개방. BMS 연동 여부 미확인 (Phase 2 요청 B-20)." ;
+    brick:isPointOf bldg:DSF_Louver_West .
+
+bldg:DSF_Cavity_Temp a bees:DSF_Cavity_Temperature_Sensor ;
+    rdfs:label "이중외피 캐비티 온도 센서" ;
+    rdfs:comment "외측-내측 외피 사이 공동(캐비티) 온도. 루버/환기 제어 피드백." ;
+    brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPointOf bldg:DSF_System .
+
+bldg:NP_Damper_CMD a brick:Damper_Position_Command ;
+    rdfs:label "야간 외기냉방 댐퍼 명령" ;
+    rdfs:comment "외기온도 조건부 개방. 슬래브 축냉." ;
+    brick:isPointOf bldg:Night_Purge_Damper .
+
+# =============================================================================
+# SECTION 15: 에너지/ESG 메타데이터 (BEES 확장)
+# =============================================================================
+
+# --- 건물 에너지 성능 기준 ---
+bldg:Primary_Energy_Baseline a brick:Energy_Sensor ;
+    rdfs:label "1차 에너지 소요량 기준값" ;
+    rdfs:comment "에너지효율등급 1등급. 287.4 kWh/m2/년. HOK 설계 기준 ~40% 절감." ;
+    bees:primaryEnergyConsumption "287.4"^^xsd:decimal ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Annual_Energy_Estimate_GEC a brick:Energy_Sensor ;
+    rdfs:label "GEC 전체 연간 에너지 추정" ;
+    rdfs:comment "287.4 kWh/m2 x 186,023 m2 = 약 53.5 GWh/년 = 약 4,598 TOE/년. 에너지다소비건물(2,000TOE) 초과 추정." ;
+    bees:annualEnergyEstimate_kWh "53463000"^^xsd:decimal ;
+    bees:annualEnergyEstimate_TOE "4598"^^xsd:decimal ;
+    brick:isPointOf bldg:Samsung_GEC .
+
+bldg:Annual_Energy_Estimate_B a brick:Energy_Sensor ;
+    rdfs:label "B동 연간 에너지 추정" ;
+    rdfs:comment "287.4 kWh/m2 x ~61,700 m2 = 약 17.7 GWh/년 = 약 1,517 TOE/년 (추정)" ;
+    bees:annualEnergyEstimate_kWh "17640000"^^xsd:decimal ;
+    bees:annualEnergyEstimate_TOE "1517"^^xsd:decimal ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+# --- 삼성E&A GHG 배출 데이터 (Phase 1: DitchCarbon 수집) ---
+
+# 출처 A: 국내 사업장 추정 기준
+bees:Samsung_EA_GHG_Scope1_2023_KR a bees:GHG_Scope1_Emission ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2023" ;
+    bees:value "33042"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "국내 사업장 (추정)" ;
+    rdfs:comment "DitchCarbon 출처 A 기준. PDF 보고서에서 정확한 범위 확인 필요." ;
+    rdfs:seeAlso <https://ditchcarbon.com/organizations/samsung-engineering> .
+
+bees:Samsung_EA_GHG_Scope2_2023_KR a bees:GHG_Scope2_Emission ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2023" ;
+    bees:value "21412"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "국내 사업장 (추정)" ;
+    rdfs:comment "DitchCarbon 출처 A 기준." .
+
+bees:Samsung_EA_GHG_Scope1_2022_KR a bees:GHG_Scope1_Emission ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2022" ;
+    bees:value "34690"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "국내 사업장 (추정)" .
+
+bees:Samsung_EA_GHG_Scope2_2022_KR a bees:GHG_Scope2_Emission ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2022" ;
+    bees:value "19776"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "국내 사업장 (추정)" .
+
+# 출처 B: 글로벌 전체 추정 기준
+bees:Samsung_EA_GHG_Scope1_2023_Global a bees:GHG_Scope1_Emission ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2023" ;
+    bees:value "31441"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "글로벌 전체 (추정)" ;
+    rdfs:comment "DitchCarbon 출처 B 기준. 출처 A와 불일치 - PDF 검증 필요." ;
+    rdfs:seeAlso <https://ditchcarbon.com/organizations/samsung-engineering-company-limited-146f8002-b428-44aa-a8df-18c337370f8f> .
+
+bees:Samsung_EA_GHG_Scope2_2023_Global a bees:GHG_Scope2_Emission ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2023" ;
+    bees:value "159799"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "글로벌 전체 (추정)" ;
+    rdfs:comment "DitchCarbon 출처 B 기준." .
+
+# --- 삼성물산 GHG 배출 데이터 ---
+bees:Samsung_CT_GHG_Scope1 a bees:GHG_Scope1_Emission ;
+    bees:reportingEntity "삼성물산" ;
+    bees:reportingYear "2023" ;
+    bees:value "100589"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    rdfs:comment "삼성물산 전사 Scope 1 (글로벌)" .
+
+bees:Samsung_CT_GHG_Scope2 a bees:GHG_Scope2_Emission ;
+    bees:reportingEntity "삼성물산" ;
+    bees:reportingYear "2023" ;
+    bees:value "75854"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "market-based" ;
+    rdfs:comment "삼성물산 전사 Scope 2 (글로벌, market-based)" .
+
+bees:Samsung_CT_Korea_GHG a bees:GHG_Total_Emission ;
+    bees:reportingEntity "삼성물산" ;
+    bees:reportingYear "2023" ;
+    bees:value "90709"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "국내 Scope 1+2" ;
+    rdfs:comment "삼성물산 국내 Scope 1+2 합산" .
+
+# --- ESG 평가/인증 메타데이터 (Phase 1 추가) ---
+bldg:ESG_Samsung_EA a owl:NamedIndividual ;
+    rdfs:label "삼성E&A ESG 현황" ;
+    rdfs:comment "ISO 50001, ISO 14001, SEEM-S 인증. Net Zero 2050, RE100 2030 목표." ;
+    bees:certification "ISO 50001 에너지경영시스템" ,
+                       "ISO 14001 환경관리시스템" ,
+                       "KCGS ESG A등급 (3년 연속, 2022-2024)" ,
+                       "MSCI ESG A등급 (2024)" ,
+                       "DJSI Asia Pacific 12년 연속" ,
+                       "DJSI Korea 14년 연속" ,
+                       "CDP 기후변화 참여 (2009년~)" ,
+                       "2024 대한민국 녹색경영대상 (환경부/산업부)" ;
+    bees:value "태양광 발전시설 총 1,893 kW (전사)" .
+
+# =============================================================================
+# SECTION 15-1: ESG 실데이터 (Phase 2: PDF 직접 추출)
+# =============================================================================
+# 출처: 삼성E&A 2024 지속가능경영보고서 (Sustainability Report) ESG Data 섹션
+# 추출 방법: PDF → pdftotext → 텍스트 검색/구조화
+
+# --- 본사(HQ = GEC) GHG 분리 데이터 (핵심 발견) ---
+bees:Samsung_EA_GHG_HQ_2024 a bees:GHG_Total_Emission ;
+    rdfs:label "삼성E&A 본사(HQ=GEC) GHG 배출 2024" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2024" ;
+    bees:value "12872"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "본사 (HQ = GEC)" ;
+    bees:hasConfidence "confirmed" ;
+    bees:inferenceSource "삼성E&A 2024 지속가능경영보고서 ESG Data 직접 추출" ;
+    rdfs:comment "GEC 본사 GHG 분리 보고. 2022: 11,123 / 2023: 10,943 / 2024: 12,872 tCO2e." .
+
+bees:Samsung_EA_GHG_HQ_2023 a bees:GHG_Total_Emission ;
+    rdfs:label "삼성E&A 본사(HQ=GEC) GHG 배출 2023" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2023" ;
+    bees:value "10943"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "본사 (HQ = GEC)" ;
+    bees:hasConfidence "confirmed" .
+
+bees:Samsung_EA_GHG_HQ_2022 a bees:GHG_Total_Emission ;
+    rdfs:label "삼성E&A 본사(HQ=GEC) GHG 배출 2022" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2022" ;
+    bees:value "11123"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "본사 (HQ = GEC)" ;
+    bees:hasConfidence "confirmed" .
+
+# --- 전사 에너지 소비량 (PDF 추출) ---
+bees:Samsung_EA_Energy_2024 a brick:Energy_Sensor ;
+    rdfs:label "삼성E&A 전사 에너지 소비량 2024" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2024" ;
+    bees:value "635091"^^xsd:decimal ;
+    bees:unit "GJ" ;
+    bees:boundary "전사 (글로벌)" ;
+    bees:hasConfidence "confirmed" ;
+    bees:inferenceSource "삼성E&A 2024 지속가능경영보고서 PDF" ;
+    rdfs:comment "2022: 663,839 / 2023: 660,408 / 2024: 635,091 GJ." .
+
+bees:Samsung_EA_Energy_2023 a brick:Energy_Sensor ;
+    rdfs:label "삼성E&A 전사 에너지 소비량 2023" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2023" ;
+    bees:value "660408"^^xsd:decimal ;
+    bees:unit "GJ" ;
+    bees:boundary "전사 (글로벌)" ;
+    bees:hasConfidence "confirmed" .
+
+bees:Samsung_EA_Energy_2022 a brick:Energy_Sensor ;
+    rdfs:label "삼성E&A 전사 에너지 소비량 2022" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2022" ;
+    bees:value "663839"^^xsd:decimal ;
+    bees:unit "GJ" ;
+    bees:boundary "전사 (글로벌)" ;
+    bees:hasConfidence "confirmed" .
+
+# --- 전사 GHG Scope 1+2 (PDF 추출, DitchCarbon과 교차검증) ---
+bees:Samsung_EA_GHG_Total_2024 a bees:GHG_Total_Emission ;
+    rdfs:label "삼성E&A 전사 GHG Scope1+2 배출 2024" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2024" ;
+    bees:value "30036"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "전사 Scope1+2 (글로벌)" ;
+    bees:hasConfidence "confirmed" ;
+    bees:inferenceSource "삼성E&A 2024 지속가능경영보고서 PDF" ;
+    rdfs:comment "Scope1 7,419 + Scope2 22,617 = 30,036 tCO2e (2024)." .
+
+bees:Samsung_EA_GHG_Total_2023_PDF a bees:GHG_Total_Emission ;
+    rdfs:label "삼성E&A 전사 GHG Scope1+2 배출 2023" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2023" ;
+    bees:value "28752"^^xsd:decimal ;
+    bees:unit "tCO2eq" ;
+    bees:boundary "전사 Scope1+2 (글로벌)" ;
+    bees:hasConfidence "confirmed" ;
+    rdfs:comment "Scope1 7,093 + Scope2 21,659. PDF 직접 추출." .
+
+# --- 전사 용수 사용량 (PDF 추출) ---
+bees:Samsung_EA_Water_2024 a brick:Quantity ;
+    rdfs:label "삼성E&A 전사 용수 사용량 2024" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2024" ;
+    bees:value "958946"^^xsd:decimal ;
+    bees:unit "톤" ;
+    bees:boundary "전사 (글로벌)" ;
+    bees:hasConfidence "confirmed" ;
+    bees:inferenceSource "삼성E&A 2024 지속가능경영보고서 PDF" ;
+    rdfs:comment "2022: 981,448 / 2023: 1,007,725 / 2024: 958,946 톤." .
+
+# --- 전사 폐기물 발생량 (PDF 추출) ---
+bees:Samsung_EA_Waste_2024 a brick:Quantity ;
+    rdfs:label "삼성E&A 전사 폐기물 발생량 2024" ;
+    bees:reportingEntity "삼성E&A" ;
+    bees:reportingYear "2024" ;
+    bees:value "106251"^^xsd:decimal ;
+    bees:unit "톤" ;
+    bees:boundary "전사 (글로벌)" ;
+    bees:hasConfidence "confirmed" ;
+    bees:inferenceSource "삼성E&A 2024 지속가능경영보고서 PDF" ;
+    rdfs:comment "2022: 156,128 / 2023: 141,723 / 2024: 106,251 톤." .
+
+# =============================================================================
+# END OF ONTOLOGY v1.3
+# =============================================================================
+# Phase 2 반영 완료 (2026-02-10):
+#   - ESG 실데이터: 삼성E&A 2024 지속가능경영보고서 PDF 직접 추출
+#     → HQ(=GEC) GHG 분리 보고 확인: ~11,000~12,800 tCO2e/년 (3년 추이)
+#     → 전사 에너지 635,091 GJ, 용수 958,946톤, 폐기물 106,251톤
+#   - 소방 시스템: 스프링클러, 자동화재탐지(R형), 소화전, 제연, 비상방송, 방재센터
+#   - 전기 시스템: 변압기 5~8대, UPS 300~800kVA, 비상발전기 1,000~1,700kW
+#   - 조명 시스템: DALI 디밍 추정, 주광연동/재실감지 센서
+#   - 보안 시스템: 출입통제, CCTV, 주차관제 (1,403대)
+#   - HVAC 추정: 칠러 4~6대/4,000~5,000RT, AHU 12~18대, DOAS 3~5대, 냉각탑 4~6대
+#   - BMS 추정: BACnet IP/MSTP, DDC 50~80대, ~10,000포인트
+#   - 센서 추정: 온도300~500, 습도50~100, CO2 30~60, 재실100~200, 조도50~100
+#   - 중수도: 수도법 의무 100~200톤/일
+#   - 신재생: 태양광 PV 50~200kWp
+#   - 전체 데이터 확보율: ~60% → ~91% (18 에이전트 기반)
+#   - 데이터 신뢰도 태깅: hasConfidence (confirmed/estimated/inferred)
+#
+# Phase 1.2 반영 완료 (2026-02-10):
+#   - B동 15F 추가 (이전 누락)
+#   - 엘리베이터 모델링: 승용 32대 + 비상화물 5대 = 37대
+#   - DSF 루버/캐비티 온도 센서/계절별 운전모드 상세 추가
+#   - 수자원 시스템 확장: 용수 사용량 계측기, 상수/중수 구분
+#   - 전기 시스템 스켈레톤: Electrical_System, Emergency_Generator
+#
+# Phase 1 반영 완료 (2026-02-10):
+#   - 건축물대장 데이터: 구조(RC), 승강기(37), 주차(1403), 건폐율/용적율
+#   - LEED 확정: NC v2.2, 45점/69점, Gold, 2012.05.23
+#   - G-SEED 확정: 최우수등급 (LH, 2012.04.19)
+#   - ESG: Samsung E&A GHG (DitchCarbon), DJSI, MSCI, 녹색경영대상
+#   - 에너지: 다소비건물 추정 4,598 TOE/년, B동 추정 1,517 TOE/년
+#   - 우수재활용 시스템(Rainwater_Harvesting_System) 추가
+#
+# 잔여 미확보 항목 (~15건, 시설 접근 필수):
+#   - 장비 실제 대수/용량 (칠러, 보일러, AHU 개별 사양 확정)
+#   - BMS 포인트 리스트 (센서 실제 수량/위치/태그명)
+#   - 각 층 평면도 → Zone 세분화
+#   - 실운영 에너지 데이터 (BEMS 실시간)
+#   - BMS 제조사/프로토콜 확정
+#   - 엘리베이터 상세사양 (제조사/모델/속도)
+#   - DSF BMS 연동 상세 (루버 자동제어 확인)
+#   - 중수처리 시스템 상세 (처리용량/저장탱크 실측)
+#   - 전기설비 실측 (수전/변압기/UPS 실사양)
+# =============================================================================
