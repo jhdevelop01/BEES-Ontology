@@ -1,0 +1,337 @@
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix brick: <https://brickschema.org/schema/Brick#> .
+@prefix bldg: <https://example.org/gec-b#> .
+@prefix bees: <https://example.org/bees#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# =============================================================================
+# Samsung GEC B동 SHACL Validation Shapes
+# =============================================================================
+# 목적: Brick Schema 기반 온톨로지의 구조적 무결성 검증
+# 버전: 1.0 (Phase 3)
+# 작성일: 2026-02-10
+# 대상: GEC_B_Ontology.ttl v1.7
+# =============================================================================
+
+# =============================================================================
+# Shape 1: Building 필수 속성 검증
+# =============================================================================
+
+bees:BuildingShape a sh:NodeShape ;
+    sh:targetClass brick:Building ;
+    rdfs:label "Building Validation Shape" ;
+    rdfs:comment "모든 Building 인스턴스의 필수 속성 검증." ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Building에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:isPartOf ;
+        sh:minCount 1 ;
+        sh:message "Building은 반드시 Site의 일부여야 합니다 (brick:isPartOf)." ;
+    ] .
+
+# =============================================================================
+# Shape 2: Floor 필수 속성 검증
+# =============================================================================
+
+bees:FloorShape a sh:NodeShape ;
+    sh:targetClass brick:Floor ;
+    rdfs:label "Floor Validation Shape" ;
+    rdfs:comment "모든 Floor 인스턴스의 필수 속성 검증." ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Floor에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:isPartOf ;
+        sh:minCount 1 ;
+        sh:class brick:Building ;
+        sh:message "Floor는 반드시 Building의 일부여야 합니다." ;
+    ] .
+
+# =============================================================================
+# Shape 3: HVAC Zone 필수 속성 검증
+# =============================================================================
+
+bees:HVACZoneShape a sh:NodeShape ;
+    sh:targetClass brick:HVAC_Zone ;
+    rdfs:label "HVAC Zone Validation Shape" ;
+    rdfs:comment "모든 HVAC Zone 인스턴스의 필수 속성 검증." ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "HVAC Zone에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:isPartOf ;
+        sh:minCount 1 ;
+        sh:message "HVAC Zone은 반드시 Floor의 일부여야 합니다." ;
+    ] .
+
+# =============================================================================
+# Shape 4: Equipment 필수 속성 검증
+# =============================================================================
+
+bees:ChillerShape a sh:NodeShape ;
+    sh:targetClass brick:Chiller ;
+    rdfs:label "Chiller Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Chiller에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:isPartOf ;
+        sh:minCount 1 ;
+        sh:message "Chiller는 반드시 Plant의 일부여야 합니다." ;
+    ] .
+
+bees:AHUShape a sh:NodeShape ;
+    sh:targetClass brick:AHU ;
+    rdfs:label "AHU Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "AHU에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:isPartOf ;
+        sh:minCount 1 ;
+        sh:message "AHU는 반드시 System의 일부여야 합니다." ;
+    ] .
+
+bees:BoilerShape a sh:NodeShape ;
+    sh:targetClass brick:Boiler ;
+    rdfs:label "Boiler Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Boiler에는 rdfs:label이 필수입니다." ;
+    ] .
+
+# =============================================================================
+# Shape 5: Sensor/Point 필수 속성 검증
+# =============================================================================
+
+bees:TemperatureSensorShape a sh:NodeShape ;
+    sh:targetClass brick:Temperature_Sensor ;
+    rdfs:label "Temperature Sensor Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Temperature Sensor에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path [ sh:alternativePath ( brick:isPointOf brick:hasLocation ) ] ;
+        sh:minCount 1 ;
+        sh:message "Sensor는 isPointOf 또는 hasLocation 중 하나 이상 필요합니다." ;
+    ] .
+
+bees:CO2SensorShape a sh:NodeShape ;
+    sh:targetClass brick:CO2_Sensor ;
+    rdfs:label "CO2 Sensor Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "CO2 Sensor에는 rdfs:label이 필수입니다." ;
+    ] .
+
+# =============================================================================
+# Shape 6: Estimated Data Confidence 검증
+# =============================================================================
+
+bees:EstimatedDataShape a sh:NodeShape ;
+    sh:targetSubjectsOf bees:hasConfidence ;
+    rdfs:label "Data Confidence Validation Shape" ;
+    rdfs:comment "hasConfidence 속성을 가진 모든 인스턴스의 값 검증." ;
+
+    sh:property [
+        sh:path bees:hasConfidence ;
+        sh:in ( "confirmed" "estimated" "inferred" ) ;
+        sh:message "hasConfidence 값은 confirmed, estimated, inferred 중 하나여야 합니다." ;
+    ] .
+
+bees:EstimatedRangeShape a sh:NodeShape ;
+    sh:targetSubjectsOf bees:estimatedRange ;
+    rdfs:label "Estimated Range Requires Confidence" ;
+    rdfs:comment "estimatedRange가 있으면 hasConfidence도 있어야 합니다." ;
+
+    sh:property [
+        sh:path bees:hasConfidence ;
+        sh:minCount 1 ;
+        sh:message "estimatedRange가 있으면 hasConfidence가 필수입니다." ;
+    ] .
+
+# =============================================================================
+# Shape 7: LEED Category Score 검증
+# =============================================================================
+
+bees:LEEDCategoryShape a sh:NodeShape ;
+    sh:targetClass bees:LEED_Category_Score ;
+    rdfs:label "LEED Category Score Validation Shape" ;
+
+    sh:property [
+        sh:path bees:leedCategory ;
+        sh:minCount 1 ;
+        sh:message "LEED Category Score에는 leedCategory가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:achievedScore ;
+        sh:minCount 1 ;
+        sh:datatype xsd:integer ;
+        sh:message "LEED Category Score에는 achievedScore (정수)가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:availableScore ;
+        sh:minCount 1 ;
+        sh:datatype xsd:integer ;
+        sh:message "LEED Category Score에는 availableScore (정수)가 필수입니다." ;
+    ] .
+
+# =============================================================================
+# Shape 8: G-SEED Category Score 검증
+# =============================================================================
+
+bees:GSEEDCategoryShape a sh:NodeShape ;
+    sh:targetClass bees:GSEED_Category_Score ;
+    rdfs:label "G-SEED Category Score Validation Shape" ;
+
+    sh:property [
+        sh:path bees:gseedCategory ;
+        sh:minCount 1 ;
+        sh:message "G-SEED Category Score에는 gseedCategory가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:achievedScore ;
+        sh:minCount 1 ;
+        sh:datatype xsd:integer ;
+        sh:message "G-SEED Category Score에는 achievedScore (정수)가 필수입니다." ;
+    ] .
+
+# =============================================================================
+# Shape 9: ESG Data (GHG Emission) 검증
+# =============================================================================
+
+bees:GHGEmissionShape a sh:NodeShape ;
+    sh:targetClass bees:GHG_Total_Emission ;
+    rdfs:label "GHG Total Emission Validation Shape" ;
+
+    sh:property [
+        sh:path bees:reportingEntity ;
+        sh:minCount 1 ;
+        sh:message "GHG 데이터에는 reportingEntity가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:reportingYear ;
+        sh:minCount 1 ;
+        sh:message "GHG 데이터에는 reportingYear가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:value ;
+        sh:minCount 1 ;
+        sh:message "GHG 데이터에는 value가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:unit ;
+        sh:minCount 1 ;
+        sh:message "GHG 데이터에는 unit이 필수입니다." ;
+    ] .
+
+bees:GHGScope1Shape a sh:NodeShape ;
+    sh:targetClass bees:GHG_Scope1_Emission ;
+    rdfs:label "GHG Scope 1 Emission Validation Shape" ;
+
+    sh:property [
+        sh:path bees:reportingEntity ;
+        sh:minCount 1 ;
+        sh:message "GHG Scope 1 데이터에는 reportingEntity가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:value ;
+        sh:minCount 1 ;
+        sh:message "GHG Scope 1 데이터에는 value가 필수입니다." ;
+    ] .
+
+# =============================================================================
+# Shape 10: Site 구조 검증
+# =============================================================================
+
+bees:SiteShape a sh:NodeShape ;
+    sh:targetClass brick:Site ;
+    rdfs:label "Site Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Site에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:hasPart ;
+        sh:minCount 1 ;
+        sh:message "Site는 최소 1개 Building을 포함해야 합니다." ;
+    ] .
+
+# =============================================================================
+# Shape 11: Energy Breakdown 검증
+# =============================================================================
+
+bees:EnergyBreakdownShape a sh:NodeShape ;
+    sh:targetClass bees:EnergyBreakdown ;
+    rdfs:label "Energy Breakdown Validation Shape" ;
+
+    sh:property [
+        sh:path bees:value ;
+        sh:minCount 1 ;
+        sh:datatype xsd:decimal ;
+        sh:message "Energy Breakdown에는 value (decimal)가 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path bees:unit ;
+        sh:minCount 1 ;
+        sh:message "Energy Breakdown에는 unit이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:isPointOf ;
+        sh:minCount 1 ;
+        sh:message "Energy Breakdown은 건물에 연결되어야 합니다 (isPointOf)." ;
+    ] .
+
+# =============================================================================
+# END OF SHACL SHAPES v1.0
+# =============================================================================
+# 검증 대상: GEC_B_Ontology.ttl v1.7
+# Shape 수: 11개 (Site, Building, Floor, Zone, Equipment x3, Sensor x2,
+#            Confidence, LEED, G-SEED, GHG, EnergyBreakdown)
+# 실행 방법: pyshacl 또는 Apache Jena SHACL validator 사용
+#   $ pip install pyshacl
+#   $ pyshacl -s GEC_B_SHACL.ttl -d GEC_B_Ontology.ttl
+# =============================================================================
