@@ -14,18 +14,11 @@
 |------|------|------|
 | GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (v2.0.1, ~6,830줄, 5,756 트리플, 845 인스턴스) |
 | GEC_B_SHACL.ttl | `ontology/` | SHACL 검증 Shape (v2.0, 19개) |
-| history.md | `_docs/` | 전체 프로젝트 히스토리 (Phase 1~8 상세) |
-| 01_건물_설비_정보.md | `_docs/` | 건물 기본정보, 인증, 입주현황, HVAC, 설비, 스마트빌딩 통합 |
-| 02_에너지_ESG_데이터.md | `_docs/` | 에너지/ESG 데이터 종합 (서울시 실측 포함) |
-| 03_참고자료.md | `_docs/` | Brick Schema 참고정보 + 학술논문/기술참고 |
-| 04_인증_벤치마킹_설비추론.md | `_docs/` | 인증 역분석, 벤치마킹, 설비 추론 |
-| 05_데이터_확보_및_출처추적.md | `_docs/` | 7개 영역 134건 확보 현황 + 데이터 출처/생성과정 추적표 |
-| 06_온톨로지_구축_방법론.md | `_docs/` | 구축 프로세스 재현 가이드 (9단계, 계산식, 체크리스트) |
-| 07_온톨로지_통계_요약.md | `_docs/` | 온톨로지 인스턴스 통계 (rdflib 추출, 845개, 전층 모델) |
+| docker-compose.yml | 루트 | 디지털 트윈 플랫폼 8서비스 Docker 오케스트레이션 |
+| .env | 루트 | 환경변수 (Neo4j, MQTT, InfluxDB, PostgreSQL, 서버 간 URL) |
+| history.md | `_docs/` | **★ 전체 프로젝트 히스토리 (Phase 1~9 상세, 플랫폼 작업 이어가려면 필수 참조)** |
 | 08_개발_원칙.md | `_docs/` | **TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙** (모든 세션 필수 참조) |
-| GEC_B동_온톨로지_통계.xlsx | `_docs/` | 층별 중심 통계 엑셀 |
-| 09_Neo4j_GraphDB.md | `_docs/` | Neo4j 접속 정보, 설정, 임포트 결과, 재임포트 절차, 샘플 쿼리 |
-| GEC_B동_데이터_요청서.pdf | `_docs/` | Phase 2 내부 데이터 요청서 |
+| 10_디지털트윈_플랫폼_설계.md | `_docs/` | 플랫폼 전체 아키텍처 설계서 |
 
 ## 온톨로지 규칙
 - **Brick Schema 1.3+** 준수: Location → System → Equipment → Point 위계
@@ -56,9 +49,73 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
 # v2.0.1: ~6,830줄, 5,756 트리플, 845 인스턴스, 전층 모델 (지하~옥상)
 ```
 
+## 디지털 트윈 IoT 시뮬레이션 플랫폼 (Phase 9)
+
+### 개요
+Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 플랫폼. Phase 1 MVP 완료.
+
+### 아키텍처
+```
+[Frontend :3000] → [Server A Backend :8010] → [Neo4j :7689] (온톨로지)
+                                             → [MQTT :1885] (실시간)
+                                             → [Server B :8011] (제어)
+                                                    ↓
+                                              [Server C :8012] (에뮬레이터)
+                                                    ↓ MQTT
+                                              [Server D :8013] (시계열 저장)
+```
+
+### 서버 구성
+| 서버 | 역할 | 기술스택 | 호스트 포트 |
+|------|------|----------|:----------:|
+| Server A Backend | REST API, SSE, Neo4j 연동 | FastAPI | 8010 |
+| Server A Frontend | 대시보드, 모니터링, 제어 UI | Next.js 14, Tailwind, shadcn/ui | 3000 |
+| Server B | BAS Adapter (프로토콜 게이트웨이) | FastAPI | 8011 |
+| Server C | 가상 건물 에뮬레이터 (센서 데이터 생성) | FastAPI, AsyncIO | 8012 |
+| Server D | Data Historian (시계열 수집/조회) | FastAPI, InfluxDB | 8013 |
+
+### 인프라 (Docker Compose)
+| 서비스 | 호스트 포트 | 인증 |
+|--------|:----------:|------|
+| Mosquitto MQTT | 1885 | 없음 |
+| InfluxDB | 8088 | bees-dev-token |
+| PostgreSQL | 5434 | bees / bees2024 |
+| Neo4j (외부 컨테이너) | 7476/7689 | neo4j / bees2024 |
+
+### Phase 1 MVP 현재 상태
+- ✅ AHU_5F 1대 + 5개 센서 실시간 시뮬레이션 (5초 간격)
+- ✅ SSE 실시간 스트림 (polling 방식, `_event_counter` + `threading.Lock`)
+- ✅ 대시보드 KPI + 모니터링 차트 + 장비 제어 (ON/OFF)
+- ✅ E2E 제어: Frontend → A → B → C → MQTT → A(SSE) → Frontend
+- ✅ Data Historian: MQTT → InfluxDB 배치 저장 + 시계열 조회 API
+
+### Phase 2 미구현 (다음 작업)
+1. **845개 전체 인스턴스 시뮬레이션** — Neo4j에서 자동 로딩 → 프로파일 자동 생성
+2. **온톨로지 그래프 뷰** — Cytoscape.js (`/ontology` 페이지)
+3. **토폴로지 뷰** — 트리뷰 + 층별 레이아웃 (`/topology` 페이지)
+4. **LLM 채팅** — OpenAI GPT Function Calling → Neo4j Cypher (`/chat` 페이지)
+
+### 기동 방법
+```bash
+docker compose up -d                                    # 전체 기동
+curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인
+open http://localhost:3000                               # 프론트엔드
+```
+
+### 주요 기술 결정 사항
+- **MQTT 타임스탬프**: Server C는 ISO 8601 발행, Server A `_parse_ts()`가 Unix로 변환
+- **SSE**: `asyncio.Event` 크로스스레드 불가 → polling 방식 사용 (Python 3.12+)
+- **Neo4j**: docker-compose에서 제거, 기존 `neo4j-bees` 외부 컨테이너 사용 (`host.docker.internal`)
+- **NEXT_PUBLIC_* 환경변수**: 빌드 시 bake됨, 런타임 변경 불가
+
+### 상세 참조
+- **전체 구현 상세/디버깅 이력/다음 작업 가이드**: `_docs/history.md` (섹션 12)
+- **전체 아키텍처 설계서**: `_docs/10_디지털트윈_플랫폼_설계.md`
+
 ## 작업 시작 전
 1. **`_docs/08_개발_원칙.md`를 반드시 읽을 것** — TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙
-2. 프로젝트 맥락이 필요하면 `_docs/history.md`를 읽을 것
+2. **플랫폼 작업 시 `_docs/history.md` 섹션 12를 반드시 읽을 것** — 서버별 API/구현 상세, 디버깅 이력, 미구현 목록
+3. 온톨로지 맥락이 필요하면 `_docs/history.md` 섹션 1~11을 읽을 것
 
 ## 언어
 사용자와의 대화 및 문서 작성은 **한국어**. 온톨로지(TTL) 내 식별자와 기술 용어는 영어.
