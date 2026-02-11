@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.11 (v1.9.1 — Phase 7 자기검토 수정: 비대칭/중복/누락 전면 수정)
+> **최종 업데이트:** 2026.02.11 (v2.0 — Phase 8 에너지 흐름 완성 + 구조적 정합성 강화)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -34,18 +34,18 @@
 
 ---
 
-## 2. 현재 온톨로지 상태 (v1.9.1)
+## 2. 현재 온톨로지 상태 (v2.0)
 
 ### 파일
 | 파일 | 위치 | 규모 |
 |------|------|------|
-| **GEC_B_Ontology.ttl** | `05_온톨로지/` | ~6,400줄, 5,328 트리플 |
-| **GEC_B_SHACL.ttl** | `05_온톨로지/` | 337줄, 11개 Shape |
+| **GEC_B_Ontology.ttl** | `ontology/` | ~6,830줄, 5,756 트리플 |
+| **GEC_B_SHACL.ttl** | `ontology/` | ~480줄, 19개 Shape |
 
 ### 온톨로지 구성
 - **네임스페이스**: `brick:` (Brick Schema), `bldg:` (인스턴스), `bees:` (커스텀), `rdf:`, `rdfs:`, `owl:`, `xsd:`, `unit:`, `schema:`, `ref:`, `tag:`
 - **커스텀 클래스 28개 + 속성 45개** (`bees:` 네임스페이스)
-- **신뢰도 태깅 824개**: `confirmed` 22 / `estimated` 539 / `inferred` 263 / 미태깅 0
+- **신뢰도 태깅 845개**: `confirmed` 25 / `estimated` 539 / `inferred` 284 / 미태깅 0
 - **Site 참조**: `bldg:Samsung_GEC` 12개 트리플 (최소 컨텍스트 + 에너지 실측)
 - **전층 모델링**: 지하(B4F~B1F), 포디움(1F~3F), 오피스(5F~15F 3-Tier), 옥상(RF)
 - **데이터 일관성**: hasPart↔isPartOf 완전 대칭, 고아 엔티티 0개, 중복 인스턴스 0개
@@ -56,26 +56,37 @@
 | Floor | 18 | B4F~RF (18개 층) |
 | HVAC Zone | 60 | 전층 Zone 보유: 오피스 5존/층, 지하/포디움/옥상 용도별 Zone |
 | Room/Space | 57 | 주차장, 기계실, 전기실, 로비, 오픈오피스, 회의실 등 |
-| Equipment | 258 | Chiller(4), Boiler(3), AHU(14), 팬(16), 펌프(10), CC패널(20), 디퓨저(48) 등 |
-| Sensor | 278 | ZAT/ZAH/CO2/CO/플레넘압력/노점/결로/BMS포인트 등 |
+| Equipment | 279 | Chiller(4), Boiler(3), AHU(14), 팬(16), 펌프(13), CC패널(20), 디퓨저(48), 엘리베이터(10+2그룹), FCU(3) 등 |
+| Sensor | 283 | ZAT/ZAH/CO2/CO/플레넘압력/노점/결로/BMS포인트/재실 등 |
 | Command/Setpoint | 83 | 밸브명령, 팬속도, 댐퍼, 온도설정값, VFD속도 등 |
 | System | 22 | HVAC, UFAD, CC, RH, DSF, NP, LS, BAS, 전기, 소방, 보안, 수직이동 등 |
 | Profile (에너지/ESG) | 12 | 월별 에너지 프로파일, GHG, 인증 점수 |
 | 기타 | 36 | DSF 제어 모드, 건물/사이트, 네트워크 등 |
-| **합계** | **824** | |
+| **합계** | **845** | |
 
-### SHACL 검증 Shape 11개
+### SHACL 검증 Shape 19개 (v2.0)
+**기존 11개:**
 1. SiteShape — Site 필수 속성 (label, hasPart)
 2. BuildingShape — Building 필수 속성 (label, isPartOf)
 3. FloorShape — Floor 필수 속성 (label, isPartOf Building)
 4. HVACZoneShape — HVAC Zone 필수 속성 (label, isPartOf)
 5. ChillerShape — Chiller 필수 속성 (label, isPartOf)
 6. AHUShape — AHU 필수 속성 (label, isPartOf)
-7. BoilerShape — Boiler 필수 속성 (label)
+7. BoilerShape — Boiler 필수 속성 (label, isPartOf)
 8. TemperatureSensorShape — 센서 연결 (label, isPointOf/hasLocation)
 9. EstimatedDataShape — hasConfidence 값 범위 (confirmed/estimated/inferred)
 10. LEEDCategoryShape — LEED 크레딧 (category, achieved/available)
 11. GSEEDCategoryShape — G-SEED 분야 (category, achievedScore)
+
+**Phase 8 추가 8개:**
+12. AHUFeedsShape — AHU feeds >= 1
+13. ChillerFeedsShape — Chiller feeds >= 1
+14. PumpFeedsShape — Pump feeds >= 1 (Warning)
+15. CoolingTowerFeedsShape — Cooling Tower feeds >= 1
+16. EquipmentLocationShape — Equipment hasLocation 권장 (Warning)
+17. ElevatorShape — Elevator 필수 속성 (label, hasLocation)
+18. FCUShape — FCU 필수 속성 (label, feeds)
+19. OccupancySensorShape — Occupancy Sensor 연결 (label, isPointOf/hasLocation)
 
 ### 데이터 확보율: 100% (134건)
 | 구분 | 확인 | 추정 | 미확인 | 총 | 확보율 |
@@ -97,35 +108,26 @@
 
 ```
 BEES Ontology/
-├── 01_건물정보/
-│   ├── 01_건물_기본정보.md          # 건축물대장, 건물개요, 층별정보
-│   ├── 02_건물_인증정보.md          # LEED, G-SEED 인증 상세
-│   └── 06_입주현황_이력.md          # 입주사, 임대현황
-├── 02_설비시스템/
-│   ├── 03_HVAC_공조시스템.md        # UFAD+CC+RH 3중 공조, DSF
-│   ├── 04_설비_인프라.md            # 전기/소방/보안/급배수/승강기
-│   └── 05_스마트빌딩_기술.md        # BMS/BAS, DDC, 센서, 자동제어
-├── 03_에너지_ESG/
-│   └── 09_에너지_ESG_데이터.md      # GHG, 에너지사용량, ESG보고서
-├── 04_참고자료/
-│   ├── 08_Brick_Schema_참고정보.md  # Brick Schema 1.3+ 참조
-│   └── 10_학술논문_기술참고.md      # 논문 16편+, 특허 6건
-├── 05_온톨로지/
-│   ├── GEC_B_Ontology.ttl          # ★ 메인 온톨로지 (v1.9)
-│   └── GEC_B_SHACL.ttl             # ★ SHACL 검증 Shape (v1.0)
-└── 06_프로젝트관리/
-    ├── 07_미확보_정보_목록.md       # 미확보 항목 (Phase 5 전수 추정 완료, 0건)
-    ├── 11_데이터_확보_현황.md       # 7개 영역 134건 확보 현황
-    ├── 12_Phase2_데이터_요청서.md   # 내부 데이터 요청서 (59건)
-    ├── 12_Phase2_데이터_요청서_전달용.md
-    ├── 13_인증세부_벤치마킹_설비추론.md  # LEED 크레딧, 유사건물 벤치마킹
-    ├── 14_온톨로지_완성_현황.md     # 온톨로지 완성도 종합
-    ├── 15_온톨로지_구축_방법론.md   # ★ 구축 프로세스 재현 가이드 (1,054줄)
-    ├── 16_데이터_출처_및_생성과정_추적표.md  # ★ 134건 항목별 데이터 출처/생성과정 추적
-    ├── 17_온톨로지_통계_요약.md             # 온톨로지 인스턴스 통계 (rdflib 추출)
-    ├── GEC_B동_온톨로지_통계.xlsx           # ★ 층별 중심 통계 엑셀 (5시트, rdflib 추출)
-    ├── GEC_B동_데이터_요청서_BEES-REQ-2026-001.pdf
-    └── history.md                   # ★ 이 파일 (프로젝트 히스토리)
+├── CLAUDE.md                                  # 프로젝트 설정 및 규칙
+├── ontology/
+│   ├── GEC_B_Ontology.ttl                     # ★ 메인 온톨로지 (v2.0.1)
+│   └── GEC_B_SHACL.ttl                        # ★ SHACL 검증 Shape (v2.0)
+└── _docs/
+    ├── 01_건물_설비_정보.md                    # 건물정보+인증+입주+HVAC+설비+스마트빌딩 (6파일 통합)
+    ├── 02_에너지_ESG_데이터.md                 # GHG, 에너지사용량, ESG보고서
+    ├── 03_참고자료.md                          # Brick Schema + 학술논문 (2파일 통합)
+    ├── 04_인증_벤치마킹_설비추론.md             # LEED 크레딧, 유사건물 벤치마킹
+    ├── 05_데이터_확보_및_출처추적.md            # 확보현황 + 출처추적표 (2파일 통합)
+    ├── 06_온톨로지_구축_방법론.md               # ★ 구축 프로세스 재현 가이드 (1,054줄)
+    ├── 07_온톨로지_통계_요약.md                 # 온톨로지 인스턴스 통계 (rdflib 추출)
+    ├── 08_개발_원칙.md                         # ★ TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙
+    ├── history.md                              # ★ 이 파일 (프로젝트 히스토리)
+    ├── 세션요약_20260211.md                    # 세션별 작업 요약
+    ├── GEC_B동_온톨로지_통계.xlsx               # ★ 층별 중심 통계 엑셀 (5시트, rdflib 추출)
+    ├── GEC_B동_데이터_요청서.pdf                # 내부 데이터 요청서
+    └── 검증_쿼리/
+        ├── SPARQL_검증_쿼리_결과_20260211.md   # SPARQL 10개 쿼리 검증 결과
+        └── rdfs_comment_보강_결과_20260211.md  # rdfs:comment 45건 보강 결과
 ```
 
 ---
@@ -224,7 +226,10 @@ BEES Ontology/
 | v1.6 | 2,070 | 1,464 | Phase 4.1 (서울시 에너지 실측 데이터, EUI 384, B동 교차검증) |
 | v1.7 | 2,938 | 2,024 | Phase 5 (미확보 14건 전수 공학적 추정, 공간모델, BMS아키텍처, 월별에너지) |
 | v1.8 | 4,948 | 3,702 | Phase 6 (6F~15F 3-Tier 층별 설비/센서/공간 모델, +292 인스턴스) |
-| **v1.9** | **6,505** | **5,090** | **Phase 7 (전면 보완: 지하/저층/옥상 + BMS포인트 + 누락시스템 + confidence 전수)** |
+| v1.9 | 6,505 | 5,090 | Phase 7 (전면 보완: 지하/저층/옥상 + BMS포인트 + 누락시스템 + confidence 전수) |
+| v1.9.1 | 6,382 | 5,328 | Phase 7.1 (자기검토: 비대칭25건, 중복제거, hasLocation+isPartOf 보강, Boiler_3 신규) |
+| v2.0 | 6,770 | 5,711 | Phase 8 (에너지 흐름 완성: feeds +78, hasPart 미러링, 엘리베이터 개별화, SHACL v2.0) |
+| **v2.0.1** | **6,830** | **5,756** | **Phase 8.1 (주요 장비/시스템 rdfs:comment 45건 보강, 개발 원칙 문서화)** |
 
 ---
 
@@ -333,6 +338,13 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 | 20 | "온톨로지 기반 통계 집계 + 층별 엑셀" | `17_온톨로지_통계_요약.md` + `GEC_B동_온톨로지_통계.xlsx` 생성 (rdflib SPARQL 추출, 5시트) |
 | 21 | "6F~15F도 5F처럼 설비/센서 넣어줘" + "리서치 기반으로 추정해줘" | Phase 6: v1.7→v1.8, 3-Tier 층별 모델 (+292인스턴스, +1,678트리플), 엑셀/통계 재생성 |
 | 22 | "전체 보완해줘 — 이미 만든 내용까지 검토하고 실제 건물에 맞게" | Phase 7: v1.8→v1.9, 전면 보완 8단계 (+229인스턴스, +1,388트리플), hasLocation 50건 수정, 지하/저층/옥상 모델링, BMS포인트 추가, 누락시스템 6개 생성, confidence 전수태깅(0건 미태깅) |
+| 23 | "Phase 8 계획 세워줘" | Phase 8: v1.9.1→v2.0, 에너지 흐름 완성(feeds +78), hasPart 미러링(6시스템), 엘리베이터 개별화(10대), 2F/3F 보강, SHACL v2.0(19 shapes) |
+| 24 | "검증 쿼리 결과를 파일로 저장해줘" | `_docs/검증_쿼리/SPARQL_검증_쿼리_결과_20260211.md` 생성 (SPARQL 10개 쿼리) |
+| 25 | "온톨로지가 LLM 자연어 쿼리에 적합한지 평가" | LLM 적합성 분석: 83/100점, 한글 라벨 100%, 관계 3,349개, Neo4j 임포트 준비 완료 |
+| 26 | "개발 원칙 파일 생성해줘" | `_docs/08_개발_원칙.md` 생성 (TTL-First 원칙, Neo4j 동기화 규칙, 변경 워크플로우) |
+| 27 | "rdfs:comment 보강해줘" | v2.0→v2.0.1, 주요 장비/시스템 45건 comment 추가 (5,711→5,756 트리플) |
+| 28 | "보강 결과 파일로 저장해줘" | `_docs/검증_쿼리/rdfs_comment_보강_결과_20260211.md` 생성 |
+| 29 | "폴더 정리해줘 — Docs 폴더 생성, 통합, 중복 제거" | 7개 폴더→2개(Ontology+Docs), 28파일→16파일, 10파일→3파일 통합, 5파일 삭제, 전체 경로 참조 업데이트 |
 
 ---
 
@@ -342,19 +354,19 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 ```python
 from rdflib import Graph
 g = Graph()
-g.parse("05_온톨로지/GEC_B_Ontology.ttl", format="turtle")
+g.parse("ontology/GEC_B_Ontology.ttl", format="turtle")
 print(f"트리플 수: {len(g)}")  # 예상: 3,702
 ```
 
 ### SHACL 유효성 검증
 ```bash
 pip install pyshacl
-pyshacl -s 05_온톨로지/GEC_B_SHACL.ttl -d 05_온톨로지/GEC_B_Ontology.ttl
+pyshacl -s ontology/GEC_B_SHACL.ttl -d ontology/GEC_B_Ontology.ttl
 ```
 
 ### 범위 검증 (Samsung_GEC 참조 확인)
 ```bash
-grep -c "Samsung_GEC" 05_온톨로지/GEC_B_Ontology.ttl  # 예상: ~12 (Site 최소 컨텍스트 + 에너지 실측)
+grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl  # 예상: ~12 (Site 최소 컨텍스트 + 에너지 실측)
 ```
 
 ---

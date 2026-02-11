@@ -12,17 +12,19 @@
 ## 핵심 파일
 | 파일 | 위치 | 설명 |
 |------|------|------|
-| GEC_B_Ontology.ttl | `05_온톨로지/` | 메인 온톨로지 (v1.9.1, ~6,400줄, 5,328 트리플) |
-| GEC_B_SHACL.ttl | `05_온톨로지/` | SHACL 검증 Shape (11개) |
-| history.md | `06_프로젝트관리/` | 전체 프로젝트 히스토리 (Phase 1~5 상세) |
-| 14_온톨로지_완성_현황.md | `06_프로젝트관리/` | 온톨로지 완성도 종합 (100%, 134건) |
-| 11_데이터_확보_현황.md | `06_프로젝트관리/` | 7개 영역 134건 확보 현황 |
-| 07_미확보_정보_목록.md | `06_프로젝트관리/` | 미확보 0건 (Phase 5에서 전수 추정 완료) |
-| 15_온톨로지_구축_방법론.md | `06_프로젝트관리/` | 구축 프로세스 재현 가이드 (9단계, 계산식, 체크리스트) |
-| 16_데이터_출처_및_생성과정_추적표.md | `06_프로젝트관리/` | 134건 항목별 데이터 출처 및 수집/생성 과정 추적 |
-| 17_온톨로지_통계_요약.md | `06_프로젝트관리/` | 온톨로지 인스턴스 통계 (rdflib 추출, 824개 인스턴스, 전층 모델) |
-| GEC_B동_온톨로지_통계.xlsx | `06_프로젝트관리/` | 층별 중심 통계 엑셀 (5시트: 층별종합/상세/전체인스턴스/feeds/요약) |
-| 09_에너지_ESG_데이터.md | `03_에너지_ESG/` | 에너지/ESG 데이터 종합 (서울시 실측 포함) |
+| GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (v2.0.1, ~6,830줄, 5,756 트리플, 845 인스턴스) |
+| GEC_B_SHACL.ttl | `ontology/` | SHACL 검증 Shape (v2.0, 19개) |
+| history.md | `_docs/` | 전체 프로젝트 히스토리 (Phase 1~8 상세) |
+| 01_건물_설비_정보.md | `_docs/` | 건물 기본정보, 인증, 입주현황, HVAC, 설비, 스마트빌딩 통합 |
+| 02_에너지_ESG_데이터.md | `_docs/` | 에너지/ESG 데이터 종합 (서울시 실측 포함) |
+| 03_참고자료.md | `_docs/` | Brick Schema 참고정보 + 학술논문/기술참고 |
+| 04_인증_벤치마킹_설비추론.md | `_docs/` | 인증 역분석, 벤치마킹, 설비 추론 |
+| 05_데이터_확보_및_출처추적.md | `_docs/` | 7개 영역 134건 확보 현황 + 데이터 출처/생성과정 추적표 |
+| 06_온톨로지_구축_방법론.md | `_docs/` | 구축 프로세스 재현 가이드 (9단계, 계산식, 체크리스트) |
+| 07_온톨로지_통계_요약.md | `_docs/` | 온톨로지 인스턴스 통계 (rdflib 추출, 845개, 전층 모델) |
+| 08_개발_원칙.md | `_docs/` | **TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙** (모든 세션 필수 참조) |
+| GEC_B동_온톨로지_통계.xlsx | `_docs/` | 층별 중심 통계 엑셀 |
+| GEC_B동_데이터_요청서.pdf | `_docs/` | Phase 2 내부 데이터 요청서 |
 
 ## 온톨로지 규칙
 - **Brick Schema 1.3+** 준수: Location → System → Equipment → Point 위계
@@ -35,18 +37,19 @@
 ## 검증 명령
 ```bash
 # TTL 구문 검증
-python3 -c "from rdflib import Graph; g=Graph(); g.parse('05_온톨로지/GEC_B_Ontology.ttl', format='turtle'); print(f'트리플: {len(g)}')"
+python3 -c "from rdflib import Graph; g=Graph(); g.parse('ontology/GEC_B_Ontology.ttl', format='turtle'); print(f'트리플: {len(g)}')"
 
 # SHACL 유효성 검증
-pyshacl -s 05_온톨로지/GEC_B_SHACL.ttl -d 05_온톨로지/GEC_B_Ontology.ttl
+pyshacl -s ontology/GEC_B_SHACL.ttl -d ontology/GEC_B_Ontology.ttl
 
 # 범위 검증 (Site 참조 ~12개 허용 - 최소 컨텍스트 + 에너지 실측)
-grep -c "Samsung_GEC" 05_온톨로지/GEC_B_Ontology.ttl
-# v1.9: ~6,500줄, 5,090 트리플, 798 인스턴스, 전층 모델 (지하~옥상)
+grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
+# v2.0.1: ~6,830줄, 5,756 트리플, 845 인스턴스, 전층 모델 (지하~옥상)
 ```
 
 ## 작업 시작 전
-새 세션에서 프로젝트 맥락이 필요하면 `06_프로젝트관리/history.md`를 먼저 읽을 것.
+1. **`_docs/08_개발_원칙.md`를 반드시 읽을 것** — TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙
+2. 프로젝트 맥락이 필요하면 `_docs/history.md`를 읽을 것
 
 ## 언어
 사용자와의 대화 및 문서 작성은 **한국어**. 온톨로지(TTL) 내 식별자와 기술 용어는 영어.

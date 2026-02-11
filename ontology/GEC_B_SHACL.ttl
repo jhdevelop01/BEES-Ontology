@@ -10,9 +10,9 @@
 # Samsung GEC B동 SHACL Validation Shapes
 # =============================================================================
 # 목적: Brick Schema 기반 온톨로지의 구조적 무결성 검증
-# 버전: 1.0 (Phase 3)
-# 작성일: 2026-02-10
-# 대상: GEC_B_Ontology.ttl v1.7
+# 버전: 2.0 (Phase 8)
+# 작성일: 2026-02-11
+# 대상: GEC_B_Ontology.ttl v2.0
 # =============================================================================
 
 # =============================================================================
@@ -123,6 +123,12 @@ bees:BoilerShape a sh:NodeShape ;
         sh:path rdfs:label ;
         sh:minCount 1 ;
         sh:message "Boiler에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:isPartOf ;
+        sh:minCount 1 ;
+        sh:message "Boiler는 반드시 Plant의 일부여야 합니다." ;
     ] .
 
 # =============================================================================
@@ -326,11 +332,150 @@ bees:EnergyBreakdownShape a sh:NodeShape ;
     ] .
 
 # =============================================================================
-# END OF SHACL SHAPES v1.0
+# Shape 12: AHU feeds 검증
 # =============================================================================
-# 검증 대상: GEC_B_Ontology.ttl v1.7
-# Shape 수: 11개 (Site, Building, Floor, Zone, Equipment x3, Sensor x2,
-#            Confidence, LEED, G-SEED, GHG, EnergyBreakdown)
+
+bees:AHUFeedsShape a sh:NodeShape ;
+    sh:targetClass brick:AHU ;
+    rdfs:label "AHU Feeds Validation Shape" ;
+    rdfs:comment "AHU는 최소 1개 Zone/System에 feeds 관계가 있어야 합니다." ;
+
+    sh:property [
+        sh:path brick:feeds ;
+        sh:minCount 1 ;
+        sh:message "AHU에는 최소 1개의 feeds 관계가 필요합니다." ;
+    ] .
+
+# =============================================================================
+# Shape 13: Chiller feeds 검증
+# =============================================================================
+
+bees:ChillerFeedsShape a sh:NodeShape ;
+    sh:targetClass brick:Chiller ;
+    rdfs:label "Chiller Feeds Validation Shape" ;
+    rdfs:comment "Chiller는 최소 1개의 Pump 또는 Cooling Tower에 feeds 관계가 있어야 합니다." ;
+
+    sh:property [
+        sh:path brick:feeds ;
+        sh:minCount 1 ;
+        sh:message "Chiller에는 최소 1개의 feeds 관계가 필요합니다." ;
+    ] .
+
+# =============================================================================
+# Shape 14: Pump feeds 검증
+# =============================================================================
+
+bees:PumpFeedsShape a sh:NodeShape ;
+    sh:targetClass brick:Pump ;
+    rdfs:label "Pump Feeds Validation Shape" ;
+    rdfs:comment "Pump는 최소 1개의 feeds 관계가 있어야 합니다." ;
+    sh:severity sh:Warning ;
+
+    sh:property [
+        sh:path brick:feeds ;
+        sh:minCount 1 ;
+        sh:message "Pump에는 최소 1개의 feeds 관계가 권장됩니다." ;
+    ] .
+
+# =============================================================================
+# Shape 15: Cooling Tower feeds 검증
+# =============================================================================
+
+bees:CoolingTowerFeedsShape a sh:NodeShape ;
+    sh:targetClass brick:Cooling_Tower ;
+    rdfs:label "Cooling Tower Feeds Validation Shape" ;
+
+    sh:property [
+        sh:path brick:feeds ;
+        sh:minCount 1 ;
+        sh:message "Cooling Tower에는 최소 1개의 feeds 관계가 필요합니다." ;
+    ] .
+
+# =============================================================================
+# Shape 16: Equipment hasLocation 권장
+# =============================================================================
+
+bees:EquipmentLocationShape a sh:NodeShape ;
+    sh:targetClass brick:Equipment ;
+    rdfs:label "Equipment Location Validation Shape" ;
+    rdfs:comment "Equipment에는 hasLocation이 권장됩니다." ;
+    sh:severity sh:Warning ;
+
+    sh:property [
+        sh:path brick:hasLocation ;
+        sh:minCount 1 ;
+        sh:message "Equipment에는 hasLocation이 권장됩니다." ;
+    ] .
+
+# =============================================================================
+# Shape 17: Elevator 필수 속성 검증
+# =============================================================================
+
+bees:ElevatorShape a sh:NodeShape ;
+    sh:targetClass brick:Elevator ;
+    rdfs:label "Elevator Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Elevator에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:hasLocation ;
+        sh:minCount 1 ;
+        sh:message "Elevator에는 hasLocation이 필수입니다." ;
+    ] .
+
+# =============================================================================
+# Shape 18: Fan Coil Unit 검증
+# =============================================================================
+
+bees:FCUShape a sh:NodeShape ;
+    sh:targetClass brick:Fan_Coil_Unit ;
+    rdfs:label "Fan Coil Unit Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "FCU에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path brick:feeds ;
+        sh:minCount 1 ;
+        sh:message "FCU에는 feeds 관계가 필요합니다." ;
+    ] .
+
+# =============================================================================
+# Shape 19: Occupancy Sensor 검증
+# =============================================================================
+
+bees:OccupancySensorShape a sh:NodeShape ;
+    sh:targetClass brick:Occupancy_Sensor ;
+    rdfs:label "Occupancy Sensor Validation Shape" ;
+
+    sh:property [
+        sh:path rdfs:label ;
+        sh:minCount 1 ;
+        sh:message "Occupancy Sensor에는 rdfs:label이 필수입니다." ;
+    ] ;
+
+    sh:property [
+        sh:path [ sh:alternativePath ( brick:isPointOf brick:hasLocation ) ] ;
+        sh:minCount 1 ;
+        sh:message "Occupancy Sensor는 isPointOf 또는 hasLocation이 필요합니다." ;
+    ] .
+
+# =============================================================================
+# END OF SHACL SHAPES v2.0
+# =============================================================================
+# 검증 대상: GEC_B_Ontology.ttl v2.0
+# Shape 수: 19개
+#   기존 11개: Site, Building, Floor, Zone, Chiller, AHU, Boiler,
+#              Temperature/CO2 Sensor, Confidence, LEED, G-SEED, GHG, EnergyBreakdown
+#   추가 8개: AHU feeds, Chiller feeds, Pump feeds, CT feeds,
+#             Equipment location, Elevator, FCU, Occupancy Sensor
 # 실행 방법: pyshacl 또는 Apache Jena SHACL validator 사용
 #   $ pip install pyshacl
 #   $ pyshacl -s GEC_B_SHACL.ttl -d GEC_B_Ontology.ttl

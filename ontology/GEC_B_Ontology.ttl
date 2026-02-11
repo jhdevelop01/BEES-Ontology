@@ -14,8 +14,8 @@
 # Samsung GEC B동 Brick Schema 온톨로지
 # =============================================================================
 # 프로젝트: 삼성물산 GEC B동 Brick Schema 기반 빌딩 온톨로지
-# 작성일: 2026-02-10
-# 버전: 1.9.1 (Phase 7 — 전면 보완 + 자기검토 수정)
+# 작성일: 2026-02-11
+# 버전: 2.0 (Phase 8 — 에너지 흐름 완성 + 구조적 정합성 강화)
 # 기반: Brick Schema 1.3+
 # 범위: GEC B동 전용 — Location, Equipment, Point, System 전체 모델링
 # =============================================================================
@@ -465,6 +465,9 @@ bldg:GEC_Tower_B a brick:Building ;
     brick:hasPart bldg:B_B3F ;
     brick:hasPart bldg:B_B4F ;
     brick:hasPart bldg:B_RF ;
+    brick:isFedBy bldg:FCU_Group ;
+    brick:isFedBy bldg:Rainwater_Pump ;
+    brick:isFedBy bldg:Water_Supply_Pump_1 ;
     brick:isPartOf bldg:Samsung_GEC .
 
 bldg:Samsung_GEC a brick:Site ;
@@ -648,6 +651,8 @@ bldg:Parking_Zone_B4F a brick:HVAC_Zone ;
     rdfs:label "B동 B4F 주차장 환기존" ;
     rdfs:comment "지하4층 주차장. CO 농도 기반 환기팬 제어." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Exhaust_Fan_B4F ;
+    brick:isFedBy bldg:Supply_Fan_B4F ;
     brick:isPartOf bldg:B_B4F .
 
 # --- B3F ---
@@ -655,6 +660,8 @@ bldg:Parking_Zone_B3F a brick:HVAC_Zone ;
     rdfs:label "B동 B3F 주차장 환기존" ;
     rdfs:comment "지하3층 주차장. CO 농도 기반 환기팬 제어." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Exhaust_Fan_B3F ;
+    brick:isFedBy bldg:Supply_Fan_B3F ;
     brick:isPartOf bldg:B_B3F .
 
 # --- B2F ---
@@ -668,6 +675,8 @@ bldg:Parking_Zone_B2F a brick:HVAC_Zone ;
     rdfs:label "B동 B2F 주차장 환기존" ;
     rdfs:comment "지하2층 주차장 영역. CO 농도 기반 환기팬 제어." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Exhaust_Fan_B2F ;
+    brick:isFedBy bldg:Supply_Fan_B2F ;
     brick:isPartOf bldg:B_B2F .
 
 # --- B1F ---
@@ -675,6 +684,7 @@ bldg:Cafeteria_Zone_B1F a brick:HVAC_Zone ;
     rdfs:label "B동 B1F 구내식당 공조존" ;
     rdfs:comment "지하1층 구내식당. 주방배기 + 급기 제어." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Kitchen_Exhaust_Fan_B1F ;
     brick:isPartOf bldg:B_B1F .
 
 bldg:Mechanical_Zone_B1F a brick:HVAC_Zone ;
@@ -688,6 +698,9 @@ bldg:Lobby_Zone_1F a brick:HVAC_Zone ;
     rdfs:label "B동 1F 로비 공조존" ;
     rdfs:comment "1층 메인로비. 에어커튼 + PAC 냉난방 제어." ;
     bees:hasConfidence "inferred" ;
+    brick:isFedBy bldg:AHU_UFAD_11 ;
+    brick:isFedBy bldg:Air_Curtain_1F ;
+    brick:isFedBy bldg:PAC_Lobby_1F ;
     brick:isPartOf bldg:B_1F .
 
 # --- 2F ---
@@ -695,6 +708,8 @@ bldg:Lounge_Zone_2F a brick:HVAC_Zone ;
     rdfs:label "B동 2F 라운지 공조존" ;
     rdfs:comment "2층 라운지/공용공간. 전용 AHU 냉난방 제어." ;
     bees:hasConfidence "inferred" ;
+    brick:isFedBy bldg:AHU_UFAD_11 ;
+    brick:isFedBy bldg:FCU_2F ;
     brick:isPartOf bldg:B_2F .
 
 # --- 3F ---
@@ -702,6 +717,9 @@ bldg:Conference_Zone_3F a brick:HVAC_Zone ;
     rdfs:label "B동 3F 회의실 공조존" ;
     rdfs:comment "3층 컨퍼런스센터. CO2 기반 환기 + AHU 냉난방 제어." ;
     bees:hasConfidence "inferred" ;
+    brick:isFedBy bldg:AHU_UFAD_11 ;
+    brick:isFedBy bldg:FCU_3F_1 ;
+    brick:isFedBy bldg:FCU_3F_2 ;
     brick:isPartOf bldg:B_3F .
 
 # --- 5F ---
@@ -1403,6 +1421,7 @@ bldg:BAS a brick:Building_Automation_System ;
     brick:hasPart bldg:BMS_Server ;
     brick:hasPart bldg:DDC_Controller_Group ;
     brick:hasPart bldg:DDC_Controller_Typical ;
+    brick:isFedBy bldg:Electrical_System ;
     brick:isPartOf bldg:GEC_Tower_B .
 
 bldg:CC_System a bees:Chilled_Ceiling_System ;
@@ -1410,6 +1429,47 @@ bldg:CC_System a bees:Chilled_Ceiling_System ;
     rdfs:comment "구리배관 내장 천장패널, 16도C 냉수 순환 복사냉방. PMV -0.1~0.42 (MDPI 논문)." ;
     bees:chilledWaterTemp 16.0 ;
     bees:hasConfidence "estimated" ;
+    brick:hasPart bldg:CC_Distribution_Header_10F ;
+    brick:hasPart bldg:CC_Distribution_Header_11F ;
+    brick:hasPart bldg:CC_Distribution_Header_12F ;
+    brick:hasPart bldg:CC_Distribution_Header_14F ;
+    brick:hasPart bldg:CC_Distribution_Header_15F ;
+    brick:hasPart bldg:CC_Distribution_Header_5F ;
+    brick:hasPart bldg:CC_Distribution_Header_6F ;
+    brick:hasPart bldg:CC_Distribution_Header_7F ;
+    brick:hasPart bldg:CC_Distribution_Header_8F ;
+    brick:hasPart bldg:CC_Distribution_Header_9F ;
+    brick:hasPart bldg:CC_Panel_10F_Int ;
+    brick:hasPart bldg:CC_Panel_10F_West ;
+    brick:hasPart bldg:CC_Panel_11F_Int ;
+    brick:hasPart bldg:CC_Panel_11F_West ;
+    brick:hasPart bldg:CC_Panel_12F_Int ;
+    brick:hasPart bldg:CC_Panel_12F_West ;
+    brick:hasPart bldg:CC_Panel_14F_Int ;
+    brick:hasPart bldg:CC_Panel_14F_West ;
+    brick:hasPart bldg:CC_Panel_15F_Int ;
+    brick:hasPart bldg:CC_Panel_15F_West ;
+    brick:hasPart bldg:CC_Panel_5F_Int ;
+    brick:hasPart bldg:CC_Panel_5F_West ;
+    brick:hasPart bldg:CC_Panel_6F_Int ;
+    brick:hasPart bldg:CC_Panel_6F_West ;
+    brick:hasPart bldg:CC_Panel_7F_Int ;
+    brick:hasPart bldg:CC_Panel_7F_West ;
+    brick:hasPart bldg:CC_Panel_8F_Int ;
+    brick:hasPart bldg:CC_Panel_8F_West ;
+    brick:hasPart bldg:CC_Panel_9F_Int ;
+    brick:hasPart bldg:CC_Panel_9F_West ;
+    brick:hasPart bldg:CC_Pump_1 ;
+    brick:hasPart bldg:CC_Three_Way_Valve_10F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_11F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_12F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_14F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_15F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_5F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_6F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_7F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_8F ;
+    brick:hasPart bldg:CC_Three_Way_Valve_9F ;
     brick:isPartOf bldg:HVAC_System .
 
 bldg:DALI_System a bees:DALI_Lighting_System ;
@@ -1434,6 +1494,16 @@ bldg:DSF_System a bees:Double_Skin_Facade_System ;
     bees:inferenceSource "학술논문 + 특허 (이중외피 설계 표준)" ;
     brick:feeds bldg:NP_System ;
     brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:hasPart bldg:DSF_Cavity_Temp ;
+    brick:hasPart bldg:DSF_Control_Safety ;
+    brick:hasPart bldg:DSF_Control_Summer ;
+    brick:hasPart bldg:DSF_Control_Transition ;
+    brick:hasPart bldg:DSF_Control_Winter ;
+    brick:hasPart bldg:DSF_Inner_Window_West ;
+    brick:hasPart bldg:DSF_Louver_CMD ;
+    brick:hasPart bldg:DSF_Louver_West ;
+    brick:hasPart bldg:DSF_Vent_CMD ;
+    brick:hasPart bldg:DSF_West_Unit ;
     brick:isPartOf bldg:HVAC_System .
 
 bldg:Domestic_Water_System a brick:Water_System ;
@@ -1441,6 +1511,8 @@ bldg:Domestic_Water_System a brick:Water_System ;
     rdfs:comment "상수도 급수 + 급탕. 2,000명 규모." ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "건축물 위생설비 기준, 수도법" ;
+    brick:feeds bldg:Water_Supply_Pump_1 ;
+    brick:feeds bldg:Water_Supply_Pump_2 ;
     brick:hasLocation bldg:GEC_Tower_B ;
     brick:hasPart bldg:Pressure_Tank ;
     brick:hasPart bldg:Water_Meter_Main ;
@@ -1467,6 +1539,11 @@ bldg:Electrical_System a brick:Electrical_System ;
     bees:estimatedRange "B동 수전 8,000~12,000 kVA" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "전기사업법, 벤치마킹 원단위 130~200 kVA/1000m2" ;
+    brick:feeds bldg:BAS ;
+    brick:feeds bldg:Chiller_Plant ;
+    brick:feeds bldg:HVAC_System ;
+    brick:feeds bldg:Lighting_System ;
+    brick:feeds bldg:Vertical_Transport_System ;
     brick:hasLocation bldg:GEC_Tower_B ;
     brick:hasPart bldg:Transformer_Group ;
     brick:hasPart bldg:UPS_System ;
@@ -1507,30 +1584,40 @@ bldg:HVAC_System a brick:HVAC_System ;
     brick:hasPart bldg:CC_System ;
     brick:hasPart bldg:Chiller_Plant ;
     brick:hasPart bldg:DSF_System ;
+    brick:hasPart bldg:FCU_2F ;
+    brick:hasPart bldg:FCU_3F_1 ;
+    brick:hasPart bldg:FCU_3F_2 ;
     brick:hasPart bldg:NP_System ;
     brick:hasPart bldg:RH_System ;
     brick:hasPart bldg:UFAD_System ;
+    brick:isFedBy bldg:Electrical_System ;
     brick:isPartOf bldg:BAS .
 
 bldg:LS_System a bees:Light_Shelf_System ;
     rdfs:label "가변형 외부 라이트셀프 시스템" ;
     rdfs:comment "일조량 수확. 여름 태양열 저감, 겨울 태양열 최대화. LEED IEQc8 자연채광." ;
     bees:hasConfidence "estimated" ;
+    brick:hasPart bldg:LS_Angle_CMD ;
+    brick:hasPart bldg:Light_Shelf_West ;
     brick:isPartOf bldg:Lighting_System .
 
 bldg:Lighting_System a brick:Lighting_System ;
     rdfs:label "GEC B동 조명 시스템" ;
+    rdfs:comment "조명 시스템. LED 조명, 일광연동 디밍, 재실감지 자동 소등, DALI 프로토콜 기반 제어" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:GEC_Tower_B ;
     brick:hasPart bldg:DALI_System ;
     brick:hasPart bldg:Daylight_Sensor_Group ;
     brick:hasPart bldg:Occupancy_Sensor_Lighting_Group ;
+    brick:isFedBy bldg:Electrical_System ;
     brick:isPartOf bldg:BAS .
 
 bldg:NP_System a bees:Night_Purge_System ;
     rdfs:label "야간 외기냉방 시스템" ;
     rdfs:comment "외기온도 조건부 댐퍼 개방으로 슬래브 축냉. 냉방부하 ~21% 절감 (학술논문)." ;
     bees:hasConfidence "estimated" ;
+    brick:hasPart bldg:NP_Damper_CMD ;
+    brick:hasPart bldg:Night_Purge_Damper ;
     brick:isPartOf bldg:HVAC_System .
 
 bldg:Parking_Ventilation_System a brick:HVAC_System ;
@@ -1552,6 +1639,36 @@ bldg:RH_System a bees:Radiant_Heating_System ;
     rdfs:label "복사난방 시스템" ;
     rdfs:comment "온수 순환 복사패널 난방." ;
     bees:hasConfidence "estimated" ;
+    brick:hasPart bldg:RH_Distribution_Header_10F ;
+    brick:hasPart bldg:RH_Distribution_Header_11F ;
+    brick:hasPart bldg:RH_Distribution_Header_12F ;
+    brick:hasPart bldg:RH_Distribution_Header_14F ;
+    brick:hasPart bldg:RH_Distribution_Header_15F ;
+    brick:hasPart bldg:RH_Distribution_Header_5F ;
+    brick:hasPart bldg:RH_Distribution_Header_6F ;
+    brick:hasPart bldg:RH_Distribution_Header_7F ;
+    brick:hasPart bldg:RH_Distribution_Header_8F ;
+    brick:hasPart bldg:RH_Distribution_Header_9F ;
+    brick:hasPart bldg:RH_Panel_10F_Int ;
+    brick:hasPart bldg:RH_Panel_11F_Int ;
+    brick:hasPart bldg:RH_Panel_12F_Int ;
+    brick:hasPart bldg:RH_Panel_14F_Int ;
+    brick:hasPart bldg:RH_Panel_15F_Int ;
+    brick:hasPart bldg:RH_Panel_5F_Int ;
+    brick:hasPart bldg:RH_Panel_6F_Int ;
+    brick:hasPart bldg:RH_Panel_7F_Int ;
+    brick:hasPart bldg:RH_Panel_8F_Int ;
+    brick:hasPart bldg:RH_Panel_9F_Int ;
+    brick:hasPart bldg:RH_Three_Way_Valve_10F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_11F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_12F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_14F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_15F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_5F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_6F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_7F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_8F ;
+    brick:hasPart bldg:RH_Three_Way_Valve_9F ;
     brick:isPartOf bldg:HVAC_System .
 
 bldg:Rainwater_System a bees:Rainwater_Harvesting_System ;
@@ -1606,7 +1723,11 @@ bldg:UFAD_System a bees:UFAD_System ;
 
 bldg:Vertical_Transport_System a brick:Equipment_System ;
     rdfs:label "수직이동 시스템 (엘리베이터)" ;
+    rdfs:comment "수직이동 시스템. 승용 8대 + 비상/화물 2대 엘리베이터 총 10대 관리" ;
     bees:hasConfidence "estimated" ;
+    brick:hasPart bldg:Elevator_Group_Emergency ;
+    brick:hasPart bldg:Elevator_Group_Passenger ;
+    brick:isFedBy bldg:Electrical_System ;
     brick:isPartOf bldg:GEC_Tower_B .
 
 bldg:Wastewater_Treatment a bees:Wastewater_Treatment_System ;
@@ -1624,6 +1745,7 @@ bldg:Wastewater_Treatment a bees:Wastewater_Treatment_System ;
 
 bldg:Water_System a brick:Water_System ;
     rdfs:label "B동 수자원 시스템" ;
+    rdfs:comment "급배수 시스템. 상수도 급수, 오배수 처리, 우수 재활용, 중수도 시스템 통합 관리" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:GEC_Tower_B ;
     brick:hasPart bldg:Rainwater_System ;
@@ -1650,11 +1772,13 @@ bldg:AHU_UFAD_1 a brick:AHU ;
     brick:feeds bldg:B_5F_Perimeter_South ;
     brick:feeds bldg:B_5F_Perimeter_West ;
     brick:hasLocation bldg:B_5F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_10 a brick:AHU ;
     rdfs:label "UFAD AHU #10 (15F 담당, 추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 15층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_15F_Interior_Zone ;
@@ -1663,6 +1787,7 @@ bldg:AHU_UFAD_10 a brick:AHU ;
     brick:feeds bldg:B_15F_Perimeter_South ;
     brick:feeds bldg:B_15F_Perimeter_West ;
     brick:hasLocation bldg:B_15F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
@@ -1671,14 +1796,15 @@ bldg:AHU_UFAD_11 a brick:AHU ;
     rdfs:comment "1~3F 포디움 담당 AHU. 로비/편의시설 공조." ;
     bees:airflowRate_CMH 30000.0 ;
     bees:hasConfidence "estimated" ;
-    brick:feeds bldg:B_1F ;
-    brick:feeds bldg:B_2F ;
-    brick:feeds bldg:B_3F ;
+    brick:feeds bldg:Conference_Zone_3F ;
+    brick:feeds bldg:Lobby_Zone_1F ;
+    brick:feeds bldg:Lounge_Zone_2F ;
     brick:hasLocation bldg:B_RF ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_2 a brick:AHU ;
     rdfs:label "UFAD 전용 AHU #2 (추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 6층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_6F_Interior_Zone ;
@@ -1687,11 +1813,13 @@ bldg:AHU_UFAD_2 a brick:AHU ;
     brick:feeds bldg:B_6F_Perimeter_South ;
     brick:feeds bldg:B_6F_Perimeter_West ;
     brick:hasLocation bldg:B_6F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_3 a brick:AHU ;
     rdfs:label "UFAD 전용 AHU #3 (추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 7층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_7F_Interior_Zone ;
@@ -1700,11 +1828,13 @@ bldg:AHU_UFAD_3 a brick:AHU ;
     brick:feeds bldg:B_7F_Perimeter_South ;
     brick:feeds bldg:B_7F_Perimeter_West ;
     brick:hasLocation bldg:B_7F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_4 a brick:AHU ;
     rdfs:label "UFAD AHU #4 (8F 담당, 추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 8층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_8F_Interior_Zone ;
@@ -1713,11 +1843,13 @@ bldg:AHU_UFAD_4 a brick:AHU ;
     brick:feeds bldg:B_8F_Perimeter_South ;
     brick:feeds bldg:B_8F_Perimeter_West ;
     brick:hasLocation bldg:B_8F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_5 a brick:AHU ;
     rdfs:label "UFAD AHU #5 (9F 담당, 추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 9층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_9F_Interior_Zone ;
@@ -1726,11 +1858,13 @@ bldg:AHU_UFAD_5 a brick:AHU ;
     brick:feeds bldg:B_9F_Perimeter_South ;
     brick:feeds bldg:B_9F_Perimeter_West ;
     brick:hasLocation bldg:B_9F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_6 a brick:AHU ;
     rdfs:label "UFAD AHU #6 (10F 담당, 추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 10층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_10F_Interior_Zone ;
@@ -1739,11 +1873,13 @@ bldg:AHU_UFAD_6 a brick:AHU ;
     brick:feeds bldg:B_10F_Perimeter_South ;
     brick:feeds bldg:B_10F_Perimeter_West ;
     brick:hasLocation bldg:B_10F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_7 a brick:AHU ;
     rdfs:label "UFAD AHU #7 (11F 담당, 추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 11층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_11F_Interior_Zone ;
@@ -1752,11 +1888,13 @@ bldg:AHU_UFAD_7 a brick:AHU ;
     brick:feeds bldg:B_11F_Perimeter_South ;
     brick:feeds bldg:B_11F_Perimeter_West ;
     brick:hasLocation bldg:B_11F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_8 a brick:AHU ;
     rdfs:label "UFAD AHU #8 (12F 담당, 추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 12층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_12F_Interior_Zone ;
@@ -1765,11 +1903,13 @@ bldg:AHU_UFAD_8 a brick:AHU ;
     brick:feeds bldg:B_12F_Perimeter_South ;
     brick:feeds bldg:B_12F_Perimeter_West ;
     brick:hasLocation bldg:B_12F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_9 a brick:AHU ;
     rdfs:label "UFAD AHU #9 (14F 담당, 추정)" ;
+    rdfs:comment "바닥급기(UFAD) 공조기, 14층 전용. 이중바닥 플레넘을 통해 급기하며 디퓨저로 분배" ;
     bees:airflowRate_CMH 47000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:B_14F_Interior_Zone ;
@@ -1778,6 +1918,7 @@ bldg:AHU_UFAD_9 a brick:AHU ;
     brick:feeds bldg:B_14F_Perimeter_South ;
     brick:feeds bldg:B_14F_Perimeter_West ;
     brick:hasLocation bldg:B_14F ;
+    brick:isFedBy bldg:CHW_Pump_Group ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
@@ -1786,6 +1927,7 @@ bldg:Air_Curtain_1F a brick:AHU ;
     rdfs:comment "메인 출입구 에어커튼. 외기 침입 방지." ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "대형 로비 출입구 에어커튼 필수" ;
+    brick:feeds bldg:Lobby_Zone_1F ;
     brick:hasLocation bldg:B_1F ;
     brick:isPartOf bldg:HVAC_System .
 
@@ -1798,13 +1940,16 @@ bldg:Boiler_1 a brick:Boiler ;
     bees:hasConfidence "estimated" ;
     bees:heatingCapacity_Mcal 2500.0 ;
     bees:inferenceSource "벤치마킹, 복사난방 효율 반영" ;
+    brick:feeds bldg:HW_Pump_1 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Boiler_Plant .
 
 bldg:Boiler_2 a brick:Boiler ;
     rdfs:label "보일러 #2 (추정)" ;
+    rdfs:comment "고효율 콘덴싱 가스보일러 #2 (추정 3,000MBH). 온수를 생산하여 복사난방 패널과 FCU에 공급" ;
     bees:hasConfidence "estimated" ;
     bees:heatingCapacity_Mcal 2500.0 ;
+    brick:feeds bldg:HW_Pump_1 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Boiler_Plant .
 
@@ -1812,6 +1957,7 @@ bldg:Boiler_3 a brick:Boiler ;
     rdfs:label "보일러 #3" ;
     rdfs:comment "온수 보일러 3호기. 난방/급탕 겸용 추정." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:HW_Pump_1 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Boiler_Plant .
 
@@ -1832,6 +1978,8 @@ bldg:CC_Distribution_Header_10F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_10F_Int ;
     brick:feeds bldg:CC_Panel_10F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_11F a bees:Distribution_Header ;
@@ -1840,6 +1988,8 @@ bldg:CC_Distribution_Header_11F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_11F_Int ;
     brick:feeds bldg:CC_Panel_11F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_12F a bees:Distribution_Header ;
@@ -1848,6 +1998,8 @@ bldg:CC_Distribution_Header_12F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_12F_Int ;
     brick:feeds bldg:CC_Panel_12F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_14F a bees:Distribution_Header ;
@@ -1856,6 +2008,8 @@ bldg:CC_Distribution_Header_14F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_14F_Int ;
     brick:feeds bldg:CC_Panel_14F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_15F a bees:Distribution_Header ;
@@ -1864,6 +2018,8 @@ bldg:CC_Distribution_Header_15F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_15F_Int ;
     brick:feeds bldg:CC_Panel_15F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_5F a bees:Distribution_Header ;
@@ -1872,6 +2028,8 @@ bldg:CC_Distribution_Header_5F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_5F_Int ;
     brick:feeds bldg:CC_Panel_5F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_6F a bees:Distribution_Header ;
@@ -1880,6 +2038,8 @@ bldg:CC_Distribution_Header_6F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_6F_Int ;
     brick:feeds bldg:CC_Panel_6F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_7F a bees:Distribution_Header ;
@@ -1888,6 +2048,8 @@ bldg:CC_Distribution_Header_7F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_7F_Int ;
     brick:feeds bldg:CC_Panel_7F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_8F a bees:Distribution_Header ;
@@ -1896,6 +2058,8 @@ bldg:CC_Distribution_Header_8F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_8F_Int ;
     brick:feeds bldg:CC_Panel_8F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Distribution_Header_9F a bees:Distribution_Header ;
@@ -1904,6 +2068,8 @@ bldg:CC_Distribution_Header_9F a bees:Distribution_Header ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:CC_Panel_9F_Int ;
     brick:feeds bldg:CC_Panel_9F_West ;
+    brick:isFedBy bldg:CC_Pump_1 ;
+    brick:isFedBy bldg:CHW_Pump_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Pump_1 a brick:Chilled_Water_Pump ;
@@ -1912,6 +2078,16 @@ bldg:CC_Pump_1 a brick:Chilled_Water_Pump ;
     bees:estimatedRange "2~4대" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "칠드실링 독립 냉수루프" ;
+    brick:feeds bldg:CC_Distribution_Header_10F ;
+    brick:feeds bldg:CC_Distribution_Header_11F ;
+    brick:feeds bldg:CC_Distribution_Header_12F ;
+    brick:feeds bldg:CC_Distribution_Header_14F ;
+    brick:feeds bldg:CC_Distribution_Header_15F ;
+    brick:feeds bldg:CC_Distribution_Header_5F ;
+    brick:feeds bldg:CC_Distribution_Header_6F ;
+    brick:feeds bldg:CC_Distribution_Header_7F ;
+    brick:feeds bldg:CC_Distribution_Header_8F ;
+    brick:feeds bldg:CC_Distribution_Header_9F ;
     brick:isPartOf bldg:CC_System ;
     brick:isPartOf bldg:Chiller_Plant .
 
@@ -1919,7 +2095,21 @@ bldg:CHW_Pump_1 a brick:Chilled_Water_Pump ;
     rdfs:label "냉수 순환펌프 #1" ;
     rdfs:comment "변속펌프 (Variable Speed) 추정. 대수/유량/양정 미확인." ;
     bees:hasConfidence "estimated" ;
+    brick:feeds bldg:CC_Distribution_Header_10F ;
+    brick:feeds bldg:CC_Distribution_Header_11F ;
+    brick:feeds bldg:CC_Distribution_Header_12F ;
+    brick:feeds bldg:CC_Distribution_Header_14F ;
+    brick:feeds bldg:CC_Distribution_Header_15F ;
+    brick:feeds bldg:CC_Distribution_Header_5F ;
+    brick:feeds bldg:CC_Distribution_Header_6F ;
+    brick:feeds bldg:CC_Distribution_Header_7F ;
+    brick:feeds bldg:CC_Distribution_Header_8F ;
+    brick:feeds bldg:CC_Distribution_Header_9F ;
     brick:hasLocation bldg:B_B1F ;
+    brick:isFedBy bldg:Chiller_1 ;
+    brick:isFedBy bldg:Chiller_2 ;
+    brick:isFedBy bldg:Chiller_3 ;
+    brick:isFedBy bldg:Chiller_4 ;
     brick:isPartOf bldg:Chiller_Plant .
 
 bldg:CHW_Pump_Group a brick:Chilled_Water_Pump ;
@@ -1928,6 +2118,16 @@ bldg:CHW_Pump_Group a brick:Chilled_Water_Pump ;
     bees:estimatedRange "4~6대, 300~500 LPM/대" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "벤치마킹, 칠러 대수 연동" ;
+    brick:feeds bldg:AHU_UFAD_1 ;
+    brick:feeds bldg:AHU_UFAD_10 ;
+    brick:feeds bldg:AHU_UFAD_2 ;
+    brick:feeds bldg:AHU_UFAD_3 ;
+    brick:feeds bldg:AHU_UFAD_4 ;
+    brick:feeds bldg:AHU_UFAD_5 ;
+    brick:feeds bldg:AHU_UFAD_6 ;
+    brick:feeds bldg:AHU_UFAD_7 ;
+    brick:feeds bldg:AHU_UFAD_8 ;
+    brick:feeds bldg:AHU_UFAD_9 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Chiller_Plant .
 
@@ -1935,7 +2135,11 @@ bldg:CW_Pump_1 a brick:Condenser_Water_Pump ;
     rdfs:label "냉각수 순환펌프 #1" ;
     rdfs:comment "대수/유량/양정 미확인." ;
     bees:hasConfidence "estimated" ;
+    brick:feeds bldg:Chiller_Plant ;
     brick:hasLocation bldg:B_B1F ;
+    brick:isFedBy bldg:Cooling_Tower_1 ;
+    brick:isFedBy bldg:Cooling_Tower_2 ;
+    brick:isFedBy bldg:Cooling_Tower_3 ;
     brick:isPartOf bldg:Chiller_Plant .
 
 bldg:CW_Pump_Group a brick:Condenser_Water_Pump ;
@@ -1958,6 +2162,8 @@ bldg:Chiller_1 a brick:Chiller ;
     bees:inferenceSource "벤치마킹 원단위 24 RT/1000m2" ;
     bees:manufacturer "Trane/Carrier (추정, 2012 한국 대형빌딩 주요 공급사)" ;
     bees:modelSeries "원심식 (Centrifugal) 대용량" ;
+    brick:feeds bldg:CHW_Pump_1 ;
+    brick:feeds bldg:Cooling_Tower_1 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Chiller_Plant .
 
@@ -1967,6 +2173,8 @@ bldg:Chiller_2 a brick:Chiller ;
     bees:coolingCapacity_RT 1500.0 ;
     bees:hasConfidence "estimated" ;
     bees:manufacturer "Trane/Carrier (추정)" ;
+    brick:feeds bldg:CHW_Pump_1 ;
+    brick:feeds bldg:Cooling_Tower_2 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Chiller_Plant .
 
@@ -1976,6 +2184,8 @@ bldg:Chiller_3 a brick:Chiller ;
     bees:coolingCapacity_RT 1500.0 ;
     bees:hasConfidence "estimated" ;
     bees:manufacturer "Trane/Carrier (추정)" ;
+    brick:feeds bldg:CHW_Pump_1 ;
+    brick:feeds bldg:Cooling_Tower_3 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Chiller_Plant .
 
@@ -1985,6 +2195,8 @@ bldg:Chiller_4 a brick:Chiller ;
     bees:coolingCapacity_RT 1500.0 ;
     bees:hasConfidence "estimated" ;
     bees:manufacturer "Trane/Carrier (추정)" ;
+    brick:feeds bldg:CHW_Pump_1 ;
+    brick:feeds bldg:Cooling_Tower_1 ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Chiller_Plant .
 
@@ -2006,6 +2218,8 @@ bldg:Chiller_Plant a brick:Chiller_Plant ;
     brick:hasPart bldg:Cooling_Tower_1 ;
     brick:hasPart bldg:Cooling_Tower_2 ;
     brick:hasPart bldg:Cooling_Tower_3 ;
+    brick:isFedBy bldg:CW_Pump_1 ;
+    brick:isFedBy bldg:Electrical_System ;
     brick:isPartOf bldg:HVAC_System .
 
 bldg:Cooling_Tower_1 a brick:Cooling_Tower ;
@@ -2014,19 +2228,28 @@ bldg:Cooling_Tower_1 a brick:Cooling_Tower ;
     bees:estimatedRange "4~6대, 총 5,000~6,500 CRT" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "칠러 용량 x 1.25" ;
+    brick:feeds bldg:CW_Pump_1 ;
     brick:hasLocation bldg:B_RF ;
+    brick:isFedBy bldg:Chiller_1 ;
+    brick:isFedBy bldg:Chiller_4 ;
     brick:isPartOf bldg:Chiller_Plant .
 
 bldg:Cooling_Tower_2 a brick:Cooling_Tower ;
     rdfs:label "냉각탑 #2 (추정)" ;
+    rdfs:comment "개방형 냉각탑 #2. 칠러 냉각수(37→32°C)를 대기와 열교환하여 냉각, 냉각수 펌프와 연동" ;
     bees:hasConfidence "estimated" ;
+    brick:feeds bldg:CW_Pump_1 ;
     brick:hasLocation bldg:B_RF ;
+    brick:isFedBy bldg:Chiller_2 ;
     brick:isPartOf bldg:Chiller_Plant .
 
 bldg:Cooling_Tower_3 a brick:Cooling_Tower ;
     rdfs:label "냉각탑 #3 (추정)" ;
+    rdfs:comment "개방형 냉각탑 #3. 칠러 냉각수(37→32°C)를 대기와 열교환하여 냉각, 냉각수 펌프와 연동" ;
     bees:hasConfidence "estimated" ;
+    brick:feeds bldg:CW_Pump_1 ;
     brick:hasLocation bldg:B_RF ;
+    brick:isFedBy bldg:Chiller_3 ;
     brick:isPartOf bldg:Chiller_Plant .
 
 bldg:DOAS_1 a brick:AHU ;
@@ -2044,6 +2267,7 @@ bldg:DOAS_1 a brick:AHU ;
 
 bldg:DOAS_2 a brick:AHU ;
     rdfs:label "외기조화기 (DOAS/OAU) #2 (추정)" ;
+    rdfs:comment "외기전담 처리 공조기(DOAS) #2. 외기를 필터링·제습하여 UFAD AHU에 공급, 에너지 회수 환기장치(ERV) 내장" ;
     bees:airflowRate_CMH 24000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:UFAD_System ;
@@ -2053,6 +2277,7 @@ bldg:DOAS_2 a brick:AHU ;
 
 bldg:DOAS_3 a brick:AHU ;
     rdfs:label "외기조화기 (DOAS) #3 (추정)" ;
+    rdfs:comment "외기전담 처리 공조기(DOAS) #3. 외기를 필터링·제습하여 UFAD AHU에 공급, 에너지 회수 환기장치(ERV) 내장" ;
     bees:airflowRate_CMH 24000.0 ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:UFAD_System ;
@@ -2060,12 +2285,37 @@ bldg:DOAS_3 a brick:AHU ;
     brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
+bldg:FCU_2F a brick:Fan_Coil_Unit ;
+    rdfs:label "B동 2층 라운지 팬코일유닛" ;
+    rdfs:comment "2층 팬코일유닛. 로비 상부 공간의 개별 냉난방, 냉수/온수 코일 + 송풍팬 구성" ;
+    bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Lounge_Zone_2F ;
+    brick:hasLocation bldg:B_2F ;
+    brick:isPartOf bldg:HVAC_System .
+
+bldg:FCU_3F_1 a brick:Fan_Coil_Unit ;
+    rdfs:label "B동 3층 회의실 팬코일유닛 1" ;
+    rdfs:comment "3층 회의실 팬코일유닛 #1. 개별 냉난방 제어, 냉수/온수 코일 + 송풍팬 구성" ;
+    bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Conference_Zone_3F ;
+    brick:hasLocation bldg:B_3F ;
+    brick:isPartOf bldg:HVAC_System .
+
+bldg:FCU_3F_2 a brick:Fan_Coil_Unit ;
+    rdfs:label "B동 3층 회의실 팬코일유닛 2" ;
+    rdfs:comment "3층 회의실 팬코일유닛 #2. 개별 냉난방 제어, 냉수/온수 코일 + 송풍팬 구성" ;
+    bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Conference_Zone_3F ;
+    brick:hasLocation bldg:B_3F ;
+    brick:isPartOf bldg:HVAC_System .
+
 bldg:FCU_Group a brick:Fan_Coil_Unit ;
     rdfs:label "팬코일유닛 그룹 (특수실)" ;
     rdfs:comment "회의실, 서버실 등 특수 공간 개별 제어. B동 10~30대 추정." ;
     bees:estimatedRange "10~30대" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "특수실 개별 제어 표준" ;
+    brick:feeds bldg:GEC_Tower_B ;
     brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:HVAC_System .
 
@@ -2073,7 +2323,20 @@ bldg:HW_Pump_1 a brick:Hot_Water_Pump ;
     rdfs:label "온수 순환펌프 #1" ;
     rdfs:comment "대수/유량/양정 미확인." ;
     bees:hasConfidence "estimated" ;
+    brick:feeds bldg:RH_Distribution_Header_10F ;
+    brick:feeds bldg:RH_Distribution_Header_11F ;
+    brick:feeds bldg:RH_Distribution_Header_12F ;
+    brick:feeds bldg:RH_Distribution_Header_14F ;
+    brick:feeds bldg:RH_Distribution_Header_15F ;
+    brick:feeds bldg:RH_Distribution_Header_5F ;
+    brick:feeds bldg:RH_Distribution_Header_6F ;
+    brick:feeds bldg:RH_Distribution_Header_7F ;
+    brick:feeds bldg:RH_Distribution_Header_8F ;
+    brick:feeds bldg:RH_Distribution_Header_9F ;
     brick:hasLocation bldg:B_B1F ;
+    brick:isFedBy bldg:Boiler_1 ;
+    brick:isFedBy bldg:Boiler_2 ;
+    brick:isFedBy bldg:Boiler_3 ;
     brick:isPartOf bldg:Boiler_Plant .
 
 bldg:HW_Pump_Group a brick:Hot_Water_Pump ;
@@ -2089,72 +2352,95 @@ bldg:PAC_Lobby_1F a brick:AHU ;
     rdfs:label "1층 로비 공조기 (PAC)" ;
     rdfs:comment "로비 냉난방용 패키지 에어컨 또는 FCU." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Lobby_Zone_1F ;
     brick:hasLocation bldg:B_1F ;
     brick:isPartOf bldg:HVAC_System .
 
 bldg:RH_Distribution_Header_10F a bees:Distribution_Header ;
     rdfs:label "10층 복사난방 분배기" ;
+    rdfs:comment "10층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_10F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_11F a bees:Distribution_Header ;
     rdfs:label "11층 복사난방 분배기" ;
+    rdfs:comment "11층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_11F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_12F a bees:Distribution_Header ;
     rdfs:label "12층 복사난방 분배기" ;
+    rdfs:comment "12층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_12F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_14F a bees:Distribution_Header ;
     rdfs:label "14층 복사난방 분배기" ;
+    rdfs:comment "14층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_14F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_15F a bees:Distribution_Header ;
     rdfs:label "15층 복사난방 분배기" ;
+    rdfs:comment "15층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_15F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_5F a bees:Distribution_Header ;
     rdfs:label "5F 복사난방 분배기" ;
+    rdfs:comment "5층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_5F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_6F a bees:Distribution_Header ;
     rdfs:label "6층 복사난방 분배기" ;
+    rdfs:comment "6층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_6F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_7F a bees:Distribution_Header ;
     rdfs:label "7층 복사난방 분배기" ;
+    rdfs:comment "7층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_7F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_8F a bees:Distribution_Header ;
     rdfs:label "8층 복사난방 분배기" ;
+    rdfs:comment "8층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_8F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Distribution_Header_9F a bees:Distribution_Header ;
     rdfs:label "9층 복사난방 분배기" ;
+    rdfs:comment "9층 복사난방 분배헤더. 온수 공급관에서 분기하여 각 존의 복사패널에 온수 분배" ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:RH_Panel_9F_Int ;
+    brick:isFedBy bldg:HW_Pump_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:Rainwater_Pump a brick:Pump ;
     rdfs:label "우수 재활용 펌프" ;
+    rdfs:comment "빗물 재활용 펌프. 지하 우수저류조에서 중수도 탱크로 빗물을 이송" ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:GEC_Tower_B ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Rainwater_System .
 
@@ -2167,32 +2453,54 @@ bldg:Sewage_Pump_1 a brick:Water_Pump ;
 
 bldg:Sewage_Pump_2 a brick:Water_Pump ;
     rdfs:label "지하 배수펌프 #2 (예비)" ;
+    rdfs:comment "오수 배수 펌프 #2. 지하층 오수를 지상 하수관로로 양수" ;
     bees:hasConfidence "inferred" ;
     brick:hasLocation bldg:B_B4F ;
     brick:isPartOf bldg:Drainage_System .
 
 bldg:Wastewater_Aeration_Pump a brick:Pump ;
     rdfs:label "중수처리 폭기 펌프" ;
+    rdfs:comment "오수처리 폭기 펌프. 오수처리조에서 미생물 분해를 위한 공기 공급" ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Wastewater_Treatment_Tank ;
     brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:Wastewater_Treatment .
 
 bldg:Water_Supply_Pump_1 a brick:Water_Pump ;
     rdfs:label "급수 가압펌프 #1" ;
+    rdfs:comment "급수 가압 펌프 #1. 상수도 수압을 건물 고층부까지 가압하여 공급" ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:GEC_Tower_B ;
     brick:hasLocation bldg:B_B1F ;
+    brick:isFedBy bldg:Domestic_Water_System ;
     brick:isPartOf bldg:Domestic_Water_System .
 
 bldg:Water_Supply_Pump_2 a brick:Water_Pump ;
     rdfs:label "급수 가압펌프 #2 (예비)" ;
+    rdfs:comment "급수 가압 펌프 #2. 상수도 수압을 건물 고층부까지 가압하여 공급" ;
     bees:hasConfidence "inferred" ;
     brick:hasLocation bldg:B_B1F ;
+    brick:isFedBy bldg:Domestic_Water_System ;
     brick:isPartOf bldg:Domestic_Water_System .
 
 
 # =============================================================================
 # SECTION 8: EQUIPMENT — 수직이동 (엘리베이터)
 # =============================================================================
+
+bldg:Elevator_Emergency_1 a brick:Elevator ;
+    rdfs:label "B동 비상용 엘리베이터" ;
+    rdfs:comment "비상용 엘리베이터 #1. 소방 구조 및 장애인 이동용, B4F~15F 운행, 정원 24인" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Emergency .
+
+bldg:Elevator_Freight_1 a brick:Elevator ;
+    rdfs:label "B동 화물용 엘리베이터" ;
+    rdfs:comment "화물용 엘리베이터 #1. 대형 화물·장비 운반, B4F~15F 운행" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Emergency .
 
 bldg:Elevator_Group_Emergency a brick:Elevator ;
     rdfs:label "B동 비상/화물 엘리베이터 (추정 2대)" ;
@@ -2201,7 +2509,9 @@ bldg:Elevator_Group_Emergency a brick:Elevator ;
     bees:estimatedRange "2대 (화물 1 + 비상 1)" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "소방시설법 (11층 이상 비상용 승강기), 화물수송 표준" ;
-    brick:hasLocation bldg:B_1F ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:hasPart bldg:Elevator_Emergency_1 ;
+    brick:hasPart bldg:Elevator_Freight_1 ;
     brick:isPartOf bldg:Vertical_Transport_System .
 
 bldg:Elevator_Group_Passenger a brick:Elevator ;
@@ -2212,8 +2522,72 @@ bldg:Elevator_Group_Passenger a brick:Elevator ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "5분 수송능력 계산 (ASHRAE/건축설비 기준)" ;
     bees:manufacturer "현대엘리베이터/Otis/Mitsubishi (추정)" ;
-    brick:hasLocation bldg:B_1F ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:hasPart bldg:Elevator_Passenger_1 ;
+    brick:hasPart bldg:Elevator_Passenger_2 ;
+    brick:hasPart bldg:Elevator_Passenger_3 ;
+    brick:hasPart bldg:Elevator_Passenger_4 ;
+    brick:hasPart bldg:Elevator_Passenger_5 ;
+    brick:hasPart bldg:Elevator_Passenger_6 ;
+    brick:hasPart bldg:Elevator_Passenger_7 ;
+    brick:hasPart bldg:Elevator_Passenger_8 ;
     brick:isPartOf bldg:Vertical_Transport_System .
+
+bldg:Elevator_Passenger_1 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 1호기" ;
+    rdfs:comment "승용 엘리베이터 #1. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_2 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 2호기" ;
+    rdfs:comment "승용 엘리베이터 #2. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_3 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 3호기" ;
+    rdfs:comment "승용 엘리베이터 #3. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_4 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 4호기" ;
+    rdfs:comment "승용 엘리베이터 #4. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_5 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 5호기" ;
+    rdfs:comment "승용 엘리베이터 #5. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_6 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 6호기" ;
+    rdfs:comment "승용 엘리베이터 #6. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_7 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 7호기" ;
+    rdfs:comment "승용 엘리베이터 #7. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_8 a brick:Elevator ;
+    rdfs:label "B동 승용 엘리베이터 8호기" ;
+    rdfs:comment "승용 엘리베이터 #8. B4F~15F 운행, 정원 24인(1,600kg), 속도 180m/min" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPartOf bldg:Elevator_Group_Passenger .
 
 
 # =============================================================================
@@ -2664,6 +3038,7 @@ bldg:DSF_Louver_CMD a bees:DSF_Louver_Position_Command ;
     rdfs:label "이중외피 루버 개폐 명령" ;
     rdfs:comment "루버 개폐각도 제어. 여름 개방(환기), 겨울 폐쇄(단열), 중간기 부분개방. BMS 연동 여부 미확인 (Phase 2 요청 B-20)." ;
     bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPointOf bldg:DSF_Louver_West .
 
 bldg:DSF_Louver_West a bees:DSF_Louver ;
@@ -2672,6 +3047,7 @@ bldg:DSF_Louver_West a bees:DSF_Louver ;
     rdfs:comment "외측외피 루버. 개폐각도 제어로 일사/환기 조절. BMS 연동 여부 미확인 (Phase 2 요청 B-20)." ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "특허(이중외피 제어), 학술논문 16편+" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPartOf bldg:DSF_West_Unit .
 
 bldg:Damper_CMD_UFAD a brick:Damper_Position_Command ;
@@ -2693,6 +3069,7 @@ bldg:Exhaust_Fan_B2F a brick:Exhaust_Fan ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "주차장법 시행규칙 제6조 (환기장치)" ;
     brick:hasLocation bldg:B_B2F ;
+    brick:isFedBy bldg:Parking_Zone_B2F ;
     brick:isPartOf bldg:Parking_Ventilation_System .
 
 bldg:Exhaust_Fan_B3F a brick:Exhaust_Fan ;
@@ -2701,6 +3078,7 @@ bldg:Exhaust_Fan_B3F a brick:Exhaust_Fan ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "주차장법 시행규칙 제6조 (환기장치)" ;
     brick:hasLocation bldg:B_B3F ;
+    brick:isFedBy bldg:Parking_Zone_B3F ;
     brick:isPartOf bldg:Parking_Ventilation_System .
 
 bldg:Exhaust_Fan_B4F a brick:Exhaust_Fan ;
@@ -2709,6 +3087,7 @@ bldg:Exhaust_Fan_B4F a brick:Exhaust_Fan ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "주차장법 시행규칙 제6조 (환기장치)" ;
     brick:hasLocation bldg:B_B4F ;
+    brick:isFedBy bldg:Parking_Zone_B4F ;
     brick:isPartOf bldg:Parking_Ventilation_System .
 
 bldg:Exhaust_Fan_RF_1 a brick:Exhaust_Fan ;
@@ -3092,12 +3471,14 @@ bldg:Kitchen_Exhaust_Fan_B1F a brick:Exhaust_Fan ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "건축물 위생설비 기준 (주방 환기)" ;
     brick:hasLocation bldg:B_B1F ;
+    brick:isFedBy bldg:Cafeteria_Zone_B1F ;
     brick:isPartOf bldg:Exhaust_Ventilation_System .
 
 bldg:NP_Damper_CMD a brick:Damper_Position_Command ;
     rdfs:label "야간 외기냉방 댐퍼 명령" ;
     rdfs:comment "외기온도 조건부 개방. 슬래브 축냉." ;
     bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:NP_System ;
     brick:isPointOf bldg:Night_Purge_Damper .
 
 bldg:Night_Purge_Damper a brick:Damper ;
@@ -3246,6 +3627,7 @@ bldg:Supply_Fan_B2F a brick:Supply_Fan ;
     rdfs:label "지하2층 급기팬" ;
     rdfs:comment "지하2층 주차장 급기." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Parking_Zone_B2F ;
     brick:hasLocation bldg:B_B2F ;
     brick:isPartOf bldg:Parking_Ventilation_System .
 
@@ -3253,6 +3635,7 @@ bldg:Supply_Fan_B3F a brick:Supply_Fan ;
     rdfs:label "지하3층 급기팬" ;
     rdfs:comment "지하3층 주차장 급기." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Parking_Zone_B3F ;
     brick:hasLocation bldg:B_B3F ;
     brick:isPartOf bldg:Parking_Ventilation_System .
 
@@ -3260,6 +3643,7 @@ bldg:Supply_Fan_B4F a brick:Supply_Fan ;
     rdfs:label "지하4층 급기팬" ;
     rdfs:comment "지하4층 주차장 급기." ;
     bees:hasConfidence "inferred" ;
+    brick:feeds bldg:Parking_Zone_B4F ;
     brick:hasLocation bldg:B_B4F ;
     brick:isPartOf bldg:Parking_Ventilation_System .
 
@@ -3288,6 +3672,7 @@ bldg:Access_Control_System a brick:Equipment ;
     rdfs:label "출입통제 시스템" ;
     rdfs:comment "카드키/생체인증 기반 출입통제. 각 층 + 주출입구 + 지하주차장." ;
     bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Security_System .
 
 bldg:BMS_Server a brick:Controller ;
@@ -3307,6 +3692,7 @@ bldg:BMS_Workstation a brick:Equipment ;
     rdfs:comment "방재센터 모니터링 + 관리사무소 운영용. 그래픽 HMI, 이력 조회, 알람 관리." ;
     bees:estimatedRange "2~3대" ;
     bees:hasConfidence "estimated" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:BAS .
 
 bldg:CCTV_System a brick:Equipment ;
@@ -3519,6 +3905,7 @@ bldg:DSF_Inner_Window_West a brick:HVAC_Equipment ;
     rdfs:label "서향 이중외피 내측 창문" ;
     rdfs:comment "내측외피 개폐 가능 창문. 자연환기 연계." ;
     bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPartOf bldg:DSF_West_Unit .
 
 bldg:DSF_West_Unit a brick:HVAC_Equipment ;
@@ -3536,6 +3923,7 @@ bldg:Emergency_Broadcast a brick:Equipment ;
     rdfs:comment "11층 이상 의무 설치. 각 층 스피커 + 방재실 앰프." ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "소방시설법 (11층 이상)" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Fire_Safety_System .
 
 bldg:Emergency_Communication_System a brick:Equipment ;
@@ -3598,7 +3986,7 @@ bldg:Emergency_Phone_Elevator a brick:Equipment ;
     rdfs:comment "승강기법 의무 설치." ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "승강기 안전관리법" ;
-    brick:hasLocation bldg:B_1F ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Emergency_Communication_System .
 
 bldg:Fire_Detection_System a brick:Equipment ;
@@ -3637,6 +4025,7 @@ bldg:Indoor_Fire_Hydrant a brick:Equipment ;
     rdfs:comment "각 층 복도/로비 설치. 소방시설법 의무. 호스릴 포함 추정." ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "소방시설법" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Fire_Safety_System .
 
 bldg:Intercom_B1F a brick:Equipment ;
@@ -3699,6 +4088,7 @@ bldg:Outdoor_Fire_Hydrant a brick:Equipment ;
     rdfs:comment "건물 외곽 설치. 소방시설법 의무." ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "소방시설법" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Fire_Safety_System .
 
 bldg:PV_Inverter_1 a brick:Equipment ;
@@ -3713,6 +4103,7 @@ bldg:Parking_Management_System a brick:Equipment ;
     rdfs:comment "1,403대 자주식 주차장 관제. LPR(차번인식) 추정." ;
     bees:estimatedRange "1,403대 관리" ;
     bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Security_System .
 
 bldg:Pressure_Controller_UFAD a brick:Controller ;
@@ -3820,6 +4211,7 @@ bldg:Smoke_Control_System a brick:Equipment ;
     rdfs:comment "11층 이상 의무. 특별피난계단 부속실/비상용 승강기 승강장 급기가압 제연." ;
     bees:hasConfidence "inferred" ;
     bees:inferenceSource "소방시설법 (11층 이상)" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Fire_Safety_System .
 
 bldg:Solar_Panel_RF a brick:Equipment ;
@@ -3866,6 +4258,7 @@ bldg:Wastewater_Treatment_Tank a brick:Equipment ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "중수 처리량 64 m³/일 × 1.5일분" ;
     brick:hasLocation bldg:B_B1F ;
+    brick:isFedBy bldg:Wastewater_Aeration_Pump ;
     brick:isPartOf bldg:Wastewater_Treatment .
 
 
@@ -4284,6 +4677,18 @@ bldg:CO2_15F_Int a brick:CO2_Sensor ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_15F_Interior_Zone ;
     brick:isPointOf bldg:B_15F_Interior_Zone .
+
+bldg:CO2_1F a brick:CO2_Sensor ;
+    rdfs:label "B동 1층 로비 CO2 센서" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:B_1F ;
+    brick:isPointOf bldg:Lobby_Zone_1F .
+
+bldg:CO2_2F a brick:CO2_Sensor ;
+    rdfs:label "B동 2층 라운지 CO2 센서" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:B_2F ;
+    brick:isPointOf bldg:Lounge_Zone_2F .
 
 bldg:CO2_3F a brick:CO2_Sensor ;
     rdfs:label "3층 CO2 센서" ;
@@ -4735,6 +5140,7 @@ bldg:DSF_Cavity_Temp a bees:DSF_Cavity_Temperature_Sensor ;
     rdfs:comment "외측-내측 외피 사이 공동(캐비티) 온도. 루버/환기 제어 피드백." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_5F_Perimeter_West ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPointOf bldg:DSF_System .
 
 bldg:Daylight_Sensor_Group a brick:Luminance_Sensor ;
@@ -4814,6 +5220,30 @@ bldg:Dew_Point_Temp_9F a brick:Dew_Point_Temperature_Sensor ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_9F ;
     brick:isPointOf bldg:CC_System .
+
+bldg:Elevator_Emergency_Group_Fault a brick:Fault_Status ;
+    rdfs:label "B동 비상/화물 엘리베이터 그룹 고장 상태" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPointOf bldg:Elevator_Group_Emergency .
+
+bldg:Elevator_Emergency_Group_Status a brick:On_Off_Status ;
+    rdfs:label "B동 비상/화물 엘리베이터 그룹 운행 상태" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPointOf bldg:Elevator_Group_Emergency .
+
+bldg:Elevator_Passenger_Group_Fault a brick:Fault_Status ;
+    rdfs:label "B동 승용 엘리베이터 그룹 고장 상태" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPointOf bldg:Elevator_Group_Passenger .
+
+bldg:Elevator_Passenger_Group_Status a brick:On_Off_Status ;
+    rdfs:label "B동 승용 엘리베이터 그룹 운행 상태" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
+    brick:isPointOf bldg:Elevator_Group_Passenger .
 
 bldg:Energy_Cost_Sensor a bees:Energy_Cost_Sensor ;
     rdfs:label "시장 에너지 비용 센서" ;
@@ -5050,6 +5480,18 @@ bldg:Occ_Sensor_Group a brick:Occupancy_Sensor ;
     bees:inferenceSource "LEED IEQ, 벤치마킹" ;
     brick:isPointOf bldg:BAS .
 
+bldg:Occupancy_2F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 2층 라운지 재실 센서" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:B_2F ;
+    brick:isPointOf bldg:Lounge_Zone_2F .
+
+bldg:Occupancy_3F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 회의실 재실 센서" ;
+    bees:hasConfidence "inferred" ;
+    brick:hasLocation bldg:B_3F ;
+    brick:isPointOf bldg:Conference_Zone_3F .
+
 bldg:Occupancy_Lobby_1F a brick:Occupancy_Sensor ;
     rdfs:label "1층 로비 재실 센서" ;
     bees:hasConfidence "inferred" ;
@@ -5062,6 +5504,7 @@ bldg:Occupancy_Sensor_Lighting_Group a brick:Occupancy_Sensor ;
     bees:estimatedRange "100~200개" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "LEED IEQ, 벤치마킹" ;
+    brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:Lighting_System .
 
 bldg:PV_Energy_Meter a brick:Energy_Sensor ;
@@ -5758,6 +6201,7 @@ bldg:DSF_Vent_CMD a bees:DSF_Vent_Command ;
     rdfs:label "이중외피 환기 명령" ;
     rdfs:comment "서향 이중외피 환기 제어. 외기온도/일사량 연계." ;
     bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPointOf bldg:DSF_West_Unit .
 
 bldg:Dimmer_CMD_Typical a brick:Luminance_Command ;
@@ -5775,6 +6219,7 @@ bldg:LS_Angle_CMD a bees:Light_Shelf_Angle_Command ;
     rdfs:label "라이트셀프 각도 명령" ;
     rdfs:comment "계절/시간별 최적 각도 제어. 일사량 센서 연계." ;
     bees:hasConfidence "estimated" ;
+    brick:isPartOf bldg:LS_System ;
     brick:isPointOf bldg:Light_Shelf_West .
 
 bldg:Plenum_Pressure_SP_10F a brick:Pressure_Setpoint ;
@@ -6270,6 +6715,7 @@ bldg:DSF_Control_Safety a bees:DSF_Control_Mode ;
     rdfs:comment "풍속 > 15 m/s 또는 강우 감지 시 루버 전폐쇄. 화재 감지 시 전폐쇄 + 연기유입 차단." ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "건축법규 안전기준, 소방법" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPointOf bldg:DSF_System .
 
 bldg:DSF_Control_Summer a bees:DSF_Control_Mode ;
@@ -6277,6 +6723,7 @@ bldg:DSF_Control_Summer a bees:DSF_Control_Mode ;
     rdfs:comment "외기온도 > 26°C: 주간 루버 90° 개방(자연환기), 야간 전개방(야간냉각→슬래브 축냉). 캐비티 과열 방지. 풍속 > 15m/s 시 안전폐쇄." ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "특허(이중외피 제어), 학술논문, ASHRAE" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPointOf bldg:DSF_System .
 
 bldg:DSF_Control_Transition a bees:DSF_Control_Mode ;
@@ -6284,6 +6731,7 @@ bldg:DSF_Control_Transition a bees:DSF_Control_Mode ;
     rdfs:comment "5°C ≤ 외기온도 ≤ 26°C: 루버 30~60° 부분 개방. 외기온도 < 실내온도 시 자연환기 활성화. 일사량 연계 각도 최적화." ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "특허(이중외피 제어), 학술논문" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPointOf bldg:DSF_System .
 
 bldg:DSF_Control_Winter a bees:DSF_Control_Mode ;
@@ -6291,6 +6739,7 @@ bldg:DSF_Control_Winter a bees:DSF_Control_Mode ;
     rdfs:comment "외기온도 < 5°C: 루버 0° 폐쇄(이중단열). 캐비티 내 정지공기층 = 단열효과. 태양열 집열(캐비티→실내 전달). 난방부하 ~15-20% 저감." ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "특허(이중외피 제어), 학술논문" ;
+    brick:isPartOf bldg:DSF_System ;
     brick:isPointOf bldg:DSF_System .
 
 bldg:Fire_Control_Room a brick:Location ;
@@ -6368,15 +6817,13 @@ bldg:VFD_Group a brick:VFD ;
     brick:isPointOf bldg:BAS .
 
 # =============================================================================
-# END OF ONTOLOGY v1.9.1
+# END OF ONTOLOGY v2.0
 # =============================================================================
-# Phase 7 자기검토 수정사항 (v1.9 → v1.9.1):
-#   - Fix 1: AHU_UFAD_11 포인트 8개 추가 (포디움 AHU 완성)
-#   - Fix 2: hasPart↔isPartOf 비대칭 25건 수정
-#   - Fix 3: 네이밍 중복 제거 (Mechanical_Room_B1F, Electrical_Room_B2F)
-#   - Fix 4: hasLocation 보완 22건 (장비/환기팬/비상조명 등)
-#   - Fix 5: confidence 기준 통일 (Floor_Diffuser_5F confirmed→estimated)
-#   - Fix 6: isPartOf 누락 71건 (Floor Diffuser→UFAD, 센서→Zone 등)
-#   - Fix 7: Boiler_3 + 5포인트 신규 생성
-#   - 추가: 유령 참조 실체화, 중복 라벨 정리, Vertical_Transport_System 생성
+# Phase 8 변경사항 (v1.9.1 → v2.0):
+#   1. 냉수(CHW)/냉각수(CW)/온수(HW) 순환 feeds 체인 구축
+#   2. 환기/전기/수배관 feeds 보강 + AHU_UFAD_11 feeds Floor→Zone 수정
+#   3. hasPart 정방향 미러링 (CC_System 41, RH_System 30 등 6개 시스템)
+#   4. 2F/3F 저층부 보강 (FCU, CO2, Occupancy 추가)
+#   5. 엘리베이터 개별화 (10대) + 그룹 포인트 + hasLocation 수정
+#   6. SHACL v2.0 (19 shapes)
 # =============================================================================
