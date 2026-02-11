@@ -41,10 +41,7 @@ async def get_dashboard_summary() -> dict[str, Any]:
     avg_temperature = round(sum(temp_values) / len(temp_values), 1) if temp_values else 24.0
 
     # 활성 알람 수 (최근 이벤트에서 alarm 타입 카운트)
-    alarm_count = 0
-    for event in mqtt_service._event_queue:
-        if event.get("type") == "alarm":
-            alarm_count += 1
+    alarm_count = mqtt_service.get_alarm_count()
 
     # 시뮬레이션 상태
     simulation_status = "running" if point_cache else "stopped"

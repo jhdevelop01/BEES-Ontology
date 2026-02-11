@@ -9,8 +9,10 @@ import asyncio
 import json
 import logging
 import time
+import threading
 from typing import Any
 from collections import deque
+from datetime import datetime
 
 import paho.mqtt.client as mqtt
 
@@ -24,15 +26,15 @@ _point_cache: dict[str, dict[str, Any]] = {}
 # 최신 디바이스 상태 캐시 — { device_id: { is_active, mode, ts } }
 _device_cache: dict[str, dict[str, Any]] = {}
 
-# SSE 브로드캐스트용 이벤트 큐 (최근 100건 유지)
-_event_queue: deque[dict[str, Any]] = deque(maxlen=100)
+# SSE 브로드캐스트용 이벤트 큐 (최근 500건 유지)
+_event_queue: deque[dict[str, Any]] = deque(maxlen=500)
 
-# SSE 구독자 알림용 asyncio.Event
-_new_event: asyncio.Event | None = None
+# 이벤트 카운터 (monotonic, thread-safe)
+_event_counter: int = 0
+_counter_lock = threading.Lock()
 
 # MQTT 클라이언트
 _client: mqtt.Client | None = None
-_loop: asyncio.AbstractEventLoop | None = None
 
 
 def _on_connect(client: mqtt.Client, userdata: Any, flags: Any, rc: int, properties: Any = None) -> None:
@@ -47,8 +49,22 @@ def _on_connect(client: mqtt.Client, userdata: Any, flags: Any, rc: int, propert
         logger.warning("MQTT 연결 실패, 코드: %d", rc)
 
 
+def _parse_ts(raw_ts: Any) -> float:
+    """타임스탬프를 Unix timestamp(초)로 변환. ISO 문자열 또는 숫자 지원."""
+    if isinstance(raw_ts, (int, float)):
+        return float(raw_ts)
+    if isinstance(raw_ts, str):
+        try:
+            dt = datetime.fromisoformat(raw_ts)
+            return dt.timestamp()
+        except (ValueError, TypeError):
+            pass
+    return time.time()
+
+
 def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> None:
-    """MQTT 메시지 수신 콜백"""
+    """MQTT 메시지 수신 콜백 (MQTT 백그라운드 스레드에서 호출)"""
+    global _event_counter
     try:
         topic = msg.topic
         payload = json.loads(msg.payload.decode("utf-8"))
@@ -58,34 +74,28 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
             _point_cache[point_id] = {
                 "point_id": point_id,
                 "value": payload.get("value"),
-                "ts": payload.get("ts", time.time()),
+                "ts": _parse_ts(payload.get("ts", time.time())),
                 "unit": payload.get("unit", ""),
                 "quality": payload.get("quality", "good"),
             }
-            # SSE 이벤트 추가
-            event = {
-                "type": "point",
-                "data": _point_cache[point_id],
-            }
+            event = {"type": "point", "data": _point_cache[point_id]}
             _event_queue.append(event)
-            _notify_sse()
+            with _counter_lock:
+                _event_counter += 1
 
         elif topic.startswith("bees/devices/"):
-            # bees/devices/{device_id}/state
             parts = topic.replace("bees/devices/", "").split("/")
             device_id = parts[0]
             _device_cache[device_id] = {
                 "device_id": device_id,
                 "is_active": payload.get("is_active", False),
                 "mode": payload.get("mode", "unknown"),
-                "ts": payload.get("ts", time.time()),
+                "ts": _parse_ts(payload.get("ts", time.time())),
             }
-            event = {
-                "type": "device",
-                "data": _device_cache[device_id],
-            }
+            event = {"type": "device", "data": _device_cache[device_id]}
             _event_queue.append(event)
-            _notify_sse()
+            with _counter_lock:
+                _event_counter += 1
 
         elif topic.startswith("bees/alarms/"):
             severity = topic.replace("bees/alarms/", "")
@@ -94,28 +104,20 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
                 "data": {
                     "severity": severity,
                     **payload,
-                    "ts": payload.get("ts", time.time()),
+                    "ts": _parse_ts(payload.get("ts", time.time())),
                 },
             }
             _event_queue.append(event)
-            _notify_sse()
+            with _counter_lock:
+                _event_counter += 1
 
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         logger.warning("MQTT 메시지 파싱 실패 (%s): %s", msg.topic, e)
 
 
-def _notify_sse() -> None:
-    """SSE 구독자에게 새 이벤트 알림"""
-    global _new_event, _loop
-    if _new_event and _loop:
-        _loop.call_soon_threadsafe(_new_event.set)
-
-
 async def connect() -> None:
     """MQTT 클라이언트 연결 (백그라운드 스레드)"""
-    global _client, _new_event, _loop
-    _loop = asyncio.get_event_loop()
-    _new_event = asyncio.Event()
+    global _client
 
     _client = mqtt.Client(
         mqtt.CallbackAPIVersion.VERSION2,
@@ -126,7 +128,7 @@ async def connect() -> None:
 
     try:
         _client.connect_async(MQTT_BROKER, MQTT_PORT, keepalive=60)
-        _client.loop_start()  # 백그라운드 스레드에서 네트워크 루프 실행
+        _client.loop_start()
         logger.info("MQTT 클라이언트 시작: %s:%d", MQTT_BROKER, MQTT_PORT)
     except Exception as e:
         logger.warning("MQTT 연결 실패 (서비스는 계속 실행): %s", e)
@@ -162,37 +164,38 @@ def get_latest_device(device_id: str) -> dict[str, Any] | None:
     return _device_cache.get(device_id)
 
 
+def get_alarm_count() -> int:
+    """현재 큐에 있는 알람 이벤트 수 반환"""
+    return sum(1 for event in _event_queue if event.get("type") == "alarm")
+
+
 async def event_generator():
     """
     SSE 이벤트 제너레이터.
-    새 MQTT 메시지가 도착할 때마다 yield.
+    폴링 방식: 0.5초마다 이벤트 카운터를 확인하여 새 이벤트를 전달.
+    MQTT 스레드와의 크로스스레드 asyncio.Event 이슈를 방지.
     """
-    global _new_event
-    if not _new_event:
-        _new_event = asyncio.Event()
+    last_counter = _event_counter
+    last_queue_snapshot = len(_event_queue)
 
-    last_index = len(_event_queue)
     while True:
-        # 새 이벤트가 올 때까지 대기 (최대 1초)
-        try:
-            await asyncio.wait_for(_new_event.wait(), timeout=1.0)
-            _new_event.clear()
-        except asyncio.TimeoutError:
-            # heartbeat 전송
-            yield {"event": "heartbeat", "data": json.dumps({"ts": time.time()})}
-            continue
+        await asyncio.sleep(0.5)
 
-        # 큐에서 새 이벤트 추출
-        current_len = len(_event_queue)
-        if current_len > last_index:
-            # deque는 maxlen이 있으므로, 최근 이벤트만 전송
-            new_events = list(_event_queue)[max(0, last_index):]
-            last_index = current_len
+        current_counter = _event_counter
+
+        if current_counter > last_counter:
+            # 새 이벤트 발생 — 큐에서 새 이벤트 추출
+            queue_list = list(_event_queue)
+            new_count = current_counter - last_counter
+            # 큐 끝에서 new_count개 추출 (deque maxlen으로 앞부분은 사라질 수 있음)
+            new_events = queue_list[-min(new_count, len(queue_list)):]
+            last_counter = current_counter
+
             for event in new_events:
                 yield {
                     "event": event["type"],
                     "data": json.dumps(event["data"]),
                 }
-        elif current_len < last_index:
-            # deque가 래핑된 경우
-            last_index = current_len
+        else:
+            # 새 이벤트 없음 — heartbeat
+            yield {"event": "heartbeat", "data": json.dumps({"ts": time.time()})}

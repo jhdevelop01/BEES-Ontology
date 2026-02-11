@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.11 (v2.0 — Phase 8 에너지 흐름 완성 + 구조적 정합성 강화)
+> **최종 업데이트:** 2026.02.12 (Phase 9 — 디지털 트윈 IoT 시뮬레이션 플랫폼 구축)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -346,6 +346,49 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 | 28 | "보강 결과 파일로 저장해줘" | `_docs/검증_쿼리/rdfs_comment_보강_결과_20260211.md` 생성 |
 | 29 | "폴더 정리해줘 — Docs 폴더 생성, 통합, 중복 제거" | 7개 폴더→2개(ontology+_docs), 28파일→16파일, 10파일→3파일 통합, 5파일 삭제, 전체 경로 참조 업데이트 |
 | 30 | "Neo4j 구축 진행하자" | Docker neo4j-bees 컨테이너 생성 (neo4j:5.26.0 + n10s), TTL 5,756 트리플 전량 임포트, 관계 6종 완전 일치 검증, `scripts/verify_neo4j.py` 생성 |
+| 31 | "디지털 트윈 시뮬레이션 플랫폼 만들자" | Phase 9: 4-서버 아키텍처 설계 + MVP 구현. Server A(FastAPI+Next.js 대시보드), B(BAS Adapter), C(가상 건물 에뮬레이터), D(Data Historian). Docker Compose 8서비스 오케스트레이션 |
+| 32 | "프론트엔드 데이터 안 보여" | SSE 크로스스레드 이슈 진단+수정(asyncio.Event→polling), 타임스탬프 포맷 변환(ISO→Unix), 센서ID 매핑 수정, Docker 포트 충돌 6건 해결 |
+
+---
+
+## 12. Phase 9: 디지털 트윈 IoT 시뮬레이션 플랫폼 (2026.02.11~12)
+
+### 개요
+Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 IoT 시뮬레이션 플랫폼 구축.
+
+### 아키텍처
+| 서버 | 역할 | 기술스택 | 호스트 포트 |
+|------|------|----------|------------|
+| Server A Backend | 온톨로지 웹 서비스 (REST API, SSE, Neo4j 연동) | FastAPI, Python | 8010 |
+| Server A Frontend | 대시보드 + 모니터링 UI | Next.js, TypeScript, Tailwind, shadcn/ui | 3000 |
+| Server B | BAS Adapter (프로토콜 게이트웨이) | FastAPI, Python | 8011 |
+| Server C | 가상 건물 에뮬레이터 (센서 데이터 생성) | FastAPI, AsyncIO, Python | 8012 |
+| Server D | Data Historian (시계열 수집/조회) | FastAPI, PostgreSQL, Python | 8013 |
+
+### 인프라 (Docker Compose)
+| 서비스 | 이미지 | 호스트 포트 |
+|--------|--------|------------|
+| Mosquitto | eclipse-mosquitto:2 | 1885 |
+| InfluxDB | influxdb:2.7 | 8088 |
+| PostgreSQL | postgres:16 | 5434 |
+| Neo4j | neo4j:5.26.0 (기존 neo4j-bees) | 7476/7689 |
+
+### 데이터 흐름
+1. **센서 데이터**: Server C → MQTT(bees/points/#) → Server A(SSE) + Server D(저장)
+2. **장비 제어**: Frontend → Server A → Server B → Server C
+3. **온톨로지 조회**: Frontend → Server A → Neo4j (Cypher)
+
+### MVP 구현 (Phase 1 완료)
+- AHU_5F 장비 + 5개 센서 시뮬레이션 동작
+- 5초 간격 데이터 생성 (온도, 습도, 급기온도, 필터차압, 전력)
+- SSE 실시간 스트림 + 대시보드 KPI 표시
+- 장비 제어 (ON/OFF, 모드 변경) End-to-End 동작
+
+### 디버깅 이력
+- **SSE 크로스스레드 이슈**: Python 3.12 `asyncio.Event`가 MQTT 백그라운드 스레드에서 동작 안함 → polling 방식(`_event_counter` + `threading.Lock`)으로 교체
+- **타임스탬프 포맷**: Server C(ISO 8601) vs Frontend(Unix) → `_parse_ts()` 변환 함수 추가
+- **센서 ID 불일치**: 프론트엔드 하드코딩 ID → 실제 온톨로지 point_id로 매핑 수정
+- **Docker 포트 충돌**: hvac-*, bees-otel-* 등 기존 프로젝트와 6건 포트 충돌 → 전부 고유 포트로 변경
 
 ---
 

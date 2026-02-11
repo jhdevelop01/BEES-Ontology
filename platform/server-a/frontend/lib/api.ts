@@ -3,7 +3,7 @@
  * 모든 API 요청을 중앙에서 관리한다.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 /**
  * 기본 fetch 래퍼 — JSON 응답 반환

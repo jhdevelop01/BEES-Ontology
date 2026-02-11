@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 /**
  * SSE 이벤트 데이터 타입
@@ -63,10 +63,12 @@ export function useSSE(maxHistory: number = 60) {
     eventSourceRef.current = es;
 
     es.onopen = () => {
+      console.log("[BEES SSE] 연결 성공:", `${API_BASE}/api/stream/points`);
       setConnected(true);
     };
 
-    es.onerror = () => {
+    es.onerror = (err) => {
+      console.warn("[BEES SSE] 연결 오류, 5초 후 재연결:", err);
       setConnected(false);
       // 5초 후 재연결 시도
       setTimeout(() => {
@@ -89,8 +91,8 @@ export function useSSE(maxHistory: number = 60) {
           const updated = [...history, data].slice(-maxHistory);
           return { ...prev, [data.point_id]: updated };
         });
-      } catch {
-        // 파싱 실패 무시
+      } catch (err) {
+        console.warn("[BEES SSE] point 파싱 실패:", err);
       }
     });
 

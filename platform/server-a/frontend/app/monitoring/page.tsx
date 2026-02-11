@@ -6,64 +6,64 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LiveChart, type ChartDataPoint } from "@/components/charts/live-chart";
 import { useSSE } from "@/lib/sse";
-import { Thermometer, Wind, Gauge, Fan, Filter } from "lucide-react";
+import { Thermometer, Wind, Gauge, Filter } from "lucide-react";
 
 /**
  * 모니터링 페이지
  * AHU_5F 연결 센서 5개의 실시간 값 + 각 센서별 라인 차트
  */
 
-// AHU_5F의 5개 주요 센서 정의
+// AHU_5F의 5개 주요 센서 정의 (실제 MQTT point_id 사용)
 const SENSORS = [
   {
-    id: "AHU_5F_SAT",
+    id: "bldg:Zone_Air_Temp_5F_Interior",
+    name: "존 공기온도",
+    description: "Zone Air Temperature",
+    unit: "°C",
+    color: "#ef4444", // red
+    icon: Thermometer,
+    yMin: 15,
+    yMax: 35,
+  },
+  {
+    id: "bldg:Zone_Air_Humidity_5F_Interior",
+    name: "존 공기습도",
+    description: "Zone Air Humidity",
+    unit: "%RH",
+    color: "#3b82f6", // blue
+    icon: Wind,
+    yMin: 20,
+    yMax: 80,
+  },
+  {
+    id: "bldg:Supply_Air_Temp_AHU_5F",
     name: "급기온도",
     description: "Supply Air Temperature",
     unit: "°C",
-    color: "#3b82f6", // blue
+    color: "#f59e0b", // amber
     icon: Thermometer,
     yMin: 10,
     yMax: 30,
   },
   {
-    id: "AHU_5F_RAT",
-    name: "환기온도",
-    description: "Return Air Temperature",
-    unit: "°C",
-    color: "#ef4444", // red
-    icon: Thermometer,
-    yMin: 18,
-    yMax: 32,
-  },
-  {
-    id: "AHU_5F_MAT",
-    name: "혼합공기온도",
-    description: "Mixed Air Temperature",
-    unit: "°C",
-    color: "#f59e0b", // amber
-    icon: Wind,
-    yMin: 10,
-    yMax: 32,
-  },
-  {
-    id: "AHU_5F_Filter_DP",
+    id: "bldg:Filter_DP_AHU_5F",
     name: "필터 차압",
     description: "Filter Differential Pressure",
     unit: "Pa",
     color: "#8b5cf6", // purple
     icon: Filter,
-    yMin: 50,
-    yMax: 600,
+    yMin: 100,
+    yMax: 500,
   },
   {
-    id: "AHU_5F_Fan_Speed",
-    name: "팬 속도",
-    description: "Fan Speed (VFD)",
-    unit: "Hz",
+    id: "bldg:Power_AHU_5F",
+    name: "전력 소비",
+    description: "Electrical Power",
+    unit: "kW",
     color: "#10b981", // green
-    icon: Fan,
+    icon: Gauge,
     yMin: 0,
-    yMax: 60,
+    yMax: 50,
   },
 ];
 

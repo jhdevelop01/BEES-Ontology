@@ -31,8 +31,8 @@ export default function DashboardPage() {
       try {
         const data = await getDashboardSummary();
         setSummary(data);
-      } catch {
-        // API 미연결 시 기본값 사용
+      } catch (err) {
+        console.error("[BEES] 대시보드 API 호출 실패:", err);
       } finally {
         setLoading(false);
       }
@@ -68,7 +68,7 @@ export default function DashboardPage() {
 
   // AHU_5F 급기온도 차트 데이터
   const satChartData = useMemo((): ChartDataPoint[] => {
-    const history = pointHistory["AHU_5F_SAT"] || [];
+    const history = pointHistory["bldg:Supply_Air_Temp_AHU_5F"] || [];
     return history.map((p) => ({
       time: new Date(p.ts * 1000).toLocaleTimeString("ko-KR", {
         hour: "2-digit",

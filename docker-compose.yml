@@ -1,28 +1,14 @@
 services:
   # ─────────────── 인프라 (데이터베이스 + 메시지 브로커) ───────────────
-  neo4j:
-    image: neo4j:5.26.0-community
-    container_name: bees-neo4j
-    ports:
-      - "7476:7474"
-      - "7689:7687"
-    volumes:
-      - ./data/neo4j/data:/data
-      - ./data/neo4j/plugins:/plugins
-    environment:
-      NEO4J_AUTH: neo4j/bees2024
-      NEO4J_PLUGINS: '["n10s"]'
-    healthcheck:
-      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "bees2024", "RETURN 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # Neo4j: 기존 neo4j-bees 컨테이너 사용 (7476/7689 포트)
+  # docker-compose 외부에서 이미 실행 중이므로 여기서는 생략
+  # 서버들은 host.docker.internal:7689 또는 외부 네트워크로 접속
 
   influxdb:
     image: influxdb:2.7
     container_name: bees-influxdb
     ports:
-      - "8086:8086"
+      - "8088:8086"
     environment:
       DOCKER_INFLUXDB_INIT_MODE: setup
       DOCKER_INFLUXDB_INIT_USERNAME: bees
@@ -43,7 +29,7 @@ services:
     image: postgres:16
     container_name: bees-postgres
     ports:
-      - "5432:5432"
+      - "5434:5432"
     environment:
       POSTGRES_DB: bees_platform
       POSTGRES_USER: bees
@@ -61,7 +47,7 @@ services:
     image: eclipse-mosquitto:2
     container_name: bees-mosquitto
     ports:
-      - "1883:1883"
+      - "1885:1883"
     volumes:
       - ./platform/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ./data/mosquitto/data:/mosquitto/data
@@ -77,10 +63,8 @@ services:
     build: ./platform/server-a/backend
     container_name: bees-server-a
     ports:
-      - "8000:8000"
+      - "8010:8000"
     depends_on:
-      neo4j:
-        condition: service_healthy
       influxdb:
         condition: service_healthy
       postgres:
@@ -88,6 +72,8 @@ services:
       mosquitto:
         condition: service_healthy
     env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data/server-a/logs:/app/logs
 
@@ -99,13 +85,13 @@ services:
     depends_on:
       - server-a-backend
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: http://localhost:8010
 
   server-b:
     build: ./platform/server-b
     container_name: bees-server-b
     ports:
-      - "8001:8001"
+      - "8011:8001"
     depends_on:
       mosquitto:
         condition: service_healthy
@@ -120,13 +106,13 @@ services:
     build: ./platform/server-c
     container_name: bees-server-c
     ports:
-      - "8002:8002"
+      - "8012:8002"
     depends_on:
-      neo4j:
-        condition: service_healthy
       mosquitto:
         condition: service_healthy
     env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data/server-c/snapshots:/app/snapshots
       - ./data/server-c/logs:/app/logs
@@ -135,7 +121,7 @@ services:
     build: ./platform/server-d
     container_name: bees-server-d
     ports:
-      - "8003:8003"
+      - "8013:8003"
     depends_on:
       influxdb:
         condition: service_healthy
