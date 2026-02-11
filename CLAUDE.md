@@ -24,6 +24,7 @@
 | 07_온톨로지_통계_요약.md | `_docs/` | 온톨로지 인스턴스 통계 (rdflib 추출, 845개, 전층 모델) |
 | 08_개발_원칙.md | `_docs/` | **TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙** (모든 세션 필수 참조) |
 | GEC_B동_온톨로지_통계.xlsx | `_docs/` | 층별 중심 통계 엑셀 |
+| 09_Neo4j_GraphDB.md | `_docs/` | Neo4j 접속 정보, 설정, 임포트 결과, 재임포트 절차, 샘플 쿼리 |
 | GEC_B동_데이터_요청서.pdf | `_docs/` | Phase 2 내부 데이터 요청서 |
 
 ## 온톨로지 규칙
@@ -33,6 +34,14 @@
 - **추정 범위**: `bees:estimatedRange` — 정밀 수량 미확정 시 사용
 - **TTL 수정 후 반드시 rdflib 파싱 검증** (구문 오류 방지)
 - **SHACL Shape 동기화**: 새 클래스 추가 시 해당 Shape도 검토
+
+## Neo4j GraphDB
+- **컨테이너**: `neo4j-bees` (Docker, neo4j:5.26.0-community + n10s)
+- **Browser**: http://localhost:7476
+- **Bolt**: bolt://localhost:7689
+- **인증**: neo4j / bees2024
+- **검증**: `python3 scripts/verify_neo4j.py`
+- **graphconfig**: MAP 모드, LABELS, applyNeo4jNaming=false (Brick 원본 관계명 유지)
 
 ## 검증 명령
 ```bash
