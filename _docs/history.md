@@ -107,27 +107,81 @@
 ## 3. 프로젝트 디렉토리 구조
 
 ```
-BEES Ontology/
+BEES-Ontology/
 ├── CLAUDE.md                                  # 프로젝트 설정 및 규칙
+├── docker-compose.yml                         # ★ Phase 9: 8서비스 Docker 오케스트레이션
+├── .env                                       # ★ Phase 9: 환경변수 (DB, MQTT, API 키)
 ├── ontology/
 │   ├── GEC_B_Ontology.ttl                     # ★ 메인 온톨로지 (v2.0.1)
 │   └── GEC_B_SHACL.ttl                        # ★ SHACL 검증 Shape (v2.0)
+├── scripts/
+│   └── verify_neo4j.py                        # Neo4j 검증 스크립트
+├── platform/                                  # ★ Phase 9: 디지털 트윈 플랫폼
+│   ├── server-a/
+│   │   ├── backend/                           # FastAPI 백엔드 (:8010→8000)
+│   │   │   ├── app/
+│   │   │   │   ├── main.py                    #   앱 진입점, CORS, lifespan
+│   │   │   │   ├── config.py                  #   환경변수 중앙관리
+│   │   │   │   ├── routers/
+│   │   │   │   │   ├── dashboard.py           #   GET /api/dashboard/summary
+│   │   │   │   │   ├── control.py             #   POST /api/control, GET /api/devices/status
+│   │   │   │   │   ├── stream.py              #   GET /api/stream/points (SSE), /snapshot
+│   │   │   │   │   ├── ontology.py            #   GET /api/ontology/search, /topology/tree
+│   │   │   │   │   └── history.py             #   GET /api/history/{pointId}
+│   │   │   │   └── services/
+│   │   │   │       ├── mqtt_service.py        #   ★ MQTT 구독 + SSE 이벤트 생성 (polling 방식)
+│   │   │   │       ├── neo4j_service.py       #   Neo4j Cypher 쿼리 (토폴로지, 검색)
+│   │   │   │       └── influxdb_service.py    #   스텁 (Phase 2)
+│   │   │   ├── requirements.txt
+│   │   │   └── Dockerfile
+│   │   └── frontend/                          # Next.js 14 프론트엔드 (:3000)
+│   │       ├── app/
+│   │       │   ├── page.tsx                   #   대시보드 (KPI 카드, 차트, 테이블)
+│   │       │   ├── monitoring/page.tsx        #   모니터링 (AHU_5F 5센서 실시간)
+│   │       │   ├── control/page.tsx           #   제어 (장비 ON/OFF, 명령 이력)
+│   │       │   └── layout.tsx                 #   공통 레이아웃 (사이드바)
+│   │       ├── components/
+│   │       │   ├── charts/live-chart.tsx       #   recharts 실시간 라인 차트
+│   │       │   ├── layout/sidebar.tsx          #   네비게이션 사이드바
+│   │       │   └── ui/                        #   shadcn/ui (card, badge, button, toast)
+│   │       ├── lib/
+│   │       │   ├── api.ts                     #   REST API 클라이언트 (fetchJSON 래퍼)
+│   │       │   └── sse.ts                     #   useSSE 훅 (EventSource + 자동 재연결)
+│   │       ├── package.json
+│   │       └── Dockerfile
+│   ├── server-b/                              # BAS Adapter (:8011→8001)
+│   │   └── app/
+│   │       ├── main.py                        #   POST /command, GET /devices, 감사 로그
+│   │       ├── device_registry.py             #   인메모리 장비 레지스트리 (ID 매핑)
+│   │       └── config.py
+│   ├── server-c/                              # 가상 건물 에뮬레이터 (:8012→8002)
+│   │   └── app/
+│   │       ├── main.py                        #   시뮬레이션 시작/중지, 장비 제어
+│   │       ├── engine.py                      #   ★ EmulatorEngine (AsyncIO 데이터 생성 루프)
+│   │       ├── profiles/
+│   │       │   └── ahu_5f.py                  #   AHU_5F 5센서 데이터 프로파일
+│   │       └── config.py
+│   ├── server-d/                              # Data Historian (:8013→8003)
+│   │   ├── app/
+│   │   │   ├── main.py
+│   │   │   ├── mqtt_worker.py                 #   MQTT → InfluxDB 배치 저장
+│   │   │   ├── database.py                    #   asyncpg + InfluxDB 클라이언트
+│   │   │   ├── models.py                      #   Pydantic 모델
+│   │   │   └── routers/
+│   │   │       ├── points.py                  #   시계열 조회 (latest, history, summary)
+│   │   │       ├── admin.py                   #   알람/감사 로그 조회
+│   │   │       └── health.py
+│   │   └── db/
+│   │       └── init.sql                       #   PostgreSQL 스키마 (6테이블)
+│   └── mosquitto/
+│       └── mosquitto.conf                     #   MQTT 브로커 설정
+├── data/                                      # Docker 볼륨 마운트 (gitignore)
 └── _docs/
-    ├── 01_건물_설비_정보.md                    # 건물정보+인증+입주+HVAC+설비+스마트빌딩 (6파일 통합)
-    ├── 02_에너지_ESG_데이터.md                 # GHG, 에너지사용량, ESG보고서
-    ├── 03_참고자료.md                          # Brick Schema + 학술논문 (2파일 통합)
-    ├── 04_인증_벤치마킹_설비추론.md             # LEED 크레딧, 유사건물 벤치마킹
-    ├── 05_데이터_확보_및_출처추적.md            # 확보현황 + 출처추적표 (2파일 통합)
-    ├── 06_온톨로지_구축_방법론.md               # ★ 구축 프로세스 재현 가이드 (1,054줄)
-    ├── 07_온톨로지_통계_요약.md                 # 온톨로지 인스턴스 통계 (rdflib 추출)
-    ├── 08_개발_원칙.md                         # ★ TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙
-    ├── history.md                              # ★ 이 파일 (프로젝트 히스토리)
-    ├── 세션요약_20260211.md                    # 세션별 작업 요약
-    ├── GEC_B동_온톨로지_통계.xlsx               # ★ 층별 중심 통계 엑셀 (5시트, rdflib 추출)
-    ├── GEC_B동_데이터_요청서.pdf                # 내부 데이터 요청서
+    ├── 01~08_*.md                             # 온톨로지 문서 (기존)
+    ├── history.md                              # ★ 이 파일
+    ├── 10_디지털트윈_플랫폼_설계.md             # Phase 9 설계서 (전체 아키텍처)
+    ├── GEC_B동_온톨로지_통계.xlsx
     └── 검증_쿼리/
-        ├── SPARQL_검증_쿼리_결과_20260211.md   # SPARQL 10개 쿼리 검증 결과
-        └── rdfs_comment_보강_결과_20260211.md  # rdfs:comment 45건 보강 결과
 ```
 
 ---
@@ -353,42 +407,288 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 
 ## 12. Phase 9: 디지털 트윈 IoT 시뮬레이션 플랫폼 (2026.02.11~12)
 
-### 개요
-Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 IoT 시뮬레이션 플랫폼 구축.
+### 12.1 개요
+Brick Schema 온톨로지(845 인스턴스, 5,756 트리플)를 기반으로 **4개 독립 서버** 구성의 디지털 트윈 IoT 시뮬레이션 플랫폼 구축. 가상 건물 에뮬레이터가 실시간 센서 데이터를 생성하고, 웹 대시보드에서 장비 제어 및 온톨로지 기반 지식 조회가 가능한 시스템.
 
-### 아키텍처
-| 서버 | 역할 | 기술스택 | 호스트 포트 |
-|------|------|----------|------------|
-| Server A Backend | 온톨로지 웹 서비스 (REST API, SSE, Neo4j 연동) | FastAPI, Python | 8010 |
-| Server A Frontend | 대시보드 + 모니터링 UI | Next.js, TypeScript, Tailwind, shadcn/ui | 3000 |
-| Server B | BAS Adapter (프로토콜 게이트웨이) | FastAPI, Python | 8011 |
-| Server C | 가상 건물 에뮬레이터 (센서 데이터 생성) | FastAPI, AsyncIO, Python | 8012 |
-| Server D | Data Historian (시계열 수집/조회) | FastAPI, PostgreSQL, Python | 8013 |
+### 12.2 시스템 아키텍처
 
-### 인프라 (Docker Compose)
-| 서비스 | 이미지 | 호스트 포트 |
-|--------|--------|------------|
-| Mosquitto | eclipse-mosquitto:2 | 1885 |
-| InfluxDB | influxdb:2.7 | 8088 |
-| PostgreSQL | postgres:16 | 5434 |
-| Neo4j | neo4j:5.26.0 (기존 neo4j-bees) | 7476/7689 |
+```
+[사용자 브라우저]
+    ↓ http://localhost:3000
+[Server A Frontend — Next.js 14]
+    ↓ REST API / SSE (http://localhost:8010)
+[Server A Backend — FastAPI]
+    ├── Neo4j (bolt://host.docker.internal:7689) ← 온톨로지 조회
+    ├── MQTT 구독 (bees/points/#, bees/devices/#) ← 실시간 데이터 수신
+    └── → Server B (http://server-b:8001) ← 제어 명령 전달
+           ↓
+[Server B — BAS Adapter (FastAPI)]
+    ├── 디바이스 레지스트리 (온톨로지 ID → 에뮬레이터 매핑)
+    ├── → Server C (http://server-c:8002) ← 명령 전달
+    ├── MQTT 발행 (bees/commands/{deviceId}) ← 감사
+    └── PostgreSQL (audit_log) ← 감사 로그 저장
+           ↓
+[Server C — 가상 건물 에뮬레이터 (FastAPI + AsyncIO)]
+    ├── 장비 상태 관리 (ON/OFF, mode)
+    ├── 센서 데이터 생성 (5초 간격)
+    └── MQTT 발행 (bees/points/{point_id}, bees/devices/{device_id}/state)
+           ↓
+[Mosquitto MQTT Broker]
+    ↓ 구독
+[Server D — Data Historian (FastAPI)]
+    ├── MQTT → InfluxDB 배치 저장
+    ├── REST API (시계열 조회, 집계)
+    └── PostgreSQL (알람/감사/스케줄)
+```
 
-### 데이터 흐름
-1. **센서 데이터**: Server C → MQTT(bees/points/#) → Server A(SSE) + Server D(저장)
-2. **장비 제어**: Frontend → Server A → Server B → Server C
-3. **온톨로지 조회**: Frontend → Server A → Neo4j (Cypher)
+### 12.3 포트 매핑 (확정, 다른 프로젝트와 충돌 방지)
 
-### MVP 구현 (Phase 1 완료)
-- AHU_5F 장비 + 5개 센서 시뮬레이션 동작
-- 5초 간격 데이터 생성 (온도, 습도, 급기온도, 필터차압, 전력)
-- SSE 실시간 스트림 + 대시보드 KPI 표시
-- 장비 제어 (ON/OFF, 모드 변경) End-to-End 동작
+| 서비스 | 컨테이너명 | 호스트 포트 | 컨테이너 포트 | 비고 |
+|--------|-----------|:-----------:|:------------:|------|
+| Frontend | bees-frontend | **3000** | 3000 | Next.js standalone |
+| Server A Backend | bees-server-a | **8010** | 8000 | FastAPI + Uvicorn |
+| Server B | bees-server-b | **8011** | 8001 | BAS Adapter |
+| Server C | bees-server-c | **8012** | 8002 | 에뮬레이터 |
+| Server D | bees-server-d | **8013** | 8003 | Data Historian |
+| Mosquitto | bees-mosquitto | **1885** | 1883 | MQTT 브로커 |
+| InfluxDB | bees-influxdb | **8088** | 8086 | 시계열 DB |
+| PostgreSQL | bees-postgres | **5434** | 5432 | 관계형 DB |
+| Neo4j | neo4j-bees (외부) | 7476/7689 | - | docker-compose 외부, 기존 컨테이너 |
 
-### 디버깅 이력
-- **SSE 크로스스레드 이슈**: Python 3.12 `asyncio.Event`가 MQTT 백그라운드 스레드에서 동작 안함 → polling 방식(`_event_counter` + `threading.Lock`)으로 교체
-- **타임스탬프 포맷**: Server C(ISO 8601) vs Frontend(Unix) → `_parse_ts()` 변환 함수 추가
-- **센서 ID 불일치**: 프론트엔드 하드코딩 ID → 실제 온톨로지 point_id로 매핑 수정
-- **Docker 포트 충돌**: hvac-*, bees-otel-* 등 기존 프로젝트와 6건 포트 충돌 → 전부 고유 포트로 변경
+> **포트 충돌 이력**: hvac-influxdb(8086→8087), hvac-postgres(5433), hvac-mqtt(1883/1884), bees-otel-api(8000), hvac-fmi(8002), hvac-cdl(8003) 등과 충돌하여 모두 고유 포트로 변경
+
+### 12.4 환경변수 (.env)
+```bash
+NEO4J_URI=bolt://host.docker.internal:7689  # 기존 neo4j-bees 컨테이너
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=bees2024
+INFLUXDB_URL=http://influxdb:8086            # Docker 내부 통신은 컨테이너 포트
+INFLUXDB_TOKEN=bees-dev-token
+INFLUXDB_ORG=samsung-gec
+INFLUXDB_BUCKET=raw_7d
+DATABASE_URL=postgresql://bees:bees2024@postgres:5432/bees_platform
+MQTT_BROKER=mosquitto                        # Docker 내부 서비스명
+MQTT_PORT=1883
+SERVER_B_URL=http://server-b:8001
+SERVER_C_URL=http://server-c:8002
+SERVER_D_URL=http://server-d:8003
+```
+
+### 12.5 MQTT 토픽 설계
+```
+bees/points/{point_id}              # 센서 데이터 (Server C → D, A)
+  예: bees/points/bldg:Zone_Air_Temp_5F_Interior
+  payload: {"value": 24.3, "ts": "2026-02-12T10:30:00", "unit": "degC", "quality": "good"}
+
+bees/devices/{device_id}/state      # 장비 상태 변경 (Server C → A)
+  예: bees/devices/bldg:AHU_5F/state
+  payload: {"is_active": true, "mode": "auto", "ts": "..."}
+
+bees/commands/{device_id}           # 제어 명령 (Server B → 감사)
+  payload: {"command": "ON", "source": "user", "ts": "..."}
+
+bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
+  payload: {"equipment": "...", "type": "...", "value": ..., "threshold": ...}
+```
+
+> **주의**: Server C는 `ts`를 ISO 8601 문자열로 발행. Server A `mqtt_service.py`의 `_parse_ts()`가 Unix timestamp로 변환하여 프론트엔드에 전달.
+
+### 12.6 Server A — 온톨로지 웹 서비스 (구현 완료)
+
+#### Backend API (FastAPI, :8010)
+| 엔드포인트 | 메서드 | 구현 | 설명 |
+|-----------|--------|:----:|------|
+| `/api/dashboard/summary` | GET | ✅ | KPI 카드 (활성장비, 평균온도, 알람수, 시뮬레이션 상태) |
+| `/api/stream/points` | GET | ✅ | SSE 실시간 스트림 (point/device/alarm/heartbeat) |
+| `/api/stream/snapshot` | GET | ✅ | 현재 MQTT 캐시 전체 스냅샷 |
+| `/api/control` | POST | ✅ | 제어 명령 → Server B 프록시 |
+| `/api/devices/status` | GET | ✅ | MQTT 캐시 + Neo4j 병합 장비 상태 |
+| `/api/ontology/search` | GET | ✅ | Neo4j Cypher 검색 (URI/라벨/클래스) |
+| `/api/topology/tree` | GET | ✅ | 건물 계층 트리 (Site→Building→Floor→Zone→Equipment) |
+| `/api/history/{pointId}` | GET | ✅ | Server D 시계열 조회 프록시 |
+| `/health` | GET | ✅ | 헬스체크 |
+| `/api/chat` | POST | ❌ | **Phase 2**: OpenAI GPT + Neo4j Cypher Q&A |
+| `/api/ontology/graph` | GET | ❌ | **Phase 2**: Cytoscape.js JSON (노드+엣지) |
+
+**핵심 서비스 — mqtt_service.py (SSE 구현)**:
+- paho-mqtt 백그라운드 스레드에서 MQTT 메시지 수신
+- `_point_cache`, `_device_cache` 딕셔너리에 최신값 캐시
+- **polling 기반 SSE**: `_event_counter` + `threading.Lock`으로 크로스스레드 동기화
+  - `asyncio.Event`는 Python 3.12에서 크로스스레드 동작 불가 → polling으로 교체
+  - `event_generator()`: 0.5초마다 카운터 비교, 새 이벤트 있으면 yield, 없으면 heartbeat
+- `_parse_ts()`: ISO 8601 문자열 → Unix timestamp 변환
+
+**의존성**: `fastapi==0.115.6`, `neo4j==5.27.0`, `paho-mqtt==2.1.0`, `sse-starlette==2.2.1`, `httpx==0.28.1`
+
+#### Frontend (Next.js 14, :3000)
+| 페이지 | 경로 | 구현 | 핵심 컴포넌트 |
+|--------|------|:----:|-------------|
+| 대시보드 | `/` | ✅ | KPI 카드 4개, 급기온도 실시간 차트 (recharts), 장비 테이블, 최근 센서 테이블 |
+| 모니터링 | `/monitoring` | ✅ | AHU_5F 5센서 현재값 카드, 센서별 라인 차트, 상세 테이블 |
+| 제어 | `/control` | ✅ | 장비 ON/OFF 토글, 상태 LED, 명령 이력 (낙관적 업데이트) |
+| 온톨로지 | `/ontology` | ❌ | **Phase 2**: Cytoscape.js 그래프 뷰, 노드 클릭 상세 |
+| 토폴로지 | `/topology` | ❌ | **Phase 2**: 트리뷰 + 층별 장비 레이아웃 |
+| LLM 채팅 | `/chat` | ❌ | **Phase 2**: GPT 대화 UI, 쿼리 결과 렌더링 |
+
+**SSE 훅 (`lib/sse.ts`)**:
+- `useSSE(maxHistory=60)` — EventSource 기반 구독
+- 반환: `{ points, pointHistory, devices, alarms, connected }`
+- 자동 재연결: 5초 후 재시도
+- API_BASE: `NEXT_PUBLIC_API_URL` (빌드 시 bake, 기본값 `http://localhost:8010`)
+
+**의존성**: `next@14.2.23`, `react@18`, `recharts@2.15`, `lucide-react`, `tailwindcss`, `class-variance-authority`
+
+### 12.7 Server B — BAS Adapter (구현 완료)
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/command` | POST | 제어 명령 수신 → 유효성 검증 → Server C 전달 → MQTT 발행 → 감사 로그 |
+| `/devices` | GET | 디바이스 레지스트리 전체 조회 |
+| `/devices/{id}/status` | GET | Server C에서 특정 장비 상태 프록시 |
+| `/health` | GET | 헬스체크 (MQTT, DB 연결 상태) |
+| `/audit-log` | GET | 명령 감사 로그 조회 (최근 100건) |
+
+**디바이스 레지스트리** (`device_registry.py`):
+- `DeviceInfo`: ontology_id, name, type, location, allowed_commands
+- Phase 1 등록: `bldg:AHU_5F` (ON, OFF, setpoint)
+- **Phase 2 확장**: Neo4j에서 자동 로딩 필요
+
+**폴백 처리**: PostgreSQL 미연결 시 인메모리 감사 로그 (FIFO, 500건)
+
+### 12.8 Server C — 가상 건물 에뮬레이터 (구현 완료)
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/simulation/start` | POST | 시뮬레이션 시작 |
+| `/simulation/stop` | POST | 시뮬레이션 중지 |
+| `/simulation/status` | GET | 상태 조회 (running/stopped) |
+| `/devices` | GET | 전체 장비 상태 + 최신 센서값 |
+| `/devices/{id}` | GET | 특정 장비 상태 |
+| `/devices/{id}/command` | POST | 장비 제어 (ON/OFF/MODE) |
+
+**EmulatorEngine** (`engine.py`):
+- AsyncIO 기반 시뮬레이션 루프 (5초 간격)
+- 데이터 생성 공식: `value = base_value + noise * random(-1,1) + daily_pattern + equipment_effect + drift`
+- 장비 ON/OFF에 따른 물리적 보정 (예: AHU OFF → 급기온도 24°C로 수렴, 전력 0.5kW 대기)
+- MQTT 발행: `bees/points/{point_id}`, `bees/devices/{device_id}/state`
+
+**AHU_5F 데이터 프로파일** (`profiles/ahu_5f.py`):
+| 센서 ID | Brick 클래스 | 기본값 | 범위 | 단위 | 특성 |
+|---------|-------------|:------:|------|:----:|------|
+| `bldg:Zone_Air_Temp_5F_Interior` | Zone_Air_Temperature_Sensor | 24°C | 18~30 | degC | 일간 사인파 + 재실 보정 |
+| `bldg:Zone_Air_Humidity_5F_Interior` | Zone_Air_Humidity_Sensor | 50% | 30~70 | %RH | AHU OFF시 60%로 상승 |
+| `bldg:Supply_Air_Temp_AHU_5F` | Supply_Air_Temperature_Sensor | 16°C | 12~28 | degC | AHU OFF시 24°C 수렴 |
+| `bldg:Filter_DP_AHU_5F` | Filter_Differential_Pressure_Sensor | 250Pa | 100~500 | Pa | 시간당 0.5Pa 드리프트 |
+| `bldg:Power_AHU_5F` | Electrical_Power_Sensor | 35kW | 0~52 | kW | ON=35kW, OFF=0.5kW |
+
+### 12.9 Server D — Data Historian (구현 완료)
+
+| 엔드포인트 | 메서드 | 설명 |
+|-----------|--------|------|
+| `/data/points/summary` | GET | 전체 포인트 현황 (최근 7일) |
+| `/data/points/{id}/latest` | GET | 최신값 조회 |
+| `/data/points/{id}/history` | GET | 시계열 조회 (Flux 쿼리, aggregation: 1m/5m/1h/1d) |
+| `/data/points` | POST | 단건 저장 (REST fallback) |
+| `/alarm-history` | GET | 알람 이력 (equipment, severity 필터, 페이지네이션) |
+| `/audit-log` | GET | 감사 로그 조회 |
+| `/health` | GET | 헬스체크 (InfluxDB, PostgreSQL, MQTT) |
+
+**MQTT → InfluxDB 워커** (`mqtt_worker.py`):
+- `bees/points/#` 구독 (QoS=1)
+- 배치 플러시: 크기 도달 또는 시간 경과 시 InfluxDB 배치 쓰기
+- measurement: `sensor_data`, tag: `point_id`, field: `value`
+
+**PostgreSQL 스키마** (`db/init.sql`):
+- `users` — 사용자 관리 (email, role, department)
+- `equipment_metadata` — 장비 메타데이터 (제조사, 모델, 유지보수)
+- `work_orders` — 유지보수 작업 주문
+- `alarm_history` — 알람 이력 (onset_at, cleared_at, acknowledged_at)
+- `audit_log` — 감사 로그 (user_id, action, target_equipment)
+- `schedules` — 스케줄 관리 (JSONB)
+
+### 12.10 구현 완료 항목 요약 (Phase 1 MVP)
+
+✅ **완료**:
+1. Docker Compose 8서비스 오케스트레이션 (docker-compose.yml)
+2. 실시간 데이터 파이프라인: Server C → MQTT → Server A(SSE) + Server D(저장)
+3. 장비 제어 E2E: Frontend → A → B → C → 상태 변경 → MQTT → Frontend 업데이트
+4. 대시보드 KPI (활성 장비, 평균 온도, 알람, 시뮬레이션 상태)
+5. 모니터링 페이지 (AHU_5F 5센서 실시간 차트)
+6. 제어 페이지 (ON/OFF 토글, 명령 이력)
+7. 온톨로지 검색 API (Neo4j Cypher)
+8. 토폴로지 트리 API
+9. 시계열 조회 프록시 (Server A → Server D)
+10. 감사 로그 (PostgreSQL + 인메모리 폴백)
+11. 모든 외부 의존성에 대한 폴백 처리 (Neo4j, Server B/C/D, PostgreSQL)
+
+### 12.11 미구현 / Phase 2 이후 작업
+
+#### Phase 2: 풀 시뮬레이션 + 온톨로지 뷰 + LLM 채팅
+| # | 작업 | 상세 | 관련 파일 |
+|---|------|------|----------|
+| 1 | **845개 전체 인스턴스 시뮬레이션** | Neo4j에서 장비/센서 목록 자동 로딩 → DataProfile 자동 생성. 현재 AHU_5F 1대만 | `server-c/app/engine.py`, `profiles/` |
+| 2 | **온톨로지 그래프 뷰** | Cytoscape.js 기반 노드+엣지 시각화. `/ontology` 페이지 | `frontend/app/ontology/page.tsx` (신규) |
+| 3 | **토폴로지 뷰** | 트리뷰(좌) + 층별 장비 레이아웃(우). `/topology` 페이지 | `frontend/app/topology/page.tsx` (신규) |
+| 4 | **LLM 채팅** | OpenAI GPT Function Calling → Neo4j Cypher → 응답 생성 | `backend/app/routers/chat.py` (신규), `services/openai_service.py` (신규) |
+| 5 | **디바이스 레지스트리 자동 로딩** | Server B 시작 시 Neo4j에서 제어 가능 장비 자동 등록 | `server-b/app/device_registry.py` |
+| 6 | **일간 패턴 / 계절 보정** | 24시간 재실 패턴, 서울 기후 계절 보정 | `server-c/app/profiles/` |
+| 7 | **InfluxDB 직접 연결** | Server A에서 Server D 프록시 대신 직접 InfluxDB 쿼리 | `backend/app/services/influxdb_service.py` |
+
+#### Phase 3: 고급 기능
+| # | 작업 | 상세 |
+|---|------|------|
+| 1 | BACnet/IP 어댑터 | Server B에 BAC0 라이브러리 추가 |
+| 2 | 알람 자동 생성 | 임계값 비교 → alarm_history 자동 저장 |
+| 3 | 에너지 분석 대시보드 | 월별/일별 에너지 소비 차트, 피크 분석 |
+| 4 | 데이터 보존 정책 | raw → 1h → 1d 집계, 자동 retention |
+| 5 | 사용자 인증 | JWT 기반 로그인, 역할 기반 접근 제어 |
+| 6 | 스케줄 관리 | 장비 스케줄 CRUD (schedules 테이블 활용) |
+
+### 12.12 디버깅 이력 (문제 → 원인 → 수정)
+
+| 문제 | 원인 | 수정 |
+|------|------|------|
+| SSE에서 heartbeat만 전달, 센서 데이터 미전달 | Python 3.12에서 `asyncio.Event`의 `call_soon_threadsafe()`가 MQTT 백그라운드 스레드에서 실패 | `_event_counter` + `threading.Lock` polling 방식으로 전면 교체 |
+| 프론트엔드 차트에 데이터 미표시 | 타임스탬프 포맷 불일치 (Server C: ISO 문자열, Frontend: Unix 숫자) | `mqtt_service._parse_ts()` 변환 함수 추가 |
+| 모니터링 페이지 센서 카드 빈 값 | 프론트엔드에서 `AHU_5F_SAT` 등 가짜 ID 사용 (실제 MQTT: `bldg:Supply_Air_Temp_AHU_5F`) | 5개 센서 ID 모두 실제 온톨로지 point_id로 교체 |
+| `docker compose up` 포트 바인딩 실패 | 동일 머신의 hvac-*, bees-otel-* 프로젝트와 6개 포트 충돌 | 전체 포트 재매핑 (8010/8011/8012/8013/8088/1885/5434) |
+| `bees-influxdb` 컨테이너 재생성 실패 | 이전 `docker compose down`에서 삭제 안 된 stale 컨테이너 | `docker rm -f` 후 재생성 |
+| Neo4j 연결 실패 (Unauthorized) | 기존 neo4j-bees 컨테이너 인증 정보 불일치 (미해결) | 서비스는 폴백 데이터로 계속 실행. **향후 수정 필요** |
+
+### 12.13 기동 방법
+```bash
+# 전체 기동
+cd /Users/mckim64/Projects/SAMSUNG/BEES-Ontology
+docker compose up -d
+
+# 개별 로그 확인
+docker logs -f bees-server-a   # Backend
+docker logs -f bees-server-c   # 에뮬레이터
+
+# SSE 스트림 확인 (curl)
+curl -sN http://localhost:8010/api/stream/points
+
+# API 스냅샷 확인
+curl -s http://localhost:8010/api/stream/snapshot | python3 -m json.tool
+
+# 시뮬레이션 시작 (자동 시작이 안 된 경우)
+curl -X POST http://localhost:8012/simulation/start
+
+# 장비 제어 테스트
+curl -X POST http://localhost:8010/api/control \
+  -H "Content-Type: application/json" \
+  -d '{"deviceId": "bldg:AHU_5F", "command": "ON"}'
+
+# Frontend 확인
+open http://localhost:3000
+```
+
+### 12.14 Git 커밋 이력 (Phase 9)
+```
+a9f126a fix: SSE 실시간 스트림 수정 + Docker 포트 충돌 해결 + 프론트엔드 데이터 표시 복구
+ff9d3fd feat: 디지털 트윈 플랫폼 Phase 1 MVP — 4개 서버 구현
+0e390c5 docs: 디지털 트윈 플랫폼 설계서 v2 추가
+```
 
 ---
 
@@ -417,18 +717,51 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl  # 예상: ~12 (Site 최소 �
 
 ## 11. 다음 작업 가이드
 
-### 만약 내부 데이터가 확보되면 (Phase 4)
+### 디지털 트윈 플랫폼 다음 단계 (Phase 2 우선순위)
+
+**즉시 착수 가능 (의존성 없음):**
+1. **845개 전체 인스턴스 시뮬레이션 확장** — `server-c/app/profiles/`에 장비 유형별 프로파일 추가 (칠러, 보일러, FCU, 냉각탑, 펌프 등). `engine.py`에서 Neo4j 자동 로딩 구현
+2. **온톨로지 그래프 뷰 페이지** — `frontend/app/ontology/page.tsx` 신규 생성. Cytoscape.js 설치, Neo4j → 그래프 JSON 변환 API 추가
+3. **토폴로지 뷰 페이지** — `frontend/app/topology/page.tsx` 신규 생성. 트리뷰 컴포넌트, 층별 장비 레이아웃
+
+**OpenAI API 키 필요:**
+4. **LLM 채팅 기능** — `backend/app/routers/chat.py` + `services/openai_service.py` 신규. Function Calling → Neo4j Cypher → 응답 생성. `frontend/app/chat/page.tsx` 신규
+
+**기타:**
+5. **Neo4j 인증 문제 해결** — 기존 neo4j-bees 컨테이너와 .env 인증정보 일치 확인
+6. **디바이스 레지스트리 자동 로딩** — Server B 시작 시 Neo4j에서 제어 가능 장비 자동 등록
+
+### 플랫폼 기동 체크리스트 (새 세션 시작 시)
+```bash
+# 1. Neo4j 기존 컨테이너 확인
+docker ps | grep neo4j-bees
+
+# 2. 전체 기동
+cd /Users/mckim64/Projects/SAMSUNG/BEES-Ontology
+docker compose up -d
+
+# 3. 상태 확인
+docker compose ps
+
+# 4. 데이터 흐름 확인
+curl -s http://localhost:8010/api/stream/snapshot | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'포인트: {d[\"point_count\"]}개, 디바이스: {d[\"device_count\"]}개')"
+
+# 5. Frontend 확인
+open http://localhost:3000
+```
+
+### 온톨로지 관련 (필요 시)
+
+**만약 내부 데이터가 확보되면 (Phase 4):**
 1. 평면도 → `brick:Room` 인스턴스 추가, Zone 세분화
 2. BMS 포인트 리스트 → `brick:Point` 하위 센서/명령/설정값 정밀 모델링
-3. 장비 대장 → 제조사/모델명/시리얼 속성 추가 (`brick:hasModel`, `ref:hasExternalReference`)
+3. 장비 대장 → 제조사/모델명/시리얼 속성 추가
 4. BEMS 데이터 → 실측 에너지 값으로 추정값 교체, `confirmed`로 신뢰도 변경
-5. SHACL 검증 실행 → 오류 수정
 
-### 온톨로지 수정 시 주의사항
+**온톨로지 수정 시 주의사항:**
 - **TTL 수정 후 반드시 rdflib 파싱 검증** (구문 오류 방지)
 - **신뢰도 태깅 유지**: 새 데이터 추가 시 `bees:hasConfidence` 반드시 기재
 - **B동 범위 유지**: 새 인스턴스는 `bldg:GEC_Tower_B` 또는 그 하위에 연결
-- **SHACL 대상 업데이트**: 새 클래스 추가 시 해당 Shape도 추가 검토
 - **`bees:` 네임스페이스**: 커스텀 클래스/속성은 반드시 `bees:` 접두사 사용
 
 ---
