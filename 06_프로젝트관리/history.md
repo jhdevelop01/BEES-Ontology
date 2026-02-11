@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.10 (v1.7 — 미확보 14건 전수 공학적 추정 완료, 100% 모델링)
+> **최종 업데이트:** 2026.02.11 (v1.9.1 — Phase 7 자기검토 수정: 비대칭/중복/누락 전면 수정)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -34,34 +34,35 @@
 
 ---
 
-## 2. 현재 온톨로지 상태 (v1.7)
+## 2. 현재 온톨로지 상태 (v1.9.1)
 
 ### 파일
 | 파일 | 위치 | 규모 |
 |------|------|------|
-| **GEC_B_Ontology.ttl** | `05_온톨로지/` | 2,938줄, 2,024 트리플 |
+| **GEC_B_Ontology.ttl** | `05_온톨로지/` | ~6,400줄, 5,328 트리플 |
 | **GEC_B_SHACL.ttl** | `05_온톨로지/` | 337줄, 11개 Shape |
 
 ### 온톨로지 구성
 - **네임스페이스**: `brick:` (Brick Schema), `bldg:` (인스턴스), `bees:` (커스텀), `rdf:`, `rdfs:`, `owl:`, `xsd:`, `unit:`, `schema:`, `ref:`, `tag:`
 - **커스텀 클래스 28개 + 속성 45개** (`bees:` 네임스페이스)
-- **신뢰도 태깅 ~144개**: `confirmed` 5 / `estimated` ~125 / `inferred` ~14
+- **신뢰도 태깅 824개**: `confirmed` 22 / `estimated` 539 / `inferred` 263 / 미태깅 0
 - **Site 참조**: `bldg:Samsung_GEC` 12개 트리플 (최소 컨텍스트 + 에너지 실측)
+- **전층 모델링**: 지하(B4F~B1F), 포디움(1F~3F), 오피스(5F~15F 3-Tier), 옥상(RF)
+- **데이터 일관성**: hasPart↔isPartOf 완전 대칭, 고아 엔티티 0개, 중복 인스턴스 0개
 
 ### 인스턴스 수
 | 카테고리 | 수량 | 주요 유형 |
 |----------|:----:|-----------|
-| Location | 71 | Site(1), Building(1), Floor(18), HVAC_Zone(50), Location(1) |
-| System | 14 | HVAC, UFAD, CC, RH, DSF, NP, LS, DALI, BAS, Water, Rainwater, Electrical, Fire, Security |
-| Equipment | 60+ | Chiller(4), AHU(14), Boiler(3), CT(3), Pump(7), Valve(4), Damper(3), Elevator(2), Tank(2), DDC(4), 기타 |
-| Point/Sensor | 30+ | 온도/습도/CO2/압력/조도/일사량/외기/재실/전력/풍속/강우 |
-| Command | 15+ | 밸브/댐퍼/팬/DSF 루버/칠러 기동정지 |
-| Setpoint | 5+ | 온도/압력 설정값 |
-| ESG/인증 | 22 | GEC Energy(1), HQ GHG(3), LEED(6), GSEED(7), Energy Breakdown(5) |
-| Space/Room | 10+ | Office(1), MeetingRoom(1), ServerRoom(1), Support(1), Lobby(1), Mechanical(3) 등 |
-| Monthly Profile | 12 | 월별 에너지 프로파일 (Jan~Dec) |
-| DSF Control | 4 | 여름/겨울/중간기/안전 모드 |
-| 관계(feeds) | 35+ | 시스템간 feeds 관계 (AHU→Zone 확장) |
+| Floor | 18 | B4F~RF (18개 층) |
+| HVAC Zone | 60 | 전층 Zone 보유: 오피스 5존/층, 지하/포디움/옥상 용도별 Zone |
+| Room/Space | 57 | 주차장, 기계실, 전기실, 로비, 오픈오피스, 회의실 등 |
+| Equipment | 258 | Chiller(4), Boiler(3), AHU(14), 팬(16), 펌프(10), CC패널(20), 디퓨저(48) 등 |
+| Sensor | 278 | ZAT/ZAH/CO2/CO/플레넘압력/노점/결로/BMS포인트 등 |
+| Command/Setpoint | 83 | 밸브명령, 팬속도, 댐퍼, 온도설정값, VFD속도 등 |
+| System | 22 | HVAC, UFAD, CC, RH, DSF, NP, LS, BAS, 전기, 소방, 보안, 수직이동 등 |
+| Profile (에너지/ESG) | 12 | 월별 에너지 프로파일, GHG, 인증 점수 |
+| 기타 | 36 | DSF 제어 모드, 건물/사이트, 네트워크 등 |
+| **합계** | **824** | |
 
 ### SHACL 검증 Shape 11개
 1. SiteShape — Site 필수 속성 (label, hasPart)
@@ -110,7 +111,7 @@ BEES Ontology/
 │   ├── 08_Brick_Schema_참고정보.md  # Brick Schema 1.3+ 참조
 │   └── 10_학술논문_기술참고.md      # 논문 16편+, 특허 6건
 ├── 05_온톨로지/
-│   ├── GEC_B_Ontology.ttl          # ★ 메인 온톨로지 (v1.7)
+│   ├── GEC_B_Ontology.ttl          # ★ 메인 온톨로지 (v1.9)
 │   └── GEC_B_SHACL.ttl             # ★ SHACL 검증 Shape (v1.0)
 └── 06_프로젝트관리/
     ├── 07_미확보_정보_목록.md       # 미확보 항목 (Phase 5 전수 추정 완료, 0건)
@@ -221,7 +222,9 @@ BEES Ontology/
 | v1.4 | 2,218 | 1,617 | Phase 3 (Zone확장, 인증상세, 시스템관계, SHACL) |
 | v1.5 | 2,017 | 1,438 | Phase 3.1 (B동 범위 한정, 전사ESG 삭제, 시스템 재배치) |
 | v1.6 | 2,070 | 1,464 | Phase 4.1 (서울시 에너지 실측 데이터, EUI 384, B동 교차검증) |
-| **v1.7** | **2,938** | **2,024** | **Phase 5 (미확보 14건 전수 공학적 추정, 공간모델, BMS아키텍처, 월별에너지)** |
+| v1.7 | 2,938 | 2,024 | Phase 5 (미확보 14건 전수 공학적 추정, 공간모델, BMS아키텍처, 월별에너지) |
+| v1.8 | 4,948 | 3,702 | Phase 6 (6F~15F 3-Tier 층별 설비/센서/공간 모델, +292 인스턴스) |
+| **v1.9** | **6,505** | **5,090** | **Phase 7 (전면 보완: 지하/저층/옥상 + BMS포인트 + 누락시스템 + confidence 전수)** |
 
 ---
 
@@ -328,6 +331,8 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 | 18 | "구축 과정 단계별로 정리해서 파일로 저장해줘" | `15_온톨로지_구축_방법론.md` 생성 (1,054줄, 13개 섹션, 재현 가능 가이드) |
 | 19 | "각 데이터 항목별 출처와 생성 과정 추적표 만들어줘" | `16_데이터_출처_및_생성과정_추적표.md` 생성 (134건 항목별 출처/수집·생성 과정 추적) |
 | 20 | "온톨로지 기반 통계 집계 + 층별 엑셀" | `17_온톨로지_통계_요약.md` + `GEC_B동_온톨로지_통계.xlsx` 생성 (rdflib SPARQL 추출, 5시트) |
+| 21 | "6F~15F도 5F처럼 설비/센서 넣어줘" + "리서치 기반으로 추정해줘" | Phase 6: v1.7→v1.8, 3-Tier 층별 모델 (+292인스턴스, +1,678트리플), 엑셀/통계 재생성 |
+| 22 | "전체 보완해줘 — 이미 만든 내용까지 검토하고 실제 건물에 맞게" | Phase 7: v1.8→v1.9, 전면 보완 8단계 (+229인스턴스, +1,388트리플), hasLocation 50건 수정, 지하/저층/옥상 모델링, BMS포인트 추가, 누락시스템 6개 생성, confidence 전수태깅(0건 미태깅) |
 
 ---
 
@@ -338,7 +343,7 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 from rdflib import Graph
 g = Graph()
 g.parse("05_온톨로지/GEC_B_Ontology.ttl", format="turtle")
-print(f"트리플 수: {len(g)}")  # 예상: 2,024
+print(f"트리플 수: {len(g)}")  # 예상: 3,702
 ```
 
 ### SHACL 유효성 검증
