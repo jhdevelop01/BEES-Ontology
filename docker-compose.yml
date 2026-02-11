@@ -1,0 +1,149 @@
+services:
+  # ─────────────── 인프라 (데이터베이스 + 메시지 브로커) ───────────────
+  neo4j:
+    image: neo4j:5.26.0-community
+    container_name: bees-neo4j
+    ports:
+      - "7476:7474"
+      - "7689:7687"
+    volumes:
+      - ./data/neo4j/data:/data
+      - ./data/neo4j/plugins:/plugins
+    environment:
+      NEO4J_AUTH: neo4j/bees2024
+      NEO4J_PLUGINS: '["n10s"]'
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "bees2024", "RETURN 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  influxdb:
+    image: influxdb:2.7
+    container_name: bees-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: bees
+      DOCKER_INFLUXDB_INIT_PASSWORD: bees2024
+      DOCKER_INFLUXDB_INIT_ORG: samsung-gec
+      DOCKER_INFLUXDB_INIT_BUCKET: raw_7d
+      DOCKER_INFLUXDB_INIT_RETENTION: 168h
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: bees-dev-token
+    volumes:
+      - ./data/influxdb:/var/lib/influxdb2
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16
+    container_name: bees-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: bees_platform
+      POSTGRES_USER: bees
+      POSTGRES_PASSWORD: bees2024
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./platform/server-d/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bees -d bees_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: bees-mosquitto
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./platform/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./data/mosquitto/data:/mosquitto/data
+      - ./data/mosquitto/log:/mosquitto/log
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ─────────────── 애플리케이션 서버 ───────────────
+  server-a-backend:
+    build: ./platform/server-a/backend
+    container_name: bees-server-a
+    ports:
+      - "8000:8000"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./data/server-a/logs:/app/logs
+
+  server-a-frontend:
+    build: ./platform/server-a/frontend
+    container_name: bees-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - server-a-backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+
+  server-b:
+    build: ./platform/server-b
+    container_name: bees-server-b
+    ports:
+      - "8001:8001"
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./data/server-b/db:/app/db
+      - ./data/server-b/logs:/app/logs
+
+  server-c:
+    build: ./platform/server-c
+    container_name: bees-server-c
+    ports:
+      - "8002:8002"
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./data/server-c/snapshots:/app/snapshots
+      - ./data/server-c/logs:/app/logs
+
+  server-d:
+    build: ./platform/server-d
+    container_name: bees-server-d
+    ports:
+      - "8003:8003"
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./data/server-d/export:/app/export
+      - ./data/server-d/logs:/app/logs

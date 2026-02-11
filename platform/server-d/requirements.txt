@@ -1,0 +1,19 @@
+# BEES Server D — Data Historian 의존성
+# Python 3.12
+
+# 웹 프레임워크
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# 시계열 DB
+influxdb-client==1.46.0
+
+# PostgreSQL 비동기 드라이버
+asyncpg==0.30.0
+
+# MQTT 클라이언트
+paho-mqtt==1.6.1
+
+# 설정 관리
+pydantic-settings==2.7.1
+pydantic==2.10.5

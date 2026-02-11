@@ -1,2 +1,22 @@
 .DS_Store
 .claude/
+
+# Docker 데이터 볼륨 (컨테이너별 호스트 저장)
+data/
+
+# 환경변수 (API 키 포함)
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Node.js
+node_modules/
+.next/
+
+# IDE
+.vscode/
+.idea/

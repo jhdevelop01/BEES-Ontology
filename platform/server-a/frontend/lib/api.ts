@@ -1,0 +1,186 @@
+/**
+ * Server A Backend API 호출 래퍼
+ * 모든 API 요청을 중앙에서 관리한다.
+ */
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+/**
+ * 기본 fetch 래퍼 — JSON 응답 반환
+ */
+async function fetchJSON<T = unknown>(
+  path: string,
+  options?: RequestInit
+): Promise<T> {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "Unknown error");
+    throw new Error(`API 오류 (${res.status}): ${errorText}`);
+  }
+
+  return res.json();
+}
+
+// ─── 대시보드 ───
+
+export interface DashboardSummary {
+  kpi: {
+    active_devices: number;
+    total_devices: number;
+    avg_temperature: number;
+    alarm_count: number;
+    simulation_status: string;
+  };
+  devices: DeviceStatus[];
+  recent_points: PointData[];
+  timestamp: number;
+}
+
+export interface DeviceStatus {
+  device_id: string;
+  name?: string;
+  is_active: boolean;
+  mode: string;
+  type?: string;
+  location?: string;
+  ts: number | null;
+}
+
+export interface PointData {
+  point_id: string;
+  value: number | null;
+  ts: number;
+  unit: string;
+  quality: string;
+}
+
+export async function getDashboardSummary(): Promise<DashboardSummary> {
+  return fetchJSON<DashboardSummary>("/api/dashboard/summary");
+}
+
+// ─── 제어 ───
+
+export interface ControlCommand {
+  deviceId: string;
+  command: string;
+  params?: Record<string, unknown>;
+  userId?: number;
+}
+
+export interface ControlResponse {
+  success: boolean;
+  message: string;
+  deviceId: string;
+  command: string;
+}
+
+export async function sendControlCommand(
+  cmd: ControlCommand
+): Promise<ControlResponse> {
+  return fetchJSON<ControlResponse>("/api/control", {
+    method: "POST",
+    body: JSON.stringify(cmd),
+  });
+}
+
+// ─── 장비 상태 ───
+
+export interface DeviceStatusResponse {
+  devices: DeviceStatus[];
+  total: number;
+  active: number;
+}
+
+export async function getDeviceStatus(): Promise<DeviceStatusResponse> {
+  return fetchJSON<DeviceStatusResponse>("/api/devices/status");
+}
+
+// ─── 토폴로지 ───
+
+export interface TopologyNode {
+  id: string;
+  name: string;
+  type: string;
+  labels?: string[];
+  description?: string;
+  children?: TopologyNode[];
+}
+
+export interface TopologyResponse {
+  tree: TopologyNode[];
+  source: string;
+}
+
+export async function getTopologyTree(): Promise<TopologyResponse> {
+  return fetchJSON<TopologyResponse>("/api/topology/tree");
+}
+
+// ─── 온톨로지 검색 ───
+
+export interface SearchResult {
+  uri: string;
+  labels: string[];
+  name: string;
+}
+
+export interface SearchResponse {
+  query: string;
+  count: number;
+  results: SearchResult[];
+}
+
+export async function searchOntology(
+  query: string,
+  limit: number = 20
+): Promise<SearchResponse> {
+  return fetchJSON<SearchResponse>(
+    `/api/ontology/search?q=${encodeURIComponent(query)}&limit=${limit}`
+  );
+}
+
+// ─── 시계열 이력 ───
+
+export interface HistoryResponse {
+  point_id: string;
+  data: PointData[];
+  source?: string;
+  message?: string;
+}
+
+export async function getPointHistory(
+  pointId: string,
+  start: string = "-1h",
+  stop: string = "now()"
+): Promise<HistoryResponse> {
+  return fetchJSON<HistoryResponse>(
+    `/api/history/${encodeURIComponent(pointId)}?start=${start}&stop=${stop}`
+  );
+}
+
+// ─── 스트림 스냅샷 ───
+
+export interface SnapshotResponse {
+  points: Record<string, PointData>;
+  devices: Record<string, DeviceStatus>;
+  point_count: number;
+  device_count: number;
+  timestamp: number;
+}
+
+export async function getStreamSnapshot(): Promise<SnapshotResponse> {
+  return fetchJSON<SnapshotResponse>("/api/stream/snapshot");
+}
+
+// ─── 헬스체크 ───
+
+export async function healthCheck(): Promise<{ status: string }> {
+  return fetchJSON<{ status: string }>("/health");
+}
