@@ -184,3 +184,112 @@ export async function getStreamSnapshot(): Promise<SnapshotResponse> {
 export async function healthCheck(): Promise<{ status: string }> {
   return fetchJSON<{ status: string }>("/health");
 }
+
+// ─── 온톨로지 그래프 ───
+
+export interface GraphNode {
+  data: {
+    id: string;
+    label: string;
+    type: string;
+    labels: string[];
+    uri: string;
+  };
+}
+
+export interface GraphEdge {
+  data: {
+    id: string;
+    source: string;
+    target: string;
+    label: string;
+    type: string;
+  };
+}
+
+export interface GraphResponse {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  stats: {
+    node_count: number;
+    edge_count: number;
+  };
+}
+
+export async function getOntologyGraph(params?: {
+  nodeType?: string;
+  floor?: string;
+  limit?: number;
+}): Promise<GraphResponse> {
+  const sp = new URLSearchParams();
+  if (params?.nodeType) sp.set("node_type", params.nodeType);
+  if (params?.floor) sp.set("floor", params.floor);
+  if (params?.limit) sp.set("limit", String(params.limit));
+  const qs = sp.toString();
+  return fetchJSON<GraphResponse>(
+    `/api/ontology/graph${qs ? `?${qs}` : ""}`
+  );
+}
+
+// ─── 노드 상세 ───
+
+export interface NodeConnection {
+  rel: string;
+  direction: "incoming" | "outgoing";
+  target_uri: string;
+  target_labels: string[];
+}
+
+export interface NodeDetail {
+  uri: string;
+  name: string;
+  labels: string[];
+  type: string;
+  properties: Record<string, unknown>;
+  connections: NodeConnection[];
+}
+
+export async function getNodeDetail(nodeId: string): Promise<NodeDetail> {
+  return fetchJSON<NodeDetail>(
+    `/api/ontology/node/${encodeURIComponent(nodeId)}`
+  );
+}
+
+// ─── LLM 채팅 ───
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ToolCallInfo {
+  name: string;
+  arguments: Record<string, unknown>;
+  result_count: number;
+}
+
+export interface ChatResponse {
+  response: string;
+  cypher_queries: string[];
+  sources: string[];
+  tool_calls: ToolCallInfo[];
+}
+
+export interface ChatStatusResponse {
+  available: boolean;
+  model: string | null;
+}
+
+export async function sendChatMessage(
+  message: string,
+  history: ChatMessage[] = []
+): Promise<ChatResponse> {
+  return fetchJSON<ChatResponse>("/api/chat", {
+    method: "POST",
+    body: JSON.stringify({ message, history }),
+  });
+}
+
+export async function getChatStatus(): Promise<ChatStatusResponse> {
+  return fetchJSON<ChatStatusResponse>("/api/chat/status");
+}

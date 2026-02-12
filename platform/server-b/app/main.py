@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.device_registry import registry
+from app.neo4j_loader import load_devices_from_neo4j
 
 # ---------------------------------------------------------------------------
 # 로깅 설정
@@ -268,6 +269,10 @@ async def lifespan(app: FastAPI):
     logger.info("  MQTT Broker:  %s:%s", settings.MQTT_BROKER, settings.MQTT_PORT)
     logger.info("  등록 장비:    %d개", registry.count)
     logger.info("=" * 60)
+
+    # Neo4j에서 장비 자동 로딩 (Phase 2)
+    neo4j_count = await load_devices_from_neo4j()
+    logger.info("Neo4j 디바이스 로딩: %d개 추가 (전체 %d개)", neo4j_count, registry.count)
 
     # MQTT 초기화
     _mqtt_client = _init_mqtt()

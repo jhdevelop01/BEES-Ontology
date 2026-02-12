@@ -29,6 +29,34 @@ async def search_ontology(
     }
 
 
+@router.get("/ontology/graph")
+async def get_ontology_graph(
+    node_type: str | None = Query(None, description="노드 타입 필터 (Equipment, Point, System 등)"),
+    floor: str | None = Query(None, description="층 필터 (예: 5F, B1F)"),
+    limit: int = Query(200, ge=1, le=1000, description="최대 노드 수"),
+) -> dict[str, Any]:
+    """
+    Cytoscape.js 호환 그래프 데이터 반환.
+    온톨로지 그래프 시각화를 위한 노드/엣지 데이터.
+    """
+    data = await neo4j_service.get_graph_data(
+        node_type=node_type,
+        floor=floor,
+        limit=limit,
+    )
+    return data
+
+
+@router.get("/ontology/node/{node_id:path}")
+async def get_ontology_node(node_id: str) -> dict[str, Any]:
+    """
+    노드 상세 정보 조회.
+    URI, 이름, 라벨, 타입, 속성, 연결 목록을 반환.
+    """
+    detail = await neo4j_service.get_node_detail(node_id)
+    return detail
+
+
 @router.get("/topology/tree")
 async def get_topology_tree() -> dict[str, Any]:
     """

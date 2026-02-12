@@ -82,39 +82,53 @@ Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 �
 | PostgreSQL | 5434 | bees / bees2024 |
 | Neo4j (외부 컨테이너) | 7476/7689 | neo4j / bees2024 |
 
-### Phase 1 MVP 현재 상태
-- ✅ AHU_5F 1대 + 5개 센서 실시간 시뮬레이션 (5초 간격)
-- ✅ SSE 실시간 스트림 (polling 방식, `_event_counter` + `threading.Lock`)
-- ✅ 대시보드 KPI + 모니터링 차트 + 장비 제어 (ON/OFF)
-- ✅ E2E 제어: Frontend → A → B → C → MQTT → A(SSE) → Frontend
-- ✅ Data Historian: MQTT → InfluxDB 배치 저장 + 시계열 조회 API
+### Phase 2 현재 상태 (2026.02.12) — ✅ 전체 완료
+- ✅ **84개 장비 + 164개 포인트** 실시간 시뮬레이션 (Neo4j 자동 로딩, 5초 간격)
+- ✅ **온톨로지 그래프 뷰** — Cytoscape.js, cose-bilkent 레이아웃, 타입 필터, 노드 상세 (`/ontology`)
+- ✅ **토폴로지 뷰** — 18층 건물 트리 + 장비 그리드/리스트 (`/topology`)
+- ✅ **LLM 채팅** — OpenAI GPT-4o Function Calling × 6도구 → Neo4j Cypher (`/chat`)
+- ✅ **디바이스 레지스트리** — Server B Neo4j 자동 로딩
+- ✅ **서울 계절 보정** — 사인파 모델 (냉방 7월, 난방 1월 피크)
+- ✅ **InfluxDB 직접 연동** — 3단계 폴백: InfluxDB 직접 → Server D 프록시 → MQTT 캐시
+- ✅ SSE 실시간 스트림 + 대시보드 KPI + 모니터링 + 장비 제어 (Phase 1 유지)
+- ✅ Data Historian: MQTT → InfluxDB (Phase 1 유지)
+- ⚠️ **OpenAI API 키**: `.env`의 `OPENAI_API_KEY`에 실제 키 설정 필요
+- ⚠️ **시뮬레이션 수동 시작**: `POST http://localhost:8012/simulation/start` 필요
 
-### Phase 2 미구현 (다음 작업)
-1. **845개 전체 인스턴스 시뮬레이션** — Neo4j에서 자동 로딩 → 프로파일 자동 생성
-2. **온톨로지 그래프 뷰** — Cytoscape.js (`/ontology` 페이지)
-3. **토폴로지 뷰** — 트리뷰 + 층별 레이아웃 (`/topology` 페이지)
-4. **LLM 채팅** — OpenAI GPT Function Calling → Neo4j Cypher (`/chat` 페이지)
+### 프론트엔드 6개 페이지
+| 경로 | 기능 |
+|------|------|
+| `/` | 대시보드 — KPI, 장비 상태, 최근 데이터 |
+| `/monitoring` | 모니터링 — 실시간 차트 |
+| `/control` | 제어 — ON/OFF, 모드 변경 |
+| `/ontology` | 온톨로지 그래프 — Cytoscape.js 시각화 |
+| `/topology` | 토폴로지 — 건물 계층 트리 + 장비 그리드 |
+| `/chat` | AI 채팅 — LLM 자연어 질의 |
 
 ### 기동 방법
 ```bash
+docker start neo4j-bees                                 # Neo4j 시작
 docker compose up -d                                    # 전체 기동
-curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인
+curl -s -X POST http://localhost:8012/simulation/start   # 시뮬레이션 시작
+curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (164포인트 기대)
 open http://localhost:3000                               # 프론트엔드
 ```
 
 ### 주요 기술 결정 사항
 - **MQTT 타임스탬프**: Server C는 ISO 8601 발행, Server A `_parse_ts()`가 Unix로 변환
 - **SSE**: `asyncio.Event` 크로스스레드 불가 → polling 방식 사용 (Python 3.12+)
-- **Neo4j**: docker-compose에서 제거, 기존 `neo4j-bees` 외부 컨테이너 사용 (`host.docker.internal`)
+- **Neo4j**: docker-compose에서 제거, 외부 `neo4j-bees` 컨테이너 사용 (`host.docker.internal:7689`)
 - **NEXT_PUBLIC_* 환경변수**: 빌드 시 bake됨, 런타임 변경 불가
+- **Cytoscape.js**: dynamic import (SSR 회피), `as any` 타입 캐스팅으로 strict 타입 우회
+- **n10s 노드 필터**: `n.uri STARTS WITH 'https://example.org/gec-b#'`로 스키마 노드 제외
 
 ### 상세 참조
-- **전체 구현 상세/디버깅 이력/다음 작업 가이드**: `_docs/history.md` (섹션 12)
+- **전체 구현 상세/디버깅 이력/다음 작업 가이드**: `_docs/history.md` (섹션 10~13)
 - **전체 아키텍처 설계서**: `_docs/10_디지털트윈_플랫폼_설계.md`
 
 ## 작업 시작 전
 1. **`_docs/08_개발_원칙.md`를 반드시 읽을 것** — TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙
-2. **플랫폼 작업 시 `_docs/history.md` 섹션 12를 반드시 읽을 것** — 서버별 API/구현 상세, 디버깅 이력, 미구현 목록
+2. **플랫폼 작업 시 `_docs/history.md` 섹션 10~13을 반드시 읽을 것** — 서버별 API/구현 상세, Phase 2 완료 내역, 다음 작업 가이드
 3. 온톨로지 맥락이 필요하면 `_docs/history.md` 섹션 1~11을 읽을 것
 
 ## 언어

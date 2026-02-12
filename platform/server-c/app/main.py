@@ -53,6 +53,11 @@ async def lifespan(app: FastAPI):
     logger.info("Server C 시작 — 가상 건물 에뮬레이터")
     logger.info(f"MQTT 브로커: {settings.MQTT_BROKER}:{settings.MQTT_PORT}")
     logger.info(f"시뮬레이션 간격: {settings.SIMULATION_INTERVAL}초")
+
+    # Phase 2: Neo4j에서 장비/센서 자동 로딩
+    load_result = await engine.initialize_from_neo4j()
+    logger.info(f"Neo4j 로딩 결과: {load_result}")
+
     yield
     # 종료 시 시뮬레이션 정리
     if engine._running:
@@ -126,6 +131,16 @@ async def health_check():
 # ─────────────────────────────────────────────────────────────
 # API 엔드포인트 — 시뮬레이션 제어
 # ─────────────────────────────────────────────────────────────
+
+@app.get("/neo4j/status", tags=["시스템"])
+async def neo4j_load_status():
+    """Neo4j 로딩 상태 및 등록된 장비/포인트 수 조회."""
+    return {
+        "neo4j_loaded": engine._neo4j_loaded,
+        "device_count": len(engine._devices),
+        "point_count": len(engine._profiles),
+    }
+
 
 @app.post("/simulation/start", response_model=SimulationResponse, tags=["시뮬레이션"])
 async def simulation_start():

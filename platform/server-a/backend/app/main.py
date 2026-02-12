@@ -16,8 +16,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.services import neo4j_service, mqtt_service
-from app.routers import dashboard, control, stream, ontology, history
+from app.services import neo4j_service, mqtt_service, openai_service, influxdb_service
+from app.routers import dashboard, control, stream, ontology, history, chat
 
 # 로깅 설정
 logging.basicConfig(
@@ -39,12 +39,15 @@ async def lifespan(app: FastAPI):
     # 시작 시 서비스 초기화
     await neo4j_service.connect()
     await mqtt_service.connect()
+    await influxdb_service.connect()
+    openai_service.init()
 
     logger.info("=== 모든 서비스 초기화 완료 ===")
     yield
 
     # 종료 시 서비스 정리
     logger.info("=== Server A Backend 종료 중 ===")
+    await influxdb_service.disconnect()
     await mqtt_service.disconnect()
     await neo4j_service.disconnect()
     logger.info("=== 모든 서비스 정리 완료 ===")
@@ -77,6 +80,7 @@ app.include_router(control.router)
 app.include_router(stream.router)
 app.include_router(ontology.router)
 app.include_router(history.router)
+app.include_router(chat.router)
 
 
 @app.get("/health", tags=["시스템"])
@@ -104,6 +108,10 @@ async def root():
             "topology": "/api/topology/tree",
             "search": "/api/ontology/search?q=AHU",
             "history": "/api/history/{pointId}",
+            "chat": "/api/chat",
+            "chat_status": "/api/chat/status",
+            "ontology_graph": "/api/ontology/graph",
+            "ontology_node": "/api/ontology/node/{node_id}",
             "docs": "/docs",
         },
     }

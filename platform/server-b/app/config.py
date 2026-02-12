@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     # PostgreSQL 연결 정보 (감사 로그 저장용)
     DATABASE_URL: str = "postgresql://bees:bees2024@postgres:5432/bees_platform"
 
+    # Neo4j 연결 정보 (디바이스 레지스트리 자동 로딩용)
+    NEO4J_URI: str = "bolt://host.docker.internal:7689"
+    NEO4J_USER: str = "neo4j"
+    NEO4J_PASSWORD: str = "bees2024"
+
     # Server B 자체 설정
     HOST: str = "0.0.0.0"
     PORT: int = 8001

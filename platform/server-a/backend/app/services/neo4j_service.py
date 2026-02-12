@@ -216,6 +216,361 @@ def _extract_name(uri: str) -> str:
     return uri
 
 
+def _uri_to_brick_id(uri: str) -> str:
+    """URI를 bldg:XXX 형태의 Brick ID로 변환"""
+    if not uri:
+        return ""
+    if "https://example.org/gec-b#" in uri:
+        return "bldg:" + uri.replace("https://example.org/gec-b#", "")
+    return "bldg:" + _extract_name(uri)
+
+
+def _classify_node_type(labels: list[str]) -> str:
+    """Neo4j 라벨을 기반으로 노드 타입 분류 (Cytoscape.js 시각화용)"""
+    if not labels:
+        return "Other"
+
+    # n10s 공통 라벨 제거 후 분류
+    meaningful = [l for l in labels if l not in ("Resource", "Class", "Property")]
+    if not meaningful:
+        return "Other"
+
+    labels_set = set(meaningful)
+
+    # Location (먼저 체크 — Building, Floor, Site, Zone)
+    if "Building" in labels_set:
+        return "Building"
+    if "Floor" in labels_set or "Storey" in labels_set:
+        return "Floor"
+    if "Site" in labels_set:
+        return "Site"
+    if any("Zone" in lbl for lbl in meaningful):
+        return "Zone"
+    if "Location" in labels_set or "Room" in labels_set:
+        return "Location"
+    location_keywords = ["Space", "Mechanical_Room", "Office", "Lobby", "Corridor"]
+    for lk in location_keywords:
+        if any(lk in lbl for lbl in meaningful):
+            return "Location"
+
+    # System
+    if "System" in labels_set or any("System" in lbl for lbl in meaningful):
+        return "System"
+
+    # Equipment 하위 클래스 (구체적인 것 우선)
+    equipment_types = [
+        "AHU", "Chiller", "Boiler", "Pump", "Fan", "Cooling_Tower",
+        "Heat_Exchanger", "VAV", "FCU", "PAC", "MAU", "HEX",
+        "Damper", "Valve", "VFD", "Actuator", "Filter",
+        "Diffuser", "Meter", "Panel", "Transformer",
+        "Controller", "Server", "Header", "Pipe",
+    ]
+    for et in equipment_types:
+        if et in labels_set or any(et in lbl for lbl in meaningful):
+            return "Equipment"
+
+    if "Equipment" in labels_set:
+        return "Equipment"
+
+    # Sensor / Point
+    sensor_keywords = ["Sensor", "Setpoint", "Command", "Status", "Alarm", "Parameter", "Limit"]
+    for sk in sensor_keywords:
+        if sk in labels_set or any(sk in lbl for lbl in meaningful):
+            return "Point"
+
+    if "Point" in labels_set:
+        return "Point"
+
+    # Loop
+    if any("Loop" in lbl for lbl in meaningful):
+        return "System"
+
+    return "Other"
+
+
+async def run_cypher(cypher: str, params: dict | None = None) -> list[dict[str, Any]]:
+    """
+    범용 Cypher 실행 — LLM 채팅 등에서 사용.
+    Returns:
+        list[dict]: 결과 레코드 리스트, 또는 [{"error": str}] on failure.
+    """
+    if not _driver:
+        return [{"error": "Neo4j 연결이 설정되지 않았습니다."}]
+
+    try:
+        async with _driver.session() as session:
+            result = await session.run(cypher, parameters=params or {})
+            records = [record.data() async for record in result]
+            return records
+    except Exception as e:
+        logger.warning("Cypher 실행 실패: %s — %s", cypher[:100], e)
+        return [{"error": str(e)}]
+
+
+async def get_graph_data(
+    node_type: str | None = None,
+    floor: str | None = None,
+    limit: int = 200,
+) -> dict[str, Any]:
+    """
+    Cytoscape.js 호환 그래프 데이터 반환.
+    nodes와 edges를 포함하며, 필터링 지원.
+    """
+    if not _driver:
+        return _get_fallback_graph_data(node_type, floor, limit)
+
+    try:
+        async with _driver.session() as session:
+            # --- 1) 노드 조회 ---
+            where_clauses = []
+            params: dict[str, Any] = {"limit": limit}
+
+            if node_type:
+                where_clauses.append(
+                    "any(label IN labels(n) WHERE label CONTAINS $node_type)"
+                )
+                params["node_type"] = node_type
+
+            if floor:
+                where_clauses.append("n.uri CONTAINS $floor")
+                params["floor"] = floor
+
+            where_str = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+
+            # n10s 내부/스키마 노드 제외: URI 필수 + 스키마 노드 제외
+            schema_exclude = (
+                "n.uri IS NOT NULL "
+                "AND n.uri STARTS WITH 'https://example.org/gec-b#' "
+                "AND NOT any(l IN labels(n) WHERE l IN "
+                "['DatatypeProperty', 'ObjectProperty', 'Class', 'Relationship', 'Property'])"
+            )
+            if where_clauses:
+                full_where = f"WHERE {schema_exclude} AND " + " AND ".join(where_clauses)
+            else:
+                full_where = f"WHERE {schema_exclude}"
+
+            node_query = f"""
+                MATCH (n)
+                {full_where}
+                RETURN n.uri AS uri, labels(n) AS labels
+                LIMIT $limit
+            """
+            result = await session.run(node_query, parameters=params)
+            node_records = [record.data() async for record in result]
+
+            if not node_records:
+                return _get_fallback_graph_data(node_type, floor, limit)
+
+            # URI 집합 (엣지 필터링용)
+            uri_set = {r["uri"] for r in node_records if r.get("uri")}
+
+            # 노드 생성
+            nodes = []
+            for r in node_records:
+                uri = r.get("uri", "")
+                lbls = r.get("labels", [])
+                brick_id = _uri_to_brick_id(uri)
+                nodes.append({
+                    "data": {
+                        "id": brick_id,
+                        "label": _extract_name(uri),
+                        "type": _classify_node_type(lbls),
+                        "labels": lbls,
+                        "uri": uri,
+                    }
+                })
+
+            # --- 2) 엣지 조회 ---
+            rel_types = ["feeds", "isPartOf", "hasLocation", "isPointOf", "hasPart", "isFedBy"]
+            edge_query = """
+                MATCH (a)-[r]->(b)
+                WHERE a.uri IN $uris AND b.uri IN $uris
+                  AND type(r) IN $rel_types
+                RETURN a.uri AS source, b.uri AS target, type(r) AS rel_type
+            """
+            result = await session.run(
+                edge_query,
+                parameters={"uris": list(uri_set), "rel_types": rel_types},
+            )
+            edge_records = [record.data() async for record in result]
+
+            edges = []
+            for idx, r in enumerate(edge_records):
+                src_id = _uri_to_brick_id(r.get("source", ""))
+                tgt_id = _uri_to_brick_id(r.get("target", ""))
+                rel = r.get("rel_type", "")
+                edges.append({
+                    "data": {
+                        "id": f"e{idx}",
+                        "source": src_id,
+                        "target": tgt_id,
+                        "label": rel,
+                        "type": rel,
+                    }
+                })
+
+            # 통계
+            type_counts: dict[str, int] = {}
+            for n in nodes:
+                t = n["data"]["type"]
+                type_counts[t] = type_counts.get(t, 0) + 1
+
+            return {
+                "nodes": nodes,
+                "edges": edges,
+                "stats": {
+                    "node_count": len(nodes),
+                    "edge_count": len(edges),
+                    "type_counts": type_counts,
+                },
+            }
+
+    except Exception as e:
+        logger.warning("그래프 데이터 조회 실패: %s", e)
+        return _get_fallback_graph_data(node_type, floor, limit)
+
+
+async def get_node_detail(node_id: str) -> dict[str, Any]:
+    """
+    노드 상세 정보 조회.
+    URI, 이름, 라벨, 타입, 속성, 연결 목록을 반환.
+    """
+    if not _driver:
+        return _get_fallback_node_detail(node_id)
+
+    # node_id를 URI로 변환 (bldg:XXX → 전체 URI)
+    if node_id.startswith("bldg:"):
+        uri = "https://example.org/gec-b#" + node_id.replace("bldg:", "")
+    else:
+        uri = node_id
+
+    try:
+        async with _driver.session() as session:
+            # 노드 속성 조회
+            node_result = await session.run("""
+                MATCH (n {uri: $uri})
+                RETURN n.uri AS uri, labels(n) AS labels, properties(n) AS props
+            """, uri=uri)
+            node_record = await node_result.single()
+
+            if not node_record:
+                return _get_fallback_node_detail(node_id)
+
+            node_data = node_record.data()
+            lbls = node_data.get("labels", [])
+            props = node_data.get("props", {})
+
+            # 연결 관계 조회 (나가는 방향)
+            out_result = await session.run("""
+                MATCH (n {uri: $uri})-[r]->(m)
+                RETURN type(r) AS rel_type, m.uri AS target_uri, labels(m) AS target_labels
+            """, uri=uri)
+            out_records = [record.data() async for record in out_result]
+
+            # 연결 관계 조회 (들어오는 방향)
+            in_result = await session.run("""
+                MATCH (m)-[r]->(n {uri: $uri})
+                RETURN type(r) AS rel_type, m.uri AS source_uri, labels(m) AS source_labels
+            """, uri=uri)
+            in_records = [record.data() async for record in in_result]
+
+            connections = []
+            for r in out_records:
+                target_uri = r.get("target_uri", "")
+                connections.append({
+                    "direction": "outgoing",
+                    "rel": r.get("rel_type", ""),
+                    "target_uri": _uri_to_brick_id(target_uri),
+                    "target_labels": r.get("target_labels", []),
+                })
+
+            for r in in_records:
+                source_uri = r.get("source_uri", "")
+                connections.append({
+                    "direction": "incoming",
+                    "rel": r.get("rel_type", ""),
+                    "target_uri": _uri_to_brick_id(source_uri),
+                    "target_labels": r.get("source_labels", []),
+                })
+
+            return {
+                "uri": uri,
+                "brick_id": _uri_to_brick_id(uri),
+                "name": _extract_name(uri),
+                "labels": lbls,
+                "type": _classify_node_type(lbls),
+                "properties": {k: v for k, v in props.items() if k != "uri"},
+                "connections": connections,
+                "stats": {
+                    "outgoing": len(out_records),
+                    "incoming": len(in_records),
+                    "total": len(connections),
+                },
+            }
+
+    except Exception as e:
+        logger.warning("노드 상세 조회 실패: %s — %s", node_id, e)
+        return _get_fallback_node_detail(node_id)
+
+
+def _get_fallback_graph_data(
+    node_type: str | None = None,
+    floor: str | None = None,
+    limit: int = 200,
+) -> dict[str, Any]:
+    """Neo4j 미연결 시 폴백 그래프 데이터"""
+    fallback_nodes = [
+        {"data": {"id": "bldg:GEC_Tower_B", "label": "GEC_Tower_B", "type": "Building", "labels": ["Building"], "uri": ""}},
+        {"data": {"id": "bldg:Floor_5F", "label": "Floor_5F", "type": "Floor", "labels": ["Floor"], "uri": ""}},
+        {"data": {"id": "bldg:AHU_5F", "label": "AHU_5F", "type": "Equipment", "labels": ["AHU", "Equipment"], "uri": ""}},
+        {"data": {"id": "bldg:AHU_5F_SAT", "label": "AHU_5F_SAT", "type": "Point", "labels": ["Supply_Air_Temperature_Sensor", "Point"], "uri": ""}},
+        {"data": {"id": "bldg:AHU_5F_RAT", "label": "AHU_5F_RAT", "type": "Point", "labels": ["Return_Air_Temperature_Sensor", "Point"], "uri": ""}},
+        {"data": {"id": "bldg:Zone_5F_Interior", "label": "Zone_5F_Interior", "type": "Zone", "labels": ["HVAC_Zone"], "uri": ""}},
+        {"data": {"id": "bldg:Chiller_1", "label": "Chiller_1", "type": "Equipment", "labels": ["Chiller", "Equipment"], "uri": ""}},
+    ]
+    fallback_edges = [
+        {"data": {"id": "e0", "source": "bldg:GEC_Tower_B", "target": "bldg:Floor_5F", "label": "hasPart", "type": "hasPart"}},
+        {"data": {"id": "e1", "source": "bldg:Floor_5F", "target": "bldg:Zone_5F_Interior", "label": "hasPart", "type": "hasPart"}},
+        {"data": {"id": "e2", "source": "bldg:AHU_5F", "target": "bldg:AHU_5F_SAT", "label": "hasPoint", "type": "hasPoint"}},
+        {"data": {"id": "e3", "source": "bldg:AHU_5F", "target": "bldg:AHU_5F_RAT", "label": "hasPoint", "type": "hasPoint"}},
+        {"data": {"id": "e4", "source": "bldg:AHU_5F", "target": "bldg:Zone_5F_Interior", "label": "feeds", "type": "feeds"}},
+    ]
+
+    # 필터링 적용
+    if node_type:
+        fallback_nodes = [
+            n for n in fallback_nodes
+            if node_type.lower() in str(n["data"]["labels"]).lower()
+               or node_type.lower() in n["data"]["type"].lower()
+        ]
+
+    return {
+        "nodes": fallback_nodes[:limit],
+        "edges": fallback_edges,
+        "stats": {
+            "node_count": len(fallback_nodes),
+            "edge_count": len(fallback_edges),
+            "type_counts": {"Building": 1, "Floor": 1, "Equipment": 2, "Point": 2, "Zone": 1},
+        },
+    }
+
+
+def _get_fallback_node_detail(node_id: str) -> dict[str, Any]:
+    """Neo4j 미연결 시 폴백 노드 상세"""
+    name = node_id.replace("bldg:", "") if node_id.startswith("bldg:") else node_id
+    return {
+        "uri": "",
+        "brick_id": node_id if node_id.startswith("bldg:") else f"bldg:{node_id}",
+        "name": name,
+        "labels": ["Unknown"],
+        "type": "Other",
+        "properties": {},
+        "connections": [],
+        "stats": {"outgoing": 0, "incoming": 0, "total": 0},
+        "fallback": True,
+    }
+
+
 def _get_fallback_topology() -> list[dict]:
     """Neo4j 미연결 시 폴백 토폴로지 (GEC B동 구조 기반)"""
     floors = []

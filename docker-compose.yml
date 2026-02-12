@@ -98,6 +98,8 @@ services:
       postgres:
         condition: service_healthy
     env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       - ./data/server-b/db:/app/db
       - ./data/server-b/logs:/app/logs

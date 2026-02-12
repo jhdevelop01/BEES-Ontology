@@ -35,3 +35,7 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "postgresql://bees:bees2024@localhost:5432/bees_platform",
 )
+
+# OpenAI LLM
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")

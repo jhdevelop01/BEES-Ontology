@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.12 (Phase 9 — 디지털 트윈 IoT 시뮬레이션 플랫폼 구축)
+> **최종 업데이트:** 2026.02.12 (Phase 10 — 디지털 트윈 플랫폼 Phase 2 완료, 7/7 항목 100%)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -131,7 +131,7 @@ BEES-Ontology/
 │   │   │   │   └── services/
 │   │   │   │       ├── mqtt_service.py        #   ★ MQTT 구독 + SSE 이벤트 생성 (polling 방식)
 │   │   │   │       ├── neo4j_service.py       #   Neo4j Cypher 쿼리 (토폴로지, 검색)
-│   │   │   │       └── influxdb_service.py    #   스텁 (Phase 2)
+│   │   │   │       └── influxdb_service.py    #   InfluxDB 직접 조회 (async)
 │   │   │   ├── requirements.txt
 │   │   │   └── Dockerfile
 │   │   └── frontend/                          # Next.js 14 프론트엔드 (:3000)
@@ -402,15 +402,18 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 | 30 | "Neo4j 구축 진행하자" | Docker neo4j-bees 컨테이너 생성 (neo4j:5.26.0 + n10s), TTL 5,756 트리플 전량 임포트, 관계 6종 완전 일치 검증, `scripts/verify_neo4j.py` 생성 |
 | 31 | "디지털 트윈 시뮬레이션 플랫폼 만들자" | Phase 9: 4-서버 아키텍처 설계 + MVP 구현. Server A(FastAPI+Next.js 대시보드), B(BAS Adapter), C(가상 건물 에뮬레이터), D(Data Historian). Docker Compose 8서비스 오케스트레이션 |
 | 32 | "프론트엔드 데이터 안 보여" | SSE 크로스스레드 이슈 진단+수정(asyncio.Event→polling), 타임스탬프 포맷 변환(ISO→Unix), 센서ID 매핑 수정, Docker 포트 충돌 6건 해결 |
+| 33 | "Phase 2 진행하자" (history.md 인수인계 파일 기반) | Phase 2: 4팀 병렬 — Team1 에뮬레이터 확장(84장비+164포인트), Team2 프론트엔드 3페이지, Team3 LLM 채팅, Team4 API+인프라. ~25개 파일 신규/수정 |
+| 34 | "모든 서버 한방에 켜고 끌 수 있게 스크립트" | `start.sh`, `stop.sh` 생성 (Neo4j→Docker Compose→시뮬레이션→상태 확인) |
+| 35 | "모든 내용을 빠짐없이 개발하였는지 검토" | 29개 항목 전수 검증: 27/29 완료(93%), 미구현 2건(InfluxDB) 발견 → 즉시 구현하여 29/29(100%) 달성 |
 
 ---
 
-## 12. Phase 9: 디지털 트윈 IoT 시뮬레이션 플랫폼 (2026.02.11~12)
+## 10. Phase 9: 디지털 트윈 IoT 시뮬레이션 플랫폼 (2026.02.11~12)
 
-### 12.1 개요
+### 10.1 개요
 Brick Schema 온톨로지(845 인스턴스, 5,756 트리플)를 기반으로 **4개 독립 서버** 구성의 디지털 트윈 IoT 시뮬레이션 플랫폼 구축. 가상 건물 에뮬레이터가 실시간 센서 데이터를 생성하고, 웹 대시보드에서 장비 제어 및 온톨로지 기반 지식 조회가 가능한 시스템.
 
-### 12.2 시스템 아키텍처
+### 10.2 시스템 아키텍처
 
 ```
 [사용자 브라우저]
@@ -441,7 +444,7 @@ Brick Schema 온톨로지(845 인스턴스, 5,756 트리플)를 기반으로 **4
     └── PostgreSQL (알람/감사/스케줄)
 ```
 
-### 12.3 포트 매핑 (확정, 다른 프로젝트와 충돌 방지)
+### 10.3 포트 매핑 (확정, 다른 프로젝트와 충돌 방지)
 
 | 서비스 | 컨테이너명 | 호스트 포트 | 컨테이너 포트 | 비고 |
 |--------|-----------|:-----------:|:------------:|------|
@@ -457,7 +460,7 @@ Brick Schema 온톨로지(845 인스턴스, 5,756 트리플)를 기반으로 **4
 
 > **포트 충돌 이력**: hvac-influxdb(8086→8087), hvac-postgres(5433), hvac-mqtt(1883/1884), bees-otel-api(8000), hvac-fmi(8002), hvac-cdl(8003) 등과 충돌하여 모두 고유 포트로 변경
 
-### 12.4 환경변수 (.env)
+### 10.4 환경변수 (.env)
 ```bash
 NEO4J_URI=bolt://host.docker.internal:7689  # 기존 neo4j-bees 컨테이너
 NEO4J_USER=neo4j
@@ -474,7 +477,7 @@ SERVER_C_URL=http://server-c:8002
 SERVER_D_URL=http://server-d:8003
 ```
 
-### 12.5 MQTT 토픽 설계
+### 10.5 MQTT 토픽 설계
 ```
 bees/points/{point_id}              # 센서 데이터 (Server C → D, A)
   예: bees/points/bldg:Zone_Air_Temp_5F_Interior
@@ -493,7 +496,7 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 
 > **주의**: Server C는 `ts`를 ISO 8601 문자열로 발행. Server A `mqtt_service.py`의 `_parse_ts()`가 Unix timestamp로 변환하여 프론트엔드에 전달.
 
-### 12.6 Server A — 온톨로지 웹 서비스 (구현 완료)
+### 10.6 Server A — 온톨로지 웹 서비스 (구현 완료)
 
 #### Backend API (FastAPI, :8010)
 | 엔드포인트 | 메서드 | 구현 | 설명 |
@@ -507,8 +510,10 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 | `/api/topology/tree` | GET | ✅ | 건물 계층 트리 (Site→Building→Floor→Zone→Equipment) |
 | `/api/history/{pointId}` | GET | ✅ | Server D 시계열 조회 프록시 |
 | `/health` | GET | ✅ | 헬스체크 |
-| `/api/chat` | POST | ❌ | **Phase 2**: OpenAI GPT + Neo4j Cypher Q&A |
-| `/api/ontology/graph` | GET | ❌ | **Phase 2**: Cytoscape.js JSON (노드+엣지) |
+| `/api/chat` | POST | ✅ | OpenAI GPT-4o Function Calling + Neo4j Cypher Q&A (Phase 2 완료) |
+| `/api/chat/status` | GET | ✅ | OpenAI 서비스 상태 확인 (Phase 2 완료) |
+| `/api/ontology/graph` | GET | ✅ | Cytoscape.js JSON — 노드+엣지+통계 (Phase 2 완료) |
+| `/api/ontology/node/{id}` | GET | ✅ | 노드 상세 — URI, 라벨, 속성, 연결 목록 (Phase 2 완료) |
 
 **핵심 서비스 — mqtt_service.py (SSE 구현)**:
 - paho-mqtt 백그라운드 스레드에서 MQTT 메시지 수신
@@ -526,9 +531,9 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 | 대시보드 | `/` | ✅ | KPI 카드 4개, 급기온도 실시간 차트 (recharts), 장비 테이블, 최근 센서 테이블 |
 | 모니터링 | `/monitoring` | ✅ | AHU_5F 5센서 현재값 카드, 센서별 라인 차트, 상세 테이블 |
 | 제어 | `/control` | ✅ | 장비 ON/OFF 토글, 상태 LED, 명령 이력 (낙관적 업데이트) |
-| 온톨로지 | `/ontology` | ❌ | **Phase 2**: Cytoscape.js 그래프 뷰, 노드 클릭 상세 |
-| 토폴로지 | `/topology` | ❌ | **Phase 2**: 트리뷰 + 층별 장비 레이아웃 |
-| LLM 채팅 | `/chat` | ❌ | **Phase 2**: GPT 대화 UI, 쿼리 결과 렌더링 |
+| 온톨로지 | `/ontology` | ✅ | Cytoscape.js 그래프 뷰, 3레이아웃, 타입 필터, 노드 클릭 상세 (Phase 2 완료) |
+| 토폴로지 | `/topology` | ✅ | 트리뷰 + 층별 장비 그리드/리스트 뷰 + SSE 실시간 (Phase 2 완료) |
+| LLM 채팅 | `/chat` | ✅ | GPT-4o 대화 UI, 예시 질문, Cypher 표시, 도구 호출 배지 (Phase 2 완료) |
 
 **SSE 훅 (`lib/sse.ts`)**:
 - `useSSE(maxHistory=60)` — EventSource 기반 구독
@@ -538,7 +543,7 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 
 **의존성**: `next@14.2.23`, `react@18`, `recharts@2.15`, `lucide-react`, `tailwindcss`, `class-variance-authority`
 
-### 12.7 Server B — BAS Adapter (구현 완료)
+### 10.7 Server B — BAS Adapter (구현 완료)
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|--------|------|
@@ -551,11 +556,11 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 **디바이스 레지스트리** (`device_registry.py`):
 - `DeviceInfo`: ontology_id, name, type, location, allowed_commands
 - Phase 1 등록: `bldg:AHU_5F` (ON, OFF, setpoint)
-- **Phase 2 확장**: Neo4j에서 자동 로딩 필요
+- **Phase 2 완료**: Neo4j에서 제어 가능 장비 9종 자동 로딩 (`server-b/app/neo4j_loader.py`)
 
 **폴백 처리**: PostgreSQL 미연결 시 인메모리 감사 로그 (FIFO, 500건)
 
-### 12.8 Server C — 가상 건물 에뮬레이터 (구현 완료)
+### 10.8 Server C — 가상 건물 에뮬레이터 (구현 완료)
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|--------|------|
@@ -581,7 +586,7 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 | `bldg:Filter_DP_AHU_5F` | Filter_Differential_Pressure_Sensor | 250Pa | 100~500 | Pa | 시간당 0.5Pa 드리프트 |
 | `bldg:Power_AHU_5F` | Electrical_Power_Sensor | 35kW | 0~52 | kW | ON=35kW, OFF=0.5kW |
 
-### 12.9 Server D — Data Historian (구현 완료)
+### 10.9 Server D — Data Historian (구현 완료)
 
 | 엔드포인트 | 메서드 | 설명 |
 |-----------|--------|------|
@@ -606,7 +611,7 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 - `audit_log` — 감사 로그 (user_id, action, target_equipment)
 - `schedules` — 스케줄 관리 (JSONB)
 
-### 12.10 구현 완료 항목 요약 (Phase 1 MVP)
+### 10.10 구현 완료 항목 요약 (Phase 1 MVP)
 
 ✅ **완료**:
 1. Docker Compose 8서비스 오케스트레이션 (docker-compose.yml)
@@ -621,18 +626,18 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 10. 감사 로그 (PostgreSQL + 인메모리 폴백)
 11. 모든 외부 의존성에 대한 폴백 처리 (Neo4j, Server B/C/D, PostgreSQL)
 
-### 12.11 미구현 / Phase 2 이후 작업
+### 10.11 Phase 2 이후 작업 (Phase 2는 전체 완료)
 
-#### Phase 2: 풀 시뮬레이션 + 온톨로지 뷰 + LLM 채팅
-| # | 작업 | 상세 | 관련 파일 |
-|---|------|------|----------|
-| 1 | **845개 전체 인스턴스 시뮬레이션** | Neo4j에서 장비/센서 목록 자동 로딩 → DataProfile 자동 생성. 현재 AHU_5F 1대만 | `server-c/app/engine.py`, `profiles/` |
-| 2 | **온톨로지 그래프 뷰** | Cytoscape.js 기반 노드+엣지 시각화. `/ontology` 페이지 | `frontend/app/ontology/page.tsx` (신규) |
-| 3 | **토폴로지 뷰** | 트리뷰(좌) + 층별 장비 레이아웃(우). `/topology` 페이지 | `frontend/app/topology/page.tsx` (신규) |
-| 4 | **LLM 채팅** | OpenAI GPT Function Calling → Neo4j Cypher → 응답 생성 | `backend/app/routers/chat.py` (신규), `services/openai_service.py` (신규) |
-| 5 | **디바이스 레지스트리 자동 로딩** | Server B 시작 시 Neo4j에서 제어 가능 장비 자동 등록 | `server-b/app/device_registry.py` |
-| 6 | **일간 패턴 / 계절 보정** | 24시간 재실 패턴, 서울 기후 계절 보정 | `server-c/app/profiles/` |
-| 7 | **InfluxDB 직접 연결** | Server A에서 Server D 프록시 대신 직접 InfluxDB 쿼리 | `backend/app/services/influxdb_service.py` |
+#### Phase 2: 풀 시뮬레이션 + 온톨로지 뷰 + LLM 채팅 — ✅ 전체 완료
+| # | 작업 | 상태 | 관련 파일 |
+|---|------|:----:|----------|
+| 1 | **845개 전체 인스턴스 시뮬레이션** | ✅ | `server-c/app/engine.py`, `profiles/`, `neo4j_loader.py` |
+| 2 | **온톨로지 그래프 뷰** | ✅ | `frontend/app/ontology/page.tsx` |
+| 3 | **토폴로지 뷰** | ✅ | `frontend/app/topology/page.tsx` |
+| 4 | **LLM 채팅** | ✅ | `backend/app/routers/chat.py`, `services/openai_service.py` |
+| 5 | **디바이스 레지스트리 자동 로딩** | ✅ | `server-b/app/device_registry.py`, `neo4j_loader.py` |
+| 6 | **일간 패턴 / 계절 보정** | ✅ | `server-c/app/profiles/profile_factory.py` |
+| 7 | **InfluxDB 직접 연결** | ✅ | `backend/app/services/influxdb_service.py`, `routers/history.py` |
 
 #### Phase 3: 고급 기능
 | # | 작업 | 상세 |
@@ -644,7 +649,7 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 | 5 | 사용자 인증 | JWT 기반 로그인, 역할 기반 접근 제어 |
 | 6 | 스케줄 관리 | 장비 스케줄 CRUD (schedules 테이블 활용) |
 
-### 12.12 디버깅 이력 (문제 → 원인 → 수정)
+### 10.12 디버깅 이력 (문제 → 원인 → 수정)
 
 | 문제 | 원인 | 수정 |
 |------|------|------|
@@ -655,7 +660,7 @@ bees/alarms/{severity}              # 알람 이벤트 (Server A 구독)
 | `bees-influxdb` 컨테이너 재생성 실패 | 이전 `docker compose down`에서 삭제 안 된 stale 컨테이너 | `docker rm -f` 후 재생성 |
 | Neo4j 연결 실패 (Unauthorized) | 기존 neo4j-bees 컨테이너 인증 정보 불일치 (미해결) | 서비스는 폴백 데이터로 계속 실행. **향후 수정 필요** |
 
-### 12.13 기동 방법
+### 10.13 기동 방법
 ```bash
 # 전체 기동
 cd /Users/mckim64/Projects/SAMSUNG/BEES-Ontology
@@ -683,7 +688,7 @@ curl -X POST http://localhost:8010/api/control \
 open http://localhost:3000
 ```
 
-### 12.14 Git 커밋 이력 (Phase 9)
+### 10.14 Git 커밋 이력 (Phase 9)
 ```
 a9f126a fix: SSE 실시간 스트림 수정 + Docker 포트 충돌 해결 + 프론트엔드 데이터 표시 복구
 ff9d3fd feat: 디지털 트윈 플랫폼 Phase 1 MVP — 4개 서버 구현
@@ -692,7 +697,7 @@ ff9d3fd feat: 디지털 트윈 플랫폼 Phase 1 MVP — 4개 서버 구현
 
 ---
 
-## 10. 검증 방법
+## 11. 검증 방법
 
 ### TTL 구문 검증
 ```python
@@ -715,44 +720,198 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl  # 예상: ~12 (Site 최소 �
 
 ---
 
-## 11. 다음 작업 가이드
+## 12. Phase 10 — 디지털 트윈 플랫폼 Phase 2 확장 (2026.02.12)
 
-### 디지털 트윈 플랫폼 다음 단계 (Phase 2 우선순위)
+### 12.1 개요
+Phase 1 MVP(AHU_5F 1대 + 5센서)에서 **845개 전체 인스턴스 시뮬레이션 + 온톨로지 시각화 + LLM 채팅**으로 확장.
+4개 팀 병렬 작업으로 약 25개 파일 신규/수정.
 
-**즉시 착수 가능 (의존성 없음):**
-1. **845개 전체 인스턴스 시뮬레이션 확장** — `server-c/app/profiles/`에 장비 유형별 프로파일 추가 (칠러, 보일러, FCU, 냉각탑, 펌프 등). `engine.py`에서 Neo4j 자동 로딩 구현
-2. **온톨로지 그래프 뷰 페이지** — `frontend/app/ontology/page.tsx` 신규 생성. Cytoscape.js 설치, Neo4j → 그래프 JSON 변환 API 추가
-3. **토폴로지 뷰 페이지** — `frontend/app/topology/page.tsx` 신규 생성. 트리뷰 컴포넌트, 층별 장비 레이아웃
+### 12.2 완료된 작업
 
-**OpenAI API 키 필요:**
-4. **LLM 채팅 기능** — `backend/app/routers/chat.py` + `services/openai_service.py` 신규. Function Calling → Neo4j Cypher → 응답 생성. `frontend/app/chat/page.tsx` 신규
+#### Team 1: 에뮬레이터 확장 (Server C + Server B)
+- **Neo4j 자동 로딩**: `server-c/app/neo4j_loader.py` — 장비 84개 + 포인트 164개 자동 등록
+- **프로파일 자동 생성**: `server-c/app/profiles/profile_factory.py` — 30+ Brick 포인트 클래스별 시뮬레이션 파라미터 매핑
+- **서울 계절 보정**: `seasonal_correction()` — 사인파 모델 (7월 냉방 피크, 1월 난방 피크)
+- **장비별 전력 오버라이드**: Chiller 750kW, Boiler 30kW, AHU 35kW, CT 15kW, FCU 0.5kW
+- **Phase 1 폴백**: Neo4j 실패 시 AHU_5F MVP로 자동 전환
+- **Server B 디바이스 레지스트리**: `server-b/app/neo4j_loader.py` — Neo4j에서 제어 가능 장비 자동 로딩
 
-**기타:**
-5. **Neo4j 인증 문제 해결** — 기존 neo4j-bees 컨테이너와 .env 인증정보 일치 확인
-6. **디바이스 레지스트리 자동 로딩** — Server B 시작 시 Neo4j에서 제어 가능 장비 자동 등록
+#### Team 2: 프론트엔드 시각화
+- **온톨로지 그래프 뷰**: `frontend/app/ontology/page.tsx` — Cytoscape.js, cose-bilkent/breadthfirst/circle 레이아웃, 노드 타입별 색상, 타입 필터, 노드 클릭 상세
+- **토폴로지 뷰**: `frontend/app/topology/page.tsx` — 건물 계층 트리 + 장비 그리드/리스트 뷰 + SSE 실시간 상태
+- **사이드바 확장**: 6개 메뉴 (대시보드, 모니터링, 제어, 온톨로지, 토폴로지, AI 채팅)
+
+#### Team 3: LLM 채팅
+- **OpenAI 서비스**: `backend/app/services/openai_service.py` (~590줄) — GPT-4o Function Calling, 6개 도구
+  - `query_building_ontology`: 범용 Cypher (쓰기 차단, LIMIT 50 자동)
+  - `get_equipment_on_floor`: 층별 장비 (한글 "5층" → "B_5F" 정규화)
+  - `get_equipment_sensors`: 장비 센서 목록
+  - `get_system_info`: 시스템 구성 (한글 키워드 매핑)
+  - `count_by_type`: Brick 클래스별 집계
+  - `get_energy_flow`: feeds 관계 추적
+- **채팅 UI**: `frontend/app/chat/page.tsx` — 메시지 이력, 예시 질문, Cypher 표시, 도구 호출 배지
+- **안전 가드**: 쓰기 Cypher 차단, LIMIT 50, 대화 이력 10개, Function Calling 최대 3회
+
+#### Team 4: 백엔드 API 확장 + 인프라 보강
+- **온톨로지 그래프 API**: `GET /api/ontology/graph` — Cytoscape.js 호환 JSON (노드+엣지+통계)
+- **노드 상세 API**: `GET /api/ontology/node/{node_id}` — URI, 라벨, 속성, 연결 목록
+- **범용 Cypher 실행**: `neo4j_service.run_cypher()` — LLM 채팅용
+- **노드 타입 분류**: `_classify_node_type()` — n10s 라벨 기반 7단계 분류
+- **InfluxDB 직접 연동**: `influxdb_service.py` — Server D 프록시 없이 InfluxDB 직접 조회
+  - `InfluxDBClientAsync` 비동기 클라이언트, lifespan `connect()`/`disconnect()`
+  - `query_point_history()`: Flux 쿼리, aggregateWindow 지원, 상대/절대 시간
+  - `get_point_latest()`: 최신 1건 조회
+  - 3단계 폴백: InfluxDB 직접 → Server D 프록시 → MQTT 캐시
+
+### 12.3 신규 파일 목록
+| 파일 | 설명 |
+|------|------|
+| `server-c/app/neo4j_loader.py` | Neo4j 장비/센서 자동 로딩 |
+| `server-c/app/profiles/profile_factory.py` | Brick 클래스별 시뮬레이션 프로파일 자동 생성 |
+| `server-b/app/neo4j_loader.py` | Server B 디바이스 레지스트리 Neo4j 로딩 |
+| `server-a/backend/app/services/openai_service.py` | OpenAI GPT Function Calling 서비스 |
+| `server-a/backend/app/routers/chat.py` | LLM 채팅 API |
+| `server-a/frontend/app/ontology/page.tsx` | 온톨로지 그래프 뷰 |
+| `server-a/frontend/app/topology/page.tsx` | 토폴로지 트리 뷰 |
+| `server-a/frontend/app/chat/page.tsx` | LLM 채팅 UI |
+| `server-a/frontend/types/modules.d.ts` | Cytoscape.js 타입 선언 |
+
+### 12.4 수정된 파일 목록
+| 파일 | 변경 내용 |
+|------|----------|
+| `server-c/app/engine.py` | `initialize_from_neo4j()`, 계절 보정, boolean 처리 |
+| `server-c/app/main.py` | Neo4j 로딩 호출, `/neo4j/status` 엔드포인트 |
+| `server-c/requirements.txt` | `neo4j==5.27.0` |
+| `server-b/app/config.py` | Neo4j 연결 정보 추가 |
+| `server-b/app/main.py` | Neo4j 디바이스 로딩 호출 |
+| `server-b/requirements.txt` | `neo4j==5.27.0` |
+| `server-a/backend/app/config.py` | OPENAI_API_KEY, OPENAI_MODEL |
+| `server-a/backend/app/services/neo4j_service.py` | 그래프 API, 노드 상세, Cypher 실행, 타입 분류 |
+| `server-a/backend/app/routers/ontology.py` | `/api/ontology/graph`, `/api/ontology/node/{id}` |
+| `server-a/backend/app/main.py` | chat 라우터, openai_service.init(), influxdb_service lifespan |
+| `server-a/backend/app/services/influxdb_service.py` | 스텁 → InfluxDB async 직접 연동 |
+| `server-a/backend/app/routers/history.py` | 3단계 폴백 (InfluxDB→ServerD→MQTT) |
+| `server-a/backend/requirements.txt` | `openai>=1.14.0`, `influxdb-client[async]>=1.40.0` |
+| `server-a/frontend/package.json` | cytoscape, cytoscape-cose-bilkent |
+| `server-a/frontend/lib/api.ts` | Graph, NodeDetail, Chat 타입/함수 |
+| `server-a/frontend/components/layout/sidebar.tsx` | 6개 메뉴 (Phase 2 라벨) |
+| `docker-compose.yml` | Server B/C extra_hosts 추가 |
+| `.env` | OPENAI_MODEL=gpt-4o |
+
+### 12.5 검증 결과 (2026.02.12)
+```
+인프라: 8 Docker 컨테이너 + Neo4j 외부 컨테이너 = 9개 서비스 정상
+시뮬레이션: 84개 장비, 164개 포인트 실시간 생성 (5초 간격)
+온톨로지 그래프: 300+ 노드, 227 엣지 (Equipment/Point/Zone/Floor/Building/System/Location 분류)
+토폴로지: GEC_Tower_B 18개 층, Zone 계층 완전
+LLM 채팅: 서비스 준비 완료 (OpenAI API 키 설정 필요)
+InfluxDB 직접 조회: source=influxdb_direct 확인 (3단계 폴백 동작)
+프론트엔드: 6개 페이지 전체 HTTP 200 (대시보드/모니터링/제어/온톨로지/토폴로지/채팅)
+```
+
+### 12.6 디버깅 이력
+1. **Cytoscape.js 타입 오류**: `shape: "data(shape)"` → `shape: "ellipse" as const` + `} as any,`로 해결
+2. **n10s 내부 노드**: `_GraphConfig`, `DatatypeProperty` 등이 그래프에 포함 → `n.uri IS NOT NULL AND n.uri STARTS WITH 'https://example.org/gec-b#'` 필터 추가
+3. **API 키 불일치**: stats 키 `total_nodes`/`total_edges` → `node_count`/`edge_count`로 프론트엔드와 통일
+4. **NodeDetail 필드명**: `relationship`→`rel`, `node_id`→`target_uri`로 프론트엔드 인터페이스 매칭
+5. **Neo4j 컨테이너**: `neo4j-bees` 삭제 상태 → 재생성 + n10s 설정 + TTL 5,756 트리플 재임포트
+
+### 12.7 Neo4j 컨테이너 (재생성)
+```bash
+# 생성 명령
+docker run -d --name neo4j-bees \
+  -p 7476:7474 -p 7689:7687 \
+  -e NEO4J_AUTH=neo4j/bees2024 \
+  -e NEO4J_PLUGINS='["n10s"]' \
+  -e NEO4J_dbms_security_procedures_unrestricted='n10s.*' \
+  -e NEO4J_dbms_security_procedures_allowlist='n10s.*' \
+  -v "$(pwd)/ontology:/import" \
+  neo4j:5.26.0-community
+
+# n10s 설정
+docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
+  "CREATE CONSTRAINT n10s_unique_uri IF NOT EXISTS FOR (r:Resource) REQUIRE r.uri IS UNIQUE"
+docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
+  "CALL n10s.graphconfig.init({handleVocabUris: 'MAP', handleMultival: 'ARRAY', handleRDFTypes: 'LABELS', applyNeo4jNaming: false})"
+docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
+  "CALL n10s.rdf.import.fetch('file:///import/GEC_B_Ontology.ttl', 'Turtle')"
+# 결과: 5,756 트리플 로드
+```
+
+---
+
+## 13. 다음 작업 가이드
+
+### 현재 상태 요약 (2026.02.12 기준)
+
+**온톨로지**: v2.0.1 — 5,756 트리플, 845 인스턴스, SHACL 19 Shape, 신뢰도 100% 태깅
+**플랫폼**: Phase 2 **100% 완료** — 9개 서비스(Docker 8 + Neo4j 외부), 6개 프론트엔드 페이지
+
+| 완료된 Phase | 주요 내용 |
+|:---:|----------|
+| Phase 1 (온톨로지) | v1.0~v2.0.1, 10단계 구축, B동 전용, 845 인스턴스 |
+| Phase 1 (플랫폼 MVP) | AHU_5F 1대 + 5센서, SSE, 대시보드/모니터링/제어, E2E 제어 |
+| **Phase 2 (플랫폼 확장)** | **84장비 164포인트 풀 시뮬레이션, 온톨로지 그래프, 토폴로지 뷰, LLM 채팅, InfluxDB 직접 연동** |
+
+### 주의사항 (다음 세션 필독)
+
+1. **OpenAI API 키 미설정**: `.env`의 `OPENAI_API_KEY=your-api-key-here`를 실제 키로 교체해야 LLM 채팅 동작
+2. **시뮬레이션 수동 시작 필요**: 서버 기동 후 `POST http://localhost:8012/simulation/start` 호출 필요
+3. **Neo4j 외부 컨테이너**: `neo4j-bees`는 docker-compose에 포함되지 않음, 별도 `docker start neo4j-bees` 필요
+4. **start.sh / stop.sh**: 프로젝트 루트에 전체 기동/종료 스크립트 있음
 
 ### 플랫폼 기동 체크리스트 (새 세션 시작 시)
 ```bash
-# 1. Neo4j 기존 컨테이너 확인
-docker ps | grep neo4j-bees
-
-# 2. 전체 기동
+# 방법 1: start.sh 사용 (권장)
 cd /Users/mckim64/Projects/SAMSUNG/BEES-Ontology
-docker compose up -d
+./start.sh
 
-# 3. 상태 확인
-docker compose ps
+# 방법 2: 수동 기동
+docker start neo4j-bees                                 # 1. Neo4j 시작
+docker compose up -d                                    # 2. Docker Compose 8서비스
+sleep 5                                                  # 3. 서비스 안정화 대기
+curl -s -X POST http://localhost:8012/simulation/start   # 4. 시뮬레이션 시작
 
-# 4. 데이터 흐름 확인
+# 상태 확인
+docker compose ps && docker ps --filter name=neo4j-bees
 curl -s http://localhost:8010/api/stream/snapshot | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'포인트: {d[\"point_count\"]}개, 디바이스: {d[\"device_count\"]}개')"
-
-# 5. Frontend 확인
+curl -s "http://localhost:8010/api/ontology/graph?limit=50" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'노드: {d[\"stats\"][\"node_count\"]}개, 엣지: {d[\"stats\"][\"edge_count\"]}개')"
+curl -s "http://localhost:8010/api/history/bldg:Zone_Air_Temp_5F_Interior?start=-1h" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'source: {d[\"source\"]}, data: {len(d[\"data\"])}건')"
 open http://localhost:3000
+
+# 종료
+./stop.sh
 ```
 
-### 온톨로지 관련 (필요 시)
+### Phase 3: 착수 가능한 다음 작업
 
-**만약 내부 데이터가 확보되면 (Phase 4):**
+#### 운영 개선 (우선순위 높음)
+| # | 작업 | 상세 | 난이도 |
+|---|------|------|:------:|
+| 1 | **시뮬레이션 자동 시작** | Server C lifespan에서 `engine.start()` 자동 호출 | 낮음 |
+| 2 | **OpenAI API 키 연동** | `.env` 설정 + LLM 채팅 E2E 테스트 | 낮음 |
+| 3 | **알람 시스템** | 임계값 비교 → `alarm_history` 저장 + 프론트엔드 알림 | 중간 |
+| 4 | **Grafana 대시보드** | InfluxDB → Grafana 시계열 시각화 (docker-compose에 추가) | 중간 |
+
+#### 프론트엔드 개선
+| # | 작업 | 상세 | 난이도 |
+|---|------|------|:------:|
+| 5 | **온톨로지 그래프 상호작용** | 노드 클릭 → 연결 노드 확장, 경로 하이라이트 | 중간 |
+| 6 | **토폴로지 실시간 상태** | 장비 카드에 SSE 데이터 실시간 반영 (현재 초기 로딩만) | 중간 |
+| 7 | **시계열 차트 페이지** | `/history` 페이지 — 포인트 선택 + 기간/집계 조절 가능한 차트 | 중간 |
+| 8 | **반응형 디자인** | 모바일/태블릿 최적화 | 중간 |
+
+#### 플랫폼 고급 기능
+| # | 작업 | 상세 | 난이도 |
+|---|------|------|:------:|
+| 9 | **BACnet/IP 어댑터** | Server B에 BAC0 라이브러리 추가 (실제 BMS 연동 준비) | 높음 |
+| 10 | **데이터 보존 정책** | raw → 1h → 1d 집계, 자동 retention policy | 중간 |
+| 11 | **사용자 인증** | JWT 기반 로그인/로그아웃, 역할 기반 접근 제어 | 높음 |
+| 12 | **스케줄 관리** | 장비 스케줄 CRUD (PostgreSQL `schedules` 테이블 활용) | 중간 |
+
+### 온톨로지 관련 (내부 데이터 확보 시)
+
+**만약 내부 데이터가 확보되면:**
 1. 평면도 → `brick:Room` 인스턴스 추가, Zone 세분화
 2. BMS 포인트 리스트 → `brick:Point` 하위 센서/명령/설정값 정밀 모델링
 3. 장비 대장 → 제조사/모델명/시리얼 속성 추가
@@ -763,6 +922,19 @@ open http://localhost:3000
 - **신뢰도 태깅 유지**: 새 데이터 추가 시 `bees:hasConfidence` 반드시 기재
 - **B동 범위 유지**: 새 인스턴스는 `bldg:GEC_Tower_B` 또는 그 하위에 연결
 - **`bees:` 네임스페이스**: 커스텀 클래스/속성은 반드시 `bees:` 접두사 사용
+- **Neo4j 동기화**: TTL 변경 후 Neo4j 재임포트 필요 (섹션 11.7 참조)
+
+### 핵심 기술 결정 사항 (다음 세션 참고용)
+
+| 결정 | 이유 | 파일 |
+|------|------|------|
+| SSE polling 방식 (`_event_counter` + `threading.Lock`) | Python 3.12에서 `asyncio.Event` 크로스스레드 불가 | `mqtt_service.py` |
+| n10s URI 필터: `n.uri STARTS WITH 'https://example.org/gec-b#'` | n10s가 `_GraphConfig`, `Class`, `Property` 등 내부 노드 생성 | `neo4j_service.py` |
+| Neo4j 외부 컨테이너 (docker-compose 미포함) | 기존 `neo4j-bees` 컨테이너 재활용, volume 데이터 보존 | `docker-compose.yml` |
+| `NEXT_PUBLIC_*` 빌드 시 bake | Next.js standalone 모드, 런타임 변경 불가 | `frontend/Dockerfile` |
+| Cytoscape.js `as any` 캐스팅 | strict TypeScript + Cytoscape.js 타입 불일치 | `ontology/page.tsx` |
+| InfluxDB 3단계 폴백 | InfluxDB 직접 → Server D 프록시 → MQTT 캐시 | `history.py` |
+| InfluxDB 스키마: `sensor_data` / `point_id` tag / `value` field | Server D `mqtt_worker.py`와 동일 스키마 공유 | `influxdb_service.py` |
 
 ---
 

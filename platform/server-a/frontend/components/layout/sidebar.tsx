@@ -8,6 +8,9 @@ import {
   LayoutDashboard,
   Monitor,
   Settings2,
+  Share2,
+  Network,
+  MessageCircle,
   Building2,
 } from "lucide-react";
 
@@ -23,6 +26,9 @@ const navItems: NavItem[] = [
   { href: "/", label: "대시보드", icon: LayoutDashboard },
   { href: "/monitoring", label: "모니터링", icon: Monitor },
   { href: "/control", label: "제어", icon: Settings2 },
+  { href: "/ontology", label: "온톨로지", icon: Share2 },
+  { href: "/topology", label: "토폴로지", icon: Network },
+  { href: "/chat", label: "AI 채팅", icon: MessageCircle },
 ];
 
 export function Sidebar() {
@@ -74,7 +80,7 @@ export function Sidebar() {
       <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-4">
         <div className="text-xs text-gray-400">
           <p>Server A v1.0.0</p>
-          <p>Phase 1 MVP</p>
+          <p>Phase 2</p>
         </div>
       </div>
     </aside>

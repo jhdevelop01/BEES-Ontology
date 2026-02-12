@@ -3,7 +3,7 @@
 
 EmulatorEngine: AsyncIO 기반 메인 루프로 5초 간격 데이터 생성.
 DeviceState: 장비 런타임 상태 관리.
-데이터 생성 공식: value = base_value + noise * random(-1,1) + daily_pattern(hour) + equipment_effect
+데이터 생성 공식: value = base_value + noise * random(-1,1) + daily_pattern(hour) + equipment_effect + seasonal + drift
 """
 
 import asyncio
@@ -19,8 +19,30 @@ import paho.mqtt.client as mqtt
 
 from .config import settings
 from .profiles.ahu_5f import AHU_5F_DEVICE, AHU_5F_PROFILES, DataProfile, DeviceProfile
+from .profiles.profile_factory import (
+    POINT_SPECS,
+    create_data_profile,
+    create_device_profile,
+    seasonal_correction,
+    _strip_namespace,
+)
+from . import neo4j_loader
 
 logger = logging.getLogger("server-c.engine")
+
+# 바이너리(상태/알람) 포인트 클래스 — 0 또는 1만 반환
+_BINARY_CLASSES: set[str] = {
+    "On_Off_Status",
+    "Fan_On_Off_Status",
+    "Alarm",
+}
+
+# 설정값(Setpoint) 포인트 클래스 — 고정값, 노이즈 없음
+_SETPOINT_CLASSES: set[str] = {
+    "Supply_Air_Temperature_Setpoint",
+    "Zone_Air_Temperature_Setpoint",
+    "Chilled_Water_Supply_Temperature_Setpoint",
+}
 
 
 # ─────────────────────────────────────────────────────────────
@@ -82,12 +104,83 @@ class EmulatorEngine:
         self._mqtt_client: Optional[mqtt.Client] = None
         self._mqtt_connected: bool = False
 
-        # Phase 1 MVP: AHU_5F 초기 등록
-        self._register_device(AHU_5F_DEVICE)
-        for profile in AHU_5F_PROFILES:
-            self._register_profile(profile)
+        # Neo4j 로딩 상태 (Phase 2)
+        self._neo4j_loaded: bool = False
 
     # ─────────────── 초기화 ───────────────
+
+    async def initialize_from_neo4j(self) -> dict:
+        """
+        Neo4j에서 장비/센서를 자동 로딩하여 프로파일을 생성.
+
+        Phase 2: 845개 인스턴스 전체를 Neo4j에서 로딩.
+        Neo4j 연결 실패 또는 장비 없으면 Phase 1 MVP (AHU_5F) 폴백.
+
+        Returns:
+            로딩 결과 딕셔너리: {mode, device_count, point_count, skipped_points}
+        """
+        equipment_list = await neo4j_loader.load_equipment_from_neo4j()
+
+        if not equipment_list:
+            # Phase 1 폴백: AHU_5F 하드코딩
+            logger.info("Neo4j 로딩 실패 — Phase 1 MVP 폴백 (AHU_5F)")
+            self._register_device(AHU_5F_DEVICE)
+            for profile in AHU_5F_PROFILES:
+                self._register_profile(profile)
+            self._neo4j_loaded = False
+            return {
+                "mode": "fallback_ahu_5f",
+                "device_count": len(self._devices),
+                "point_count": len(self._profiles),
+                "skipped_points": 0,
+            }
+
+        # Neo4j에서 로딩 성공 — 프로파일 자동 생성
+        skipped_points = 0
+
+        for eq_id, eq_class, loc_id, points in equipment_list:
+            # 포인트 ID 목록 추출
+            point_ids = [pt_id for pt_id, _ in points]
+
+            # DeviceProfile 생성 및 등록
+            device_profile = create_device_profile(
+                equipment_id=eq_id,
+                brick_class=f"brick:{eq_class}",
+                location_id=loc_id,
+                connected_point_ids=point_ids,
+            )
+            self._register_device(device_profile)
+
+            # 각 포인트에 대해 DataProfile 생성 및 등록
+            for pt_id, pt_class in points:
+                data_profile = create_data_profile(
+                    point_id=pt_id,
+                    brick_class=f"brick:{pt_class}",
+                    equipment_id=eq_id,
+                    equipment_class=f"brick:{eq_class}",
+                )
+                if data_profile:
+                    self._register_profile(data_profile)
+                else:
+                    skipped_points += 1
+                    logger.debug(
+                        f"프로파일 스펙 없음 (스킵): {pt_id} ({pt_class})"
+                    )
+
+        self._neo4j_loaded = True
+        result = {
+            "mode": "neo4j_full",
+            "device_count": len(self._devices),
+            "point_count": len(self._profiles),
+            "skipped_points": skipped_points,
+        }
+        logger.info(
+            f"Neo4j 기반 프로파일 생성 완료: "
+            f"장비 {result['device_count']}개, "
+            f"포인트 {result['point_count']}개, "
+            f"스킵 {skipped_points}개"
+        )
+        return result
 
     def _register_device(self, device_profile: DeviceProfile) -> None:
         """장비를 레지스트리에 등록."""
@@ -178,8 +271,26 @@ class EmulatorEngine:
     def _generate_value(self, profile: DataProfile, now: datetime) -> float:
         """
         센서 데이터 생성 공식:
-        value = base_value + noise * random(-1, 1) + daily_pattern(hour) + equipment_effect + drift
+        value = base_value + noise * random(-1, 1) + daily_pattern(hour) + equipment_effect + seasonal + drift
+
+        특수 처리:
+        - 바이너리 클래스 (On_Off_Status, Fan_On_Off_Status, Alarm): 0.0 또는 1.0
+        - Setpoint 클래스: 고정 base_value (노이즈/일간패턴 없음)
         """
+        class_name = _strip_namespace(profile.brick_class)
+
+        # ── 바이너리 포인트 (상태/알람) ──
+        if class_name in _BINARY_CLASSES:
+            device = self._devices.get(profile.equipment_dependency)
+            if device and device.is_active:
+                return 1.0
+            return 0.0
+
+        # ── Setpoint (설정값) — 고정값 ──
+        if class_name in _SETPOINT_CLASSES:
+            return profile.base_value
+
+        # ── 일반 센서 데이터 생성 ──
         hour = now.hour + now.minute / 60.0
 
         # 기본값 + 랜덤 노이즈
@@ -191,11 +302,21 @@ class EmulatorEngine:
         # 장비 효과
         eq_effect = self._equipment_effect(profile)
 
+        # 계절 보정 (서울 기후)
+        spec = None
+        from .profiles.profile_factory import _find_spec
+        spec = _find_spec(profile.brick_class)
+        seasonal = 0.0
+        if spec and spec.seasonal_amplitude > 0:
+            seasonal = seasonal_correction(
+                now, spec.seasonal_amplitude, spec.seasonal_phase_month
+            )
+
         # 드리프트 (점진 변화, 예: 필터 오염)
         drift = self._drift_accumulator.get(profile.point_id, 0.0)
 
         # 최종값 계산
-        value = profile.base_value + noise + daily + eq_effect + drift
+        value = profile.base_value + noise + daily + eq_effect + seasonal + drift
 
         # 물리적 범위 클리핑
         value = max(profile.min_value, min(profile.max_value, value))
@@ -335,6 +456,7 @@ class EmulatorEngine:
             "mqtt_connected": self._mqtt_connected,
             "device_count": len(self._devices),
             "point_count": len(self._profiles),
+            "neo4j_loaded": self._neo4j_loaded,
         }
 
     def get_all_devices(self) -> list[dict]:
