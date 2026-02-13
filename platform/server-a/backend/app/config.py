@@ -39,3 +39,6 @@ DATABASE_URL = os.getenv(
 # OpenAI LLM
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
+
+# JWT 인증
+JWT_SECRET = os.getenv("JWT_SECRET", "bees-dev-secret-key-change-in-production")

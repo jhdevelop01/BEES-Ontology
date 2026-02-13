@@ -58,6 +58,16 @@ async def lifespan(app: FastAPI):
     load_result = await engine.initialize_from_neo4j()
     logger.info(f"Neo4j 로딩 결과: {load_result}")
 
+    # Phase 3: 시뮬레이션 자동 시작
+    if settings.AUTO_START_SIMULATION:
+        try:
+            start_result = await engine.start()
+            logger.info(f"시뮬레이션 자동 시작 완료: {start_result}")
+        except Exception as e:
+            logger.error(f"시뮬레이션 자동 시작 실패 (서버는 계속 구동): {e}")
+    else:
+        logger.info("시뮬레이션 자동 시작 비활성화 (AUTO_START_SIMULATION=false)")
+
     yield
     # 종료 시 시뮬레이션 정리
     if engine._running:

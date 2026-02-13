@@ -14,7 +14,7 @@ interface HeaderProps {
 
 export function Header({ title, description, connected }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white/95 backdrop-blur px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white/95 backdrop-blur px-4 pl-14 md:pl-6 lg:px-6">
       <div>
         <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
         {description && (

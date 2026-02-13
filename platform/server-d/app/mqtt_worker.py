@@ -19,7 +19,10 @@ import paho.mqtt.client as mqtt
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
+import asyncpg
+
 from .config import settings
+from .database import get_pg_pool
 
 logger = logging.getLogger("server-d.mqtt")
 
@@ -47,9 +50,14 @@ class MQTTWorker:
         self._buffer_lock = threading.Lock()
         self._last_flush_time: float = time.time()
 
+        # ── 알람 저장 버퍼 (Phase 3) ──
+        self._alarm_buffer: list[dict] = []
+        self._alarm_lock = threading.Lock()
+
         # ── 통계 ──
         self._messages_received: int = 0
         self._points_written: int = 0
+        self._alarms_saved: int = 0
         self._errors: int = 0
 
         # ── 실행 상태 ──
@@ -163,7 +171,8 @@ class MQTTWorker:
             self._mqtt_connected = True
             # 토픽 구독
             client.subscribe(settings.mqtt_topic, qos=1)
-            logger.info("MQTT 연결 성공 — 구독: %s", settings.mqtt_topic)
+            client.subscribe("bees/alarms/#", qos=1)
+            logger.info("MQTT 연결 성공 — 구독: %s, bees/alarms/#", settings.mqtt_topic)
         else:
             self._mqtt_connected = False
             logger.error("MQTT 연결 실패 — rc=%d", rc)
@@ -196,6 +205,11 @@ class MQTTWorker:
         self._messages_received += 1
 
         try:
+            # 알람 토픽 분기 처리 (Phase 3)
+            if msg.topic.startswith("bees/alarms/"):
+                self._handle_alarm_message(msg)
+                return
+
             # 토픽에서 point_id 추출
             # bees/points/bldg:Zone_Air_Temp_5F → bldg:Zone_Air_Temp_5F
             topic_parts = msg.topic.split("/", 2)
@@ -247,6 +261,103 @@ class MQTTWorker:
             self._errors += 1
 
     # ─────────────────────────────────────────────
+    # 알람 처리 (Phase 3)
+    # ─────────────────────────────────────────────
+
+    def _handle_alarm_message(self, msg: mqtt.MQTTMessage) -> None:
+        """알람 MQTT 메시지를 파싱하여 버퍼에 추가."""
+        try:
+            payload = json.loads(msg.payload.decode("utf-8"))
+            severity = msg.topic.replace("bees/alarms/", "")
+
+            alarm = {
+                "equipment_id": payload.get("equipment", ""),
+                "alarm_type": payload.get("alarm_type", "unknown"),
+                "severity": severity,
+                "message": (
+                    f"{payload.get('alarm_type', 'alarm')}: "
+                    f"값={payload.get('value')}, 임계값={payload.get('threshold')}"
+                ),
+                "threshold_value": payload.get("threshold"),
+                "actual_value": payload.get("value"),
+                "onset_at": payload.get("ts"),
+            }
+
+            with self._alarm_lock:
+                self._alarm_buffer.append(alarm)
+
+            logger.info(
+                "알람 수신: %s %s (장비=%s, 값=%s)",
+                severity, alarm["alarm_type"],
+                alarm["equipment_id"], alarm["actual_value"],
+            )
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            logger.error("알람 메시지 파싱 실패 (%s): %s", msg.topic, e)
+            self._errors += 1
+
+    def _flush_alarms(self) -> None:
+        """알람 버퍼를 PostgreSQL alarm_history에 배치 저장."""
+        with self._alarm_lock:
+            if not self._alarm_buffer:
+                return
+            alarms_to_save = self._alarm_buffer.copy()
+            self._alarm_buffer.clear()
+
+        pool = get_pg_pool()
+        if not pool:
+            logger.error("PostgreSQL 미연결 — %d 알람 유실", len(alarms_to_save))
+            self._errors += 1
+            return
+
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # MQTT 콜백 스레드에서 호출 → run_coroutine_threadsafe 사용
+                future = asyncio.run_coroutine_threadsafe(
+                    self._save_alarms_async(pool, alarms_to_save), loop
+                )
+                future.result(timeout=10)
+            else:
+                asyncio.run(self._save_alarms_async(pool, alarms_to_save))
+        except Exception as e:
+            logger.error("알람 PostgreSQL 저장 실패: %s (%d건 유실)", e, len(alarms_to_save))
+            self._errors += 1
+
+    async def _save_alarms_async(
+        self, pool: asyncpg.Pool, alarms: list[dict]
+    ) -> None:
+        """알람 리스트를 PostgreSQL에 비동기 저장."""
+        async with pool.acquire() as conn:
+            for alarm in alarms:
+                try:
+                    ts = alarm.get("onset_at")
+                    if isinstance(ts, str):
+                        onset_at = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    else:
+                        onset_at = datetime.now(timezone.utc)
+
+                    await conn.execute(
+                        """
+                        INSERT INTO alarm_history
+                            (equipment_id, alarm_type, severity, message,
+                             threshold_value, actual_value, onset_at)
+                        VALUES ($1, $2, $3, $4, $5, $6, $7)
+                        """,
+                        alarm["equipment_id"],
+                        alarm["alarm_type"],
+                        alarm["severity"],
+                        alarm["message"],
+                        alarm.get("threshold_value"),
+                        alarm.get("actual_value"),
+                        onset_at,
+                    )
+                    self._alarms_saved += 1
+                except Exception as e:
+                    logger.error("알람 INSERT 실패: %s — %s", alarm, e)
+                    self._errors += 1
+
+    # ─────────────────────────────────────────────
     # 배치 플러시
     # ─────────────────────────────────────────────
 
@@ -290,6 +401,7 @@ class MQTTWorker:
             try:
                 await asyncio.sleep(settings.batch_flush_interval)
                 self._flush_buffer()
+                self._flush_alarms()
             except asyncio.CancelledError:
                 break
             except Exception as e:
@@ -310,6 +422,7 @@ class MQTTWorker:
             "mqtt_connected": self._mqtt_connected,
             "messages_received": self._messages_received,
             "points_written": self._points_written,
+            "alarms_saved": self._alarms_saved,
             "errors": self._errors,
             "buffer_size": len(self._buffer),
         }

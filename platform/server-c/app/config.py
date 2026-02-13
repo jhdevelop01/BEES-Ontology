@@ -21,6 +21,7 @@ class Settings:
 
     # 시뮬레이션 설정
     SIMULATION_INTERVAL: float = float(os.getenv("SIMULATION_INTERVAL", "5.0"))  # 초
+    AUTO_START_SIMULATION: bool = os.getenv("AUTO_START_SIMULATION", "true").lower() == "true"
     LOG_DIR: str = os.getenv("LOG_DIR", "/app/logs")
 
     # 서버 설정

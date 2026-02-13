@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.12 (Phase 10 — 디지털 트윈 플랫폼 Phase 2 완료, 7/7 항목 100%)
+> **최종 업데이트:** 2026.02.13 (Phase 11 — 디지털 트윈 플랫폼 Phase 3 완료, 11/11 항목 100%)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -40,7 +40,7 @@
 | 파일 | 위치 | 규모 |
 |------|------|------|
 | **GEC_B_Ontology.ttl** | `ontology/` | ~6,830줄, 5,756 트리플 |
-| **GEC_B_SHACL.ttl** | `ontology/` | ~480줄, 19개 Shape |
+| **GEC_B_SHACL.ttl** | `ontology/` | ~480줄, 24개 Shape |
 
 ### 온톨로지 구성
 - **네임스페이스**: `brick:` (Brick Schema), `bldg:` (인스턴스), `bees:` (커스텀), `rdf:`, `rdfs:`, `owl:`, `xsd:`, `unit:`, `schema:`, `ref:`, `tag:`
@@ -64,8 +64,8 @@
 | 기타 | 36 | DSF 제어 모드, 건물/사이트, 네트워크 등 |
 | **합계** | **845** | |
 
-### SHACL 검증 Shape 19개 (v2.0)
-**기존 11개:**
+### SHACL 검증 Shape 24개 (v2.0)
+**기존 16개:**
 1. SiteShape — Site 필수 속성 (label, hasPart)
 2. BuildingShape — Building 필수 속성 (label, isPartOf)
 3. FloorShape — Floor 필수 속성 (label, isPartOf Building)
@@ -74,19 +74,24 @@
 6. AHUShape — AHU 필수 속성 (label, isPartOf)
 7. BoilerShape — Boiler 필수 속성 (label, isPartOf)
 8. TemperatureSensorShape — 센서 연결 (label, isPointOf/hasLocation)
-9. EstimatedDataShape — hasConfidence 값 범위 (confirmed/estimated/inferred)
-10. LEEDCategoryShape — LEED 크레딧 (category, achieved/available)
-11. GSEEDCategoryShape — G-SEED 분야 (category, achievedScore)
+9. CO2SensorShape — CO2 센서 필수 속성 (label)
+10. EstimatedDataShape — hasConfidence 값 범위 (confirmed/estimated/inferred)
+11. EstimatedRangeShape — estimatedRange 시 hasConfidence 필수
+12. LEEDCategoryShape — LEED 크레딧 (category, achieved/available)
+13. GSEEDCategoryShape — G-SEED 분야 (category, achievedScore)
+14. GHGEmissionShape — GHG 총배출량 (reportingEntity, year, value, unit)
+15. GHGScope1Shape — GHG Scope 1 배출량 (reportingEntity, value)
+16. EnergyBreakdownShape — 에너지 분해 (value, unit, isPointOf)
 
 **Phase 8 추가 8개:**
-12. AHUFeedsShape — AHU feeds >= 1
-13. ChillerFeedsShape — Chiller feeds >= 1
-14. PumpFeedsShape — Pump feeds >= 1 (Warning)
-15. CoolingTowerFeedsShape — Cooling Tower feeds >= 1
-16. EquipmentLocationShape — Equipment hasLocation 권장 (Warning)
-17. ElevatorShape — Elevator 필수 속성 (label, hasLocation)
-18. FCUShape — FCU 필수 속성 (label, feeds)
-19. OccupancySensorShape — Occupancy Sensor 연결 (label, isPointOf/hasLocation)
+17. AHUFeedsShape — AHU feeds >= 1
+18. ChillerFeedsShape — Chiller feeds >= 1
+19. PumpFeedsShape — Pump feeds >= 1 (Warning)
+20. CoolingTowerFeedsShape — Cooling Tower feeds >= 1
+21. EquipmentLocationShape — Equipment hasLocation 권장 (Warning)
+22. ElevatorShape — Elevator 필수 속성 (label, hasLocation)
+23. FCUShape — FCU 필수 속성 (label, feeds)
+24. OccupancySensorShape — Occupancy Sensor 연결 (label, isPointOf/hasLocation)
 
 ### 데이터 확보율: 100% (134건)
 | 구분 | 확인 | 추정 | 미확인 | 총 | 확보율 |
@@ -178,8 +183,11 @@ BEES-Ontology/
 ├── data/                                      # Docker 볼륨 마운트 (gitignore)
 └── _docs/
     ├── 01~08_*.md                             # 온톨로지 문서 (기존)
+    ├── 09_Neo4j_GraphDB.md                     # Neo4j 구축 문서
     ├── history.md                              # ★ 이 파일
     ├── 10_디지털트윈_플랫폼_설계.md             # Phase 9 설계서 (전체 아키텍처)
+    ├── 11_프로젝트_결과물_요약.md               # 프로젝트 결과물 요약 (접속 URL, 포트 등)
+    ├── 세션요약_20260211.md                     # Phase 8 세션 요약
     ├── GEC_B동_온톨로지_통계.xlsx
     └── 검증_쿼리/
 ```
@@ -392,7 +400,7 @@ brick:Site (Samsung_GEC) — 최소 컨텍스트
 | 20 | "온톨로지 기반 통계 집계 + 층별 엑셀" | `17_온톨로지_통계_요약.md` + `GEC_B동_온톨로지_통계.xlsx` 생성 (rdflib SPARQL 추출, 5시트) |
 | 21 | "6F~15F도 5F처럼 설비/센서 넣어줘" + "리서치 기반으로 추정해줘" | Phase 6: v1.7→v1.8, 3-Tier 층별 모델 (+292인스턴스, +1,678트리플), 엑셀/통계 재생성 |
 | 22 | "전체 보완해줘 — 이미 만든 내용까지 검토하고 실제 건물에 맞게" | Phase 7: v1.8→v1.9, 전면 보완 8단계 (+229인스턴스, +1,388트리플), hasLocation 50건 수정, 지하/저층/옥상 모델링, BMS포인트 추가, 누락시스템 6개 생성, confidence 전수태깅(0건 미태깅) |
-| 23 | "Phase 8 계획 세워줘" | Phase 8: v1.9.1→v2.0, 에너지 흐름 완성(feeds +78), hasPart 미러링(6시스템), 엘리베이터 개별화(10대), 2F/3F 보강, SHACL v2.0(19 shapes) |
+| 23 | "Phase 8 계획 세워줘" | Phase 8: v1.9.1→v2.0, 에너지 흐름 완성(feeds +78), hasPart 미러링(6시스템), 엘리베이터 개별화(10대), 2F/3F 보강, SHACL v2.0(24 shapes) |
 | 24 | "검증 쿼리 결과를 파일로 저장해줘" | `_docs/검증_쿼리/SPARQL_검증_쿼리_결과_20260211.md` 생성 (SPARQL 10개 쿼리) |
 | 25 | "온톨로지가 LLM 자연어 쿼리에 적합한지 평가" | LLM 적합성 분석: 83/100점, 한글 라벨 100%, 관계 3,349개, Neo4j 임포트 준비 완료 |
 | 26 | "개발 원칙 파일 생성해줘" | `_docs/08_개발_원칙.md` 생성 (TTL-First 원칙, Neo4j 동기화 규칙, 변경 워크플로우) |
@@ -688,8 +696,16 @@ curl -X POST http://localhost:8010/api/control \
 open http://localhost:3000
 ```
 
-### 10.14 Git 커밋 이력 (Phase 9)
+### 10.14 Git 커밋 이력 (Phase 9~10)
 ```
+# Phase 10 (플랫폼 Phase 2)
+7f62a8d docs: 프로젝트 결과물 요약 v1.1 — 접속 URL 상세화 (포트 매핑, Swagger, 헬스체크)
+a55954c docs: 프로젝트 결과물 요약 문서 추가 (BEES-DOC-011 v1.0)
+38b585c feat: 디지털 트윈 플랫폼 Phase 2 완료 — 풀 시뮬레이션, 온톨로지 뷰, LLM 채팅, InfluxDB 직접 연동
+25e2f17 docs: CLAUDE.md에 디지털 트윈 플랫폼 섹션 추가 — 새 세션 시작 시 컨텍스트 자동 로딩
+633365c docs: history.md Phase 9 전면 업데이트 — 플랫폼 아키텍처, 구현 상세, 디버깅 이력, 다음 작업 가이드
+
+# Phase 9 (플랫폼 Phase 1 MVP)
 a9f126a fix: SSE 실시간 스트림 수정 + Docker 포트 충돌 해결 + 프론트엔드 데이터 표시 복구
 ff9d3fd feat: 디지털 트윈 플랫폼 Phase 1 MVP — 4개 서버 구현
 0e390c5 docs: 디지털 트윈 플랫폼 설계서 v2 추가
@@ -800,13 +816,13 @@ Phase 1 MVP(AHU_5F 1대 + 5센서)에서 **845개 전체 인스턴스 시뮬레�
 
 ### 12.5 검증 결과 (2026.02.12)
 ```
-인프라: 8 Docker 컨테이너 + Neo4j 외부 컨테이너 = 9개 서비스 정상
+인프라: 9 Docker 컨테이너 + Neo4j 외부 컨테이너 = 10개 서비스 정상
 시뮬레이션: 84개 장비, 164개 포인트 실시간 생성 (5초 간격)
 온톨로지 그래프: 300+ 노드, 227 엣지 (Equipment/Point/Zone/Floor/Building/System/Location 분류)
 토폴로지: GEC_Tower_B 18개 층, Zone 계층 완전
 LLM 채팅: 서비스 준비 완료 (OpenAI API 키 설정 필요)
 InfluxDB 직접 조회: source=influxdb_direct 확인 (3단계 폴백 동작)
-프론트엔드: 6개 페이지 전체 HTTP 200 (대시보드/모니터링/제어/온톨로지/토폴로지/채팅)
+프론트엔드: 8개 페이지 전체 HTTP 200 (대시보드/모니터링/제어/온톨로지/토폴로지/채팅/시계열이력/로그인)
 ```
 
 ### 12.6 디버깅 이력
@@ -844,21 +860,21 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 
 ### 현재 상태 요약 (2026.02.12 기준)
 
-**온톨로지**: v2.0.1 — 5,756 트리플, 845 인스턴스, SHACL 19 Shape, 신뢰도 100% 태깅
-**플랫폼**: Phase 2 **100% 완료** — 9개 서비스(Docker 8 + Neo4j 외부), 6개 프론트엔드 페이지
+**온톨로지**: v2.0.1 — 5,756 트리플, 845 인스턴스, SHACL 24 Shape, 신뢰도 100% 태깅
+**플랫폼**: Phase 3 **100% 완료** — 10개 서비스(Docker 9 + Neo4j 외부), 8개 프론트엔드 페이지
 
 | 완료된 Phase | 주요 내용 |
 |:---:|----------|
 | Phase 1 (온톨로지) | v1.0~v2.0.1, 10단계 구축, B동 전용, 845 인스턴스 |
 | Phase 1 (플랫폼 MVP) | AHU_5F 1대 + 5센서, SSE, 대시보드/모니터링/제어, E2E 제어 |
-| **Phase 2 (플랫폼 확장)** | **84장비 164포인트 풀 시뮬레이션, 온톨로지 그래프, 토폴로지 뷰, LLM 채팅, InfluxDB 직접 연동** |
+| Phase 2 (플랫폼 확장) | 84장비 164포인트 풀 시뮬레이션, 온톨로지 그래프, 토폴로지 뷰, LLM 채팅, InfluxDB 직접 연동 |
+| **Phase 3 (플랫폼 고도화)** | **알람 시스템, Grafana, 시계열 이력, 반응형 UI, BACnet 어댑터, JWT 인증, 스케줄 관리, 데이터 보존, 품질 검증** |
 
 ### 주의사항 (다음 세션 필독)
 
 1. **OpenAI API 키 미설정**: `.env`의 `OPENAI_API_KEY=your-api-key-here`를 실제 키로 교체해야 LLM 채팅 동작
-2. **시뮬레이션 수동 시작 필요**: 서버 기동 후 `POST http://localhost:8012/simulation/start` 호출 필요
-3. **Neo4j 외부 컨테이너**: `neo4j-bees`는 docker-compose에 포함되지 않음, 별도 `docker start neo4j-bees` 필요
-4. **start.sh / stop.sh**: 프로젝트 루트에 전체 기동/종료 스크립트 있음
+2. **Neo4j 외부 컨테이너**: `neo4j-bees`는 docker-compose에 포함되지 않음, 별도 `docker start neo4j-bees` 필요
+3. **start.sh / stop.sh**: 프로젝트 루트에 전체 기동/종료 스크립트 있음 (Phase 3부터 시뮬레이션 자동 시작)
 
 ### 플랫폼 기동 체크리스트 (새 세션 시작 시)
 ```bash
@@ -868,9 +884,8 @@ cd /Users/mckim64/Projects/SAMSUNG/BEES-Ontology
 
 # 방법 2: 수동 기동
 docker start neo4j-bees                                 # 1. Neo4j 시작
-docker compose up -d                                    # 2. Docker Compose 8서비스
+docker compose up -d                                    # 2. Docker Compose 9서비스 (시뮬레이션 자동 시작)
 sleep 5                                                  # 3. 서비스 안정화 대기
-curl -s -X POST http://localhost:8012/simulation/start   # 4. 시뮬레이션 시작
 
 # 상태 확인
 docker compose ps && docker ps --filter name=neo4j-bees
@@ -883,31 +898,96 @@ open http://localhost:3000
 ./stop.sh
 ```
 
-### Phase 3: 착수 가능한 다음 작업
+---
 
-#### 운영 개선 (우선순위 높음)
-| # | 작업 | 상세 | 난이도 |
-|---|------|------|:------:|
-| 1 | **시뮬레이션 자동 시작** | Server C lifespan에서 `engine.start()` 자동 호출 | 낮음 |
-| 2 | **OpenAI API 키 연동** | `.env` 설정 + LLM 채팅 E2E 테스트 | 낮음 |
-| 3 | **알람 시스템** | 임계값 비교 → `alarm_history` 저장 + 프론트엔드 알림 | 중간 |
-| 4 | **Grafana 대시보드** | InfluxDB → Grafana 시계열 시각화 (docker-compose에 추가) | 중간 |
+## 14. Phase 11 — 디지털 트윈 플랫폼 Phase 3 (2026.02.13)
 
-#### 프론트엔드 개선
-| # | 작업 | 상세 | 난이도 |
-|---|------|------|:------:|
-| 5 | **온톨로지 그래프 상호작용** | 노드 클릭 → 연결 노드 확장, 경로 하이라이트 | 중간 |
-| 6 | **토폴로지 실시간 상태** | 장비 카드에 SSE 데이터 실시간 반영 (현재 초기 로딩만) | 중간 |
-| 7 | **시계열 차트 페이지** | `/history` 페이지 — 포인트 선택 + 기간/집계 조절 가능한 차트 | 중간 |
-| 8 | **반응형 디자인** | 모바일/태블릿 최적화 | 중간 |
+### 14.1 개요
 
-#### 플랫폼 고급 기능
-| # | 작업 | 상세 | 난이도 |
-|---|------|------|:------:|
-| 9 | **BACnet/IP 어댑터** | Server B에 BAC0 라이브러리 추가 (실제 BMS 연동 준비) | 높음 |
-| 10 | **데이터 보존 정책** | raw → 1h → 1d 집계, 자동 retention policy | 중간 |
-| 11 | **사용자 인증** | JWT 기반 로그인/로그아웃, 역할 기반 접근 제어 | 높음 |
-| 12 | **스케줄 관리** | 장비 스케줄 CRUD (PostgreSQL `schedules` 테이블 활용) | 중간 |
+Phase 2 완료 후 11개 기능 항목을 5명의 병렬 에이전트(infra-ops, alarm-eng, frontend-1, frontend-2, platform-eng)로 동시 구현.
+A2(OpenAI API 키 연동)를 제외한 A~D 전 카테고리 완료.
+
+### 14.2 구현 완료 항목 (11/11)
+
+#### A. 인프라/백엔드 (3개)
+
+| # | 항목 | 담당 | 신규/수정 파일 |
+|---|------|------|---------------|
+| A1 | **시뮬레이션 자동 시작** | infra-ops | `server-c/app/config.py` (AUTO_START_SIMULATION), `main.py` (lifespan 자동시작) |
+| A3 | **알람 시스템 — Server C** | alarm-eng | `server-c/app/alarm_checker.py` (신규, AlarmChecker 클래스), `engine.py` (알람 체크 통합) |
+| A3 | **알람 시스템 — Server A + D** | alarm-eng | `server-a/backend/app/routers/alarm.py` (신규, 3 API), `mqtt_service.py` (알람 캐시), `server-d/app/mqtt_worker.py` (알람 구독/저장), `routers/admin.py` (acknowledge) |
+| A4 | **Grafana 대시보드** | infra-ops | `platform/grafana/` (프로비저닝 3파일), `docker-compose.yml` (grafana 서비스), `.env` (GRAFANA_PORT) |
+
+#### B. 프론트엔드 (3개)
+
+| # | 항목 | 담당 | 신규/수정 파일 |
+|---|------|------|---------------|
+| B5 | **온톨로지 그래프 상호작용** | frontend-1 | `ontology/page.tsx` (클릭 하이라이트, 더블클릭 이웃 확장, 검색+포커스) |
+| B6+B8 | **토폴로지 실시간 + 반응형** | frontend-1 | `topology/page.tsx` (SSE 실시간 센서값), `sidebar.tsx` (3단계 반응형), `header.tsx`, 전 페이지 반응형 그리드 |
+| B7 | **시계열 차트 /history** | frontend-2 | `app/history/page.tsx` (신규, recharts 멀티라인), `sidebar.tsx` (메뉴 추가), `lib/api.ts` (집계 파라미터) |
+
+#### C. 플랫폼 (4개)
+
+| # | 항목 | 담당 | 신규/수정 파일 |
+|---|------|------|---------------|
+| C9 | **BACnet/IP 어댑터** | platform-eng | `server-b/app/bacnet_adapter.py` (신규, BACnetSimulator), `main.py` (5 API) |
+| C10+C12 | **데이터 보존 + 스케줄** | platform-eng | `influxdb/tasks/downsample.flux`, `server-d/app/retention.py`, `server-a/backend/app/services/postgres_service.py`, `routers/schedule.py` (CRUD 5 API) |
+| C11 | **JWT 인증** | platform-eng | `services/auth_service.py`, `dependencies.py`, `routers/auth.py` (4 API), `app/login/page.tsx`, `lib/api.ts` (401 리다이렉트) |
+
+#### D. 품질 (1개)
+
+| # | 항목 | 담당 | 신규/수정 파일 |
+|---|------|------|---------------|
+| D | **온톨로지 품질 + 알람 UI** | platform-eng | `scripts/ontology_quality_check.py` (5가지 검증), `components/alarm-banner.tsx`, `components/client-layout.tsx`, `app/layout.tsx` |
+
+### 14.3 Docker Compose 변경
+
+Phase 3부터 **9개 서비스** (Grafana 추가):
+```
+influxdb, postgres, mosquitto, grafana (신규, 포트 3001),
+server-a-backend, server-a-frontend, server-b, server-c, server-d
++ Neo4j 외부 컨테이너 = 총 10개 서비스
+```
+
+### 14.4 프론트엔드 변경
+
+8개 페이지 (2개 추가):
+```
+/ (대시보드+알람카드), /monitoring, /control (JWT 인증),
+/ontology (그래프 상호작용 강화), /topology (SSE 실시간+반응형),
+/chat, /history (신규), /login (신규)
+```
+
+전 페이지 3단계 반응형 (모바일/태블릿/데스크탑), 알람 배너 글로벌 표시.
+
+### 14.5 API 변경
+
+Server A 신규 엔드포인트:
+- `GET /api/alarms` — 활성 알람 목록
+- `GET /api/alarms/history` — 알람 이력 (Server D 프록시)
+- `POST /api/alarms/{id}/acknowledge` — 알람 확인
+- `POST /api/auth/login` — JWT 로그인
+- `POST /api/auth/register` — 사용자 등록
+- `GET /api/auth/me` — 현재 사용자
+- `POST /api/auth/logout` — 로그아웃
+- `GET /api/schedules` — 스케줄 목록
+- `POST /api/schedules` — 스케줄 생성
+- `GET /api/schedules/{id}` — 스케줄 상세
+- `PUT /api/schedules/{id}` — 스케줄 수정
+- `DELETE /api/schedules/{id}` — 스케줄 삭제
+
+Server B 신규 엔드포인트:
+- `GET /bacnet/devices` — BACnet 디바이스 목록
+- `GET /bacnet/devices/{id}/objects` — BACnet 오브젝트 목록
+- `GET /bacnet/read` — BACnet 읽기
+- `POST /bacnet/write` — BACnet 쓰기
+- `POST /bacnet/discover` — BACnet 디스커버리
+
+### 14.6 Phase 3 미완료 항목
+
+- **A2: OpenAI API 키 연동 + E2E 테스트** — 사용자 의도적 제외 (실제 API 키 필요)
+
+### Phase 4: 착수 가능한 다음 작업
 
 ### 온톨로지 관련 (내부 데이터 확보 시)
 

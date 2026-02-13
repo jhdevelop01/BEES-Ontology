@@ -6,6 +6,14 @@
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
 /**
+ * localStorage에서 JWT 토큰 가져오기
+ */
+function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("bees_token");
+}
+
+/**
  * 기본 fetch 래퍼 — JSON 응답 반환
  */
 async function fetchJSON<T = unknown>(
@@ -13,13 +21,29 @@ async function fetchJSON<T = unknown>(
   options?: RequestInit
 ): Promise<T> {
   const url = `${API_BASE}${path}`;
+  const token = getToken();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
   });
+
+  // 401 → 로그인 페이지로 리다이렉트
+  if (res.status === 401 && typeof window !== "undefined") {
+    localStorage.removeItem("bees_token");
+    localStorage.removeItem("bees_user");
+    if (!window.location.pathname.startsWith("/login")) {
+      window.location.href = "/login";
+    }
+    throw new Error("인증이 필요합니다. 로그인 페이지로 이동합니다.");
+  }
 
   if (!res.ok) {
     const errorText = await res.text().catch(() => "Unknown error");
@@ -27,6 +51,57 @@ async function fetchJSON<T = unknown>(
   }
 
   return res.json();
+}
+
+// ─── 인증 ───
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    role: string;
+    department: string | null;
+  };
+}
+
+export async function login(req: LoginRequest): Promise<LoginResponse> {
+  const data = await fetchJSON<LoginResponse>("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify(req),
+  });
+  // 토큰 저장
+  localStorage.setItem("bees_token", data.access_token);
+  localStorage.setItem("bees_user", JSON.stringify(data.user));
+  return data;
+}
+
+export function logout(): void {
+  localStorage.removeItem("bees_token");
+  localStorage.removeItem("bees_user");
+  window.location.href = "/login";
+}
+
+export function getCurrentUser(): LoginResponse["user"] | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem("bees_user");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function isLoggedIn(): boolean {
+  return !!getToken();
 }
 
 // ─── 대시보드 ───
@@ -158,10 +233,13 @@ export interface HistoryResponse {
 export async function getPointHistory(
   pointId: string,
   start: string = "-1h",
-  stop: string = "now()"
+  stop: string = "now()",
+  aggregation: string = "mean",
+  window: string = "1m"
 ): Promise<HistoryResponse> {
+  const sp = new URLSearchParams({ start, stop, aggregation, window });
   return fetchJSON<HistoryResponse>(
-    `/api/history/${encodeURIComponent(pointId)}?start=${start}&stop=${stop}`
+    `/api/history/${encodeURIComponent(pointId)}?${sp.toString()}`
   );
 }
 

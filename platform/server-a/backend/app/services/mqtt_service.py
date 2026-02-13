@@ -29,6 +29,9 @@ _device_cache: dict[str, dict[str, Any]] = {}
 # SSE 브로드캐스트용 이벤트 큐 (최근 500건 유지)
 _event_queue: deque[dict[str, Any]] = deque(maxlen=500)
 
+# 알람 캐시 — 최근 100건 알람 버퍼 (Phase 3)
+_alarm_cache: deque[dict[str, Any]] = deque(maxlen=100)
+
 # 이벤트 카운터 (monotonic, thread-safe)
 _event_counter: int = 0
 _counter_lock = threading.Lock()
@@ -99,14 +102,15 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
 
         elif topic.startswith("bees/alarms/"):
             severity = topic.replace("bees/alarms/", "")
-            event = {
-                "type": "alarm",
-                "data": {
-                    "severity": severity,
-                    **payload,
-                    "ts": _parse_ts(payload.get("ts", time.time())),
-                },
+            alarm_data = {
+                "severity": severity,
+                **payload,
+                "ts": _parse_ts(payload.get("ts", time.time())),
             }
+            # 알람 캐시에 저장 (Phase 3)
+            _alarm_cache.append(alarm_data)
+            # SSE 이벤트 큐에도 추가
+            event = {"type": "alarm", "data": alarm_data}
             _event_queue.append(event)
             with _counter_lock:
                 _event_counter += 1
@@ -165,8 +169,13 @@ def get_latest_device(device_id: str) -> dict[str, Any] | None:
 
 
 def get_alarm_count() -> int:
-    """현재 큐에 있는 알람 이벤트 수 반환"""
-    return sum(1 for event in _event_queue if event.get("type") == "alarm")
+    """현재 캐시에 있는 알람 수 반환"""
+    return len(_alarm_cache)
+
+
+def get_alarm_cache() -> list[dict[str, Any]]:
+    """최근 알람 캐시 반환 (최신순, 최대 100건)"""
+    return list(reversed(_alarm_cache))
 
 
 async def event_generator():

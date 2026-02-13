@@ -17,6 +17,7 @@ from typing import Optional
 
 import paho.mqtt.client as mqtt
 
+from .alarm_checker import AlarmChecker
 from .config import settings
 from .profiles.ahu_5f import AHU_5F_DEVICE, AHU_5F_PROFILES, DataProfile, DeviceProfile
 from .profiles.profile_factory import (
@@ -103,6 +104,9 @@ class EmulatorEngine:
         # MQTT 클라이언트
         self._mqtt_client: Optional[mqtt.Client] = None
         self._mqtt_connected: bool = False
+
+        # 알람 체커 (Phase 3)
+        self._alarm_checker = AlarmChecker()
 
         # Neo4j 로딩 상태 (Phase 2)
         self._neo4j_loaded: bool = False
@@ -370,6 +374,18 @@ class EmulatorEngine:
                     topic = f"bees/points/{point_id}"
                     self._publish_mqtt(topic, payload)
 
+                    # 알람 체크 (Phase 3)
+                    alarms = self._alarm_checker.check(
+                        point_id=point_id,
+                        value=value,
+                        brick_class=profile.brick_class,
+                        equipment_id=profile.equipment_dependency,
+                        now=now,
+                    )
+                    for alarm in alarms:
+                        alarm_topic = f"bees/alarms/{alarm['severity']}"
+                        self._publish_mqtt(alarm_topic, alarm)
+
                 # 장비 상태 발행
                 for device_id, device in self._devices.items():
                     state_payload = {
@@ -457,6 +473,8 @@ class EmulatorEngine:
             "device_count": len(self._devices),
             "point_count": len(self._profiles),
             "neo4j_loaded": self._neo4j_loaded,
+            "alarm_total": self._alarm_checker.total_alarms,
+            "alarm_suppressed": self._alarm_checker.suppressed_count,
         }
 
     def get_all_devices(self) -> list[dict]:

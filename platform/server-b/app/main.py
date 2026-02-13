@@ -10,6 +10,11 @@ Server A로부터 제어 명령을 수신하여 Server C(가상 건물 에뮬레
   - GET  /devices/{id}/status : Server C에서 장비 상태 조회
   - GET  /health         : 헬스체크
   - GET  /audit-log      : 명령 감사 로그 조회 (최근 100건)
+  - GET  /bacnet/devices           : BACnet 디바이스 목록
+  - GET  /bacnet/devices/{id}/objects : BACnet 오브젝트 목록
+  - GET  /bacnet/read              : BACnet ReadProperty
+  - POST /bacnet/write             : BACnet WriteProperty
+  - POST /bacnet/discover          : BACnet Who-Is 탐색
 """
 
 from __future__ import annotations
@@ -32,6 +37,7 @@ from pydantic import BaseModel, Field
 from app.config import settings
 from app.device_registry import registry
 from app.neo4j_loader import load_devices_from_neo4j
+from app.bacnet_adapter import bacnet_sim
 
 # ---------------------------------------------------------------------------
 # 로깅 설정
@@ -273,6 +279,13 @@ async def lifespan(app: FastAPI):
     # Neo4j에서 장비 자동 로딩 (Phase 2)
     neo4j_count = await load_devices_from_neo4j()
     logger.info("Neo4j 디바이스 로딩: %d개 추가 (전체 %d개)", neo4j_count, registry.count)
+
+    # BACnet 시뮬레이터에 장비 등록 (Phase 3)
+    _init_bacnet_devices()
+    logger.info(
+        "BACnet 시뮬레이터 초기화: %d 디바이스, %d 오브젝트",
+        bacnet_sim.device_count, bacnet_sim.total_object_count,
+    )
 
     # MQTT 초기화
     _mqtt_client = _init_mqtt()
@@ -579,6 +592,149 @@ async def get_audit_log(limit: int = 100) -> dict[str, Any]:
         "count": len(serialized),
         "limit": limit,
         "logs": serialized,
+    }
+
+
+# ---------------------------------------------------------------------------
+# BACnet 시뮬레이터 초기화 헬퍼
+# ---------------------------------------------------------------------------
+def _init_bacnet_devices() -> None:
+    """DeviceRegistry의 장비를 BACnet 시뮬레이터에 등록한다."""
+    for dev_info in registry.list_all():
+        ontology_id = dev_info["ontology_id"]
+        device_name = dev_info.get("name", ontology_id)
+        bacnet_dev = bacnet_sim.register_device(ontology_id, device_name)
+
+        # 장비 유형에 따라 기본 BACnet 오브젝트 생성
+        device_type = dev_info.get("device_type", "Equipment")
+        local_name = ontology_id.replace("bldg:", "")
+
+        # 모든 제어 가능 장비에 기본 포인트 추가
+        if dev_info.get("controllable", False):
+            bacnet_sim.add_object(
+                bacnet_dev.device_id,
+                brick_point_id=f"bldg:{local_name}_Run_Command",
+                brick_class="On_Off_Command",
+                name=f"{local_name}_Run_Command",
+            )
+            bacnet_sim.add_object(
+                bacnet_dev.device_id,
+                brick_point_id=f"bldg:{local_name}_Run_Status",
+                brick_class="On_Off_Status",
+                name=f"{local_name}_Run_Status",
+            )
+
+        # 공조기/FCU/칠러/보일러 → 온도 센서 + 설정점 추가
+        if device_type in ("AHU", "Fan_Coil_Unit", "Chiller", "Boiler"):
+            bacnet_sim.add_object(
+                bacnet_dev.device_id,
+                brick_point_id=f"bldg:{local_name}_Temp",
+                brick_class="Temperature_Sensor",
+                name=f"{local_name}_Temperature",
+                units="degC",
+            )
+            bacnet_sim.add_object(
+                bacnet_dev.device_id,
+                brick_point_id=f"bldg:{local_name}_Setpoint",
+                brick_class="Temperature_Setpoint",
+                name=f"{local_name}_Setpoint",
+                units="degC",
+            )
+
+
+# ---------------------------------------------------------------------------
+# BACnet API 엔드포인트 (시뮬레이션 모드)
+# ---------------------------------------------------------------------------
+
+class BACnetReadRequest(BaseModel):
+    """BACnet ReadProperty 요청."""
+    device_id: int = Field(..., description="BACnet 디바이스 ID")
+    object_id: str = Field(..., description="오브젝트 ID (예: AI:1)")
+    property_id: str = Field(default="presentValue", description="프로퍼티 ID")
+
+
+class BACnetWriteRequest(BaseModel):
+    """BACnet WriteProperty 요청."""
+    device_id: int = Field(..., description="BACnet 디바이스 ID")
+    object_id: str = Field(..., description="오브젝트 ID (예: AV:1)")
+    property_id: str = Field(default="presentValue", description="프로퍼티 ID")
+    value: Any = Field(..., description="쓸 값")
+
+
+class BACnetDiscoverRequest(BaseModel):
+    """BACnet Who-Is 탐색 요청."""
+    low_limit: Optional[int] = Field(default=None, description="디바이스 ID 하한")
+    high_limit: Optional[int] = Field(default=None, description="디바이스 ID 상한")
+
+
+# ── GET /bacnet/devices ──────────────────────────────────────────────────
+@app.get("/bacnet/devices")
+async def bacnet_list_devices() -> dict[str, Any]:
+    """BACnet 시뮬레이터에 등록된 전체 디바이스 목록."""
+    devices = bacnet_sim.who_is()
+    return {
+        "mode": "simulation",
+        "count": len(devices),
+        "devices": devices,
+    }
+
+
+# ── GET /bacnet/devices/{device_id}/objects ──────────────────────────────
+@app.get("/bacnet/devices/{device_id}/objects")
+async def bacnet_list_objects(device_id: int) -> dict[str, Any]:
+    """특정 BACnet 디바이스의 오브젝트 목록."""
+    device = bacnet_sim.get_device(device_id)
+    if device is None:
+        raise HTTPException(status_code=404, detail=f"BACnet 디바이스 {device_id} 없음")
+
+    objects = bacnet_sim.list_objects(device_id)
+    return {
+        "device_id": device_id,
+        "device_name": device.device_name,
+        "ontology_id": device.ontology_id,
+        "count": len(objects),
+        "objects": objects,
+    }
+
+
+# ── GET /bacnet/read ─────────────────────────────────────────────────────
+@app.get("/bacnet/read")
+async def bacnet_read_property(
+    device_id: int,
+    object_id: str,
+    property_id: str = "presentValue",
+) -> dict[str, Any]:
+    """BACnet ReadProperty 시뮬레이션."""
+    result = bacnet_sim.read_property(device_id, object_id, property_id)
+    if not result.get("success"):
+        raise HTTPException(status_code=404, detail=result.get("error", "읽기 실패"))
+    return result
+
+
+# ── POST /bacnet/write ───────────────────────────────────────────────────
+@app.post("/bacnet/write")
+async def bacnet_write_property(req: BACnetWriteRequest) -> dict[str, Any]:
+    """BACnet WriteProperty 시뮬레이션."""
+    result = bacnet_sim.write_property(
+        req.device_id, req.object_id, req.property_id, req.value,
+    )
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=400 if "읽기 전용" in result.get("error", "") else 404,
+            detail=result.get("error", "쓰기 실패"),
+        )
+    return result
+
+
+# ── POST /bacnet/discover ────────────────────────────────────────────────
+@app.post("/bacnet/discover")
+async def bacnet_discover(req: BACnetDiscoverRequest) -> dict[str, Any]:
+    """BACnet Who-Is 탐색 시뮬레이션."""
+    devices = bacnet_sim.who_is(req.low_limit, req.high_limit)
+    return {
+        "mode": "simulation",
+        "count": len(devices),
+        "devices": devices,
     }
 
 

@@ -95,9 +95,9 @@ export default function MonitoringPage() {
         connected={connected}
       />
 
-      <div className="p-6 space-y-6">
-        {/* 센서 현재값 카드 (가로 5개) */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="p-3 md:p-6 space-y-6">
+        {/* 센서 현재값 카드 */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
           {SENSORS.map((sensor) => {
             const current = points[sensor.id];
             const value =

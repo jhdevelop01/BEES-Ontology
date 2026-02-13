@@ -8,6 +8,7 @@ CREATE TABLE users (
     name VARCHAR(100) NOT NULL,
     role VARCHAR(20) NOT NULL DEFAULT 'viewer',
     department VARCHAR(100),
+    password_hash VARCHAR(255),
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     last_login TIMESTAMPTZ
@@ -99,6 +100,8 @@ CREATE INDEX idx_audit_log_created ON audit_log(created_at DESC);
 CREATE INDEX idx_work_orders_status ON work_orders(status);
 CREATE INDEX idx_work_orders_equipment ON work_orders(equipment_id);
 
--- 기본 관리자 계정
-INSERT INTO users (email, name, role, department)
-VALUES ('admin@samsung-gec.com', '시스템 관리자', 'admin', 'FM팀');
+-- 기본 계정 (비밀번호: admin123 / viewer123)
+INSERT INTO users (email, name, role, department, password_hash)
+VALUES
+  ('admin@bees.dev', '시스템 관리자', 'admin', 'FM팀', '$2b$12$axImNkZOfxnp.dksl.FMC..T4GPVWmY1.lE2q1Eiq2Xb17jE.ytpy'),
+  ('viewer@bees.dev', '일반 사용자', 'viewer', 'FM팀', '$2b$12$CPKUvf5Ka2tGDnhljApakuHhfrx34J5cULmiuG7lRK.Jw.RTMH9Zm');

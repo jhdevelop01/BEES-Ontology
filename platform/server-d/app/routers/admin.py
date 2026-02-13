@@ -110,6 +110,53 @@ async def get_alarm_history(
 
 
 # ─────────────────────────────────────────────
+# POST /alarm-history/{id}/acknowledge — 알람 확인 처리
+# ─────────────────────────────────────────────
+
+@router.post("/alarm-history/{alarm_id}/acknowledge")
+async def acknowledge_alarm(
+    alarm_id: int,
+    acknowledged_by: int = Query(1, description="확인자 사용자 ID"),
+):
+    """
+    알람 확인(acknowledge) 처리.
+    acknowledged_at을 현재 시각으로, acknowledged_by를 지정 사용자로 업데이트.
+    """
+    pool = get_pg_pool()
+    if not pool:
+        raise HTTPException(status_code=503, detail="PostgreSQL 미연결")
+
+    try:
+        async with pool.acquire() as conn:
+            result = await conn.execute(
+                """
+                UPDATE alarm_history
+                SET acknowledged_at = NOW(), acknowledged_by = $1
+                WHERE id = $2 AND acknowledged_at IS NULL
+                """,
+                acknowledged_by,
+                alarm_id,
+            )
+            # result 형식: "UPDATE N"
+            updated = int(result.split()[-1])
+            if updated == 0:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"알람 {alarm_id}을 찾을 수 없거나 이미 확인됨",
+                )
+            return {
+                "success": True,
+                "alarm_id": alarm_id,
+                "acknowledged_by": acknowledged_by,
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("알람 확인 처리 실패: %s", e)
+        raise HTTPException(status_code=500, detail=f"알람 확인 처리 실패: {e}")
+
+
+# ─────────────────────────────────────────────
 # GET /audit-log — 감사 로그 조회
 # ─────────────────────────────────────────────
 

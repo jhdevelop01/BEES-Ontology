@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Sidebar } from "@/components/layout/sidebar";
 import { ToastProvider } from "@/components/ui/toast";
+import { ClientLayout } from "@/components/client-layout";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,13 +17,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className="bg-gray-50 text-gray-900 antialiased">
         <ToastProvider>
-          <div className="flex min-h-screen">
-            {/* 사이드바 (고정) */}
-            <Sidebar />
-
-            {/* 메인 콘텐츠 영역 */}
-            <main className="ml-64 flex-1">{children}</main>
-          </div>
+          <ClientLayout>{children}</ClientLayout>
         </ToastProvider>
       </body>
     </html>

@@ -6825,5 +6825,5 @@ bldg:VFD_Group a brick:VFD ;
 #   3. hasPart 정방향 미러링 (CC_System 41, RH_System 30 등 6개 시스템)
 #   4. 2F/3F 저층부 보강 (FCU, CO2, Occupancy 추가)
 #   5. 엘리베이터 개별화 (10대) + 그룹 포인트 + hasLocation 수정
-#   6. SHACL v2.0 (19 shapes)
+#   6. SHACL v2.0 (24 shapes)
 # =============================================================================

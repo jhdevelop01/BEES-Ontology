@@ -58,6 +58,23 @@ services:
       timeout: 5s
       retries: 3
 
+  grafana:
+    image: grafana/grafana:11.0.0
+    container_name: bees-grafana
+    ports:
+      - "${GRAFANA_PORT:-3001}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: bees2024
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/bees-overview.json
+    depends_on:
+      influxdb:
+        condition: service_healthy
+    volumes:
+      - ./data/grafana:/var/lib/grafana
+      - ./platform/grafana/provisioning:/etc/grafana/provisioning
+      - ./platform/grafana/dashboards:/var/lib/grafana/dashboards
+
   # ─────────────── 애플리케이션 서버 ───────────────
   server-a-backend:
     build: ./platform/server-a/backend

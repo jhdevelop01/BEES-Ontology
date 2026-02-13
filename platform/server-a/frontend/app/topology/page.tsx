@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -148,17 +148,32 @@ function TreeItem({
   );
 }
 
-/* ── 장비 카드 컴포넌트 ── */
+/* ── 장비 카드 컴포넌트 (실시간 SSE 데이터 반영) ── */
 
 interface EquipmentCardProps {
   node: TopologyNode;
   isActive: boolean;
+  sensorValues?: Array<{ name: string; value: number | null; unit: string }>;
+  lastUpdate?: number | null;
 }
 
-function EquipmentCard({ node, isActive }: EquipmentCardProps) {
+function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCardProps) {
   const Icon = getTypeIcon(node.type);
+  const [pulse, setPulse] = useState(false);
+  const prevActiveRef = useRef(isActive);
+
+  // 상태 변경 시 pulse 애니메이션
+  useEffect(() => {
+    if (prevActiveRef.current !== isActive) {
+      setPulse(true);
+      const timer = setTimeout(() => setPulse(false), 1000);
+      prevActiveRef.current = isActive;
+      return () => clearTimeout(timer);
+    }
+  }, [isActive]);
+
   return (
-    <Card className="relative overflow-hidden">
+    <Card className={`relative overflow-hidden transition-shadow ${pulse ? "ring-2 ring-blue-400 ring-opacity-50" : ""}`}>
       <div
         className={`absolute top-0 left-0 right-0 h-1 ${
           isActive ? "bg-green-500" : "bg-gray-200"
@@ -167,14 +182,40 @@ function EquipmentCard({ node, isActive }: EquipmentCardProps) {
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-center justify-between mb-2">
           <Icon className="h-5 w-5 text-gray-400" />
-          <Badge variant={isActive ? "success" : "secondary"}>
-            {isActive ? "ON" : "OFF"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {/* LED 인디케이터 */}
+            <span className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-green-500 animate-pulse" : "bg-gray-300"}`} />
+            <Badge variant={isActive ? "success" : "secondary"}>
+              {isActive ? "ON" : "OFF"}
+            </Badge>
+          </div>
         </div>
         <p className="text-sm font-medium text-gray-900 truncate">
           {node.name}
         </p>
         <p className="text-xs text-gray-500 mt-0.5">{getTypeLabel(node.type)}</p>
+
+        {/* 실시간 센서 값 (최대 2개) */}
+        {sensorValues && sensorValues.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
+            {sensorValues.slice(0, 2).map((sv) => (
+              <div key={sv.name} className="flex items-center justify-between text-xs">
+                <span className="text-gray-400 truncate mr-2">{sv.name}</span>
+                <span className="font-semibold text-gray-700 whitespace-nowrap">
+                  {sv.value !== null ? sv.value.toFixed(1) : "--"}{" "}
+                  <span className="text-gray-400 font-normal">{sv.unit}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* 마지막 업데이트 시간 */}
+        {lastUpdate && (
+          <p className="text-[10px] text-gray-300 mt-1.5">
+            {new Date(lastUpdate * 1000).toLocaleTimeString("ko-KR")}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -280,6 +321,37 @@ export default function TopologyPage() {
     return results;
   };
 
+  /* ── 장비에 매칭되는 센서 값 추출 ── */
+  const getSensorValuesForEquipment = useCallback(
+    (eq: TopologyNode): Array<{ name: string; value: number | null; unit: string }> => {
+      const results: Array<{ name: string; value: number | null; unit: string }> = [];
+      const nodeName = eq.name.toLowerCase();
+      const nodeId = eq.id.toLowerCase();
+      for (const [pid, pdata] of Object.entries(points)) {
+        const pidLower = pid.toLowerCase();
+        if (pidLower.includes(nodeName) || pidLower.includes(nodeId)) {
+          const shortName = pid.split(":").pop()?.replace(/_/g, " ") || pid;
+          results.push({
+            name: shortName,
+            value: pdata.value,
+            unit: pdata.unit,
+          });
+        }
+      }
+      return results;
+    },
+    [points]
+  );
+
+  /* ── 장비의 마지막 업데이트 시간 ── */
+  const getLastUpdateForEquipment = useCallback(
+    (eq: TopologyNode): number | null => {
+      const dev = devices[eq.id] || devices[eq.name];
+      return dev?.ts || null;
+    },
+    [devices]
+  );
+
   /* ── 선택된 노드가 장비인지 ── */
   const isEquipmentNode = (node: TopologyNode): boolean => {
     const t = node.type.toLowerCase();
@@ -304,9 +376,9 @@ export default function TopologyPage() {
         connected={connected}
       />
 
-      <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+      <div className="flex flex-col md:flex-row" style={{ minHeight: "calc(100vh - 64px)" }}>
         {/* 왼쪽: 트리뷰 */}
-        <div className="w-80 border-r border-gray-200 bg-white flex-shrink-0 overflow-y-auto">
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-gray-200 bg-white flex-shrink-0 overflow-y-auto max-h-[40vh] md:max-h-none md:h-auto">
           <div className="p-4 border-b border-gray-200">
             <h3 className="text-sm font-semibold text-gray-700">건물 구조</h3>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -551,7 +623,7 @@ export default function TopologyPage() {
 
                     {viewMode === "grid" ? (
                       /* 그리드 뷰 */
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {getChildEquipment(selectedNode).map((eq) => {
                           const isActive =
                             deviceStatusMap[eq.name] ||
@@ -570,7 +642,12 @@ export default function TopologyPage() {
                                 });
                               }}
                             >
-                              <EquipmentCard node={eq} isActive={isActive} />
+                              <EquipmentCard
+                                node={eq}
+                                isActive={isActive}
+                                sensorValues={getSensorValuesForEquipment(eq)}
+                                lastUpdate={getLastUpdateForEquipment(eq)}
+                              />
                             </div>
                           );
                         })}

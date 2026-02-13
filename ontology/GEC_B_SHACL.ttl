@@ -471,9 +471,10 @@ bees:OccupancySensorShape a sh:NodeShape ;
 # END OF SHACL SHAPES v2.0
 # =============================================================================
 # 검증 대상: GEC_B_Ontology.ttl v2.0
-# Shape 수: 19개
-#   기존 11개: Site, Building, Floor, Zone, Chiller, AHU, Boiler,
-#              Temperature/CO2 Sensor, Confidence, LEED, G-SEED, GHG, EnergyBreakdown
+# Shape 수: 24개
+#   기존 16개: Site, Building, Floor, Zone, Chiller, AHU, Boiler,
+#              TemperatureSensor, CO2Sensor, EstimatedData, EstimatedRange,
+#              LEED, G-SEED, GHGEmission, GHGScope1, EnergyBreakdown
 #   추가 8개: AHU feeds, Chiller feeds, Pump feeds, CT feeds,
 #             Equipment location, Elevator, FCU, Occupancy Sensor
 # 실행 방법: pyshacl 또는 Apache Jena SHACL validator 사용

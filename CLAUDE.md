@@ -13,8 +13,8 @@
 | 파일 | 위치 | 설명 |
 |------|------|------|
 | GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (v2.0.1, ~6,830줄, 5,756 트리플, 845 인스턴스) |
-| GEC_B_SHACL.ttl | `ontology/` | SHACL 검증 Shape (v2.0, 19개) |
-| docker-compose.yml | 루트 | 디지털 트윈 플랫폼 8서비스 Docker 오케스트레이션 |
+| GEC_B_SHACL.ttl | `ontology/` | SHACL 검증 Shape (v2.0, 24개) |
+| docker-compose.yml | 루트 | 디지털 트윈 플랫폼 9서비스 Docker 오케스트레이션 |
 | .env | 루트 | 환경변수 (Neo4j, MQTT, InfluxDB, PostgreSQL, 서버 간 URL) |
 | history.md | `_docs/` | **★ 전체 프로젝트 히스토리 (Phase 1~9 상세, 플랫폼 작업 이어가려면 필수 참조)** |
 | 08_개발_원칙.md | `_docs/` | **TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙** (모든 세션 필수 참조) |
@@ -52,7 +52,7 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
 ## 디지털 트윈 IoT 시뮬레이션 플랫폼 (Phase 9)
 
 ### 개요
-Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 플랫폼. Phase 1 MVP 완료.
+Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 플랫폼. Phase 3 완료.
 
 ### 아키텍처
 ```
@@ -80,36 +80,47 @@ Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 �
 | Mosquitto MQTT | 1885 | 없음 |
 | InfluxDB | 8088 | bees-dev-token |
 | PostgreSQL | 5434 | bees / bees2024 |
+| Grafana | 3001 | admin / bees2024 |
 | Neo4j (외부 컨테이너) | 7476/7689 | neo4j / bees2024 |
 
-### Phase 2 현재 상태 (2026.02.12) — ✅ 전체 완료
+### Phase 3 현재 상태 (2026.02.13) — ✅ 전체 완료
+**Phase 2 (유지)**:
 - ✅ **84개 장비 + 164개 포인트** 실시간 시뮬레이션 (Neo4j 자동 로딩, 5초 간격)
-- ✅ **온톨로지 그래프 뷰** — Cytoscape.js, cose-bilkent 레이아웃, 타입 필터, 노드 상세 (`/ontology`)
-- ✅ **토폴로지 뷰** — 18층 건물 트리 + 장비 그리드/리스트 (`/topology`)
+- ✅ **온톨로지 그래프 뷰** — Cytoscape.js, 노드 클릭 하이라이트, 더블클릭 이웃 확장, 검색+포커스 (`/ontology`)
+- ✅ **토폴로지 뷰** — 18층 건물 트리 + SSE 실시간 장비 상태 + 반응형 디자인 (`/topology`)
 - ✅ **LLM 채팅** — OpenAI GPT-4o Function Calling × 6도구 → Neo4j Cypher (`/chat`)
-- ✅ **디바이스 레지스트리** — Server B Neo4j 자동 로딩
-- ✅ **서울 계절 보정** — 사인파 모델 (냉방 7월, 난방 1월 피크)
 - ✅ **InfluxDB 직접 연동** — 3단계 폴백: InfluxDB 직접 → Server D 프록시 → MQTT 캐시
-- ✅ SSE 실시간 스트림 + 대시보드 KPI + 모니터링 + 장비 제어 (Phase 1 유지)
-- ✅ Data Historian: MQTT → InfluxDB (Phase 1 유지)
-- ⚠️ **OpenAI API 키**: `.env`의 `OPENAI_API_KEY`에 실제 키 설정 필요
-- ⚠️ **시뮬레이션 수동 시작**: `POST http://localhost:8012/simulation/start` 필요
 
-### 프론트엔드 6개 페이지
+**Phase 3 (신규)**:
+- ✅ **시뮬레이션 자동 시작** — Server C 기동 시 자동 시작 (수동 POST 불필요)
+- ✅ **알람 시스템** — Server C 임계값 체크 → MQTT 발행 → Server A 캐시 → Server D PostgreSQL 저장
+- ✅ **Grafana 대시보드** — InfluxDB 자동 연동, 4패널 오버뷰 (포트 3001)
+- ✅ **시계열 이력 페이지** — recharts 멀티라인 차트, 기간/집계 선택, CSV 다운로드 (`/history`)
+- ✅ **반응형 디자인** — 모바일/태블릿/데스크탑 3단계 전 페이지 적용
+- ✅ **BACnet/IP 어댑터** — Brick→BACnet 매핑, 시뮬레이션 모드, 5개 REST API
+- ✅ **데이터 보존 정책** — InfluxDB 3단계 다운샘플링 (7d→30d→365d)
+- ✅ **스케줄 관리 API** — PostgreSQL 기반 CRUD 5개 엔드포인트
+- ✅ **JWT 인증** — 로그인/등록/역할 기반 접근 제어, 프론트엔드 로그인 페이지
+- ✅ **알람 UI** — SSE 알람 배너 + 대시보드 알람 카드
+- ✅ **온톨로지 품질 스크립트** — 5가지 자동 구조 검증 (`scripts/ontology_quality_check.py`)
+- ⚠️ **OpenAI API 키**: `.env`의 `OPENAI_API_KEY`에 실제 키 설정 필요
+
+### 프론트엔드 8개 페이지
 | 경로 | 기능 |
 |------|------|
-| `/` | 대시보드 — KPI, 장비 상태, 최근 데이터 |
+| `/` | 대시보드 — KPI, 장비 상태, 알람 카드, 최근 데이터 |
 | `/monitoring` | 모니터링 — 실시간 차트 |
-| `/control` | 제어 — ON/OFF, 모드 변경 |
-| `/ontology` | 온톨로지 그래프 — Cytoscape.js 시각화 |
-| `/topology` | 토폴로지 — 건물 계층 트리 + 장비 그리드 |
+| `/control` | 제어 — ON/OFF, 모드 변경 (JWT 인증 필요) |
+| `/ontology` | 온톨로지 그래프 — 클릭 하이라이트, 더블클릭 확장, 검색+포커스 |
+| `/topology` | 토폴로지 — 건물 계층 트리 + SSE 실시간 장비 상태 |
 | `/chat` | AI 채팅 — LLM 자연어 질의 |
+| `/history` | 시계열 이력 — recharts 멀티라인, 기간/집계, CSV 다운로드 |
+| `/login` | 로그인 — JWT 인증 |
 
 ### 기동 방법
 ```bash
 docker start neo4j-bees                                 # Neo4j 시작
-docker compose up -d                                    # 전체 기동
-curl -s -X POST http://localhost:8012/simulation/start   # 시뮬레이션 시작
+docker compose up -d                                    # 전체 기동 (9서비스 + 시뮬레이션 자동 시작)
 curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (164포인트 기대)
 open http://localhost:3000                               # 프론트엔드
 ```
@@ -123,12 +134,12 @@ open http://localhost:3000                               # 프론트엔드
 - **n10s 노드 필터**: `n.uri STARTS WITH 'https://example.org/gec-b#'`로 스키마 노드 제외
 
 ### 상세 참조
-- **전체 구현 상세/디버깅 이력/다음 작업 가이드**: `_docs/history.md` (섹션 10~13)
+- **전체 구현 상세/디버깅 이력/다음 작업 가이드**: `_docs/history.md` (섹션 10~14)
 - **전체 아키텍처 설계서**: `_docs/10_디지털트윈_플랫폼_설계.md`
 
 ## 작업 시작 전
 1. **`_docs/08_개발_원칙.md`를 반드시 읽을 것** — TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙
-2. **플랫폼 작업 시 `_docs/history.md` 섹션 10~13을 반드시 읽을 것** — 서버별 API/구현 상세, Phase 2 완료 내역, 다음 작업 가이드
+2. **플랫폼 작업 시 `_docs/history.md` 섹션 10~14을 반드시 읽을 것** — 서버별 API/구현 상세, Phase 3 완료 내역, 다음 작업 가이드
 3. 온톨로지 맥락이 필요하면 `_docs/history.md` 섹션 1~11을 읽을 것
 
 ## 언어

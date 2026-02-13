@@ -104,6 +104,9 @@ export default function OntologyPage() {
   const [selectedNode, setSelectedNode] = useState<NodeDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
+  // 이웃 확장 상태
+  const [expanding, setExpanding] = useState(false);
+
   /* ── 그래프 데이터 로딩 ── */
   const loadGraph = useCallback(
     async (nodeType?: string) => {
@@ -249,6 +252,48 @@ export default function OntologyPage() {
               "text-background-padding": "2px",
             },
           },
+          // 하이라이트 스타일
+          {
+            selector: "node.highlighted",
+            style: {
+              "border-width": 4,
+              "border-color": "#1d4ed8",
+              "border-opacity": 1,
+              "background-opacity": 1,
+              "z-index": 10,
+            },
+          },
+          {
+            selector: "edge.highlighted",
+            style: {
+              width: 3,
+              opacity: 1,
+              "z-index": 10,
+            } as any,
+          },
+          {
+            selector: "node.dimmed",
+            style: {
+              "background-opacity": 0.15,
+              "border-opacity": 0.1,
+              "text-opacity": 0.15,
+            } as any,
+          },
+          {
+            selector: "edge.dimmed",
+            style: {
+              opacity: 0.08,
+            } as any,
+          },
+          // 확장된 새 노드 표시 (pulse 효과)
+          {
+            selector: "node.newly-added",
+            style: {
+              "border-width": 3,
+              "border-color": "#f59e0b",
+              "border-style": "dashed",
+            },
+          },
         ],
         layout: {
           name: layoutName === "cose-bilkent" ? "cose-bilkent" : layoutName,
@@ -271,11 +316,31 @@ export default function OntologyPage() {
         wheelSensitivity: 0.3,
       });
 
-      // 노드 클릭 이벤트
+      // 하이라이트 함수
+      const highlightNode = (targetNode: any) => {
+        // 연결된 노드와 엣지
+        const neighborhood = targetNode.neighborhood().add(targetNode);
+        // 전체 dimmed
+        cy.elements().addClass("dimmed").removeClass("highlighted");
+        // 이웃만 하이라이트
+        neighborhood.removeClass("dimmed").addClass("highlighted");
+      };
+
+      const clearHighlight = () => {
+        cy.elements().removeClass("dimmed").removeClass("highlighted");
+      };
+
+      // 노드 클릭 이벤트 — 하이라이트 + 상세 패널
       cy.on("tap", "node", async (evt: unknown) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const nodeData = (evt as any).target.data();
+        const tappedNode = (evt as any).target;
+        const nodeData = tappedNode.data();
         const nodeId = nodeData.id;
+
+        // 연결 하이라이트
+        highlightNode(tappedNode);
+
+        // 상세 정보 로딩
         setDetailLoading(true);
         try {
           const detail = await getNodeDetail(nodeId);
@@ -294,10 +359,99 @@ export default function OntologyPage() {
         }
       });
 
-      // 빈 공간 클릭 시 상세 패널 닫기
+      // 노드 더블클릭 — 이웃 확장
+      cy.on("dbltap", "node", async (evt: unknown) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const tappedNode = (evt as any).target;
+        const nodeData = tappedNode.data();
+        const nodeId = nodeData.id;
+
+        setExpanding(true);
+        try {
+          const detail = await getNodeDetail(nodeId);
+          const newElements: Array<{
+            group: "nodes" | "edges";
+            data: Record<string, unknown>;
+          }> = [];
+
+          for (const conn of detail.connections) {
+            const targetId = conn.target_uri;
+            // 이미 그래프에 있는 노드는 스킵
+            if (cy.getElementById(targetId).length > 0) continue;
+
+            const connNodeType = resolveNodeType(conn.target_labels);
+            const connName = targetId.split("#").pop() || targetId.split("/").pop() || targetId;
+
+            // 새 노드 추가
+            newElements.push({
+              group: "nodes",
+              data: {
+                id: targetId,
+                label: connName,
+                uri: targetId,
+                labels: conn.target_labels,
+                nodeType: connNodeType,
+                color: NODE_COLORS[connNodeType] || NODE_COLORS.Other,
+                shape: NODE_SHAPES[connNodeType] || "ellipse",
+              },
+            });
+
+            // 엣지 추가
+            const edgeId = conn.direction === "outgoing"
+              ? `${nodeId}_${conn.rel}_${targetId}`
+              : `${targetId}_${conn.rel}_${nodeId}`;
+
+            if (cy.getElementById(edgeId).length === 0) {
+              newElements.push({
+                group: "edges",
+                data: {
+                  id: edgeId,
+                  source: conn.direction === "outgoing" ? nodeId : targetId,
+                  target: conn.direction === "outgoing" ? targetId : nodeId,
+                  label: conn.rel,
+                  type: conn.rel,
+                  lineColor: EDGE_STYLES[conn.rel]?.color || "#94a3b8",
+                  lineStyle: EDGE_STYLES[conn.rel]?.style || "solid",
+                },
+              });
+            }
+          }
+
+          if (newElements.length > 0) {
+            const added = cy.add(newElements as any);
+            // 새로 추가된 노드에 표시
+            added.nodes().addClass("newly-added");
+            // 3초 후 표시 제거
+            setTimeout(() => {
+              added.nodes().removeClass("newly-added");
+            }, 3000);
+
+            // 추가된 노드 주변으로 레이아웃 재실행
+            const layoutOpts: any = {
+              name: "cose-bilkent",
+              animate: true,
+              animationDuration: 500,
+              fit: false,
+              nodeDimensionsIncludeLabels: true,
+              idealEdgeLength: 120,
+              nodeRepulsion: 6000,
+              gravity: 0.25,
+              numIter: 1000,
+            };
+            cy.layout(layoutOpts).run();
+          }
+        } catch {
+          // 확장 실패 시 무시
+        } finally {
+          setExpanding(false);
+        }
+      });
+
+      // 빈 공간 클릭 시 하이라이트 해제 + 상세 패널 닫기
       cy.on("tap", (evt: unknown) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((evt as any).target === cy) {
+          clearHighlight();
           setSelectedNode(null);
         }
       });
@@ -377,17 +531,22 @@ export default function OntologyPage() {
     setSearchOpen(false);
     setSearchQuery(result.name);
 
-    // Cytoscape에서 노드 찾기 & 포커스
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cy = cyRef.current as any;
     if (cy) {
       const node = cy.getElementById(result.uri);
       if (node && node.length > 0) {
+        // 카메라 이동 + 하이라이트
         cy.animate({
           center: { eles: node },
           zoom: 2,
         }, { duration: 400 });
         node.select();
+
+        // 연결 하이라이트
+        const neighborhood = node.neighborhood().add(node);
+        cy.elements().addClass("dimmed").removeClass("highlighted");
+        neighborhood.removeClass("dimmed").addClass("highlighted");
       }
     }
 
@@ -415,11 +574,11 @@ export default function OntologyPage() {
     <div className="min-h-screen">
       <Header title="온톨로지" description="Brick Schema 그래프 시각화" />
 
-      <div className="p-6 space-y-4">
+      <div className="p-3 md:p-6 space-y-4">
         {/* 상단 컨트롤바 */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
           {/* 검색 */}
-          <div className="relative flex-1 min-w-[240px] max-w-md">
+          <div className="relative flex-1 min-w-[180px] md:min-w-[240px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
@@ -490,8 +649,8 @@ export default function OntologyPage() {
             ))}
           </div>
 
-          {/* 레이아웃 선택 */}
-          <div className="flex items-center gap-1.5 border-l border-gray-200 pl-3">
+          {/* 레이아웃 선택 — 모바일에서 숨김 */}
+          <div className="hidden md:flex items-center gap-1.5 border-l border-gray-200 pl-3">
             {LAYOUTS.map((l) => (
               <Button
                 key={l.value}
@@ -505,7 +664,7 @@ export default function OntologyPage() {
           </div>
 
           {/* 줌 컨트롤 */}
-          <div className="flex items-center gap-1 border-l border-gray-200 pl-3">
+          <div className="flex items-center gap-1 md:border-l md:border-gray-200 md:pl-3">
             <Button variant="ghost" size="icon" onClick={zoomIn} title="확대">
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -531,9 +690,9 @@ export default function OntologyPage() {
         </div>
 
         {/* 메인 컨텐츠: 그래프 + 상세 패널 */}
-        <div className="flex gap-4" style={{ height: "calc(100vh - 200px)" }}>
+        <div className="flex flex-col md:flex-row gap-4" style={{ height: "calc(100vh - 200px)" }}>
           {/* 그래프 영역 */}
-          <Card className="flex-1 relative overflow-hidden">
+          <Card className="flex-1 relative overflow-hidden min-h-[300px]">
             <CardContent className="p-0 h-full">
               {loading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
@@ -559,8 +718,16 @@ export default function OntologyPage() {
               )}
               <div ref={containerRef} className="w-full h-full" />
 
-              {/* 범례 */}
-              <div className="absolute bottom-4 left-4 bg-white/95 border border-gray-200 rounded-lg p-3 shadow-sm">
+              {/* 이웃 확장 로딩 */}
+              {expanding && (
+                <div className="absolute top-4 right-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
+                  <span className="text-xs text-amber-700">이웃 노드 로딩 중...</span>
+                </div>
+              )}
+
+              {/* 범례 — 모바일에서 숨김 */}
+              <div className="hidden md:block absolute bottom-4 left-4 bg-white/95 border border-gray-200 rounded-lg p-3 shadow-sm">
                 <p className="text-xs font-semibold text-gray-600 mb-2">
                   노드 타입
                 </p>
@@ -589,13 +756,18 @@ export default function OntologyPage() {
                     </div>
                   ))}
                 </div>
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <p className="text-[9px] text-gray-400">
+                    클릭: 연결 하이라이트 | 더블클릭: 이웃 확장
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* 상세 패널 */}
+          {/* 상세 패널 — 모바일: 하단 시트, 데스크탑: 사이드 패널 */}
           {(selectedNode || detailLoading) && (
-            <Card className="w-80 flex-shrink-0 overflow-y-auto">
+            <Card className="w-full md:w-80 flex-shrink-0 overflow-y-auto max-h-[50vh] md:max-h-none">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">노드 상세</CardTitle>

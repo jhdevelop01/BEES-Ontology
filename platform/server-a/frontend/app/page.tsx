@@ -21,7 +21,7 @@ import {
  * KPI 카드 4개 + AHU_5F 센서 실시간 차트 + 장비 상태 카드
  */
 export default function DashboardPage() {
-  const { points, pointHistory, devices, connected } = useSSE(60);
+  const { points, pointHistory, devices, alarms, connected } = useSSE(60);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,7 +63,7 @@ export default function DashboardPage() {
       : summary?.kpi.avg_temperature || 24.0;
   }, [points, summary]);
 
-  const alarmCount = summary?.kpi.alarm_count || 0;
+  const alarmCount = alarms.length || summary?.kpi.alarm_count || 0;
   const simStatus = summary?.kpi.simulation_status || (connected ? "running" : "stopped");
 
   // AHU_5F 급기온도 차트 데이터
@@ -94,9 +94,9 @@ export default function DashboardPage() {
         connected={connected}
       />
 
-      <div className="p-6 space-y-6">
+      <div className="p-3 md:p-6 space-y-6">
         {/* KPI 카드 4개 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           {/* 활성 장비 */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -257,6 +257,55 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* 최근 알람 */}
+        {alarms.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                최근 알람
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">심각도</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">장비</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">유형</th>
+                      <th className="text-right py-2 px-3 text-gray-500 font-medium">값</th>
+                      <th className="text-right py-2 px-3 text-gray-500 font-medium">임계값</th>
+                      <th className="text-right py-2 px-3 text-gray-500 font-medium">시각</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alarms
+                      .slice(-10)
+                      .reverse()
+                      .map((a, i) => (
+                        <tr key={`alarm-${i}`} className="border-b border-gray-50 hover:bg-gray-50">
+                          <td className="py-2 px-3">
+                            <Badge variant={a.severity === "critical" ? "danger" : "warning"}>
+                              {a.severity}
+                            </Badge>
+                          </td>
+                          <td className="py-2 px-3 font-mono text-xs">{a.equipment || "-"}</td>
+                          <td className="py-2 px-3">{a.type || "-"}</td>
+                          <td className="py-2 px-3 text-right">{a.value?.toFixed(1) ?? "-"}</td>
+                          <td className="py-2 px-3 text-right">{a.threshold?.toFixed(1) ?? "-"}</td>
+                          <td className="py-2 px-3 text-right text-xs text-gray-400">
+                            {a.ts ? new Date(a.ts * 1000).toLocaleTimeString("ko-KR") : "-"}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 최근 센서 데이터 */}
         <Card>

@@ -7,10 +7,11 @@ import logging
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from app.config import SERVER_B_URL
+from app.dependencies import CurrentUser, require_role
 from app.services import mqtt_service
 
 logger = logging.getLogger(__name__)
@@ -35,7 +36,10 @@ class ControlResponse(BaseModel):
 
 
 @router.post("/control", response_model=ControlResponse)
-async def send_control_command(cmd: ControlCommand) -> ControlResponse:
+async def send_control_command(
+    cmd: ControlCommand,
+    current_user: CurrentUser = Depends(require_role("operator", "admin")),
+) -> ControlResponse:
     """
     제어 명령을 Server B로 전달.
     Server B가 오프라인이면 에러 반환.
