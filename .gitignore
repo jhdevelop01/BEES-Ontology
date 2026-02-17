@@ -1,4 +1,7 @@
+# macOS
 .DS_Store
+
+# Claude Code
 .claude/
 
 # Docker 데이터 볼륨 (컨테이너별 호스트 저장)
@@ -10,8 +13,16 @@ data/
 # Python
 __pycache__/
 *.pyc
+*.pyo
 .venv/
 venv/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# 스크립트 생성물
+scripts/quality_check_results.json
 
 # Node.js
 node_modules/
@@ -20,3 +31,17 @@ node_modules/
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# 빌드 산출물
+dist/
+build/
+coverage/
+
+# 로그
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
