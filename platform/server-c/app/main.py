@@ -83,11 +83,19 @@ app = FastAPI(
     title="BEES Server C — 가상 건물 에뮬레이터",
     description=(
         "삼성물산 GEC B동 가상 건물 에뮬레이터. "
-        "Brick Schema 온톨로지 기반 장비/센서 시뮬레이션 및 MQTT 데이터 발행. "
-        "Phase 4: 시나리오 관리, 고장 주입, HVAC 열역학 모델링."
+        "Brick Schema 온톨로지 기반 84개 장비 + 164개 센서 시뮬레이션 및 MQTT 데이터 발행. "
+        "시나리오 관리, 고장 주입, HVAC 열역학 모델링 지원."
     ),
     version="2.0.0",
     lifespan=lifespan,
+    openapi_tags=[
+        {"name": "시스템", "description": "헬스체크 및 Neo4j 상태"},
+        {"name": "시뮬레이션", "description": "시뮬레이션 시작/중지/상태 제어"},
+        {"name": "장비", "description": "장비 상태 조회 및 제어 명령"},
+        {"name": "시나리오", "description": "시뮬레이션 시나리오 관리 (6개 프리셋 + 커스텀)"},
+        {"name": "고장 주입", "description": "장비 고장 시뮬레이션 (6개 유형)"},
+        {"name": "기상", "description": "외기 기상 조건 조회"},
+    ],
 )
 
 
@@ -124,6 +132,21 @@ class HealthResponse(BaseModel):
     version: str
     timestamp: str
     simulation: dict
+
+
+class Neo4jStatusResponse(BaseModel):
+    """Neo4j 로딩 상태 응답."""
+    neo4j_loaded: bool = Field(..., description="Neo4j 로딩 완료 여부")
+    device_count: int = Field(..., description="등록 장비 수")
+    point_count: int = Field(..., description="등록 포인트 수")
+
+
+class ScenarioListItem(BaseModel):
+    """시나리오 목록 항목."""
+    name: str
+    display_name: str = ""
+    description: str = ""
+    is_active: bool = False
 
 
 class ScenarioLoadRequest(BaseModel):
@@ -170,7 +193,7 @@ async def health_check():
 # API 엔드포인트 — 시뮬레이션 제어
 # ─────────────────────────────────────────────────────────────
 
-@app.get("/neo4j/status", tags=["시스템"])
+@app.get("/neo4j/status", tags=["시스템"], response_model=Neo4jStatusResponse)
 async def neo4j_load_status():
     """Neo4j 로딩 상태 및 등록된 장비/포인트 수 조회."""
     return {

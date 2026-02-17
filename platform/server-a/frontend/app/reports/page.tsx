@@ -26,6 +26,7 @@ import {
   X,
   Calendar,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ── 상수 ── */
 
@@ -46,6 +47,8 @@ const FORMAT_OPTIONS = [
 /* ── 메인 페이지 ── */
 
 export default function ReportsPage() {
+  const t = useTranslations("reports");
+  const tc = useTranslations("common");
   const { addToast } = useToast();
 
   // 프리셋 목록
@@ -68,10 +71,10 @@ export default function ReportsPage() {
       .catch(() => {
         // 프리셋 API 미연결 시 기본값
         setPresets([
-          { id: "energy_monthly", name: "에너지 월간 보고서", description: "월별 에너지 소비 현황 및 분석", icon: "Zap" },
-          { id: "maintenance_status", name: "장비 정비 현황", description: "장비별 정비 이력 및 예정 현황", icon: "Wrench" },
-          { id: "comfort", name: "쾌적도 보고서", description: "실내 온도, 습도, CO2 분석", icon: "Thermometer" },
-          { id: "alarm_summary", name: "알람 요약 보고서", description: "기간별 알람 발생 통계 및 분석", icon: "Bell" },
+          { id: "energy_monthly", name: t("presetEnergy"), description: t("presetEnergyDesc"), icon: "Zap" },
+          { id: "maintenance_status", name: t("presetMaintenance"), description: t("presetMaintenanceDesc"), icon: "Wrench" },
+          { id: "comfort", name: t("presetComfort"), description: t("presetComfortDesc"), icon: "Thermometer" },
+          { id: "alarm_summary", name: t("presetAlarm"), description: t("presetAlarmDesc"), icon: "Bell" },
         ]);
       })
       .finally(() => setPresetsLoading(false));
@@ -102,16 +105,16 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="보고서" description="보고서 생성 및 다운로드" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-6">
         {/* 프리셋 보고서 카드 */}
         <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-3">보고서 프리셋</h3>
+          <h3 className="text-sm font-medium text-gray-500 mb-3">{t("presets")}</h3>
           {presetsLoading ? (
             <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
-              로딩 중...
+              {tc("loading")}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -134,7 +137,7 @@ export default function ReportsPage() {
                         className="w-full mt-3"
                         onClick={() => handlePresetClick(preset)}
                       >
-                        생성
+                        {t("generate")}
                       </Button>
                     </CardContent>
                   </Card>
@@ -149,32 +152,32 @@ export default function ReportsPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              보고서 이력
+              {t("reportHistory")}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {historyLoading ? (
               <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                로딩 중...
+                {tc("loading")}
               </div>
             ) : history.length === 0 ? (
               <div className="text-center py-12 text-gray-400 text-sm">
                 <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p>생성된 보고서가 없습니다.</p>
-                <p className="text-xs mt-1">위 프리셋에서 보고서를 생성해 주세요.</p>
+                <p>{t("noReports")}</p>
+                <p className="text-xs mt-1">{t("noReportsHint")}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">생성일</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">유형</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">기간</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">포맷</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">상태</th>
-                      <th className="text-right py-2 px-3 text-gray-500 font-medium">다운로드</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thCreatedAt")}</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thType")}</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thPeriod")}</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thFormat")}</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
+                      <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thDownload")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -183,7 +186,7 @@ export default function ReportsPage() {
                         <td className="py-2 px-3 text-xs text-gray-500">
                           {new Date(item.generated_at).toLocaleString("ko-KR")}
                         </td>
-                        <td className="py-2 px-3 font-medium">{item.preset_id || "사용자 정의"}</td>
+                        <td className="py-2 px-3 font-medium">{item.preset_id || t("custom")}</td>
                         <td className="py-2 px-3 text-xs text-gray-500">
                           {item.period_start} ~ {item.period_end}
                         </td>
@@ -192,7 +195,7 @@ export default function ReportsPage() {
                         </td>
                         <td className="py-2 px-3">
                           <Badge variant={item.status === "completed" ? "success" : "warning"}>
-                            {item.status === "completed" ? "완료" : "생성 중"}
+                            {item.status === "completed" ? t("statusCompleted") : t("statusGenerating")}
                           </Badge>
                         </td>
                         <td className="py-2 px-3 text-right">
@@ -202,7 +205,7 @@ export default function ReportsPage() {
                               className="inline-flex items-center text-blue-600 hover:text-blue-800 text-xs"
                             >
                               <Download className="h-3.5 w-3.5 mr-1" />
-                              다운로드
+                              {tc("download")}
                             </a>
                           )}
                         </td>
@@ -224,7 +227,7 @@ export default function ReportsPage() {
           onGenerated={() => {
             setShowGenerateModal(false);
             fetchHistory();
-            addToast({ title: "보고서 생성 요청 완료", variant: "success" });
+            addToast({ title: t("generateSuccess"), variant: "success" });
           }}
         />
       )}
@@ -243,6 +246,8 @@ function GenerateReportModal({
   onClose: () => void;
   onGenerated: () => void;
 }) {
+  const t = useTranslations("reports");
+  const tc = useTranslations("common");
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
 
@@ -265,7 +270,7 @@ function GenerateReportModal({
       });
       onGenerated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "보고서 생성 실패");
+      setError(err instanceof Error ? err.message : t("generateFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -291,7 +296,7 @@ function GenerateReportModal({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <Calendar className="inline h-3.5 w-3.5 mr-1" />
-                시작일
+                {t("startDate")}
               </label>
               <input
                 type="date"
@@ -303,7 +308,7 @@ function GenerateReportModal({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 <Calendar className="inline h-3.5 w-3.5 mr-1" />
-                종료일
+                {t("endDate")}
               </label>
               <input
                 type="date"
@@ -315,7 +320,7 @@ function GenerateReportModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">출력 형식</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t("outputFormat")}</label>
             <div className="flex gap-3">
               {FORMAT_OPTIONS.map((opt) => (
                 <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
@@ -339,11 +344,11 @@ function GenerateReportModal({
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" size="sm" onClick={onClose}>
-              취소
+              {tc("cancel")}
             </Button>
             <Button type="submit" size="sm" disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <FileText className="h-4 w-4 mr-1" />}
-              생성
+              {t("generate")}
             </Button>
           </div>
         </form>

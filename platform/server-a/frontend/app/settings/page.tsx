@@ -19,10 +19,13 @@ import {
   type NotificationChannelConfig,
 } from "@/lib/api";
 import { Settings, Building2, Zap, Bell, Loader2, Save, Mail, MessageSquare, Send, ExternalLink } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ── 메인 페이지 ── */
 
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+  const tc = useTranslations("common");
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -78,7 +81,7 @@ export default function SettingsPage() {
       })
       .catch(() => {
         // 기본값
-        setBuildingName("삼성물산 GEC B동");
+        setBuildingName("Samsung GEC Tower B");
         setTimezone("Asia/Seoul");
         setDashboardRefresh(5);
         setEnergyRate(120);
@@ -144,11 +147,11 @@ export default function SettingsPage() {
         // 알림 설정 저장 실패 시에도 시스템 설정 저장은 성공 처리
       }
 
-      addToast({ title: "설정이 저장되었습니다", variant: "success" });
+      addToast({ title: t("saveSuccess"), variant: "success" });
     } catch (err) {
       addToast({
-        title: "설정 저장 실패",
-        description: err instanceof Error ? err.message : "오류 발생",
+        title: t("saveFailed"),
+        description: err instanceof Error ? err.message : tc("error"),
         variant: "error",
       });
     } finally {
@@ -161,10 +164,10 @@ export default function SettingsPage() {
     setTestingChannel(channel);
     try {
       const result = await sendTestNotification(channel);
-      addToast({ title: result.message || "테스트 전송 완료", variant: "success" });
+      addToast({ title: result.message || t("testSent"), variant: "success" });
     } catch (err) {
       addToast({
-        title: "테스트 실패",
+        title: t("testFailed"),
         description: err instanceof Error ? err.message : "",
         variant: "error",
       });
@@ -176,10 +179,10 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header title="설정" description="시스템 설정 관리" />
+        <Header title={t("title")} description={t("description")} />
         <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
           <Loader2 className="h-5 w-5 animate-spin mr-2" />
-          설정 로딩 중...
+          {tc("loading")}
         </div>
       </div>
     );
@@ -187,7 +190,7 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="설정" description="시스템 설정 관리" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-6 max-w-4xl">
         {/* 일반 설정 */}
@@ -195,13 +198,13 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              일반 설정
+              {t("general")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">건물 이름</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("buildingName")}</label>
                 <input
                   type="text"
                   value={buildingName}
@@ -211,7 +214,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">타임존</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("timezone")}</label>
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
@@ -224,7 +227,7 @@ export default function SettingsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">온도 단위</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("tempUnit")}</label>
                 <div className="flex gap-3">
                   {["°C", "°F"].map((unit) => (
                     <label key={unit} className="flex items-center gap-2 cursor-pointer">
@@ -243,17 +246,17 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">대시보드 새로고침 주기</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("dashboardRefresh")}</label>
                 <select
                   value={dashboardRefresh}
                   onChange={(e) => setDashboardRefresh(parseInt(e.target.value))}
                   disabled={!isAdmin}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                 >
-                  <option value={5}>5초</option>
-                  <option value={10}>10초</option>
-                  <option value={30}>30초</option>
-                  <option value={60}>60초</option>
+                  <option value={5}>5s</option>
+                  <option value={10}>10s</option>
+                  <option value={30}>30s</option>
+                  <option value={60}>60s</option>
                 </select>
               </div>
             </div>
@@ -265,13 +268,13 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Zap className="h-4 w-4" />
-              에너지 설정
+              {t("energySettings")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">전기 요금 (원/kWh)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("energyRate")}</label>
                 <input
                   type="number"
                   value={energyRate}
@@ -281,7 +284,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">건물 면적 (m²)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("floorArea")}</label>
                 <input
                   type="number"
                   value={floorArea}
@@ -291,9 +294,9 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">EUI 목표</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">EUI Target</label>
                 <div className="px-3 py-2 text-sm text-gray-500 bg-gray-50 rounded-lg">
-                  {floorArea > 0 ? `${(energyRate * 8760 / floorArea).toFixed(1)} kWh/m²/년` : "-"}
+                  {floorArea > 0 ? `${(energyRate * 8760 / floorArea).toFixed(1)} kWh/m²/yr` : "-"}
                 </div>
               </div>
             </div>
@@ -305,13 +308,13 @@ export default function SettingsPage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
               <Bell className="h-4 w-4" />
-              알람 임계값
+              {t("alarmSettings")}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">온도 상한 (°C)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("tempHigh")}</label>
                 <input
                   type="number"
                   step="0.5"
@@ -322,7 +325,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">온도 하한 (°C)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("tempLow")}</label>
                 <input
                   type="number"
                   step="0.5"
@@ -333,7 +336,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">습도 상한 (%)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("humidityHigh")}</label>
                 <input
                   type="number"
                   value={alarmHumidityHigh}
@@ -343,7 +346,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">습도 하한 (%)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("humidityLow")}</label>
                 <input
                   type="number"
                   value={alarmHumidityLow}
@@ -353,7 +356,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CO2 상한 (ppm)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("co2High")}</label>
                 <input
                   type="number"
                   value={alarmCo2High}
@@ -372,11 +375,11 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                알림 채널 설정
+                {t("notificationSettings")}
               </CardTitle>
               <Link href="/settings/notifications">
                 <Button variant="ghost" size="sm" className="text-xs text-gray-500">
-                  알림 이력 <ExternalLink className="h-3 w-3 ml-1" />
+                  {t("notificationLog")} <ExternalLink className="h-3 w-3 ml-1" />
                 </Button>
               </Link>
             </div>
@@ -385,7 +388,7 @@ export default function SettingsPage() {
             {/* Rate Limit */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Rate Limit (동일 장비 재알림 방지)
+                {t("rateLimit")}
               </label>
               <select
                 value={rateLimitMin}
@@ -393,10 +396,10 @@ export default function SettingsPage() {
                 disabled={!isAdmin}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
               >
-                <option value={5}>5분</option>
-                <option value={10}>10분</option>
-                <option value={30}>30분</option>
-                <option value={60}>60분</option>
+                <option value={5}>5 min</option>
+                <option value={10}>10 min</option>
+                <option value={30}>30 min</option>
+                <option value={60}>60 min</option>
               </select>
             </div>
 
@@ -414,13 +417,13 @@ export default function SettingsPage() {
                     disabled={!isAdmin}
                     className="rounded text-blue-600"
                   />
-                  <span className="text-sm">{emailEnabled ? "활성" : "비활성"}</span>
+                  <span className="text-sm">{emailEnabled ? t("emailEnabled") : t("emailChannel")}</span>
                 </label>
               </div>
               {emailEnabled && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">수신자 (쉼표 구분)</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t("emailRecipients")}</label>
                     <input
                       type="text"
                       value={emailRecipients}
@@ -432,16 +435,16 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">최소 심각도</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t("emailSeverity")}</label>
                       <select
                         value={emailSeverity}
                         onChange={(e) => setEmailSeverity(e.target.value)}
                         disabled={!isAdmin}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                       >
-                        <option value="info">정보 이상</option>
-                        <option value="warning">경고 이상</option>
-                        <option value="critical">위험만</option>
+                        <option value="info">Info+</option>
+                        <option value="warning">Warning+</option>
+                        <option value="critical">Critical</option>
                       </select>
                     </div>
                     <div className="pt-5">
@@ -456,7 +459,7 @@ export default function SettingsPage() {
                         ) : (
                           <Send className="h-3 w-3 mr-1" />
                         )}
-                        테스트
+                        {t("testNotification")}
                       </Button>
                     </div>
                   </div>
@@ -478,13 +481,13 @@ export default function SettingsPage() {
                     disabled={!isAdmin}
                     className="rounded text-purple-600"
                   />
-                  <span className="text-sm">{slackEnabled ? "활성" : "비활성"}</span>
+                  <span className="text-sm">{slackEnabled ? t("slackEnabled") : t("slackChannel")}</span>
                 </label>
               </div>
               {slackEnabled && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">{t("slackWebhook")}</label>
                     <input
                       type="text"
                       value={slackWebhook}
@@ -496,16 +499,16 @@ export default function SettingsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">최소 심각도</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">{t("slackSeverity")}</label>
                       <select
                         value={slackSeverity}
                         onChange={(e) => setSlackSeverity(e.target.value)}
                         disabled={!isAdmin}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-50"
                       >
-                        <option value="info">정보 이상</option>
-                        <option value="warning">경고 이상</option>
-                        <option value="critical">위험만</option>
+                        <option value="info">Info+</option>
+                        <option value="warning">Warning+</option>
+                        <option value="critical">Critical</option>
                       </select>
                     </div>
                     <div className="pt-5">
@@ -520,7 +523,7 @@ export default function SettingsPage() {
                         ) : (
                           <Send className="h-3 w-3 mr-1" />
                         )}
-                        테스트
+                        {t("testNotification")}
                       </Button>
                     </div>
                   </div>
@@ -539,12 +542,12 @@ export default function SettingsPage() {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              저장
+              {tc("save")}
             </Button>
           </div>
         ) : (
           <div className="text-sm text-gray-400 text-center">
-            설정 변경은 관리자 권한이 필요합니다.
+            {t("userManagement")}
           </div>
         )}
       </div>

@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Building2 } from "lucide-react";
 import { login } from "@/lib/api";
 
 export default function LoginPage() {
+  const t = useTranslations("login");
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +23,7 @@ export default function LoginPage() {
       await login({ email, password });
       router.push("/");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "로그인 실패";
+      const msg = err instanceof Error ? err.message : t("loginFailed");
       setError(msg);
     } finally {
       setLoading(false);
@@ -36,18 +38,18 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white mb-4">
             <Building2 className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">BEES</h1>
-          <p className="text-sm text-gray-500 mt-1">GEC B동 디지털 트윈 플랫폼</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
+          <p className="text-sm text-gray-500 mt-1">{t("subtitle")}</p>
         </div>
 
         {/* 로그인 카드 */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">로그인</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("heading")}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                이메일
+                {t("email")}
               </label>
               <input
                 id="email"
@@ -62,14 +64,14 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                비밀번호
+                {t("password")}
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호 입력"
+                placeholder={t("passwordPlaceholder")}
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
@@ -86,12 +88,12 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full py-2.5 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {loading ? "로그인 중..." : "로그인"}
+              {loading ? t("loggingIn") : t("loginButton")}
             </button>
           </form>
 
           <div className="mt-4 text-xs text-gray-400 text-center">
-            <p>테스트 계정: admin@bees.dev / admin123</p>
+            <p>{t("testAccount")}</p>
           </div>
         </div>
       </div>

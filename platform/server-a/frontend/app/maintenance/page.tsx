@@ -26,22 +26,23 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ── 상수 ── */
 
 const STATUS_TABS = [
-  { label: "전체", value: "" },
-  { label: "요청", value: "requested" },
-  { label: "진행", value: "in_progress" },
-  { label: "완료", value: "completed" },
-  { label: "취소", value: "cancelled" },
+  { labelKey: "statusAll", value: "" },
+  { labelKey: "statusRequested", value: "requested" },
+  { labelKey: "statusInProgress", value: "in_progress" },
+  { labelKey: "statusCompleted", value: "completed" },
+  { labelKey: "statusCancelled", value: "cancelled" },
 ] as const;
 
 const PRIORITY_OPTIONS = [
-  { label: "긴급", value: "critical" },
-  { label: "높음", value: "high" },
-  { label: "보통", value: "medium" },
-  { label: "낮음", value: "low" },
+  { labelKey: "priorityCritical", value: "critical" },
+  { labelKey: "priorityHigh", value: "high" },
+  { labelKey: "priorityMedium", value: "medium" },
+  { labelKey: "priorityLow", value: "low" },
 ] as const;
 
 const PRIORITY_BADGE: Record<string, "danger" | "warning" | "default" | "secondary"> = {
@@ -51,11 +52,11 @@ const PRIORITY_BADGE: Record<string, "danger" | "warning" | "default" | "seconda
   low: "secondary",
 };
 
-const PRIORITY_LABEL: Record<string, string> = {
-  critical: "긴급",
-  high: "높음",
-  medium: "보통",
-  low: "낮음",
+const PRIORITY_LABEL_KEY: Record<string, string> = {
+  critical: "priorityCritical",
+  high: "priorityHigh",
+  medium: "priorityMedium",
+  low: "priorityLow",
 };
 
 const STATUS_BADGE: Record<string, "secondary" | "default" | "warning" | "success"> = {
@@ -65,16 +66,18 @@ const STATUS_BADGE: Record<string, "secondary" | "default" | "warning" | "succes
   cancelled: "secondary",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  requested: "요청",
-  in_progress: "진행",
-  completed: "완료",
-  cancelled: "취소",
+const STATUS_LABEL_KEY: Record<string, string> = {
+  requested: "statusRequested",
+  in_progress: "statusInProgress",
+  completed: "statusCompleted",
+  cancelled: "statusCancelled",
 };
 
 /* ── 메인 페이지 ── */
 
 export default function MaintenancePage() {
+  const t = useTranslations("maintenance");
+  const tc = useTranslations("common");
   const { addToast } = useToast();
 
   // 탭 / 뷰 모드
@@ -148,7 +151,7 @@ export default function MaintenancePage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="유지보수" description="작업 주문 및 정비 일정 관리" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-6">
         {/* 상단 컨트롤 */}
@@ -160,7 +163,7 @@ export default function MaintenancePage() {
               onClick={() => setViewMode("list")}
             >
               <ClipboardList className="h-4 w-4 mr-1" />
-              목록
+              {t("listView")}
             </Button>
             <Button
               size="sm"
@@ -168,12 +171,12 @@ export default function MaintenancePage() {
               onClick={() => setViewMode("calendar")}
             >
               <Calendar className="h-4 w-4 mr-1" />
-              캘린더
+              {t("calendarView")}
             </Button>
           </div>
           <Button size="sm" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-1" />
-            작업 주문 생성
+            {t("createWorkOrder")}
           </Button>
         </div>
 
@@ -188,7 +191,7 @@ export default function MaintenancePage() {
                   variant={activeTab === tab.value ? "default" : "outline"}
                   onClick={() => { setActiveTab(tab.value); setPage(1); }}
                 >
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </Button>
               ))}
             </div>
@@ -198,32 +201,32 @@ export default function MaintenancePage() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Wrench className="h-4 w-4" />
-                  작업 주문 ({total}건)
+                  {t("workOrders", { count: total })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {loading ? (
                   <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
                     <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                    로딩 중...
+                    {tc("loading")}
                   </div>
                 ) : workOrders.length === 0 ? (
                   <div className="text-center py-12 text-gray-400 text-sm">
                     <Wrench className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                    <p>작업 주문이 없습니다.</p>
+                    <p>{t("noWorkOrders")}</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">ID</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">장비</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">제목</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">우선순위</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">상태</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">담당자</th>
-                          <th className="text-right py-2 px-3 text-gray-500 font-medium">생성일</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thId")}</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thEquipment")}</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thTitle")}</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thPriority")}</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
+                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thAssignee")}</th>
+                          <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thCreatedAt")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -235,17 +238,17 @@ export default function MaintenancePage() {
                           >
                             <td className="py-2 px-3 font-mono text-xs">#{wo.id}</td>
                             <td className="py-2 px-3 text-xs">
-                              {wo.equipment_ontology_id || `장비#${wo.equipment_id}`}
+                              {wo.equipment_ontology_id || `#${wo.equipment_id}`}
                             </td>
                             <td className="py-2 px-3 font-medium">{wo.title}</td>
                             <td className="py-2 px-3">
                               <Badge variant={PRIORITY_BADGE[wo.priority] || "secondary"}>
-                                {PRIORITY_LABEL[wo.priority] || wo.priority}
+                                {t(PRIORITY_LABEL_KEY[wo.priority] || wo.priority)}
                               </Badge>
                             </td>
                             <td className="py-2 px-3">
                               <Badge variant={STATUS_BADGE[wo.status] || "secondary"}>
-                                {STATUS_LABEL[wo.status] || wo.status}
+                                {t(STATUS_LABEL_KEY[wo.status] || wo.status)}
                               </Badge>
                             </td>
                             <td className="py-2 px-3 text-xs text-gray-500">
@@ -270,10 +273,10 @@ export default function MaintenancePage() {
                       disabled={page <= 1}
                       onClick={() => setPage((p) => p - 1)}
                     >
-                      이전
+                      {tc("previous")}
                     </Button>
                     <span className="text-sm text-gray-500">
-                      {page} / {Math.ceil(total / 20)}
+                      {tc("pageOf", { page, totalPages: Math.ceil(total / 20) })}
                     </span>
                     <Button
                       size="sm"
@@ -281,7 +284,7 @@ export default function MaintenancePage() {
                       disabled={page >= Math.ceil(total / 20)}
                       onClick={() => setPage((p) => p + 1)}
                     >
-                      다음
+                      {tc("next")}
                     </Button>
                   </div>
                 )}
@@ -295,7 +298,7 @@ export default function MaintenancePage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  유지보수 캘린더
+                  {t("maintenanceCalendar")}
                 </CardTitle>
                 <div className="flex items-center gap-2">
                   <Button
@@ -330,7 +333,7 @@ export default function MaintenancePage() {
               {calendarLoading ? (
                 <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
                   <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  로딩 중...
+                  {tc("loading")}
                 </div>
               ) : (
                 <CalendarGrid month={calendarMonth} events={calendarEvents} />
@@ -348,7 +351,7 @@ export default function MaintenancePage() {
           onCreated={() => {
             setShowCreateModal(false);
             fetchOrders();
-            addToast({ title: "작업 주문 생성 완료", variant: "success" });
+            addToast({ title: t("createSuccess"), variant: "success" });
           }}
         />
       )}
@@ -362,7 +365,7 @@ export default function MaintenancePage() {
           onUpdated={() => {
             setShowDetailModal(false);
             fetchOrders();
-            addToast({ title: "작업 주문 수정 완료", variant: "success" });
+            addToast({ title: t("updateSuccess"), variant: "success" });
           }}
         />
       )}
@@ -373,6 +376,7 @@ export default function MaintenancePage() {
 /* ── 캘린더 그리드 ── */
 
 function CalendarGrid({ month, events }: { month: string; events: CalendarEvent[] }) {
+  const t = useTranslations("maintenance");
   const [year, mon] = month.split("-").map(Number);
   const firstDay = new Date(year, mon - 1, 1).getDay();
   const daysInMonth = new Date(year, mon, 0).getDate();
@@ -425,21 +429,21 @@ function CalendarGrid({ month, events }: { month: string; events: CalendarEvent[
       <div className="flex gap-4 mb-3 text-xs">
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-          예정
+          {t("scheduled")}
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-          완료
+          {t("completed")}
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-          진행 중
+          {t("inProgress")}
         </div>
       </div>
 
       {/* 요일 헤더 */}
       <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-500 mb-1">
-        {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
+        {t("dayNames").split(",").map((d: string) => (
           <div key={d} className="py-1">{d}</div>
         ))}
       </div>
@@ -460,6 +464,8 @@ function CreateWorkOrderModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = useTranslations("maintenance");
+  const tc = useTranslations("common");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [equipmentId, setEquipmentId] = useState("1");
@@ -484,7 +490,7 @@ function CreateWorkOrderModal({
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "생성 실패");
+      setError(err instanceof Error ? err.message : t("createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -497,7 +503,7 @@ function CreateWorkOrderModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">작업 주문 생성</h3>
+          <h3 className="text-lg font-semibold">{t("createTitle")}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
@@ -505,7 +511,7 @@ function CreateWorkOrderModal({
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">장비 ID</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("equipmentId")}</label>
             <input
               type="number"
               value={equipmentId}
@@ -516,50 +522,50 @@ function CreateWorkOrderModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">제목 *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("titleRequired")}</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="작업 제목 입력"
+              placeholder={t("titlePlaceholder")}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">설명</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("descriptionLabel")}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              placeholder="상세 설명 (선택)"
+              placeholder={t("descriptionPlaceholder")}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">우선순위</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("priority")}</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {PRIORITY_OPTIONS.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
+                  <option key={p.value} value={p.value}>{t(p.labelKey)}</option>
                 ))}
               </select>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">담당자</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("assignee")}</label>
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">미배정</option>
+                <option value="">{t("unassigned")}</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>{u.name}</option>
                 ))}
@@ -573,11 +579,11 @@ function CreateWorkOrderModal({
 
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="outline" size="sm" onClick={onClose}>
-              취소
+              {tc("cancel")}
             </Button>
             <Button type="submit" size="sm" disabled={submitting || !title.trim()}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-              생성
+              {tc("create")}
             </Button>
           </div>
         </form>
@@ -599,6 +605,8 @@ function WorkOrderDetailModal({
   onClose: () => void;
   onUpdated: () => void;
 }) {
+  const t = useTranslations("maintenance");
+  const tc = useTranslations("common");
   const [status, setStatus] = useState(order.status);
   const [actualHours, setActualHours] = useState(String(order.actual_hours ?? ""));
   const [cost, setCost] = useState(String(order.cost ?? ""));
@@ -618,7 +626,7 @@ function WorkOrderDetailModal({
       });
       onUpdated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "수정 실패");
+      setError(err instanceof Error ? err.message : t("updateFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -631,7 +639,7 @@ function WorkOrderDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">작업 주문 #{order.id}</h3>
+          <h3 className="text-lg font-semibold">{t("detailTitle", { id: order.id })}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
@@ -641,30 +649,30 @@ function WorkOrderDetailModal({
           {/* 기본 정보 */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-gray-500">제목:</span>
+              <span className="text-gray-500">{t("titleLabel")}</span>
               <p className="font-medium">{order.title}</p>
             </div>
             <div>
-              <span className="text-gray-500">장비:</span>
-              <p className="font-medium">{order.equipment_ontology_id || `장비#${order.equipment_id}`}</p>
+              <span className="text-gray-500">{t("equipmentLabel")}</span>
+              <p className="font-medium">{order.equipment_ontology_id || `#${order.equipment_id}`}</p>
             </div>
             <div>
-              <span className="text-gray-500">우선순위:</span>
+              <span className="text-gray-500">{t("priorityLabel")}</span>
               <Badge variant={PRIORITY_BADGE[order.priority] || "secondary"} className="ml-1">
-                {PRIORITY_LABEL[order.priority] || order.priority}
+                {t(PRIORITY_LABEL_KEY[order.priority] || order.priority)}
               </Badge>
             </div>
             <div>
-              <span className="text-gray-500">요청자:</span>
+              <span className="text-gray-500">{t("requester")}</span>
               <p className="font-medium">{order.requested_by_name || "-"}</p>
             </div>
             <div>
-              <span className="text-gray-500">생성일:</span>
+              <span className="text-gray-500">{t("createdAt")}</span>
               <p className="text-xs">{new Date(order.created_at).toLocaleString("ko-KR")}</p>
             </div>
             {order.completed_at && (
               <div>
-                <span className="text-gray-500">완료일:</span>
+                <span className="text-gray-500">{t("completedAt")}</span>
                 <p className="text-xs">{new Date(order.completed_at).toLocaleString("ko-KR")}</p>
               </div>
             )}
@@ -672,7 +680,7 @@ function WorkOrderDetailModal({
 
           {order.description && (
             <div>
-              <span className="text-sm text-gray-500">설명:</span>
+              <span className="text-sm text-gray-500">{t("descriptionLabel")}:</span>
               <p className="text-sm mt-1 bg-gray-50 rounded-lg px-3 py-2">{order.description}</p>
             </div>
           )}
@@ -681,22 +689,22 @@ function WorkOrderDetailModal({
 
           {/* 수정 영역 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">상태</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("updateStatus")}</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="requested">요청</option>
-              <option value="in_progress">진행</option>
-              <option value="completed">완료</option>
-              <option value="cancelled">취소</option>
+              <option value="requested">{t("statusRequested")}</option>
+              <option value="in_progress">{t("statusInProgress")}</option>
+              <option value="completed">{t("statusCompleted")}</option>
+              <option value="cancelled">{t("statusCancelled")}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">실제 소요시간 (h)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("actualHours")}</label>
               <input
                 type="number"
                 step="0.5"
@@ -707,7 +715,7 @@ function WorkOrderDetailModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">비용 (원)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("cost")}</label>
               <input
                 type="number"
                 value={cost}
@@ -719,12 +727,12 @@ function WorkOrderDetailModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">비고</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("notes")}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              placeholder="메모 입력"
+              placeholder={t("notesPlaceholder")}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
@@ -735,11 +743,11 @@ function WorkOrderDetailModal({
 
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={onClose}>
-              닫기
+              {tc("close")}
             </Button>
             <Button size="sm" onClick={handleSave} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              저장
+              {tc("save")}
             </Button>
           </div>
         </div>

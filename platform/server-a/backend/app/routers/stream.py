@@ -8,9 +8,10 @@ import json
 import time
 import logging
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from sse_starlette.sse import EventSourceResponse
 
+from app.models import StreamSnapshotResponse
 from app.services import mqtt_service
 
 logger = logging.getLogger(__name__)
@@ -50,7 +51,7 @@ async def stream_points(request: Request):
     )
 
 
-@router.get("/snapshot")
+@router.get("/snapshot", response_model=StreamSnapshotResponse)
 async def get_stream_snapshot():
     """
     현재 시점의 센서 데이터 스냅샷.
@@ -66,3 +67,21 @@ async def get_stream_snapshot():
         "device_count": len(device_cache),
         "timestamp": time.time(),
     }
+
+
+@router.websocket("/ws")
+async def websocket_stream(websocket: WebSocket):
+    """
+    WebSocket 실시간 스트림: MQTT 이벤트를 JSON으로 push.
+    SSE 대비 양방향 통신, 낮은 오버헤드.
+    """
+    await websocket.accept()
+    mqtt_service.register_ws_client(websocket)
+    logger.info("WebSocket 클라이언트 연결")
+    try:
+        while True:
+            await websocket.receive_text()  # keep-alive
+    except WebSocketDisconnect:
+        logger.info("WebSocket 클라이언트 연결 해제")
+    finally:
+        mqtt_service.unregister_ws_client(websocket)

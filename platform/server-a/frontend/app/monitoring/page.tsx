@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -35,15 +36,15 @@ import {
 
 // ── 장비 유형 필터 탭 ──
 const TYPE_FILTERS = [
-  { key: "all", label: "전체" },
+  { key: "all", label: "typeAll" },
   { key: "AHU", label: "AHU" },
-  { key: "Fan", label: "팬" },
-  { key: "Pump", label: "펌프" },
-  { key: "Chiller", label: "칠러" },
-  { key: "Boiler", label: "보일러" },
-  { key: "Cooling_Tower", label: "냉각탑" },
+  { key: "Fan", label: "typeFan" },
+  { key: "Pump", label: "typePump" },
+  { key: "Chiller", label: "typeChiller" },
+  { key: "Boiler", label: "typeBoiler" },
+  { key: "Cooling_Tower", label: "typeCoolingTower" },
   { key: "FCU", label: "FCU" },
-  { key: "Elevator", label: "엘리베이터" },
+  { key: "Elevator", label: "typeElevator" },
 ] as const;
 
 // ── 장비 유형별 아이콘 색상 ──
@@ -64,35 +65,11 @@ function getTypeColor(type: string): string {
   return "bg-gray-100 text-gray-600";
 }
 
-function getTypeLabel(type: string): string {
-  const map: Record<string, string> = {
-    AHU: "공조기",
-    Air_Handler_Unit: "공조기",
-    Fan: "팬",
-    Supply_Fan: "급기팬",
-    Return_Fan: "환기팬",
-    Exhaust_Fan: "배기팬",
-    Pump: "펌프",
-    Chiller: "칠러",
-    Boiler: "보일러",
-    Cooling_Tower: "냉각탑",
-    FCU: "팬코일",
-    Elevator: "엘리베이터",
-    VFD: "인버터",
-    Heat_Exchanger: "열교환기",
-    Valve: "밸브",
-    Damper: "댐퍼",
-    Cooling_Coil: "냉각코일",
-    Heating_Coil: "가열코일",
-  };
-  return map[type] || type;
-}
-
 // ── AHU_5F 센서 정의 (기존 유지) ──
 const SENSORS = [
   {
     id: "bldg:Zone_Air_Temp_5F_Interior",
-    name: "존 공기온도",
+    name: "sensorZoneTemp",
     description: "Zone Air Temperature",
     unit: "°C",
     color: "#ef4444",
@@ -102,7 +79,7 @@ const SENSORS = [
   },
   {
     id: "bldg:Zone_Air_Humidity_5F_Interior",
-    name: "존 공기습도",
+    name: "sensorZoneHumidity",
     description: "Zone Air Humidity",
     unit: "%RH",
     color: "#3b82f6",
@@ -112,7 +89,7 @@ const SENSORS = [
   },
   {
     id: "bldg:Supply_Air_Temp_AHU_5F",
-    name: "급기온도",
+    name: "sensorSupplyTemp",
     description: "Supply Air Temperature",
     unit: "°C",
     color: "#f59e0b",
@@ -122,7 +99,7 @@ const SENSORS = [
   },
   {
     id: "bldg:Filter_DP_AHU_5F",
-    name: "필터 차압",
+    name: "sensorFilterDP",
     description: "Filter Differential Pressure",
     unit: "Pa",
     color: "#8b5cf6",
@@ -132,7 +109,7 @@ const SENSORS = [
   },
   {
     id: "bldg:Power_AHU_5F",
-    name: "전력 소비",
+    name: "sensorPower",
     description: "Electrical Power",
     unit: "kW",
     color: "#10b981",
@@ -144,12 +121,38 @@ const SENSORS = [
 
 export default function MonitoringPage() {
   const { points, pointHistory, devices, connected } = useSSE(60);
+  const t = useTranslations("monitoring");
 
   const [equipment, setEquipment] = useState<EquipmentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSensorCharts, setShowSensorCharts] = useState(false);
+
+  // i18n 기반 장비 유형 라벨
+  const getTypeLabelI18n = (type: string) => {
+    const map: Record<string, string> = {
+      AHU: t("typeAHU"),
+      Air_Handler_Unit: t("typeAHU"),
+      Fan: t("typeFan"),
+      Supply_Fan: t("typeSupplyFan"),
+      Return_Fan: t("typeReturnFan"),
+      Exhaust_Fan: t("typeExhaustFan"),
+      Pump: t("typePump"),
+      Chiller: t("typeChiller"),
+      Boiler: t("typeBoiler"),
+      Cooling_Tower: t("typeCoolingTower"),
+      FCU: t("typeFCU"),
+      Elevator: t("typeElevator"),
+      VFD: t("typeVFD"),
+      Heat_Exchanger: t("typeHeatExchanger"),
+      Valve: t("typeValve"),
+      Damper: t("typeDamper"),
+      Cooling_Coil: t("typeCoolingCoil"),
+      Heating_Coil: t("typeHeatingCoil"),
+    };
+    return map[type] || type;
+  };
 
   // 장비 목록 로딩
   useEffect(() => {
@@ -239,8 +242,8 @@ export default function MonitoringPage() {
   return (
     <div className="min-h-screen">
       <Header
-        title="모니터링"
-        description={`전체 장비 ${equipment.length}대 | 실시간 상태 모니터링`}
+        title={t("title")}
+        description={t("description", { count: equipment.length })}
         connected={connected}
       />
 
@@ -252,7 +255,7 @@ export default function MonitoringPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="장비명, 유형, 위치 검색..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -275,7 +278,7 @@ export default function MonitoringPage() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {filter.label}
+                {t(filter.label)}
                 {count > 0 && (
                   <span
                     className={`ml-1 ${
@@ -294,15 +297,15 @@ export default function MonitoringPage() {
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-            <span className="ml-2 text-sm text-gray-500">장비 목록 로딩 중...</span>
+            <span className="ml-2 text-sm text-gray-500">{t("equipmentLoading")}</span>
           </div>
         ) : filteredEquipment.length === 0 ? (
           <div className="text-center py-16">
             <Cpu className="h-10 w-10 text-gray-200 mx-auto mb-3" />
             <p className="text-sm text-gray-400">
               {searchQuery || typeFilter !== "all"
-                ? "검색 조건에 맞는 장비가 없습니다"
-                : "등록된 장비가 없습니다"}
+                ? t("noEquipmentFiltered")
+                : t("noEquipment")}
             </p>
           </div>
         ) : (
@@ -331,7 +334,7 @@ export default function MonitoringPage() {
                         <Badge
                           className={`text-[10px] px-1.5 ${getTypeColor(eq.type)}`}
                         >
-                          {getTypeLabel(eq.type)}
+                          {getTypeLabelI18n(eq.type)}
                         </Badge>
                         <div className="flex items-center gap-1.5">
                           {isActive === true && (
@@ -374,9 +377,9 @@ export default function MonitoringPage() {
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
-            AHU 5층 실시간 센서 차트
+            {t("sensorChartTitle")}
             <Badge variant="outline" className="text-[10px]">
-              {SENSORS.length}개 센서
+              {t("sensorCount", { count: SENSORS.length })}
             </Badge>
           </button>
 
@@ -414,7 +417,7 @@ export default function MonitoringPage() {
                         </div>
                         <div className="mt-1">
                           <p className="text-xs text-gray-500 font-medium">
-                            {sensor.name}
+                            {t(sensor.name)}
                           </p>
                           <p className="text-2xl font-bold mt-0.5">
                             {value !== null ? value.toFixed(1) : "--"}
@@ -443,7 +446,7 @@ export default function MonitoringPage() {
                               className="w-3 h-3 rounded-full"
                               style={{ backgroundColor: sensor.color }}
                             />
-                            {sensor.name}
+                            {t(sensor.name)}
                             <span className="text-xs text-gray-400 font-normal">
                               ({sensor.description})
                             </span>
@@ -477,7 +480,7 @@ export default function MonitoringPage() {
                           <div className="flex items-center justify-center h-[200px] text-gray-400 text-sm">
                             <div className="text-center">
                               <Gauge className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                              <p>데이터 수신 대기 중...</p>
+                              <p>{t("waitingData")}</p>
                             </div>
                           </div>
                         )}

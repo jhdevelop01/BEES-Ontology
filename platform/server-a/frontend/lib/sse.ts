@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useWebSocket } from "./ws";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
@@ -143,4 +144,22 @@ export function useSSE(maxHistory: number = 60) {
     alarms,
     connected,
   };
+}
+
+/**
+ * 통합 실시간 데이터 훅 — WebSocket 우선, SSE 폴백.
+ * WebSocket 연결이 성공하면 WS 데이터를 사용하고,
+ * 실패 시 자동으로 SSE로 폴백한다.
+ */
+export function useRealtimeData(maxHistory: number = 60) {
+  const ws = useWebSocket(maxHistory);
+  const sse = useSSE(maxHistory);
+
+  // WebSocket이 연결되어 있으면 WS 데이터 우선 사용
+  if (ws.connected) {
+    return ws;
+  }
+
+  // WS 미연결 시 SSE 폴백
+  return sse;
 }

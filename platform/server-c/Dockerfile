@@ -16,14 +16,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 애플리케이션 코드 복사
 COPY app/ ./app/
 
-# 환경변수 기본값
-ENV NEO4J_URI=bolt://neo4j:7687
-ENV NEO4J_USER=neo4j
-ENV NEO4J_PASSWORD=bees2024
-ENV MQTT_BROKER=mosquitto
-ENV MQTT_PORT=1883
-ENV LOG_DIR=/app/logs
-
 # 포트 노출
 EXPOSE 8002
 

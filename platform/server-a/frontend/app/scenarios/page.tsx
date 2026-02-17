@@ -28,8 +28,12 @@ import {
   RefreshCw,
   Info,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 export default function ScenariosPage() {
+  const t = useTranslations("scenarios");
+  const tc = useTranslations("common");
+
   // ── 시나리오 상태 ──
   const [scenarios, setScenarios] = useState<ScenarioInfo[]>([]);
   const [activeScenario, setActiveScenario] = useState<ScenarioInfo | null>(null);
@@ -106,10 +110,10 @@ export default function ScenariosPage() {
     try {
       const result = await loadScenario(name);
       if (result.success) {
-        showToast("success", `시나리오 "${name}" 적용 완료`);
+        showToast("success", t("scenarioApplied", { name }));
         await fetchScenarioData();
       } else {
-        showToast("error", result.message || "시나리오 적용 실패");
+        showToast("error", result.message || t("scenarioFailed"));
       }
     } catch (e) {
       showToast("error", `시나리오 적용 오류: ${e instanceof Error ? e.message : String(e)}`);
@@ -128,10 +132,10 @@ export default function ScenariosPage() {
         target_id: selectedDevice,
       });
       if (result.success) {
-        showToast("success", `고장 주입 완료 (ID: ${result.fault_id})`);
+        showToast("success", t("faultInjected", { id: result.fault_id ?? "" }));
         await fetchFaultData();
       } else {
-        showToast("error", result.error || "고장 주입 실패");
+        showToast("error", result.error || t("faultInjectFailed"));
       }
     } catch (e) {
       showToast("error", `고장 주입 오류: ${e instanceof Error ? e.message : String(e)}`);
@@ -146,10 +150,10 @@ export default function ScenariosPage() {
     try {
       const result = await clearFault(faultId);
       if (result.success) {
-        showToast("success", "고장 해제 완료");
+        showToast("success", t("faultCleared"));
         await fetchFaultData();
       } else {
-        showToast("error", "고장 해제 실패");
+        showToast("error", t("faultClearFailed"));
       }
     } catch (e) {
       showToast("error", `고장 해제 오류: ${e instanceof Error ? e.message : String(e)}`);
@@ -160,7 +164,7 @@ export default function ScenariosPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="시나리오 관리" description="시뮬레이션 시나리오 및 고장 주입 관리" />
+      <Header title={t("title")} description={t("description")} />
 
       {/* Toast */}
       {toast && (
@@ -184,7 +188,7 @@ export default function ScenariosPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Play className="h-4 w-4 text-blue-500" />
-                    시나리오 목록
+                    {t("scenarioList")}
                   </CardTitle>
                   <Button
                     variant="outline"
@@ -220,7 +224,7 @@ export default function ScenariosPage() {
                                 {scenario.display_name || scenario.name}
                               </span>
                               {isActive && (
-                                <Badge variant="success">활성</Badge>
+                                <Badge variant="success">{t("active")}</Badge>
                               )}
                             </div>
                             {scenario.description && (
@@ -230,7 +234,7 @@ export default function ScenariosPage() {
                             )}
                             <div className="flex flex-wrap gap-2 text-[10px] text-gray-400">
                               {scenario.occupancy !== undefined && (
-                                <span>재실률: {(scenario.occupancy * 100).toFixed(0)}%</span>
+                                <span>{t("occupancy")} {(scenario.occupancy * 100).toFixed(0)}%</span>
                               )}
                               {scenario.hvac_mode && (
                                 <span>HVAC: {scenario.hvac_mode}</span>
@@ -238,7 +242,7 @@ export default function ScenariosPage() {
                               {scenario.outdoor_temp_min !== undefined &&
                                 scenario.outdoor_temp_max !== undefined && (
                                   <span>
-                                    외기온: {scenario.outdoor_temp_min}~{scenario.outdoor_temp_max}°C
+                                    {t("outdoorTemp")} {scenario.outdoor_temp_min}~{scenario.outdoor_temp_max}°C
                                   </span>
                                 )}
                             </div>
@@ -264,8 +268,8 @@ export default function ScenariosPage() {
                 ) : (
                   <div className="text-center py-12 text-gray-400 text-sm">
                     <Info className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                    <p>시나리오를 불러올 수 없습니다</p>
-                    <p className="text-xs mt-1">Server C 연결을 확인하세요</p>
+                    <p>{t("noScenarios")}</p>
+                    <p className="text-xs mt-1">{t("checkServerC")}</p>
                   </div>
                 )}
               </CardContent>
@@ -277,26 +281,26 @@ export default function ScenariosPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-green-500" />
-                    현재 활성 시나리오
+                    {t("activeScenario")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-500">이름:</span>
+                      <span className="text-gray-500">{t("scenarioName")}</span>
                       <span className="ml-2 font-medium">
                         {activeScenario.display_name || activeScenario.name}
                       </span>
                     </div>
                     {activeScenario.hvac_mode && (
                       <div>
-                        <span className="text-gray-500">HVAC 모드:</span>
+                        <span className="text-gray-500">{t("hvacMode")}</span>
                         <span className="ml-2">{activeScenario.hvac_mode}</span>
                       </div>
                     )}
                     {activeScenario.occupancy !== undefined && (
                       <div>
-                        <span className="text-gray-500">재실률:</span>
+                        <span className="text-gray-500">{t("occupancy")}</span>
                         <span className="ml-2">
                           {(activeScenario.occupancy * 100).toFixed(0)}%
                         </span>
@@ -304,7 +308,7 @@ export default function ScenariosPage() {
                     )}
                     {activeScenario.solar_factor !== undefined && (
                       <div>
-                        <span className="text-gray-500">태양 복사:</span>
+                        <span className="text-gray-500">{t("solarFactor")}</span>
                         <span className="ml-2">x{activeScenario.solar_factor}</span>
                       </div>
                     )}
@@ -322,7 +326,7 @@ export default function ScenariosPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Zap className="h-4 w-4 text-orange-500" />
-                    고장 주입
+                    {t("faultInjection")}
                   </CardTitle>
                   <Button
                     variant="outline"
@@ -344,14 +348,14 @@ export default function ScenariosPage() {
                     {/* 고장 유형 선택 */}
                     <div>
                       <label className="text-xs font-medium text-gray-500 block mb-2">
-                        고장 유형
+                        {t("faultType")}
                       </label>
                       <select
                         value={selectedFaultType}
                         onChange={(e) => setSelectedFaultType(e.target.value)}
                         className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
                       >
-                        <option value="">선택...</option>
+                        <option value="">{t("selectOption")}</option>
                         {faultTypes.map((ft) => (
                           <option key={ft.id || ft.name} value={ft.id || ft.name}>
                             {ft.name} — {ft.description}
@@ -363,7 +367,7 @@ export default function ScenariosPage() {
                     {/* 대상 장비 선택 */}
                     <div>
                       <label className="text-xs font-medium text-gray-500 block mb-2">
-                        대상 장비
+                        {t("targetDevice")}
                       </label>
                       <select
                         value={selectedDevice}
@@ -390,7 +394,7 @@ export default function ScenariosPage() {
                       ) : (
                         <Zap className="h-4 w-4 mr-2" />
                       )}
-                      고장 주입
+                      {t("inject")}
                     </Button>
                   </div>
                 )}
@@ -402,7 +406,7 @@ export default function ScenariosPage() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-red-500" />
-                  활성 고장 ({activeFaults.length})
+                  {t("activeFaults", { count: activeFaults.length })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -416,14 +420,14 @@ export default function ScenariosPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">{fault.fault_type}</span>
-                            <Badge variant="danger">활성</Badge>
+                            <Badge variant="danger">{t("active")}</Badge>
                           </div>
                           <p className="text-xs text-gray-500 mt-0.5">
-                            대상: {fault.target_id}
+                            {t("target", { target: fault.target_id })}
                           </p>
                           {fault.injected_at && (
                             <p className="text-[10px] text-gray-400 mt-0.5">
-                              주입: {new Date(fault.injected_at).toLocaleString("ko-KR")}
+                              {t("injectedAt", { time: new Date(fault.injected_at).toLocaleString("ko-KR") })}
                             </p>
                           )}
                         </div>
@@ -446,7 +450,7 @@ export default function ScenariosPage() {
                 ) : (
                   <div className="text-center py-8 text-gray-400 text-sm">
                     <CheckCircle className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                    <p>활성 고장 없음</p>
+                    <p>{t("noActiveFaults")}</p>
                   </div>
                 )}
               </CardContent>
@@ -458,7 +462,7 @@ export default function ScenariosPage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Info className="h-4 w-4 text-gray-400" />
-                    고장 유형 가이드
+                    {t("faultTypeGuide")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

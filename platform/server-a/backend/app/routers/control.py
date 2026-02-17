@@ -13,6 +13,7 @@ from pydantic import BaseModel
 
 from app.config import SERVER_B_URL
 from app.dependencies import CurrentUser, require_role
+from app.models import DeviceStatusResponse
 from app.services import mqtt_service
 from app.services import audit_service
 
@@ -119,7 +120,7 @@ async def send_control_command(
         raise HTTPException(status_code=500, detail=f"제어 명령 실패: {str(e)}")
 
 
-@router.get("/devices/status")
+@router.get("/devices/status", response_model=DeviceStatusResponse)
 async def get_all_device_status() -> dict[str, Any]:
     """
     전체 장비 ON/OFF 상태 (MQTT 캐시에서 조회).

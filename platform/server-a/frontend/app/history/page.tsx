@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,26 +26,26 @@ import { Search, Clock, Download, Loader2, X } from "lucide-react";
 /* ── 상수 ── */
 
 const TIME_PRESETS = [
-  { label: "1시간", value: "-1h" },
-  { label: "6시간", value: "-6h" },
-  { label: "24시간", value: "-24h" },
-  { label: "7일", value: "-7d" },
-  { label: "30일", value: "-30d" },
+  { label: "time1h", value: "-1h" },
+  { label: "time6h", value: "-6h" },
+  { label: "time24h", value: "-24h" },
+  { label: "time7d", value: "-7d" },
+  { label: "time30d", value: "-30d" },
 ] as const;
 
 const WINDOW_OPTIONS = [
-  { label: "1분", value: "1m" },
-  { label: "5분", value: "5m" },
-  { label: "15분", value: "15m" },
-  { label: "1시간", value: "1h" },
-  { label: "1일", value: "1d" },
+  { label: "window1m", value: "1m" },
+  { label: "window5m", value: "5m" },
+  { label: "window15m", value: "15m" },
+  { label: "window1h", value: "1h" },
+  { label: "window1d", value: "1d" },
 ] as const;
 
 const AGGREGATION_OPTIONS = [
-  { label: "평균", value: "mean" },
-  { label: "최소", value: "min" },
-  { label: "최대", value: "max" },
-  { label: "합계", value: "sum" },
+  { label: "aggMean", value: "mean" },
+  { label: "aggMin", value: "min" },
+  { label: "aggMax", value: "max" },
+  { label: "aggSum", value: "sum" },
 ] as const;
 
 const LINE_COLORS = [
@@ -69,6 +70,9 @@ interface ChartRow {
 /* ── 메인 페이지 ── */
 
 export default function HistoryPage() {
+  const t = useTranslations("history");
+  const tc = useTranslations("common");
+
   // 포인트 목록
   const [pointList, setPointList] = useState<PointInfo[]>([]);
   const [pointsLoading, setPointsLoading] = useState(true);
@@ -170,7 +174,7 @@ export default function HistoryPage() {
       const merged = Array.from(tsMap.values()).sort((a, b) => a.ts - b.ts);
       setChartData(merged);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "데이터 조회 실패");
+      setError(err instanceof Error ? err.message : t("queryFailed"));
     } finally {
       setLoading(false);
     }
@@ -201,7 +205,7 @@ export default function HistoryPage() {
   // CSV 다운로드
   const downloadCSV = useCallback(() => {
     if (chartData.length === 0) return;
-    const headers = ["시간", ...selectedPoints.map(shortName)];
+    const headers = [tc("time"), ...selectedPoints.map(shortName)];
     const rows = chartData.map((row) => [
       row.time,
       ...selectedPoints.map((pid) => String(row[pid] ?? "")),
@@ -218,7 +222,7 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="시계열 이력" description="포인트 데이터 이력 조회 및 분석" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-6">
         {/* ── 컨트롤 패널 ── */}
@@ -226,7 +230,7 @@ export default function HistoryPage() {
           {/* 포인트 선택 */}
           <Card className="lg:col-span-1">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm">포인트 선택</CardTitle>
+              <CardTitle className="text-sm">{t("pointSelect")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {/* 검색 */}
@@ -234,7 +238,7 @@ export default function HistoryPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="포인트 검색..."
+                  placeholder={t("pointSearch")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -267,11 +271,11 @@ export default function HistoryPage() {
                 {pointsLoading ? (
                   <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    포인트 목록 로딩 중...
+                    {t("pointListLoading")}
                   </div>
                 ) : filteredPoints.length === 0 ? (
                   <div className="py-8 text-center text-gray-400 text-sm">
-                    {searchQuery ? "검색 결과 없음" : "포인트 없음"}
+                    {searchQuery ? t("noSearchResults") : t("noPoints")}
                   </div>
                 ) : (
                   filteredPoints.map((p) => {
@@ -307,7 +311,7 @@ export default function HistoryPage() {
                 )}
               </div>
               <p className="text-xs text-gray-400">
-                {selectedPoints.length}/8 선택 | 총 {pointList.length}개 포인트
+                {tc("selected", { count: selectedPoints.length, total: pointList.length })}
               </p>
             </CardContent>
           </Card>
@@ -316,7 +320,7 @@ export default function HistoryPage() {
           <Card className="lg:col-span-2">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">조회 조건</CardTitle>
+                <CardTitle className="text-sm">{t("queryOptions")}</CardTitle>
                 <Button
                   size="sm"
                   variant="outline"
@@ -332,7 +336,7 @@ export default function HistoryPage() {
               {/* 기간 프리셋 */}
               <div>
                 <label className="text-xs font-medium text-gray-500 mb-2 block">
-                  기간
+                  {t("period")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {TIME_PRESETS.map((preset) => (
@@ -343,7 +347,7 @@ export default function HistoryPage() {
                       onClick={() => setTimeRange(preset.value)}
                     >
                       <Clock className="h-3.5 w-3.5 mr-1" />
-                      {preset.label}
+                      {t(preset.label)}
                     </Button>
                   ))}
                 </div>
@@ -353,7 +357,7 @@ export default function HistoryPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-2 block">
-                    집계 윈도우
+                    {t("aggregateWindow")}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {WINDOW_OPTIONS.map((opt) => (
@@ -363,14 +367,14 @@ export default function HistoryPage() {
                         variant={window === opt.value ? "default" : "outline"}
                         onClick={() => setWindow(opt.value)}
                       >
-                        {opt.label}
+                        {t(opt.label)}
                       </Button>
                     ))}
                   </div>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-2 block">
-                    집계 함수
+                    {t("aggregateFunction")}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {AGGREGATION_OPTIONS.map((opt) => (
@@ -380,7 +384,7 @@ export default function HistoryPage() {
                         variant={aggregation === opt.value ? "default" : "outline"}
                         onClick={() => setAggregation(opt.value)}
                       >
-                        {opt.label}
+                        {t(opt.label)}
                       </Button>
                     ))}
                   </div>
@@ -401,11 +405,11 @@ export default function HistoryPage() {
         <Card>
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base">시계열 차트</CardTitle>
+              <CardTitle className="text-base">{t("chartTitle")}</CardTitle>
               {loading && (
                 <div className="flex items-center text-sm text-gray-400">
                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
-                  조회 중...
+                  {t("querying")}
                 </div>
               )}
             </div>
@@ -415,15 +419,15 @@ export default function HistoryPage() {
               <div className="flex items-center justify-center h-[350px] text-gray-400 text-sm">
                 <div className="text-center">
                   <Clock className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p>좌측에서 포인트를 선택하세요</p>
-                  <p className="text-xs mt-1">최대 8개 동시 비교 가능</p>
+                  <p>{t("selectPointHint")}</p>
+                  <p className="text-xs mt-1">{t("maxCompare")}</p>
                 </div>
               </div>
             ) : chartData.length === 0 && !loading ? (
               <div className="flex items-center justify-center h-[350px] text-gray-400 text-sm">
                 <div className="text-center">
                   <Clock className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                  <p>해당 기간에 데이터가 없습니다</p>
+                  <p>{t("noDataInPeriod")}</p>
                 </div>
               </div>
             ) : (
@@ -448,7 +452,7 @@ export default function HistoryPage() {
                       borderRadius: "8px",
                       fontSize: "12px",
                     }}
-                    labelFormatter={(label) => `시간: ${label}`}
+                    labelFormatter={(label) => t("tooltipTime", { time: label })}
                     formatter={(value: number, name: string) => [
                       `${value.toFixed(2)} ${unitMap[name] || ""}`,
                       shortName(name),
@@ -482,7 +486,7 @@ export default function HistoryPage() {
         {selectedPoints.length > 0 && chartData.length > 0 && (
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base">데이터 테이블</CardTitle>
+              <CardTitle className="text-base">{t("dataTable")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
@@ -490,7 +494,7 @@ export default function HistoryPage() {
                   <thead className="sticky top-0 bg-white">
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                        시간
+                        {tc("time")}
                       </th>
                       {selectedPoints.map((pid, i) => (
                         <th
@@ -544,7 +548,7 @@ export default function HistoryPage() {
               </div>
               {chartData.length > 100 && (
                 <p className="text-xs text-gray-400 mt-2 text-center">
-                  최근 100건 표시 (전체 {chartData.length}건)
+                  {t("recentRows", { total: chartData.length })}
                 </p>
               )}
             </CardContent>

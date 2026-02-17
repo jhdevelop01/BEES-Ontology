@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { Power, PowerOff, Loader2, Send } from "lucide-react";
 export default function ControlPage() {
   const { devices, connected } = useSSE();
   const { addToast } = useToast();
+  const t = useTranslations("control");
   const [deviceList, setDeviceList] = useState<DeviceStatus[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [commandHistory, setCommandHistory] = useState<
@@ -97,7 +99,7 @@ export default function ControlPage() {
 
       // 토스트 알림
       addToast({
-        title: result.success ? "명령 전송 성공" : "명령 전송 실패",
+        title: result.success ? t("commandSuccess") : t("commandFailed"),
         description: result.message,
         variant: result.success ? "success" : "error",
       });
@@ -114,8 +116,8 @@ export default function ControlPage() {
       }
     } catch (error) {
       addToast({
-        title: "명령 전송 오류",
-        description: error instanceof Error ? error.message : "알 수 없는 오류",
+        title: t("commandError"),
+        description: error instanceof Error ? error.message : t("unknownError"),
         variant: "error",
       });
     } finally {
@@ -126,8 +128,8 @@ export default function ControlPage() {
   return (
     <div className="min-h-screen">
       <Header
-        title="제어"
-        description="장비 ON/OFF 제어 및 명령 관리"
+        title={t("title")}
+        description={t("description")}
         connected={connected}
       />
 
@@ -179,17 +181,17 @@ export default function ControlPage() {
                   {/* 장비 정보 */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-500">운전 모드:</span>
+                      <span className="text-gray-500">{t("operationMode")}</span>
                       <span className="ml-2 font-medium">
                         {device.mode === "auto"
-                          ? "자동"
+                          ? t("modeAuto")
                           : device.mode === "standby"
-                          ? "대기"
+                          ? t("modeStandby")
                           : device.mode}
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500">마지막 업데이트:</span>
+                      <span className="text-gray-500">{t("lastUpdate")}</span>
                       <span className="ml-2 font-medium text-xs">
                         {device.ts
                           ? new Date(device.ts * 1000).toLocaleTimeString(
@@ -213,7 +215,7 @@ export default function ControlPage() {
                       ) : (
                         <Power className="h-4 w-4 mr-2" />
                       )}
-                      가동
+                      {t("start")}
                     </Button>
                     <Button
                       variant={!isActive ? "outline" : "destructive"}
@@ -226,7 +228,7 @@ export default function ControlPage() {
                       ) : (
                         <PowerOff className="h-4 w-4 mr-2" />
                       )}
-                      정지
+                      {t("stop")}
                     </Button>
                   </div>
                 </CardContent>
@@ -240,7 +242,7 @@ export default function ControlPage() {
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <Send className="h-4 w-4" />
-              최근 명령 이력
+              {t("recentCommands")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -255,7 +257,7 @@ export default function ControlPage() {
                       <Badge
                         variant={entry.success ? "success" : "danger"}
                       >
-                        {entry.success ? "성공" : "실패"}
+                        {entry.success ? t("commandSuccess") : t("commandFailed")}
                       </Badge>
                       <span className="font-medium">{entry.deviceId}</span>
                       <span className="text-gray-500">{entry.command}</span>
@@ -274,9 +276,9 @@ export default function ControlPage() {
             ) : (
               <div className="text-center py-8 text-gray-400 text-sm">
                 <Send className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p>아직 전송된 명령이 없습니다.</p>
+                <p>{t("noCommands")}</p>
                 <p className="text-xs mt-1">
-                  위 장비의 가동/정지 버튼을 눌러 명령을 전송하세요.
+                  {t("noCommandsHint")}
                 </p>
               </div>
             )}

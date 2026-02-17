@@ -25,17 +25,18 @@ import {
   Info,
 } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 const PAGE_SIZE = 50;
 
-function getSeverityBadge(severity: string) {
+function getSeverityBadge(severity: string, labels: Record<string, string>) {
   switch (severity) {
     case "critical":
-      return <Badge variant="danger"><AlertOctagon className="h-3 w-3 mr-1" />위험</Badge>;
+      return <Badge variant="danger"><AlertOctagon className="h-3 w-3 mr-1" />{labels.critical}</Badge>;
     case "warning":
-      return <Badge variant="warning"><AlertTriangle className="h-3 w-3 mr-1" />경고</Badge>;
+      return <Badge variant="warning"><AlertTriangle className="h-3 w-3 mr-1" />{labels.warning}</Badge>;
     case "minor":
-      return <Badge variant="default"><Info className="h-3 w-3 mr-1" />경미</Badge>;
+      return <Badge variant="default"><Info className="h-3 w-3 mr-1" />{labels.minor}</Badge>;
     default:
       return <Badge variant="secondary">{severity}</Badge>;
   }
@@ -56,22 +57,36 @@ function getChannelBadge(channel: string) {
   );
 }
 
-function getStatusBadge(status: string) {
+function getStatusBadge(status: string, labels: Record<string, string>) {
   if (status === "success") {
     return (
       <Badge variant="success">
-        <CheckCircle className="h-3 w-3 mr-1" />성공
+        <CheckCircle className="h-3 w-3 mr-1" />{labels.success}
       </Badge>
     );
   }
   return (
     <Badge variant="danger">
-      <XCircle className="h-3 w-3 mr-1" />실패
+      <XCircle className="h-3 w-3 mr-1" />{labels.failed}
     </Badge>
   );
 }
 
 export default function NotificationLogPage() {
+  const t = useTranslations("settings");
+  const tc = useTranslations("common");
+  const ta = useTranslations("alarms");
+
+  const sevLabels: Record<string, string> = {
+    critical: ta("sevCritical"),
+    warning: ta("sevWarning"),
+    minor: ta("sevMinor"),
+  };
+  const statusLabels: Record<string, string> = {
+    success: tc("success"),
+    failed: tc("failed"),
+  };
+
   const [items, setItems] = useState<NotificationLogItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -120,7 +135,7 @@ export default function NotificationLogPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="알림 이력" description="Email/Slack 알림 전송 이력" />
+      <Header title={t("notifTitle")} description={t("notifDesc")} />
 
       <div className="p-3 md:p-6 space-y-6">
         {/* 상단 네비게이션 */}
@@ -128,7 +143,7 @@ export default function NotificationLogPage() {
           <Link href="/settings">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              설정
+              {t("backToSettings")}
             </Button>
           </Link>
         </div>
@@ -138,25 +153,25 @@ export default function NotificationLogPage() {
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-green-600">{stats?.email?.success ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">Email 성공</div>
+              <div className="text-xs text-gray-500 mt-1">{t("emailSuccess")}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-red-600">{stats?.email?.failed ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">Email 실패</div>
+              <div className="text-xs text-gray-500 mt-1">{t("emailFailed")}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-green-600">{stats?.slack?.success ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">Slack 성공</div>
+              <div className="text-xs text-gray-500 mt-1">{t("slackSuccess")}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <div className="text-2xl font-bold text-red-600">{stats?.slack?.failed ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">Slack 실패</div>
+              <div className="text-xs text-gray-500 mt-1">{t("slackFailed")}</div>
             </CardContent>
           </Card>
         </div>
@@ -171,7 +186,7 @@ export default function NotificationLogPage() {
             }}
             className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">전체 채널</option>
+            <option value="">{t("allChannels")}</option>
             <option value="email">Email</option>
             <option value="slack">Slack</option>
           </select>
@@ -183,9 +198,9 @@ export default function NotificationLogPage() {
             }}
             className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">전체 상태</option>
-            <option value="success">성공</option>
-            <option value="failed">실패</option>
+            <option value="">{t("allStatus")}</option>
+            <option value="success">{tc("success")}</option>
+            <option value="failed">{tc("failed")}</option>
           </select>
         </div>
 
@@ -201,12 +216,12 @@ export default function NotificationLogPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">시간</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">채널</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">장비</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">심각도</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">수신자</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">상태</th>
+                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thTime")}</th>
+                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thChannel")}</th>
+                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thEquipment")}</th>
+                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thSeverity")}</th>
+                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thRecipient")}</th>
+                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -224,9 +239,9 @@ export default function NotificationLogPage() {
                         </td>
                         <td className="py-2 px-3">{getChannelBadge(item.channel)}</td>
                         <td className="py-2 px-3 font-medium text-xs">{item.alarm_equipment}</td>
-                        <td className="py-2 px-3">{getSeverityBadge(item.alarm_severity)}</td>
+                        <td className="py-2 px-3">{getSeverityBadge(item.alarm_severity, sevLabels)}</td>
                         <td className="py-2 px-3 text-xs text-gray-600">{item.recipient}</td>
-                        <td className="py-2 px-3">{getStatusBadge(item.status)}</td>
+                        <td className="py-2 px-3">{getStatusBadge(item.status, statusLabels)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -235,7 +250,7 @@ export default function NotificationLogPage() {
             ) : (
               <div className="text-center py-16 text-gray-400 text-sm">
                 <Mail className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                <p>알림 이력이 없습니다</p>
+                <p>{t("noNotifHistory")}</p>
               </div>
             )}
 
@@ -243,13 +258,13 @@ export default function NotificationLogPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
                 <p className="text-xs text-gray-400">
-                  총 {total}건 중 {page * PAGE_SIZE + 1}~{Math.min((page + 1) * PAGE_SIZE, total)}
+                  {tc("totalOf", { total, start: page * PAGE_SIZE + 1, end: Math.min((page + 1) * PAGE_SIZE, total) })}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-gray-600">{page + 1} / {totalPages}</span>
+                  <span className="text-sm text-gray-600">{tc("pageOf", { page: page + 1, totalPages })}</span>
                   <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>

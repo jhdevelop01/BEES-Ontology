@@ -100,6 +100,60 @@ class HealthResponse(BaseModel):
     timestamp: str
 
 
+class DeviceListResponse(BaseModel):
+    """디바이스 레지스트리 조회 응답."""
+    count: int = Field(..., description="등록 장비 수")
+    devices: list[dict[str, Any]] = Field(default_factory=list, description="장비 목록")
+
+
+class DeviceReloadResponse(BaseModel):
+    """장비 재로딩 응답."""
+    success: bool
+    new_loaded: int = Field(..., description="신규 등록 장비 수")
+    total: int = Field(..., description="전체 등록 장비 수")
+    devices: list[dict[str, Any]] = Field(default_factory=list, description="장비 목록")
+
+
+class DeviceStatusResponse(BaseModel):
+    """장비 상태 조회 응답."""
+    deviceId: str = Field(..., description="장비 ID")
+    source: str = Field("server-c", description="데이터 소스")
+    data: dict[str, Any] = Field(default_factory=dict, description="장비 상태 데이터")
+    timestamp: str = Field(..., description="조회 시각 (ISO 8601)")
+
+
+class AuditLogResponse(BaseModel):
+    """감사 로그 조회 응답."""
+    count: int = Field(..., description="반환 건수")
+    limit: int = Field(..., description="요청 제한 건수")
+    logs: list[dict[str, Any]] = Field(default_factory=list, description="감사 로그 목록")
+
+
+class CommandQueueStatus(BaseModel):
+    """명령 큐 상태 응답."""
+    pending: int = Field(0, description="대기 중 명령 수")
+    processing: int = Field(0, description="처리 중 명령 수")
+    completed: int = Field(0, description="완료 명령 수")
+    failed: int = Field(0, description="실패 명령 수")
+    total: int = Field(0, description="전체 명령 수")
+
+
+class BACnetDeviceListResponse(BaseModel):
+    """BACnet 디바이스 목록 응답."""
+    mode: str = Field("simulation", description="BACnet 모드")
+    count: int = Field(..., description="디바이스 수")
+    devices: list[dict[str, Any]] = Field(default_factory=list, description="디바이스 목록")
+
+
+class BACnetObjectListResponse(BaseModel):
+    """BACnet 오브젝트 목록 응답."""
+    device_id: int = Field(..., description="BACnet 디바이스 ID")
+    device_name: str = Field(..., description="디바이스명")
+    ontology_id: str = Field(..., description="온톨로지 ID")
+    count: int = Field(..., description="오브젝트 수")
+    objects: list[dict[str, Any]] = Field(default_factory=list, description="오브젝트 목록")
+
+
 # ---------------------------------------------------------------------------
 # MQTT 헬퍼
 # ---------------------------------------------------------------------------
@@ -346,10 +400,18 @@ app = FastAPI(
     title="BEES Server B — BAS Adapter",
     description=(
         "삼성물산 GEC B동 디지털 트윈 플랫폼의 프로토콜 게이트웨이. "
-        "Server A의 제어 명령을 Server C(가상 건물 에뮬레이터)로 전달한다."
+        "Server A의 제어 명령을 Server C(가상 건물 에뮬레이터)로 전달하고, "
+        "BACnet 시뮬레이션, 명령 큐잉, 감사 로깅을 수행한다."
     ),
     version="1.0.0",
     lifespan=lifespan,
+    openapi_tags=[
+        {"name": "시스템", "description": "헬스체크"},
+        {"name": "명령", "description": "장비 제어 명령 수신 및 재시도 큐"},
+        {"name": "장비", "description": "디바이스 레지스트리 조회/재로딩"},
+        {"name": "감사", "description": "명령 감사 로그"},
+        {"name": "BACnet", "description": "BACnet 프로토콜 시뮬레이션"},
+    ],
 )
 
 
@@ -358,7 +420,7 @@ app = FastAPI(
 # ---------------------------------------------------------------------------
 
 # ── POST /command ──────────────────────────────────────────────────────────
-@app.post("/command", response_model=CommandResponse)
+@app.post("/command", response_model=CommandResponse, tags=["명령"])
 async def send_command(req: CommandRequest) -> CommandResponse:
     """
     제어 명령 수신 및 처리.
@@ -494,7 +556,7 @@ async def send_command(req: CommandRequest) -> CommandResponse:
 
 
 # ── GET /devices ───────────────────────────────────────────────────────────
-@app.get("/devices")
+@app.get("/devices", response_model=DeviceListResponse, tags=["장비"])
 async def list_devices() -> dict[str, Any]:
     """디바이스 레지스트리에 등록된 전체 장비를 조회한다."""
     devices = registry.list_all()
@@ -505,7 +567,7 @@ async def list_devices() -> dict[str, Any]:
 
 
 # ── GET /devices/reload ────────────────────────────────────────────────────
-@app.get("/devices/reload")
+@app.get("/devices/reload", response_model=DeviceReloadResponse, tags=["장비"])
 async def reload_devices() -> dict[str, Any]:
     """
     Neo4j에서 장비 목록을 재로딩한다.
@@ -523,7 +585,7 @@ async def reload_devices() -> dict[str, Any]:
 
 
 # ── GET /devices/{device_id}/status ────────────────────────────────────────
-@app.get("/devices/{device_id}/status")
+@app.get("/devices/{device_id}/status", response_model=DeviceStatusResponse, tags=["장비"])
 async def get_device_status(device_id: str) -> dict[str, Any]:
     """
     특정 장비의 상태를 조회한다.
@@ -574,7 +636,7 @@ async def get_device_status(device_id: str) -> dict[str, Any]:
 
 
 # ── GET /health ────────────────────────────────────────────────────────────
-@app.get("/health", response_model=HealthResponse)
+@app.get("/health", response_model=HealthResponse, tags=["시스템"])
 async def health_check() -> HealthResponse:
     """게이트웨이 헬스체크. MQTT, DB 연결 상태를 포함한다."""
     mqtt_ok = _mqtt_client is not None and _mqtt_client.is_connected()
@@ -598,7 +660,7 @@ async def health_check() -> HealthResponse:
 
 
 # ── GET /audit-log ─────────────────────────────────────────────────────────
-@app.get("/audit-log")
+@app.get("/audit-log", response_model=AuditLogResponse, tags=["감사"])
 async def get_audit_log(limit: int = 100) -> dict[str, Any]:
     """
     명령 감사 로그를 조회한다.
@@ -628,7 +690,7 @@ async def get_audit_log(limit: int = 100) -> dict[str, Any]:
 
 
 # ── GET /command-queue ─────────────────────────────────────────────────────
-@app.get("/command-queue")
+@app.get("/command-queue", response_model=CommandQueueStatus, tags=["명령"])
 async def get_command_queue_status() -> dict[str, Any]:
     """명령 재시도 큐 상태를 조회한다."""
     return command_queue.get_status()
@@ -707,7 +769,7 @@ class BACnetDiscoverRequest(BaseModel):
 
 
 # ── GET /bacnet/devices ──────────────────────────────────────────────────
-@app.get("/bacnet/devices")
+@app.get("/bacnet/devices", response_model=BACnetDeviceListResponse, tags=["BACnet"])
 async def bacnet_list_devices() -> dict[str, Any]:
     """BACnet 시뮬레이터에 등록된 전체 디바이스 목록."""
     devices = bacnet_sim.who_is()
@@ -719,7 +781,7 @@ async def bacnet_list_devices() -> dict[str, Any]:
 
 
 # ── GET /bacnet/devices/{device_id}/objects ──────────────────────────────
-@app.get("/bacnet/devices/{device_id}/objects")
+@app.get("/bacnet/devices/{device_id}/objects", response_model=BACnetObjectListResponse, tags=["BACnet"])
 async def bacnet_list_objects(device_id: int) -> dict[str, Any]:
     """특정 BACnet 디바이스의 오브젝트 목록."""
     device = bacnet_sim.get_device(device_id)
@@ -737,7 +799,7 @@ async def bacnet_list_objects(device_id: int) -> dict[str, Any]:
 
 
 # ── GET /bacnet/read ─────────────────────────────────────────────────────
-@app.get("/bacnet/read")
+@app.get("/bacnet/read", tags=["BACnet"])
 async def bacnet_read_property(
     device_id: int,
     object_id: str,
@@ -751,7 +813,7 @@ async def bacnet_read_property(
 
 
 # ── POST /bacnet/write ───────────────────────────────────────────────────
-@app.post("/bacnet/write")
+@app.post("/bacnet/write", tags=["BACnet"])
 async def bacnet_write_property(req: BACnetWriteRequest) -> dict[str, Any]:
     """BACnet WriteProperty 시뮬레이션."""
     result = bacnet_sim.write_property(
@@ -766,7 +828,7 @@ async def bacnet_write_property(req: BACnetWriteRequest) -> dict[str, Any]:
 
 
 # ── POST /bacnet/discover ────────────────────────────────────────────────
-@app.post("/bacnet/discover")
+@app.post("/bacnet/discover", response_model=BACnetDeviceListResponse, tags=["BACnet"])
 async def bacnet_discover(req: BACnetDiscoverRequest) -> dict[str, Any]:
     """BACnet Who-Is 탐색 시뮬레이션."""
     devices = bacnet_sim.who_is(req.low_limit, req.high_limit)

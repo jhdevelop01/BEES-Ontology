@@ -36,6 +36,10 @@ _alarm_cache: deque[dict[str, Any]] = deque(maxlen=100)
 _event_counter: int = 0
 _counter_lock = threading.Lock()
 
+# WebSocket 클라이언트 관리
+_ws_clients: set = set()
+_ws_lock = threading.Lock()
+
 # MQTT 클라이언트
 _client: mqtt.Client | None = None
 
@@ -86,6 +90,7 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
             }
             event = {"type": "point", "data": _point_cache[point_id]}
             _event_queue.append(event)
+            _schedule_ws_broadcast(event)
             with _counter_lock:
                 _event_counter += 1
 
@@ -100,6 +105,7 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
             }
             event = {"type": "device", "data": _device_cache[device_id]}
             _event_queue.append(event)
+            _schedule_ws_broadcast(event)
             with _counter_lock:
                 _event_counter += 1
 
@@ -122,6 +128,7 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
             # SSE 이벤트 큐에도 추가
             event = {"type": "alarm", "data": alarm_data}
             _event_queue.append(event)
+            _schedule_ws_broadcast(event)
             with _counter_lock:
                 _event_counter += 1
 
@@ -191,6 +198,38 @@ def get_alarm_count() -> int:
 def get_alarm_cache() -> list[dict[str, Any]]:
     """최근 알람 캐시 반환 (최신순, 최대 100건)"""
     return list(reversed(_alarm_cache))
+
+
+def register_ws_client(ws) -> None:
+    """WebSocket 클라이언트 등록"""
+    with _ws_lock:
+        _ws_clients.add(ws)
+    logger.info("WebSocket 클라이언트 연결 (총 %d)", len(_ws_clients))
+
+
+def unregister_ws_client(ws) -> None:
+    """WebSocket 클라이언트 해제"""
+    with _ws_lock:
+        _ws_clients.discard(ws)
+    logger.info("WebSocket 클라이언트 해제 (총 %d)", len(_ws_clients))
+
+
+def _schedule_ws_broadcast(event: dict) -> None:
+    """MQTT 스레드에서 asyncio 메인 루프로 WS broadcast 예약"""
+    if _main_loop is not None and _main_loop.is_running() and _ws_clients:
+        _main_loop.call_soon_threadsafe(asyncio.ensure_future, _broadcast_ws(event))
+
+
+async def _broadcast_ws(event: dict) -> None:
+    """모든 WebSocket 클라이언트에 이벤트 JSON 전송"""
+    message = json.dumps(event)
+    with _ws_lock:
+        clients = list(_ws_clients)
+    for ws in clients:
+        try:
+            await ws.send_text(message)
+        except Exception:
+            unregister_ws_client(ws)
 
 
 async def event_generator():

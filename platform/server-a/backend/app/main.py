@@ -16,6 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.models import HealthResponse
 from app.services import neo4j_service, mqtt_service, openai_service, influxdb_service, postgres_service
 from app.routers import (
     alarm, audit, auth, dashboard, control, stream, ontology, history, chat, schedule,
@@ -125,12 +126,38 @@ async def lifespan(app: FastAPI):
     logger.info("=== 모든 서비스 정리 완료 ===")
 
 
+# OpenAPI 태그 메타데이터
+tags_metadata = [
+    {"name": "시스템", "description": "헬스체크 및 API 정보"},
+    {"name": "인증", "description": "JWT 로그인/회원가입"},
+    {"name": "대시보드", "description": "KPI 요약 정보"},
+    {"name": "제어", "description": "장비 ON/OFF 제어 (Server B 프록시)"},
+    {"name": "실시간 스트림", "description": "SSE 센서 데이터 및 스냅샷"},
+    {"name": "온톨로지", "description": "Brick Schema 그래프 조회"},
+    {"name": "시계열 이력", "description": "InfluxDB 센서 이력 (Server D 프록시)"},
+    {"name": "알람", "description": "알람 조회/확인/억제"},
+    {"name": "감사 로그", "description": "사용자 행위 감사 로그"},
+    {"name": "AI 채팅", "description": "LLM 자연어 질의"},
+    {"name": "장비", "description": "장비 상세 및 모니터링"},
+    {"name": "에너지", "description": "에너지 분석 대시보드"},
+    {"name": "유지보수", "description": "유지보수 작업 지시 관리"},
+    {"name": "보고서", "description": "보고서 생성 및 다운로드"},
+    {"name": "사용자", "description": "사용자 CRUD 및 접근 로그"},
+    {"name": "설정", "description": "시스템 설정 관리"},
+    {"name": "알림", "description": "Email/Slack 알림 채널"},
+]
+
 # FastAPI 앱 인스턴스
 app = FastAPI(
     title="BEES Server A — 온톨로지 웹 서비스",
-    description="삼성물산 GEC B동 디지털 트윈 플랫폼 백엔드",
+    description=(
+        "삼성물산 GEC B동 디지털 트윈 플랫폼 백엔드. "
+        "Neo4j 온톨로지 조회, MQTT 실시간 센서 스트림, 장비 제어, "
+        "시계열 이력, 알람 관리, AI 채팅 등 18개 페이지 지원."
+    ),
     version="1.0.0",
     lifespan=lifespan,
+    openapi_tags=tags_metadata,
 )
 
 # CORS 설정 (프론트엔드 접근 허용)
@@ -166,9 +193,9 @@ app.include_router(settings.router)
 app.include_router(notification.router)
 
 
-@app.get("/health", tags=["시스템"])
+@app.get("/health", tags=["시스템"], response_model=HealthResponse)
 async def health_check():
-    """헬스체크 엔드포인트"""
+    """서버 상태 확인. 정상 시 status=healthy 반환."""
     return {
         "status": "healthy",
         "service": "server-a-backend",

@@ -8,12 +8,13 @@ from typing import Any
 
 from fastapi import APIRouter
 
+from app.models import DashboardSummaryResponse
 from app.services import mqtt_service, neo4j_service
 
 router = APIRouter(prefix="/api/dashboard", tags=["대시보드"])
 
 
-@router.get("/summary")
+@router.get("/summary", response_model=DashboardSummaryResponse)
 async def get_dashboard_summary() -> dict[str, Any]:
     """
     대시보드 KPI 요약:

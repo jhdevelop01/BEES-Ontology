@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,35 +47,35 @@ const SEVERITY_CONFIG: Record<string, {
   variant: "danger" | "warning" | "default" | "secondary";
 }> = {
   critical: {
-    label: "위험",
+    label: "sevCritical",
     color: "text-red-600",
     bgColor: "bg-red-50 border-red-200",
     icon: AlertOctagon,
     variant: "danger",
   },
   major: {
-    label: "주의",
+    label: "sevMajor",
     color: "text-orange-600",
     bgColor: "bg-orange-50 border-orange-200",
     icon: AlertTriangle,
     variant: "warning",
   },
   warning: {
-    label: "경고",
+    label: "sevWarning",
     color: "text-yellow-600",
     bgColor: "bg-yellow-50 border-yellow-200",
     icon: AlertTriangle,
     variant: "warning",
   },
   minor: {
-    label: "경미",
+    label: "sevMinor",
     color: "text-blue-600",
     bgColor: "bg-blue-50 border-blue-200",
     icon: Info,
     variant: "default",
   },
   info: {
-    label: "정보",
+    label: "sevInfo",
     color: "text-gray-600",
     bgColor: "bg-gray-50 border-gray-200",
     icon: Info,
@@ -99,6 +100,8 @@ function SuppressModal({
   onClose: () => void;
   onConfirm: (duration: number, reason: string) => void;
 }) {
+  const t = useTranslations("alarms");
+  const tc = useTranslations("common");
   const [duration, setDuration] = useState(1);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -109,7 +112,7 @@ function SuppressModal({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold flex items-center gap-2">
             <BellOff className="h-5 w-5 text-gray-500" />
-            알람 억제
+            {t("suppressTitle")}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -117,18 +120,18 @@ function SuppressModal({
         </div>
 
         <p className="text-sm text-gray-500 mb-4">
-          <span className="font-medium text-gray-700">{equipment}</span> 장비의 알람을 지정 기간 동안 숨깁니다.
+          {t("suppressDesc", { equipment })}
         </p>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-gray-500 block mb-2">억제 기간</label>
+            <label className="text-xs font-medium text-gray-500 block mb-2">{t("suppressDuration")}</label>
             <div className="flex gap-2">
               {[
-                { label: "1시간", value: 1 },
-                { label: "4시간", value: 4 },
-                { label: "12시간", value: 12 },
-                { label: "24시간", value: 24 },
+                { label: t("dur1h"), value: 1 },
+                { label: t("dur4h"), value: 4 },
+                { label: t("dur12h"), value: 12 },
+                { label: t("dur24h"), value: 24 },
               ].map((opt) => (
                 <Button
                   key={opt.value}
@@ -143,12 +146,12 @@ function SuppressModal({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-gray-500 block mb-2">사유</label>
+            <label className="text-xs font-medium text-gray-500 block mb-2">{t("suppressReason")}</label>
             <input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="억제 사유 입력 (선택)"
+              placeholder={t("suppressReasonPlaceholder")}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -156,7 +159,7 @@ function SuppressModal({
 
         <div className="flex justify-end gap-2 mt-6">
           <Button variant="outline" size="sm" onClick={onClose}>
-            취소
+            {tc("cancel")}
           </Button>
           <Button
             variant="destructive"
@@ -172,7 +175,7 @@ function SuppressModal({
             ) : (
               <BellOff className="h-4 w-4 mr-1" />
             )}
-            억제
+            {t("suppress")}
           </Button>
         </div>
       </div>
@@ -193,17 +196,19 @@ function AckModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const t = useTranslations("alarms");
+  const tc = useTranslations("common");
   const [submitting, setSubmitting] = useState(false);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
-        <h3 className="text-base font-semibold mb-3">알람 확인</h3>
+        <h3 className="text-base font-semibold mb-3">{t("ackTitle")}</h3>
         <p className="text-sm text-gray-500 mb-4">
-          <span className="font-medium text-gray-700">{equipment}</span> 알람 #{alarmId}을 확인 처리합니다.
+          {t("ackDesc", { equipment, id: alarmId })}
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={onClose}>취소</Button>
+          <Button variant="outline" size="sm" onClick={onClose}>{tc("cancel")}</Button>
           <Button
             size="sm"
             disabled={submitting}
@@ -213,7 +218,7 @@ function AckModal({
             }}
           >
             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
-            확인
+            {t("ackProcess")}
           </Button>
         </div>
       </div>
@@ -224,6 +229,8 @@ function AckModal({
 /* ── 메인 ── */
 
 export default function AlarmsPage() {
+  const t = useTranslations("alarms");
+  const tc = useTranslations("common");
   const { alarms: sseAlarms, connected } = useSSE();
 
   const [activeAlarms, setActiveAlarms] = useState<ActiveAlarm[]>([]);
@@ -370,8 +377,8 @@ export default function AlarmsPage() {
   return (
     <div className="min-h-screen">
       <Header
-        title="알람 관리"
-        description="실시간 알람 모니터링 및 이력 관리"
+        title={t("title")}
+        description={t("description")}
         connected={connected}
       />
 
@@ -398,7 +405,7 @@ export default function AlarmsPage() {
                     <Icon className={`h-5 w-5 ${config.color}`} />
                     <span className={`text-2xl font-bold ${config.color}`}>{count}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{config.label}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t(config.label)}</p>
                 </CardContent>
               </Card>
             );
@@ -416,7 +423,7 @@ export default function AlarmsPage() {
                 <BellOff className="h-5 w-5 text-purple-500" />
                 <span className="text-2xl font-bold text-purple-600">{suppressed.length}</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">억제 중</p>
+              <p className="text-xs text-gray-500 mt-1">{t("suppressed")}</p>
             </CardContent>
           </Card>
         </div>
@@ -427,7 +434,7 @@ export default function AlarmsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <BellOff className="h-4 w-4 text-purple-500" />
-                억제 중인 알람 ({suppressed.length})
+                {t("suppressedAlarms", { count: suppressed.length })}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -439,11 +446,11 @@ export default function AlarmsPage() {
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm">{s.equipment || "알 수 없는 장비"}</span>
+                        <span className="font-medium text-sm">{s.equipment || t("unknownEquipment")}</span>
                         <Badge variant="secondary">{s.severity}</Badge>
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        사유: {s.reason || "-"} | 남은 시간: {Math.round(s.remaining_seconds / 60)}분
+                        {t("reasonLabel", { reason: s.reason || "-", minutes: Math.round(s.remaining_seconds / 60) })}
                       </p>
                     </div>
                     <Button
@@ -453,7 +460,7 @@ export default function AlarmsPage() {
                       onClick={() => handleUnsuppress(s.alarm_id)}
                     >
                       <Shield className="h-3 w-3 mr-1" />
-                      해제
+                      {t("unsuppress")}
                     </Button>
                   </div>
                 ))}
@@ -470,7 +477,7 @@ export default function AlarmsPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="장비 검색..."
+                  placeholder={t("equipmentSearch")}
                   value={equipmentSearch}
                   onChange={(e) => {
                     setEquipmentSearch(e.target.value);
@@ -488,11 +495,11 @@ export default function AlarmsPage() {
                   }}
                   className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">전체 심각도</option>
-                  <option value="critical">위험</option>
-                  <option value="warning">경고</option>
-                  <option value="minor">경미</option>
-                  <option value="info">정보</option>
+                  <option value="">{t("allSeverity")}</option>
+                  <option value="critical">{t("sevCritical")}</option>
+                  <option value="warning">{t("sevWarning")}</option>
+                  <option value="minor">{t("sevMinor")}</option>
+                  <option value="info">{t("sevInfo")}</option>
                 </select>
                 <Button
                   variant={showUnackOnly ? "default" : "outline"}
@@ -500,12 +507,12 @@ export default function AlarmsPage() {
                   onClick={() => setShowUnackOnly(!showUnackOnly)}
                 >
                   <Check className="h-3.5 w-3.5 mr-1" />
-                  미확인만
+                  {t("unackOnly")}
                 </Button>
                 <Link href="/alarms/history">
                   <Button variant="outline" size="sm">
                     <History className="h-3.5 w-3.5 mr-1" />
-                    전체 이력
+                    {t("fullHistory")}
                   </Button>
                 </Link>
               </div>
@@ -519,7 +526,7 @@ export default function AlarmsPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Bell className="h-4 w-4 text-red-500" />
-                활성 알람 ({activeAlarms.length})
+                {t("activeAlarms", { count: activeAlarms.length })}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -536,12 +543,12 @@ export default function AlarmsPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
                           <span className="font-medium text-sm">
-                            {alarm.equipment || "알 수 없는 장비"}
+                            {alarm.equipment || t("unknownEquipment")}
                           </span>
-                          <Badge variant={config.variant}>{config.label}</Badge>
+                          <Badge variant={config.variant}>{t(config.label)}</Badge>
                         </div>
                         <p className="text-xs text-gray-600 mt-0.5">
-                          {alarm.type || "알람"} — 값: {alarm.value?.toFixed(1) ?? "-"} (임계: {alarm.threshold?.toFixed(1) ?? "-"})
+                          {alarm.type || t("alarmDefault")} — {t("thValue")}: {alarm.value?.toFixed(1) ?? "-"} ({t("thThreshold")}: {alarm.threshold?.toFixed(1) ?? "-"})
                         </p>
                         <p className="text-[10px] text-gray-400 mt-0.5">
                           {new Date(alarm.ts * 1000).toLocaleString("ko-KR")}
@@ -561,7 +568,7 @@ export default function AlarmsPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                알람 이력
+                {t("alarmHistory")}
               </CardTitle>
               {historyLoading && (
                 <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
@@ -579,14 +586,14 @@ export default function AlarmsPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">심각도</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">장비</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">유형</th>
-                        <th className="text-right py-2 px-3 text-gray-500 font-medium">값</th>
-                        <th className="text-right py-2 px-3 text-gray-500 font-medium">임계값</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">발생</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">상태</th>
-                        <th className="text-center py-2 px-3 text-gray-500 font-medium">조치</th>
+                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thSeverity")}</th>
+                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thEquipment")}</th>
+                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thType")}</th>
+                        <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thValue")}</th>
+                        <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thThreshold")}</th>
+                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thOccurred")}</th>
+                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
+                        <th className="text-center py-2 px-3 text-gray-500 font-medium">{t("thAction")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -608,7 +615,7 @@ export default function AlarmsPage() {
                             <td className="py-2 px-3">
                               <Badge variant={config.variant}>
                                 <Icon className="h-3 w-3 mr-1" />
-                                {config.label}
+                                {t(config.label)}
                               </Badge>
                             </td>
                             <td className="py-2 px-3 font-medium text-xs">
@@ -637,7 +644,7 @@ export default function AlarmsPage() {
                               <Badge
                                 variant={alarm.acknowledged_at ? "success" : "secondary"}
                               >
-                                {alarm.acknowledged_at ? "확인됨" : "미확인"}
+                                {alarm.acknowledged_at ? t("acknowledged") : t("unacknowledged")}
                               </Badge>
                             </td>
                             <td className="py-2 px-3 text-center">
@@ -679,42 +686,42 @@ export default function AlarmsPage() {
                 {selectedAlarm && (
                   <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-sm font-semibold">알람 상세 #{selectedAlarm.id}</h4>
+                      <h4 className="text-sm font-semibold">{t("alarmDetail", { id: selectedAlarm.id })}</h4>
                       <button onClick={() => setSelectedAlarm(null)}>
                         <X className="h-4 w-4 text-gray-400" />
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                       <div>
-                        <span className="text-gray-500">장비:</span>
+                        <span className="text-gray-500">{t("detailEquipment")}</span>
                         <span className="ml-2 font-medium">{selectedAlarm.equipment_id}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">유형:</span>
+                        <span className="text-gray-500">{t("detailType")}</span>
                         <span className="ml-2">{selectedAlarm.alarm_type}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">심각도:</span>
+                        <span className="text-gray-500">{t("detailSeverity")}</span>
                         <span className="ml-2">
                           <Badge variant={getSeverityConfig(selectedAlarm.severity).variant}>
-                            {getSeverityConfig(selectedAlarm.severity).label}
+                            {t(getSeverityConfig(selectedAlarm.severity).label)}
                           </Badge>
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">현재값:</span>
+                        <span className="text-gray-500">{t("detailCurrentValue")}</span>
                         <span className="ml-2 font-mono">{selectedAlarm.actual_value?.toFixed(2) ?? "-"}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">임계값:</span>
+                        <span className="text-gray-500">{t("detailThreshold")}</span>
                         <span className="ml-2 font-mono">{selectedAlarm.threshold_value?.toFixed(2) ?? "-"}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">메시지:</span>
+                        <span className="text-gray-500">{t("detailMessage")}</span>
                         <span className="ml-2">{selectedAlarm.message || "-"}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">발생:</span>
+                        <span className="text-gray-500">{t("detailOnset")}</span>
                         <span className="ml-2">
                           {selectedAlarm.onset_at
                             ? new Date(selectedAlarm.onset_at).toLocaleString("ko-KR")
@@ -722,19 +729,19 @@ export default function AlarmsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">해소:</span>
+                        <span className="text-gray-500">{t("detailCleared")}</span>
                         <span className="ml-2">
                           {selectedAlarm.cleared_at
                             ? new Date(selectedAlarm.cleared_at).toLocaleString("ko-KR")
-                            : "미해소"}
+                            : t("notCleared")}
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">확인:</span>
+                        <span className="text-gray-500">{t("detailAck")}</span>
                         <span className="ml-2">
                           {selectedAlarm.acknowledged_at
                             ? new Date(selectedAlarm.acknowledged_at).toLocaleString("ko-KR")
-                            : "미확인"}
+                            : t("unacknowledged")}
                         </span>
                       </div>
                     </div>
@@ -744,7 +751,7 @@ export default function AlarmsPage() {
                       {!selectedAlarm.acknowledged_at && (
                         <Button size="sm" onClick={() => setAckTarget(selectedAlarm)}>
                           <Check className="h-4 w-4 mr-1" />
-                          확인 처리
+                          {t("ackProcess")}
                         </Button>
                       )}
                       <Button
@@ -753,11 +760,11 @@ export default function AlarmsPage() {
                         onClick={() => setSuppressTarget(selectedAlarm)}
                       >
                         <BellOff className="h-4 w-4 mr-1" />
-                        억제
+                        {t("suppress")}
                       </Button>
                       <Link href={`/monitoring/${encodeURIComponent(selectedAlarm.equipment_id)}`}>
                         <Button variant="outline" size="sm">
-                          장비 상세 보기
+                          {tc("details")}
                         </Button>
                       </Link>
                     </div>
@@ -768,8 +775,7 @@ export default function AlarmsPage() {
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
                     <p className="text-xs text-gray-400">
-                      총 {historyTotal}건 중 {page * pageSize + 1}~
-                      {Math.min((page + 1) * pageSize, historyTotal)}
+                      {tc("totalOf", { total: historyTotal, start: page * pageSize + 1, end: Math.min((page + 1) * pageSize, historyTotal) })}
                     </p>
                     <div className="flex items-center gap-2">
                       <Button
@@ -781,7 +787,7 @@ export default function AlarmsPage() {
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
                       <span className="text-sm text-gray-600">
-                        {page + 1} / {totalPages}
+                        {tc("pageOf", { page: page + 1, totalPages })}
                       </span>
                       <Button
                         variant="outline"
@@ -798,7 +804,7 @@ export default function AlarmsPage() {
             ) : (
               <div className="text-center py-12 text-gray-400 text-sm">
                 <Bell className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                <p>알람 이력이 없습니다</p>
+                <p>{t("noAlarmHistory")}</p>
               </div>
             )}
           </CardContent>

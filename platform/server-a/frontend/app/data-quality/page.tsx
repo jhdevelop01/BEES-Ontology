@@ -26,11 +26,15 @@ import {
   ArrowUpDown,
   Info,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type SortField = "point_id" | "last_value" | "last_time";
 type SortDir = "asc" | "desc";
 
 export default function DataQualityPage() {
+  const t = useTranslations("dataQuality");
+  const tc = useTranslations("common");
+
   const [health, setHealth] = useState<HistorianHealth | null>(null);
   const [workerStats, setWorkerStats] = useState<MQTTWorkerStats | null>(null);
   const [points, setPoints] = useState<PointSummaryItem[]>([]);
@@ -124,7 +128,7 @@ export default function DataQualityPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="데이터 품질" description="센서 데이터 품질 현황 및 검증 통계" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-6">
         {/* ── 상단 요약 카드 ── */}
@@ -138,7 +142,7 @@ export default function DataQualityPage() {
                   {points.length}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">총 포인트</p>
+              <p className="text-xs text-gray-500 mt-1">{t("totalPoints")}</p>
             </CardContent>
           </Card>
 
@@ -152,7 +156,7 @@ export default function DataQualityPage() {
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                정상 ({qualityStats.goodPct}%)
+                {t("goodPct", { pct: qualityStats.goodPct })}
               </p>
             </CardContent>
           </Card>
@@ -166,7 +170,7 @@ export default function DataQualityPage() {
                   {qualityStats.uncertain.toLocaleString()}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">불확실</p>
+              <p className="text-xs text-gray-500 mt-1">{t("uncertain")}</p>
             </CardContent>
           </Card>
 
@@ -179,7 +183,7 @@ export default function DataQualityPage() {
                   {qualityStats.bad.toLocaleString()}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">불량</p>
+              <p className="text-xs text-gray-500 mt-1">{t("bad")}</p>
             </CardContent>
           </Card>
         </div>
@@ -191,14 +195,14 @@ export default function DataQualityPage() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Database className="h-4 w-4 text-gray-500" />
-                Data Historian 상태
+                {t("historianStatus")}
               </CardTitle>
             </CardHeader>
             <CardContent>
               {health ? (
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-500">서비스:</span>
+                    <span className="text-gray-500">{t("service")}</span>
                     <span className="ml-2">
                       <Badge
                         variant={health.status === "ok" ? "success" : "warning"}
@@ -244,15 +248,14 @@ export default function DataQualityPage() {
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-gray-500">가동 시간:</span>
+                    <span className="text-gray-500">{t("uptime")}</span>
                     <span className="ml-2 font-mono text-xs">
-                      {Math.floor(health.uptime_seconds / 3600)}시간{" "}
-                      {Math.floor((health.uptime_seconds % 3600) / 60)}분
+                      {t("uptimeFormat", { hours: Math.floor(health.uptime_seconds / 3600), minutes: Math.floor((health.uptime_seconds % 3600) / 60) })}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">연결 확인 중...</p>
+                <p className="text-sm text-gray-400">{t("connectionCheck")}</p>
               )}
             </CardContent>
           </Card>
@@ -263,7 +266,7 @@ export default function DataQualityPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <ShieldCheck className="h-4 w-4 text-green-500" />
-                  품질 검사 통계
+                  {t("qualityStats")}
                 </CardTitle>
                 <Button
                   variant="outline"
@@ -281,25 +284,25 @@ export default function DataQualityPage() {
               {workerStats ? (
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-500">수신 메시지:</span>
+                    <span className="text-gray-500">{t("messagesReceived")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.messages_received.toLocaleString()}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">저장 포인트:</span>
+                    <span className="text-gray-500">{t("pointsWritten")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.points_written.toLocaleString()}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">저장 알람:</span>
+                    <span className="text-gray-500">{t("alarmsSaved")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.alarms_saved.toLocaleString()}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">오류:</span>
+                    <span className="text-gray-500">{t("errors")}</span>
                     <span className="ml-2 font-mono">
                       <Badge
                         variant={workerStats.errors > 0 ? "danger" : "success"}
@@ -309,7 +312,7 @@ export default function DataQualityPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">버퍼:</span>
+                    <span className="text-gray-500">{t("buffer")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.buffer_size}
                     </span>
@@ -322,13 +325,13 @@ export default function DataQualityPage() {
                           workerStats.mqtt_connected ? "success" : "danger"
                         }
                       >
-                        {workerStats.mqtt_connected ? "연결" : "끊김"}
+                        {workerStats.mqtt_connected ? t("mqttConnected") : t("mqttDisconnected")}
                       </Badge>
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">통계를 불러올 수 없습니다</p>
+                <p className="text-sm text-gray-400">{t("noStats")}</p>
               )}
             </CardContent>
           </Card>
@@ -340,13 +343,13 @@ export default function DataQualityPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Activity className="h-4 w-4" />
-                포인트 현황 ({filteredPoints.length})
+                {t("pointStatus", { count: filteredPoints.length })}
               </CardTitle>
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="포인트 ID 검색..."
+                  placeholder={t("pointIdSearch")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -368,24 +371,24 @@ export default function DataQualityPage() {
                         className="text-left py-2 px-3 text-gray-500 font-medium cursor-pointer hover:text-gray-700"
                         onClick={() => handleSort("point_id")}
                       >
-                        포인트 ID
+                        {t("thPointId")}
                         <SortIcon field="point_id" />
                       </th>
                       <th
                         className="text-right py-2 px-3 text-gray-500 font-medium cursor-pointer hover:text-gray-700"
                         onClick={() => handleSort("last_value")}
                       >
-                        최신값
+                        {t("thLatestValue")}
                         <SortIcon field="last_value" />
                       </th>
                       <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                        단위
+                        {t("thUnit")}
                       </th>
                       <th
                         className="text-left py-2 px-3 text-gray-500 font-medium cursor-pointer hover:text-gray-700"
                         onClick={() => handleSort("last_time")}
                       >
-                        마지막 수신
+                        {t("thLastReceived")}
                         <SortIcon field="last_time" />
                       </th>
                     </tr>
@@ -426,8 +429,8 @@ export default function DataQualityPage() {
             ) : (
               <div className="text-center py-12 text-gray-400 text-sm">
                 <Info className="h-8 w-8 mx-auto mb-3 opacity-30" />
-                <p>포인트 데이터가 없습니다</p>
-                <p className="text-xs mt-1">Server D 연결 및 시뮬레이션 상태를 확인하세요</p>
+                <p>{t("noPointData")}</p>
+                <p className="text-xs mt-1">{t("checkServerD")}</p>
               </div>
             )}
           </CardContent>

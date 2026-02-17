@@ -43,22 +43,26 @@ import {
   Gauge,
   Clock,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 const PIE_COLORS = ["#3b82f6", "#ef4444", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#06b6d4"];
 const BAR_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"];
 
 const PROFILE_PERIODS = [
-  { label: "24시간", value: "24h" },
-  { label: "7일", value: "7d" },
-  { label: "30일", value: "30d" },
+  { labelKey: "period24h", value: "24h" },
+  { labelKey: "period7d", value: "7d" },
+  { labelKey: "period30d", value: "30d" },
 ] as const;
 
 const COMPARISON_PERIODS = [
-  { label: "주간", value: "week" },
-  { label: "월간", value: "month" },
+  { labelKey: "periodWeek", value: "week" },
+  { labelKey: "periodMonth", value: "month" },
 ] as const;
 
 export default function EnergyPage() {
+  const t = useTranslations("energy");
+  const tc = useTranslations("common");
+
   const [realtime, setRealtime] = useState<EnergyRealtime | null>(null);
   const [profile, setProfile] = useState<EnergyProfileData | null>(null);
   const [breakdown, setBreakdown] = useState<EnergyBreakdown | null>(null);
@@ -148,7 +152,7 @@ export default function EnergyPage() {
   const pieData = useMemo(() => {
     if (!breakdown?.by_system) return [];
     return breakdown.by_system.map((s) => ({
-      name: s.system || "기타",
+      name: s.system || t("other"),
       value: s.kw,
     }));
   }, [breakdown]);
@@ -157,7 +161,7 @@ export default function EnergyPage() {
   const floorData = useMemo(() => {
     if (!breakdown?.by_floor) return [];
     return breakdown.by_floor.map((f) => ({
-      name: f.floor || "기타",
+      name: f.floor || t("other"),
       kw: f.kw,
     }));
   }, [breakdown]);
@@ -173,7 +177,7 @@ export default function EnergyPage() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header title="에너지 분석" description="로딩 중..." />
+        <Header title={t("title")} description={t("loadingDesc")} />
         <div className="flex items-center justify-center h-96">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
         </div>
@@ -183,7 +187,7 @@ export default function EnergyPage() {
 
   return (
     <div className="min-h-screen">
-      <Header title="에너지 분석" description="GEC B동 에너지 소비 현황 및 분석" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-6">
         {/* 상단 KPI 카드 - 3열 */}
@@ -193,9 +197,9 @@ export default function EnergyPage() {
             <CardContent className="pt-5 pb-4 px-5">
               <div className="flex items-center justify-between mb-2">
                 <Zap className="h-5 w-5 text-yellow-500" />
-                <Badge variant="success">실시간</Badge>
+                <Badge variant="success">{t("realtime")}</Badge>
               </div>
-              <p className="text-xs text-gray-500">현재 총 전력</p>
+              <p className="text-xs text-gray-500">{t("currentTotalPower")}</p>
               <p className="text-3xl font-bold mt-1">
                 {realtime?.total_kw?.toFixed(1) ?? "--"}
                 <span className="text-sm font-normal text-gray-400 ml-1">kW</span>
@@ -218,7 +222,7 @@ export default function EnergyPage() {
             <CardContent className="pt-5 pb-4 px-5">
               <div className="flex items-center justify-between mb-2">
                 <PieChartIcon className="h-5 w-5 text-blue-500" />
-                <span className="text-xs text-gray-400">시스템별 비율</span>
+                <span className="text-xs text-gray-400">{t("systemRatio")}</span>
               </div>
               {pieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={160}>
@@ -249,7 +253,7 @@ export default function EnergyPage() {
                 </ResponsiveContainer>
               ) : (
                 <div className="flex items-center justify-center h-[160px] text-gray-400 text-sm">
-                  데이터 없음
+                  {tc("noData")}
                 </div>
               )}
               {pieData.length > 0 && (
@@ -273,9 +277,9 @@ export default function EnergyPage() {
             <CardContent className="pt-5 pb-4 px-5">
               <div className="flex items-center justify-between mb-2">
                 <Gauge className="h-5 w-5 text-green-500" />
-                <span className="text-xs text-gray-400">에너지 사용 강도</span>
+                <span className="text-xs text-gray-400">{t("energyIntensity")}</span>
               </div>
-              <p className="text-xs text-gray-500">EUI (kWh/m²/yr)</p>
+              <p className="text-xs text-gray-500">{t("euiLabel")}</p>
               <p className="text-3xl font-bold mt-1">
                 {eui?.eui?.toFixed(1) ?? "--"}
               </p>
@@ -292,21 +296,21 @@ export default function EnergyPage() {
                   <div className="flex items-center justify-between text-[10px] mt-1">
                     <span className="text-gray-400">0</span>
                     <span className="text-gray-400">
-                      기준: {eui.benchmark} kWh/m²/yr
+                      {t("benchmark", { value: eui.benchmark })}
                     </span>
                   </div>
                   <div className="mt-2 flex items-center gap-2">
                     <Badge variant={eui.eui <= eui.benchmark ? "success" : "danger"}>
-                      {eui.rating || (eui.eui <= eui.benchmark ? "양호" : "초과")}
+                      {eui.rating || (eui.eui <= eui.benchmark ? t("ratingGood") : t("ratingExceed"))}
                     </Badge>
                     <span className="text-xs text-gray-500">
-                      연면적: {eui.area_m2?.toLocaleString() ?? "-"} m²
+                      {t("floorArea", { area: eui.area_m2?.toLocaleString() ?? "-" })}
                     </span>
                   </div>
                 </>
               )}
               {!eui && (
-                <div className="mt-4 text-sm text-gray-400">EUI 데이터 없음</div>
+                <div className="mt-4 text-sm text-gray-400">{t("noEUIData")}</div>
               )}
             </CardContent>
           </Card>
@@ -318,7 +322,7 @@ export default function EnergyPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <Activity className="h-4 w-4" />
-                에너지 프로파일
+                {t("energyProfile")}
               </CardTitle>
               <div className="flex gap-1">
                 {PROFILE_PERIODS.map((p) => (
@@ -330,7 +334,7 @@ export default function EnergyPage() {
                     className="text-xs h-7 px-2"
                   >
                     <Clock className="h-3 w-3 mr-1" />
-                    {p.label}
+                    {t(p.labelKey)}
                   </Button>
                 ))}
               </div>
@@ -360,7 +364,7 @@ export default function EnergyPage() {
                       borderRadius: "8px",
                       fontSize: "12px",
                     }}
-                    formatter={(value: number) => [`${value.toFixed(1)} kW`, "총 전력"]}
+                    formatter={(value: number) => [`${value.toFixed(1)} kW`, t("power")]}
                   />
                   <Line
                     type="monotone"
@@ -377,7 +381,7 @@ export default function EnergyPage() {
               <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
                 <div className="text-center">
                   <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  <p>프로파일 데이터 없음</p>
+                  <p>{t("noProfileData")}</p>
                 </div>
               </div>
             )}
@@ -391,7 +395,7 @@ export default function EnergyPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
-                층별 전력 소비
+                {t("floorPower")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -417,7 +421,7 @@ export default function EnergyPage() {
                         borderRadius: "8px",
                         fontSize: "12px",
                       }}
-                      formatter={(value: number) => [`${value.toFixed(1)} kW`, "전력"]}
+                      formatter={(value: number) => [`${value.toFixed(1)} kW`, t("power")]}
                     />
                     <Bar dataKey="kw" fill="#3b82f6" radius={[0, 4, 4, 0]} />
                   </BarChart>
@@ -426,7 +430,7 @@ export default function EnergyPage() {
                 <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
                   <div className="text-center">
                     <BarChart3 className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                    <p>층별 데이터 없음</p>
+                    <p>{t("noFloorData")}</p>
                   </div>
                 </div>
               )}
@@ -439,7 +443,7 @@ export default function EnergyPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  기간 비교
+                  {t("periodComparison")}
                 </CardTitle>
                 <div className="flex gap-1">
                   {COMPARISON_PERIODS.map((p) => (
@@ -450,7 +454,7 @@ export default function EnergyPage() {
                       onClick={() => setComparisonPeriod(p.value)}
                       className="text-xs h-7 px-2"
                     >
-                      {p.label}
+                      {t(p.labelKey)}
                     </Button>
                   ))}
                 </div>
@@ -475,7 +479,7 @@ export default function EnergyPage() {
                       {comparison.change_pct}%
                     </div>
                     <p className="text-sm text-gray-500 mt-2">
-                      {comparisonPeriod === "week" ? "전주 대비" : "전월 대비"}
+                      {comparisonPeriod === "week" ? t("vsLastWeek") : t("vsLastMonth")}
                     </p>
                   </div>
 
@@ -484,7 +488,7 @@ export default function EnergyPage() {
                     <div>
                       <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-gray-500">
-                          {comparisonPeriod === "week" ? "이번 주" : "이번 달"}
+                          {comparisonPeriod === "week" ? t("thisWeek") : t("thisMonth")}
                         </span>
                         <span className="font-semibold">{comparison.current.total_kwh.toFixed(1)} kWh</span>
                       </div>
@@ -507,7 +511,7 @@ export default function EnergyPage() {
                     <div>
                       <div className="flex items-center justify-between text-sm mb-1">
                         <span className="text-gray-500">
-                          {comparisonPeriod === "week" ? "지난 주" : "지난 달"}
+                          {comparisonPeriod === "week" ? t("lastWeek") : t("lastMonth")}
                         </span>
                         <span className="font-semibold">{comparison.previous.total_kwh.toFixed(1)} kWh</span>
                       </div>
@@ -533,8 +537,8 @@ export default function EnergyPage() {
                   <div className="text-center">
                     <Badge variant={comparison.change_pct <= 0 ? "success" : "danger"}>
                       {comparison.change_pct <= 0
-                        ? `${Math.abs(comparison.current.total_kwh - comparison.previous.total_kwh).toFixed(1)} kWh 절감`
-                        : `${Math.abs(comparison.current.total_kwh - comparison.previous.total_kwh).toFixed(1)} kWh 초과`}
+                        ? t("saved", { amount: Math.abs(comparison.current.total_kwh - comparison.previous.total_kwh).toFixed(1) })
+                        : t("exceeded", { amount: Math.abs(comparison.current.total_kwh - comparison.previous.total_kwh).toFixed(1) })}
                     </Badge>
                   </div>
                 </div>
@@ -542,7 +546,7 @@ export default function EnergyPage() {
                 <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
                   <div className="text-center">
                     <TrendingUp className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                    <p>비교 데이터 없음</p>
+                    <p>{t("noComparisonData")}</p>
                   </div>
                 </div>
               )}

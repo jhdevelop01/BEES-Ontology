@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -32,30 +33,32 @@ import { getCurrentUser, isLoggedIn, logout } from "@/lib/api";
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const navItems: NavItem[] = [
-  { href: "/", label: "대시보드", icon: LayoutDashboard },
-  { href: "/monitoring", label: "모니터링", icon: Monitor },
-  { href: "/control", label: "제어", icon: Settings2 },
-  { href: "/ontology", label: "온톨로지", icon: Share2 },
-  { href: "/topology", label: "토폴로지", icon: Network },
-  { href: "/history", label: "시계열 이력", icon: Clock },
-  { href: "/chat", label: "AI 채팅", icon: MessageCircle },
-  { href: "/alarms", label: "알람 관리", icon: Bell },
-  { href: "/scenarios", label: "시나리오", icon: Play },
-  { href: "/data-quality", label: "데이터 품질", icon: ShieldCheck },
-  { href: "/energy", label: "에너지 분석", icon: Zap },
-  { href: "/maintenance", label: "유지보수", icon: Wrench },
-  { href: "/reports", label: "보고서", icon: FileText },
-  { href: "/settings", label: "설정", icon: Settings },
+  { href: "/", labelKey: "dashboard", icon: LayoutDashboard },
+  { href: "/monitoring", labelKey: "monitoring", icon: Monitor },
+  { href: "/control", labelKey: "control", icon: Settings2 },
+  { href: "/ontology", labelKey: "ontology", icon: Share2 },
+  { href: "/topology", labelKey: "topology", icon: Network },
+  { href: "/history", labelKey: "history", icon: Clock },
+  { href: "/chat", labelKey: "chat", icon: MessageCircle },
+  { href: "/alarms", labelKey: "alarms", icon: Bell },
+  { href: "/scenarios", labelKey: "scenarios", icon: Play },
+  { href: "/data-quality", labelKey: "dataQuality", icon: ShieldCheck },
+  { href: "/energy", labelKey: "energy", icon: Zap },
+  { href: "/maintenance", labelKey: "maintenance", icon: Wrench },
+  { href: "/reports", labelKey: "reports", icon: FileText },
+  { href: "/settings", labelKey: "settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const t = useTranslations("nav");
+  const tc = useTranslations("common");
 
   // 경로 변경 시 모바일 메뉴 닫기
   useEffect(() => {
@@ -77,7 +80,7 @@ export function Sidebar() {
       <button
         className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-white border border-gray-200 shadow-sm lg:hidden"
         onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label="메뉴 토글"
+        aria-label={t("menuToggle")}
       >
         {mobileOpen ? (
           <X className="h-5 w-5 text-gray-700" />
@@ -110,8 +113,8 @@ export function Sidebar() {
         <div className="flex h-16 items-center border-b border-gray-200 px-4 lg:px-6">
           <Building2 className="h-6 w-6 text-blue-600 flex-shrink-0" />
           <div className={cn("ml-3", "md:hidden lg:block", mobileOpen && "!block")}>
-            <h1 className="text-base font-bold text-gray-900">BEES</h1>
-            <p className="text-[10px] text-gray-500">GEC B동 디지털 트윈</p>
+            <h1 className="text-base font-bold text-gray-900">{t("siteTitle")}</h1>
+            <p className="text-[10px] text-gray-500">{t("siteSubtitle")}</p>
           </div>
         </div>
 
@@ -122,6 +125,7 @@ export function Sidebar() {
               item.href === "/"
                 ? pathname === "/"
                 : pathname.startsWith(item.href);
+            const label = t(item.labelKey);
 
             return (
               <Link
@@ -139,7 +143,7 @@ export function Sidebar() {
                     ? "bg-blue-50 text-blue-700"
                     : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                 )}
-                title={item.label}
+                title={label}
               >
                 <item.icon
                   className={cn(
@@ -151,7 +155,7 @@ export function Sidebar() {
                   "md:hidden lg:inline",
                   mobileOpen && "!inline"
                 )}>
-                  {item.label}
+                  {label}
                 </span>
               </Link>
             );
@@ -173,7 +177,7 @@ export function Sidebar() {
                   "md:hidden lg:inline",
                   mobileOpen && "!inline"
                 )}>
-                  {getCurrentUser()?.name || "사용자"}
+                  {getCurrentUser()?.name || tc("user")}
                 </span>
               </div>
               {/* 로그아웃 */}
@@ -185,11 +189,11 @@ export function Sidebar() {
                   "lg:justify-start lg:px-3 lg:py-2 lg:gap-3",
                   mobileOpen ? "justify-start px-3 py-2 gap-3" : "justify-center px-2 py-2"
                 )}
-                title="로그아웃"
+                title={t("logout")}
               >
                 <LogOut className="h-4 w-4 text-gray-400 flex-shrink-0" />
                 <span className={cn("md:hidden lg:inline", mobileOpen && "!inline")}>
-                  로그아웃
+                  {t("logout")}
                 </span>
               </button>
             </>
@@ -202,11 +206,11 @@ export function Sidebar() {
                 "lg:justify-start lg:px-3 lg:py-2 lg:gap-3",
                 mobileOpen ? "justify-start px-3 py-2 gap-3" : "justify-center px-2 py-2"
               )}
-              title="로그인"
+              title={t("login")}
             >
               <LogIn className="h-4 w-4 flex-shrink-0" />
               <span className={cn("md:hidden lg:inline", mobileOpen && "!inline")}>
-                로그인
+                {t("login")}
               </span>
             </Link>
           )}

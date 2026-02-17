@@ -18,6 +18,7 @@ import {
   type UserAccessLogItem,
 } from "@/lib/api";
 import { Users, Plus, Loader2, X, Shield, ChevronDown, ChevronUp } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ── 상수 ── */
 
@@ -28,16 +29,18 @@ const ROLE_BADGE: Record<string, "danger" | "default" | "warning" | "secondary">
   viewer: "secondary",
 };
 
-const ROLE_LABEL: Record<string, string> = {
-  admin: "관리자",
-  manager: "매니저",
-  operator: "운영자",
-  viewer: "뷰어",
+const ROLE_LABEL_KEY: Record<string, string> = {
+  admin: "roleAdmin",
+  manager: "roleManager",
+  operator: "roleOperator",
+  viewer: "roleViewer",
 };
 
 /* ── 메인 페이지 ── */
 
 export default function UserManagementPage() {
+  const t = useTranslations("users");
+  const tc = useTranslations("common");
   const router = useRouter();
   const { addToast } = useToast();
 
@@ -99,16 +102,16 @@ export default function UserManagementPage() {
 
   // 사용자 비활성화
   const handleDelete = async (user: UserInfo) => {
-    if (!confirm(`${user.name}(${user.email})을 비활성화하시겠습니까?`)) return;
+    if (!confirm(t("deleteConfirm"))) return;
 
     try {
       await deleteUser(user.id);
-      addToast({ title: "사용자 비활성화 완료", variant: "success" });
+      addToast({ title: t("deleteSuccess"), variant: "success" });
       fetchUsers();
     } catch (err) {
       addToast({
-        title: "비활성화 실패",
-        description: err instanceof Error ? err.message : "오류 발생",
+        title: t("deleteFailed"),
+        description: err instanceof Error ? err.message : tc("error"),
         variant: "error",
       });
     }
@@ -117,25 +120,25 @@ export default function UserManagementPage() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
-        관리자 권한이 필요합니다.
+        {t("description")}
       </div>
     );
   }
 
   return (
     <div className="min-h-screen">
-      <Header title="사용자 관리" description="사용자 계정 관리 (관리자 전용)" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-6">
         {/* 상단 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-red-500" />
-            <span className="text-sm text-gray-500">관리자 전용 페이지</span>
+            <span className="text-sm text-gray-500">{t("description")}</span>
           </div>
           <Button size="sm" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-1" />
-            사용자 추가
+            {t("addUser")}
           </Button>
         </div>
 
@@ -144,31 +147,31 @@ export default function UserManagementPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Users className="h-4 w-4" />
-              사용자 목록 ({users.length}명)
+              {t("title")} ({users.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                로딩 중...
+                {tc("loading")}
               </div>
             ) : users.length === 0 ? (
               <div className="text-center py-12 text-gray-400 text-sm">
                 <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p>등록된 사용자가 없습니다.</p>
+                <p>{tc("noData")}</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">이름</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">이메일</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">역할</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">상태</th>
-                      <th className="text-right py-2 px-3 text-gray-500 font-medium">마지막 로그인</th>
-                      <th className="text-right py-2 px-3 text-gray-500 font-medium">액션</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thName")}</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thEmail")}</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thRole")}</th>
+                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{tc("status")}</th>
+                      <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thCreated")}</th>
+                      <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thActions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -179,12 +182,12 @@ export default function UserManagementPage() {
                           <td className="py-2 px-3 text-xs text-gray-500">{user.email}</td>
                           <td className="py-2 px-3">
                             <Badge variant={ROLE_BADGE[user.role] || "secondary"}>
-                              {ROLE_LABEL[user.role] || user.role}
+                              {t(ROLE_LABEL_KEY[user.role] || user.role)}
                             </Badge>
                           </td>
                           <td className="py-2 px-3">
                             <Badge variant={user.is_active ? "success" : "secondary"}>
-                              {user.is_active ? "활성" : "비활성"}
+                              {user.is_active ? tc("on") : tc("off")}
                             </Badge>
                           </td>
                           <td className="py-2 px-3 text-right text-xs text-gray-400">
@@ -210,7 +213,7 @@ export default function UserManagementPage() {
                                 variant="outline"
                                 onClick={() => setEditingUser(user)}
                               >
-                                수정
+                                {t("edit")}
                               </Button>
                               {user.is_active && user.id !== currentUser?.id && (
                                 <Button
@@ -218,7 +221,7 @@ export default function UserManagementPage() {
                                   variant="destructive"
                                   onClick={() => handleDelete(user)}
                                 >
-                                  비활성화
+                                  {tc("delete")}
                                 </Button>
                               )}
                             </div>
@@ -231,16 +234,16 @@ export default function UserManagementPage() {
                               {logLoading ? (
                                 <div className="flex items-center text-gray-400 text-xs">
                                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                                  로딩 중...
+                                  {tc("loading")}
                                 </div>
                               ) : accessLogs.length === 0 ? (
-                                <p className="text-xs text-gray-400">접근 로그 없음</p>
+                                <p className="text-xs text-gray-400">{t("accessLog")}</p>
                               ) : (
                                 <table className="w-full text-xs">
                                   <thead>
                                     <tr className="border-b border-gray-200">
-                                      <th className="text-left py-1 px-2 text-gray-400">시각</th>
-                                      <th className="text-left py-1 px-2 text-gray-400">액션</th>
+                                      <th className="text-left py-1 px-2 text-gray-400">{tc("time")}</th>
+                                      <th className="text-left py-1 px-2 text-gray-400">{t("thActions")}</th>
                                       <th className="text-left py-1 px-2 text-gray-400">IP</th>
                                     </tr>
                                   </thead>
@@ -277,7 +280,7 @@ export default function UserManagementPage() {
           onCreated={() => {
             setShowCreateModal(false);
             fetchUsers();
-            addToast({ title: "사용자 생성 완료", variant: "success" });
+            addToast({ title: t("createSuccess"), variant: "success" });
           }}
         />
       )}
@@ -290,7 +293,7 @@ export default function UserManagementPage() {
           onUpdated={() => {
             setEditingUser(null);
             fetchUsers();
-            addToast({ title: "사용자 수정 완료", variant: "success" });
+            addToast({ title: t("updateSuccess"), variant: "success" });
           }}
         />
       )}
@@ -307,6 +310,8 @@ function CreateUserModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = useTranslations("users");
+  const tc = useTranslations("common");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -330,7 +335,7 @@ function CreateUserModal({
       });
       onCreated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "생성 실패");
+      setError(err instanceof Error ? err.message : t("createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -343,7 +348,7 @@ function CreateUserModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">사용자 추가</h3>
+          <h3 className="text-lg font-semibold">{t("createUser")}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
@@ -351,7 +356,7 @@ function CreateUserModal({
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이름 *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userName")} *</label>
             <input
               type="text"
               value={name}
@@ -361,7 +366,7 @@ function CreateUserModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이메일 *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userEmail")} *</label>
             <input
               type="email"
               value={email}
@@ -371,7 +376,7 @@ function CreateUserModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호 * (6자 이상)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userPassword")} *</label>
             <input
               type="password"
               value={password}
@@ -383,25 +388,25 @@ function CreateUserModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">역할</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">{t("userRole")}</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="viewer">뷰어</option>
-                <option value="operator">운영자</option>
-                <option value="manager">매니저</option>
-                <option value="admin">관리자</option>
+                <option value="viewer">{t("roleViewer")}</option>
+                <option value="operator">{t("roleOperator")}</option>
+                <option value="manager">{t("roleManager")}</option>
+                <option value="admin">{t("roleAdmin")}</option>
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">부서</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="선택"
+                placeholder=""
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -412,10 +417,10 @@ function CreateUserModal({
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={onClose}>취소</Button>
+            <Button type="button" variant="outline" size="sm" onClick={onClose}>{tc("cancel")}</Button>
             <Button type="submit" size="sm" disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Plus className="h-4 w-4 mr-1" />}
-              추가
+              {t("addUser")}
             </Button>
           </div>
         </form>
@@ -435,6 +440,8 @@ function EditUserModal({
   onClose: () => void;
   onUpdated: () => void;
 }) {
+  const t = useTranslations("users");
+  const tc = useTranslations("common");
   const [role, setRole] = useState(user.role);
   const [isActive, setIsActive] = useState(user.is_active);
   const [name, setName] = useState(user.name);
@@ -453,7 +460,7 @@ function EditUserModal({
       });
       onUpdated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "수정 실패");
+      setError(err instanceof Error ? err.message : t("updateFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -466,7 +473,7 @@ function EditUserModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold">사용자 수정</h3>
+          <h3 className="text-lg font-semibold">{t("editUser")}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
@@ -476,7 +483,7 @@ function EditUserModal({
           <div className="text-sm text-gray-500">{user.email}</div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">이름</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userName")}</label>
             <input
               type="text"
               value={name}
@@ -486,16 +493,16 @@ function EditUserModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">역할</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userRole")}</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="viewer">뷰어</option>
-              <option value="operator">운영자</option>
-              <option value="manager">매니저</option>
-              <option value="admin">관리자</option>
+              <option value="viewer">{t("roleViewer")}</option>
+              <option value="operator">{t("roleOperator")}</option>
+              <option value="manager">{t("roleManager")}</option>
+              <option value="admin">{t("roleAdmin")}</option>
             </select>
           </div>
 
@@ -507,7 +514,7 @@ function EditUserModal({
               onChange={(e) => setIsActive(e.target.checked)}
               className="rounded"
             />
-            <label htmlFor="active" className="text-sm text-gray-700">활성 상태</label>
+            <label htmlFor="active" className="text-sm text-gray-700">{tc("status")}</label>
           </div>
 
           {error && (
@@ -515,10 +522,10 @@ function EditUserModal({
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={onClose}>취소</Button>
+            <Button variant="outline" size="sm" onClick={onClose}>{tc("cancel")}</Button>
             <Button size="sm" onClick={handleSave} disabled={submitting}>
               {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              저장
+              {tc("save")}
             </Button>
           </div>
         </div>

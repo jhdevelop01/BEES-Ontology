@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,13 +41,13 @@ function getTypeIcon(type: string) {
 
 function getTypeLabel(type: string): string {
   const t = type.toLowerCase();
-  if (t.includes("building")) return "건물";
-  if (t.includes("floor") || t.includes("story")) return "층";
+  if (t.includes("building")) return "typeBuilding";
+  if (t.includes("floor") || t.includes("story")) return "typeFloor";
   if (t.includes("zone") || t.includes("room") || t.includes("space"))
-    return "존";
-  if (t.includes("system")) return "시스템";
-  if (t.includes("sensor")) return "센서";
-  return "장비";
+    return "typeZone";
+  if (t.includes("system")) return "typeSystem";
+  if (t.includes("sensor")) return "typeSensor";
+  return "typeEquipment";
 }
 
 /* ── 토폴로지 노드 ID → 모니터링 페이지용 ID 변환 ── */
@@ -171,6 +172,7 @@ interface EquipmentCardProps {
 }
 
 function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCardProps) {
+  const t = useTranslations("topology");
   const Icon = getTypeIcon(node.type);
   const [pulse, setPulse] = useState(false);
   const prevActiveRef = useRef(isActive);
@@ -206,7 +208,7 @@ function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCa
         <p className="text-sm font-medium text-gray-900 truncate">
           {node.name}
         </p>
-        <p className="text-xs text-gray-500 mt-0.5">{getTypeLabel(node.type)}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{t(getTypeLabel(node.type))}</p>
 
         {/* 실시간 센서 값 (최대 2개) */}
         {sensorValues && sensorValues.length > 0 && (
@@ -236,7 +238,7 @@ function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCa
           className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-500 hover:text-blue-700"
           onClick={(e) => e.stopPropagation()}
         >
-          상세 보기 →
+          {t("detailView")}
         </Link>
       </CardContent>
     </Card>
@@ -246,6 +248,8 @@ function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCa
 /* ── 메인 페이지 ── */
 
 export default function TopologyPage() {
+  const t = useTranslations("topology");
+  const tc = useTranslations("common");
   const { points, devices, connected } = useSSE();
   const [treeData, setTreeData] = useState<TopologyResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -285,7 +289,7 @@ export default function TopologyPage() {
           setExpandedIds(initialExpanded);
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "토폴로지 로딩 실패");
+        setError(err instanceof Error ? err.message : t("topologyError"));
       } finally {
         setLoading(false);
       }
@@ -393,8 +397,8 @@ export default function TopologyPage() {
   return (
     <div className="min-h-screen">
       <Header
-        title="토폴로지"
-        description="건물 계층 구조 및 장비 현황"
+        title={t("title")}
+        description={t("description")}
         connected={connected}
       />
 
@@ -402,9 +406,9 @@ export default function TopologyPage() {
         {/* 왼쪽: 트리뷰 */}
         <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-gray-200 bg-white flex-shrink-0 overflow-y-auto max-h-[40vh] md:max-h-none md:h-auto">
           <div className="p-4 border-b border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700">건물 구조</h3>
+            <h3 className="text-sm font-semibold text-gray-700">{t("buildingStructure")}</h3>
             <p className="text-xs text-gray-400 mt-0.5">
-              {treeData ? `${treeData.source}` : "로딩 중..."}
+              {treeData ? `${treeData.source}` : tc("loading")}
             </p>
           </div>
 
@@ -446,11 +450,10 @@ export default function TopologyPage() {
               <div className="text-center">
                 <Building2 className="h-12 w-12 text-gray-200 mx-auto mb-4" />
                 <p className="text-gray-400 text-sm">
-                  노드를 선택하세요
+                  {t("selectNode")}
                 </p>
                 <p className="text-gray-300 text-xs mt-1">
-                  왼쪽 트리에서 건물, 층, 존, 장비를 클릭하여 상세 정보를
-                  확인하세요
+                  {t("selectNodeHint")}
                 </p>
               </div>
             </div>
@@ -467,7 +470,7 @@ export default function TopologyPage() {
                   </h2>
                   <div className="flex items-center gap-2 mt-0.5">
                     <Badge variant="outline">
-                      {getTypeLabel(selectedNode.type)}
+                      {t(getTypeLabel(selectedNode.type))}
                     </Badge>
                     {selectedNode.labels?.map((l) => (
                       <Badge key={l} variant="secondary" className="text-[10px]">
@@ -485,7 +488,7 @@ export default function TopologyPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
-                  장비 상세 모니터링
+                  {t("equipmentDetail")}
                 </Link>
               )}
 
@@ -495,7 +498,7 @@ export default function TopologyPage() {
                   <CardHeader className="pb-3">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
-                      센서 현재값
+                      {t("sensorCurrent")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -549,7 +552,7 @@ export default function TopologyPage() {
                       if (matchedPoints.length === 0) {
                         return (
                           <p className="text-sm text-gray-400 py-4 text-center">
-                            실시간 데이터 없음
+                            {t("noRealtimeData")}
                           </p>
                         );
                       }
@@ -560,19 +563,19 @@ export default function TopologyPage() {
                             <thead>
                               <tr className="border-b border-gray-200">
                                 <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                                  센서
+                                  {t("thSensor")}
                                 </th>
                                 <th className="text-right py-2 px-3 text-gray-500 font-medium">
-                                  값
+                                  {t("thValue")}
                                 </th>
                                 <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                                  단위
+                                  {t("thUnit")}
                                 </th>
                                 <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                                  상태
+                                  {t("thStatus")}
                                 </th>
                                 <th className="text-right py-2 px-3 text-gray-500 font-medium">
-                                  시간
+                                  {t("thTime")}
                                 </th>
                               </tr>
                             </thead>
@@ -632,7 +635,7 @@ export default function TopologyPage() {
                     {/* 뷰 모드 토글 */}
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-semibold text-gray-700">
-                        하위 장비 ({getChildEquipment(selectedNode).length})
+                        {t("childEquipment", { count: getChildEquipment(selectedNode).length })}
                       </h3>
                       <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-0.5">
                         <Button
@@ -694,13 +697,13 @@ export default function TopologyPage() {
                               <thead>
                                 <tr className="border-b border-gray-200">
                                   <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
-                                    이름
+                                    {t("thName")}
                                   </th>
                                   <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
-                                    타입
+                                    {t("thType")}
                                   </th>
                                   <th className="text-center py-2.5 px-4 text-gray-500 font-medium">
-                                    상태
+                                    {t("thStatus")}
                                   </th>
                                 </tr>
                               </thead>
@@ -728,7 +731,7 @@ export default function TopologyPage() {
                                       </td>
                                       <td className="py-2.5 px-4">
                                         <Badge variant="outline">
-                                          {getTypeLabel(eq.type)}
+                                          {t(getTypeLabel(eq.type))}
                                         </Badge>
                                       </td>
                                       <td className="py-2.5 px-4 text-center">
@@ -748,7 +751,7 @@ export default function TopologyPage() {
                           </div>
                           {getChildEquipment(selectedNode).length === 0 && (
                             <div className="py-8 text-center text-sm text-gray-400">
-                              하위 장비가 없습니다
+                              {t("noChildEquipment")}
                             </div>
                           )}
                         </CardContent>
@@ -764,7 +767,7 @@ export default function TopologyPage() {
                   <div className="text-center py-12">
                     <MapPin className="h-8 w-8 text-gray-200 mx-auto mb-3" />
                     <p className="text-sm text-gray-400">
-                      하위 노드가 없습니다
+                      {t("noChildNodes")}
                     </p>
                   </div>
                 )}

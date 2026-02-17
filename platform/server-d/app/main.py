@@ -114,12 +114,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="BEES Server D — Data Historian",
     description=(
-        "삼성물산 GEC B동 디지털 트윈 데이터 수집 서버.\n"
-        "MQTT 센서 데이터를 InfluxDB에 저장하고, "
-        "시계열 조회/알람 이력/감사 로그 API를 제공한다."
+        "삼성물산 GEC B동 디지털 트윈 데이터 수집 서버. "
+        "MQTT 센서 데이터를 InfluxDB에 배치 저장하고, "
+        "시계열 조회, 데이터 품질 검증, 알람 이력, 감사 로그 API를 제공한다."
     ),
     version="1.0.0",
     lifespan=lifespan,
+    openapi_tags=[
+        {"name": "시계열", "description": "센서 시계열 데이터 조회/저장"},
+        {"name": "관리", "description": "알람 이력, 감사 로그, 데이터 품질"},
+        {"name": "헬스", "description": "헬스체크 및 서비스 상태"},
+        {"name": "내보내기", "description": "CSV/Excel 데이터 내보내기"},
+    ],
 )
 
 # ── CORS 미들웨어 ──

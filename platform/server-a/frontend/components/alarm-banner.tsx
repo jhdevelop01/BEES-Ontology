@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { X, AlertTriangle, AlertOctagon } from "lucide-react";
+import { X, AlertTriangle, AlertOctagon, Bell, BellOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSSE, type SSEAlarmEvent } from "@/lib/sse";
+import {
+  requestNotificationPermission,
+  showAlarmNotification,
+} from "@/lib/notifications";
 
 const MAX_VISIBLE = 5;
 const AUTO_DISMISS_MS = 30_000;
@@ -17,19 +21,41 @@ interface AlarmEntry {
 export function AlarmBanner() {
   const { alarms } = useSSE();
   const [entries, setEntries] = useState<AlarmEntry[]>([]);
+  const [notifEnabled, setNotifEnabled] = useState(false);
 
-  // 새 알람 수신 시 엔트리 추가
+  // 브라우저 알림 권한 상태 초기화
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setNotifEnabled(Notification.permission === "granted");
+    }
+  }, []);
+
+  const toggleNotifications = useCallback(async () => {
+    if (notifEnabled) {
+      setNotifEnabled(false);
+      return;
+    }
+    const granted = await requestNotificationPermission();
+    setNotifEnabled(granted);
+  }, [notifEnabled]);
+
+  // 새 알람 수신 시 엔트리 추가 + Push 알림
   useEffect(() => {
     if (alarms.length === 0) return;
     const latest = alarms[alarms.length - 1];
     const id = `${latest.ts}-${latest.equipment || ""}-${Math.random().toString(36).slice(2, 6)}`;
+
+    // 브라우저 Push 알림
+    if (notifEnabled) {
+      showAlarmNotification(latest);
+    }
 
     setEntries((prev) => {
       const next = [...prev, { id, alarm: latest, dismissed: false }];
       // 최대 개수 유지
       return next.slice(-MAX_VISIBLE * 2);
     });
-  }, [alarms.length]);
+  }, [alarms.length, notifEnabled]);
 
   // 자동 dismiss 타이머
   useEffect(() => {
@@ -60,6 +86,25 @@ export function AlarmBanner() {
   return (
     <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
       <div className="max-w-2xl mx-auto p-2 space-y-2">
+        {/* 알림 권한 토글 버튼 */}
+        <div className="flex justify-end pointer-events-auto">
+          <button
+            onClick={toggleNotifications}
+            className={cn(
+              "p-1.5 rounded-full shadow-md border text-xs flex items-center gap-1",
+              notifEnabled
+                ? "bg-blue-50 border-blue-200 text-blue-600"
+                : "bg-gray-50 border-gray-200 text-gray-500"
+            )}
+            title={notifEnabled ? "Push 알림 끄기" : "Push 알림 켜기"}
+          >
+            {notifEnabled ? (
+              <Bell className="h-3.5 w-3.5" />
+            ) : (
+              <BellOff className="h-3.5 w-3.5" />
+            )}
+          </button>
+        </div>
         {visible.map((entry) => {
           const isCritical = entry.alarm.severity === "critical";
           return (

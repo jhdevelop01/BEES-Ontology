@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import {
   LineChart,
   Line,
@@ -46,6 +47,7 @@ export function LiveChart({
   yMin,
   yMax,
 }: LiveChartProps) {
+  const tc = useTranslations("common");
   return (
     <div>
       {title && (
@@ -76,7 +78,7 @@ export function LiveChart({
             }}
             formatter={(value: number) => [
               `${value.toFixed(1)}${unit ? ` ${unit}` : ""}`,
-              "값",
+              tc("value"),
             ]}
           />
           <Line

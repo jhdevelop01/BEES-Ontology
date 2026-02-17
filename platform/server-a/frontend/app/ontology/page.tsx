@@ -23,6 +23,7 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ── 스타일 상수 ── */
 
@@ -55,17 +56,17 @@ const EDGE_STYLES: Record<string, { color: string; style: string }> = {
 };
 
 const TYPE_FILTERS = [
-  { label: "장비", value: "Equipment" },
-  { label: "센서", value: "Sensor" },
-  { label: "존", value: "Zone" },
-  { label: "시스템", value: "System" },
-  { label: "층", value: "Floor" },
+  { label: "typeEquipment", value: "Equipment" },
+  { label: "typeSensor", value: "Sensor" },
+  { label: "typeZone", value: "Zone" },
+  { label: "typeSystem", value: "System" },
+  { label: "typeFloor", value: "Floor" },
 ];
 
 const LAYOUTS = [
-  { label: "힘 기반", value: "cose-bilkent" },
-  { label: "계층형", value: "breadthfirst" },
-  { label: "원형", value: "circle" },
+  { label: "layoutForce", value: "cose-bilkent" },
+  { label: "layoutHierarchical", value: "breadthfirst" },
+  { label: "layoutCircular", value: "circle" },
 ];
 
 function resolveNodeType(labels: string[]): string {
@@ -83,6 +84,8 @@ function resolveNodeType(labels: string[]): string {
 }
 
 export default function OntologyPage() {
+  const t = useTranslations("ontology");
+
   /* ── 상태 ── */
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<unknown>(null);
@@ -120,13 +123,13 @@ export default function OntologyPage() {
         setGraphData(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "그래프 로딩 실패"
+          err instanceof Error ? err.message : t("graphError")
         );
       } finally {
         setLoading(false);
       }
     },
-    []
+    [t]
   );
 
   useEffect(() => {
@@ -572,7 +575,7 @@ export default function OntologyPage() {
   /* ── 렌더 ── */
   return (
     <div className="min-h-screen">
-      <Header title="온톨로지" description="Brick Schema 그래프 시각화" />
+      <Header title={t("title")} description={t("description")} />
 
       <div className="p-3 md:p-6 space-y-4">
         {/* 상단 컨트롤바 */}
@@ -582,7 +585,7 @@ export default function OntologyPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="노드 검색 (이름, URI...)"
+              placeholder={t("searchPlaceholder")}
               className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -633,7 +636,7 @@ export default function OntologyPage() {
               size="sm"
               onClick={() => setSelectedType(null)}
             >
-              전체
+              {t("typeAll")}
             </Button>
             {TYPE_FILTERS.map((f) => (
               <Button
@@ -644,7 +647,7 @@ export default function OntologyPage() {
                   setSelectedType(selectedType === f.value ? null : f.value)
                 }
               >
-                {f.label}
+                {t(f.label)}
               </Button>
             ))}
           </div>
@@ -658,23 +661,23 @@ export default function OntologyPage() {
                 size="sm"
                 onClick={() => setLayoutName(l.value)}
               >
-                {l.label}
+                {t(l.label)}
               </Button>
             ))}
           </div>
 
           {/* 줌 컨트롤 */}
           <div className="flex items-center gap-1 md:border-l md:border-gray-200 md:pl-3">
-            <Button variant="ghost" size="icon" onClick={zoomIn} title="확대">
+            <Button variant="ghost" size="icon" onClick={zoomIn} title={t("zoomIn")}>
               <ZoomIn className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={zoomOut} title="축소">
+            <Button variant="ghost" size="icon" onClick={zoomOut} title={t("zoomOut")}>
               <ZoomOut className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={fitGraph} title="화면 맞춤">
+            <Button variant="ghost" size="icon" onClick={fitGraph} title={t("fitScreen")}>
               <Maximize2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={reLayout} title="재배치">
+            <Button variant="ghost" size="icon" onClick={reLayout} title={t("reLayout")}>
               <RotateCcw className="h-4 w-4" />
             </Button>
           </div>
@@ -682,9 +685,9 @@ export default function OntologyPage() {
           {/* 통계 */}
           {graphData && (
             <div className="flex items-center gap-2 text-xs text-gray-500 border-l border-gray-200 pl-3">
-              <span>노드 {graphData.stats.node_count}</span>
+              <span>{t("nodeCount", { count: graphData.stats.node_count })}</span>
               <span className="text-gray-300">|</span>
-              <span>엣지 {graphData.stats.edge_count}</span>
+              <span>{t("edgeCount", { count: graphData.stats.edge_count })}</span>
             </div>
           )}
         </div>
@@ -698,7 +701,7 @@ export default function OntologyPage() {
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                   <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">그래프 로딩 중...</p>
+                    <p className="text-sm text-gray-500">{t("graphLoading")}</p>
                   </div>
                 </div>
               )}
@@ -711,7 +714,7 @@ export default function OntologyPage() {
                       size="sm"
                       onClick={() => loadGraph(selectedType || undefined)}
                     >
-                      재시도
+                      {t("retry")}
                     </Button>
                   </div>
                 </div>
@@ -722,14 +725,14 @@ export default function OntologyPage() {
               {expanding && (
                 <div className="absolute top-4 right-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-                  <span className="text-xs text-amber-700">이웃 노드 로딩 중...</span>
+                  <span className="text-xs text-amber-700">{t("neighborLoading")}</span>
                 </div>
               )}
 
               {/* 범례 — 모바일에서 숨김 */}
               <div className="hidden md:block absolute bottom-4 left-4 bg-white/95 border border-gray-200 rounded-lg p-3 shadow-sm">
                 <p className="text-xs font-semibold text-gray-600 mb-2">
-                  노드 타입
+                  {t("nodeType")}
                 </p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {Object.entries(NODE_COLORS).map(([type, color]) => (
@@ -743,7 +746,7 @@ export default function OntologyPage() {
                   ))}
                 </div>
                 <p className="text-xs font-semibold text-gray-600 mt-2 mb-1">
-                  관계
+                  {t("relationship")}
                 </p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                   {Object.entries(EDGE_STYLES).map(([rel, style]) => (
@@ -758,7 +761,7 @@ export default function OntologyPage() {
                 </div>
                 <div className="mt-2 pt-2 border-t border-gray-100">
                   <p className="text-[9px] text-gray-400">
-                    클릭: 연결 하이라이트 | 더블클릭: 이웃 확장
+                    {t("clickHint")}
                   </p>
                 </div>
               </div>
@@ -770,7 +773,7 @@ export default function OntologyPage() {
             <Card className="w-full md:w-80 flex-shrink-0 overflow-y-auto max-h-[50vh] md:max-h-none">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm">노드 상세</CardTitle>
+                  <CardTitle className="text-sm">{t("nodeDetail")}</CardTitle>
                   <button
                     className="text-gray-400 hover:text-gray-600"
                     onClick={() => setSelectedNode(null)}
@@ -820,7 +823,7 @@ export default function OntologyPage() {
                     {Object.keys(selectedNode.properties).length > 0 && (
                       <div>
                         <p className="text-xs font-semibold text-gray-600 mb-1">
-                          속성
+                          {t("properties")}
                         </p>
                         <div className="space-y-1">
                           {Object.entries(selectedNode.properties).map(
@@ -844,7 +847,7 @@ export default function OntologyPage() {
                     {selectedNode.connections.length > 0 && (
                       <div>
                         <p className="text-xs font-semibold text-gray-600 mb-1">
-                          연결 ({selectedNode.connections.length})
+                          {t("connections")} ({selectedNode.connections.length})
                         </p>
                         <div className="space-y-1.5 max-h-64 overflow-y-auto">
                           {selectedNode.connections.map((conn, i) => (

@@ -28,6 +28,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /**
  * 장비 상세 모니터링 페이지
@@ -88,6 +89,9 @@ export default function EquipmentDetailPage() {
   const params = useParams();
   const router = useRouter();
   const equipmentId = decodeURIComponent(params.equipmentId as string);
+  const t = useTranslations("monitoring");
+  const tc = useTranslations("common");
+  const tn = useTranslations("nav");
 
   const { points, pointHistory, devices, connected } = useSSE(60);
 
@@ -115,7 +119,7 @@ export default function EquipmentDetailPage() {
         }
       } catch (e: unknown) {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : "데이터 로딩 실패");
+          setError(e instanceof Error ? e.message : t("dataLoadFailed"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -208,7 +212,7 @@ export default function EquipmentDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen">
-        <Header title="장비 상세" description="로딩 중..." connected={connected} />
+        <Header title={t("equipmentDetailTitle")} description={t("loadingDesc")} connected={connected} />
         <div className="flex items-center justify-center h-96">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
         </div>
@@ -219,15 +223,15 @@ export default function EquipmentDetailPage() {
   if (error || !detail) {
     return (
       <div className="min-h-screen">
-        <Header title="장비 상세" description="오류 발생" connected={connected} />
+        <Header title={t("equipmentDetailTitle")} description={t("errorDesc")} connected={connected} />
         <div className="p-6 text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-lg font-medium text-red-600">{error || "장비를 찾을 수 없습니다"}</p>
+          <p className="text-lg font-medium text-red-600">{error || t("equipmentNotFound")}</p>
           <button
             onClick={() => router.push("/monitoring")}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
-            모니터링으로 돌아가기
+            {t("backToMonitoring")}
           </button>
         </div>
       </div>
@@ -237,7 +241,7 @@ export default function EquipmentDetailPage() {
   return (
     <div className="min-h-screen">
       <Header
-        title={`장비 상세 — ${detail.name}`}
+        title={`${t("equipmentDetailTitle")} — ${detail.name}`}
         description={detail.brick_class.join(", ")}
         connected={connected}
       />
@@ -250,13 +254,13 @@ export default function EquipmentDetailPage() {
             className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
           >
             <ArrowLeft className="h-4 w-4" />
-            모니터링
+            {tn("monitoring")}
           </button>
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold">{detail.name}</h2>
               <Badge variant={isActive ? "success" : "secondary"}>
-                {isActive ? "운전중" : isActive === false ? "정지" : "알 수 없음"}
+                {isActive ? t("running") : isActive === false ? t("stopped") : tc("unknown")}
               </Badge>
               {deviceState?.mode && (
                 <Badge variant="outline">{deviceState.mode}</Badge>
@@ -328,9 +332,9 @@ export default function EquipmentDetailPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
-              실시간 트렌드
+              {t("realtimeTrend")}
               <span className="text-xs text-gray-400 font-normal">
-                (SSE 5초 갱신, 최근 5분)
+                ({t("trendDesc")})
               </span>
             </CardTitle>
           </CardHeader>
@@ -345,7 +349,7 @@ export default function EquipmentDetailPage() {
               <div className="flex items-center justify-center h-[350px] text-gray-400">
                 <div className="text-center">
                   <Gauge className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">데이터 수신 대기 중...</p>
+                  <p className="text-sm">{t("waitingData")}</p>
                 </div>
               </div>
             )}
@@ -360,7 +364,7 @@ export default function EquipmentDetailPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" />
-                  성능 지표
+                  {t("performanceMetrics")}
                 </CardTitle>
                 <div className="flex gap-1">
                   {PERIOD_OPTIONS.map((p) => (
@@ -385,10 +389,10 @@ export default function EquipmentDetailPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">센서</th>
-                        <th className="text-right py-2 px-2 text-gray-500 font-medium text-xs">평균</th>
-                        <th className="text-right py-2 px-2 text-gray-500 font-medium text-xs">최소</th>
-                        <th className="text-right py-2 px-2 text-gray-500 font-medium text-xs">최대</th>
+                        <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">{t("thSensor")}</th>
+                        <th className="text-right py-2 px-2 text-gray-500 font-medium text-xs">{t("thAvg")}</th>
+                        <th className="text-right py-2 px-2 text-gray-500 font-medium text-xs">{t("thMin")}</th>
+                        <th className="text-right py-2 px-2 text-gray-500 font-medium text-xs">{t("thMax")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -413,12 +417,12 @@ export default function EquipmentDetailPage() {
                   {performance.uptime_pct !== null && (
                     <div className="mt-3 flex items-center gap-2 text-sm">
                       <Power className="h-4 w-4 text-green-600" />
-                      <span>가동률: <strong>{performance.uptime_pct}%</strong></span>
+                      <span>{t("uptimeRate")} <strong>{performance.uptime_pct}%</strong></span>
                     </div>
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-6">성능 데이터 없음</p>
+                <p className="text-sm text-gray-400 text-center py-6">{t("noPerformanceData")}</p>
               )}
             </CardContent>
           </Card>
@@ -428,9 +432,9 @@ export default function EquipmentDetailPage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2">
                 <Link2 className="h-4 w-4" />
-                연결 관계
+                {t("connectionRelations")}
                 <span className="text-xs text-gray-400 font-normal">
-                  ({detail.connections.length}개)
+                  ({t("connectionCount", { count: detail.connections.length })})
                 </span>
               </CardTitle>
             </CardHeader>
@@ -461,7 +465,7 @@ export default function EquipmentDetailPage() {
                     ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-6">연결 관계 없음</p>
+                <p className="text-sm text-gray-400 text-center py-6">{t("noConnections")}</p>
               )}
             </CardContent>
           </Card>
@@ -472,9 +476,9 @@ export default function EquipmentDetailPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <AlertTriangle className="h-4 w-4" />
-              알람 이력
+              {t("alarmHistory")}
               <span className="text-xs text-gray-400 font-normal">
-                (최근 30일, {alarms?.total || 0}건)
+                ({t("alarmHistoryDesc", { count: alarms?.total || 0 })})
               </span>
             </CardTitle>
           </CardHeader>
@@ -484,11 +488,11 @@ export default function EquipmentDetailPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">시각</th>
-                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">심각도</th>
-                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">유형</th>
-                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">메시지</th>
-                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">상태</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">{t("thTime")}</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">{t("thSeverity")}</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">{t("thType")}</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">{t("thMessage")}</th>
+                      <th className="text-left py-2 px-2 text-gray-500 font-medium text-xs">{t("thStatus")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -509,9 +513,9 @@ export default function EquipmentDetailPage() {
                         </td>
                         <td className="py-1.5 px-2">
                           {a.acknowledged_at ? (
-                            <Badge variant="success" className="text-[10px]">확인</Badge>
+                            <Badge variant="success" className="text-[10px]">{t("acked")}</Badge>
                           ) : (
-                            <Badge variant="warning" className="text-[10px]">미확인</Badge>
+                            <Badge variant="warning" className="text-[10px]">{t("unacked")}</Badge>
                           )}
                         </td>
                       </tr>
@@ -520,7 +524,7 @@ export default function EquipmentDetailPage() {
                 </table>
               </div>
             ) : (
-              <p className="text-sm text-gray-400 text-center py-6">알람 이력 없음</p>
+              <p className="text-sm text-gray-400 text-center py-6">{t("noAlarmHistory")}</p>
             )}
           </CardContent>
         </Card>

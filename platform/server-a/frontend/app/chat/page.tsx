@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,12 +29,7 @@ import {
 /* ── 예제 질문 ── */
 
 const EXAMPLE_QUESTIONS = [
-  "5층에 있는 장비 목록 보여줘",
-  "AHU_UFAD_1과 연결된 센서는?",
-  "냉방 시스템의 에너지 흐름을 설명해줘",
-  "B동에서 가장 많은 센서가 있는 층은?",
-  "칠드실링 시스템 구성을 알려줘",
-  "GEC B동 건물 개요를 설명해줘",
+  "example1", "example2", "example3", "example4", "example5", "example6",
 ];
 
 /* ── 메시지 항목 타입 ── */
@@ -92,6 +88,7 @@ function CypherBlock({ queries }: { queries: string[] }) {
 /* ── 메인 페이지 ── */
 
 export default function ChatPage() {
+  const t = useTranslations("chat");
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -163,9 +160,7 @@ export default function ChatPage() {
         const errorMsg: DisplayMessage = {
           id: `e-${Date.now()}`,
           role: "assistant",
-          content: `오류가 발생했습니다: ${
-            err instanceof Error ? err.message : "알 수 없는 오류"
-          }`,
+          content: t("errorOccurred", { message: err instanceof Error ? err.message : "unknown" }),
           timestamp: new Date(),
         };
         setMessages((prev) => [...prev, errorMsg]);
@@ -189,7 +184,7 @@ export default function ChatPage() {
   /* ── 렌더 ── */
   return (
     <div className="min-h-screen flex flex-col">
-      <Header title="AI 채팅" description="GEC B동 온톨로지 기반 질의응답" />
+      <Header title={t("title")} description={t("description")} />
 
       {/* 상태 바 */}
       <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-2">
@@ -199,13 +194,13 @@ export default function ChatPage() {
           <>
             <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
             <span className="text-xs text-green-600">
-              {status.model || "GPT-4o"} 연결됨
+              {t("connected", { model: status.model || "GPT-4o" })}
             </span>
           </>
         ) : (
           <>
             <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />
-            <span className="text-xs text-yellow-600">API 키 미설정</span>
+            <span className="text-xs text-yellow-600">{t("apiKeyNotSet")}</span>
           </>
         )}
       </div>
@@ -220,11 +215,10 @@ export default function ChatPage() {
                 <MessageCircle className="h-8 w-8 text-blue-500" />
               </div>
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                GEC B동 AI 어시스턴트
+                {t("assistantTitle")}
               </h2>
               <p className="text-sm text-gray-500 mb-6">
-                Brick Schema 온톨로지와 Neo4j 그래프 데이터를 기반으로
-                건물 시스템에 대해 질문할 수 있습니다.
+                {t("assistantDesc")}
               </p>
 
               {/* 예제 질문 */}
@@ -233,9 +227,9 @@ export default function ChatPage() {
                   <button
                     key={q}
                     className="text-left px-3 py-2.5 text-sm text-gray-600 bg-gray-50 hover:bg-blue-50 hover:text-blue-700 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors"
-                    onClick={() => handleSend(q)}
+                    onClick={() => handleSend(t(q))}
                   >
-                    {q}
+                    {t(q)}
                   </button>
                 ))}
               </div>
@@ -305,7 +299,7 @@ export default function ChatPage() {
                       {msg.sources && msg.sources.length > 0 && (
                         <div className="mt-2 pt-2 border-t border-gray-100">
                           <p className="text-[10px] text-gray-400 mb-1">
-                            출처
+                            {t("sources")}
                           </p>
                           <div className="flex flex-wrap gap-1">
                             {msg.sources.map((s, i) => (
@@ -357,7 +351,7 @@ export default function ChatPage() {
                   <CardContent className="p-3">
                     <div className="flex items-center gap-2 text-sm text-gray-500">
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Neo4j에서 데이터를 조회하고 있습니다...</span>
+                      <span>{t("loadingData")}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -375,7 +369,7 @@ export default function ChatPage() {
           <input
             ref={inputRef}
             type="text"
-            placeholder="GEC B동에 대해 질문하세요..."
+            placeholder={t("inputPlaceholder")}
             className="flex-1 px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={input}
             onChange={(e) => setInput(e.target.value)}
