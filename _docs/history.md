@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.17 (Phase 4 — 시뮬레이션 고도화 + 프론트엔드 16페이지 확장 완료)
+> **최종 업데이트:** 2026.02.17 (Phase 4.5 — 버그 수정 6건 + 프론트엔드 18페이지 확장 완료)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -861,7 +861,7 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 ### 현재 상태 요약 (2026.02.17 기준)
 
 **온톨로지**: v2.0.1 — 5,756 트리플, 845 인스턴스, SHACL 24 Shape, 신뢰도 100% 태깅
-**플랫폼**: Phase 4 **100% 완료** — 10개 서비스(Docker 9 + Neo4j 외부), 16개 프론트엔드 페이지, 57+ API
+**플랫폼**: Phase 4.5 **100% 완료** — 10개 서비스(Docker 9 + Neo4j 외부), 18개 프론트엔드 페이지, 57+ API
 **설계서 대비 진행률**: **~95%** (잔여: 이메일/SMS 알림, 정기 보고서 자동 발송 등 외부 서비스 연동)
 
 | 완료된 Phase | 주요 내용 |
@@ -871,8 +871,9 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 | Phase 2 (플랫폼 확장) | 84장비 164포인트 풀 시뮬레이션, 온톨로지 그래프, 토폴로지 뷰, LLM 채팅, InfluxDB 직접 연동 |
 | Phase 3 (플랫폼 고도화) | 알람 시스템, Grafana, 시계열 이력, 반응형 UI, BACnet, JWT, 스케줄, 데이터 보존, 품질 검증 |
 | **Phase 4 (시뮬레이션+UX)** | **시나리오 7종, 고장주입 6종, 열역학 모델, 신규 8페이지, 30+ 신규 API, 데이터 품질, 명령 큐, 감사 로그** |
+| **Phase 4.5 (버그수정+UX)** | **에너지 kW 스케일링, 유지보수 캘린더, Server B 재시도, Grafana 인증, /scenarios + /data-quality 페이지** |
 
-### 프론트엔드 16개 페이지 전체 목록
+### 프론트엔드 18개 페이지 전체 목록
 | 경로 | 기능 | 추가 Phase |
 |------|------|:---:|
 | `/` | 대시보드 — KPI, 장비 상태, 알람 카드 | 1 |
@@ -886,6 +887,8 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 | `/login` | 로그인 — JWT 인증 | 3 |
 | `/alarms` | **알람 관리** — 심각도 카운트, 필터, 확인, 억제, 상세 패널 | **4** |
 | `/alarms/history` | **알람 이력** — 아카이브, CSV, 억제 | **4** |
+| `/scenarios` | **시나리오** — 시뮬레이션 시나리오 로드 + 고장 주입/해제 | **4.5** |
+| `/data-quality` | **데이터 품질** — Historian 상태, 품질 통계, 포인트 현황 | **4.5** |
 | `/energy` | **에너지 분석** — 실시간 전력, 파이차트, EUI, 층별 비교 | **4** |
 | `/maintenance` | **유지보수** — 작업 주문 CRUD, 캘린더, 수명 추적 | **4** |
 | `/reports` | **보고서** — 4종 프리셋, 생성/다운로드, 이력 | **4** |
@@ -1151,9 +1154,9 @@ Server B 확장:
 
 ### 15.5 프론트엔드 확장 (frontend-2 + infra-quality)
 
-기존 8페이지 → **16페이지** (8개 신규):
+기존 8페이지 → **18페이지** (10개 신규: Phase 4에서 8개 + Phase 4.5에서 2개):
 ```
-신규 페이지:
+Phase 4 신규 (8개):
 /alarms              — 알람 관리 (심각도 카운트, 필터, 확인 모달, 억제 모달, 상세 패널)
 /alarms/history      — 알람 이력 아카이브 (CSV 다운로드, 억제)
 /energy              — 에너지 분석 대시보드
@@ -1162,6 +1165,10 @@ Server B 확장:
 /settings            — 시스템 설정
 /settings/users      — 사용자 관리 (CRUD)
 /monitoring/[equipmentId] — 장비 상세 모니터링 (실시간 게이지, 트렌드, 성능, 연결 관계, 알람)
+
+Phase 4.5 신규 (2개):
+/scenarios           — 시나리오 관리 (Server C 시나리오 로드 + 고장 주입/해제)
+/data-quality        — 데이터 품질 (Server D 품질 통계 + 포인트 현황 테이블)
 ```
 
 사이드바 12개 메뉴: 대시보드, 모니터링, 제어, 온톨로지, 토폴로지, 시계열 이력, AI 채팅, 알람 관리, 에너지 분석, 유지보수, 보고서, 설정
@@ -1190,7 +1197,7 @@ Server B 확장:
 | PostgreSQL (5434) | healthy |
 | Grafana (3001) | 200 |
 
-**프론트엔드 16개 페이지 전체 HTTP 200 확인:**
+**프론트엔드 18개 페이지 전체 HTTP 200 확인:**
 /, /monitoring, /control, /alarms, /alarms/history, /energy, /maintenance, /reports, /settings, /settings/users, /ontology, /topology, /chat, /history, /login (+ /monitoring/[equipmentId] 동적 라우트)
 
 **신규 API 검증 결과:**
@@ -1214,13 +1221,30 @@ Server B 확장:
 | 신규 파일 | 26개 |
 | 수정 파일 | 14개 |
 | 신규 코드 | ~8,900줄 |
-| 프론트엔드 페이지 | 8 → 16개 |
+| 프론트엔드 페이지 | 8 → 18개 |
 | API 엔드포인트 | ~30 → 57+개 |
 | 시뮬레이션 시나리오 | 7종 (프리셋 6 + 커스텀) |
 | 고장 주입 유형 | 6종 |
 | 설계서 대비 진행률 | ~95% |
 
 **잔여 (~5%):** 이메일/SMS 알림 채널, 정기 보고서 자동 발송 등 외부 서비스 연동
+
+### 15.9 Phase 4.5 — 버그 수정 + 신규 2페이지 (2026.02.17)
+
+Phase 4 빌드 후 부분 동작 이슈 6건을 수정하고 프론트엔드 2페이지를 추가.
+
+**버그 수정 (4건):**
+1. **에너지 분석 kW 스케일링** — 에뮬레이터 정규화 값(0~100)을 장비 타입별 실제 kW로 변환, InfluxDB 빈 버킷 쿼리 수정 (`energy_service.py`, `energy.py`)
+2. **유지보수 캘린더 500 오류** — asyncpg 날짜 타입 변환 (`maintenance.py`) + equipment_metadata Neo4j 시드 (`neo4j_loader.py`)
+3. **Server B 장비 로딩 재시도** — Neo4j 연결 5회 재시도(10초 간격) + `/devices/reload` 수동 갱신 API (`server-b/main.py`)
+4. **Grafana InfluxDB 인증** — 데이터소스 UID `influxdb-bees` 명시 + HTTP Authorization 헤더 추가 (`influxdb.yml`, `bees-overview.json`)
+
+**신규 페이지 (2건):**
+5. **`/scenarios`** — Server C 시나리오 프리셋 로드 + 고장 주입/해제 UI (`app/scenarios/page.tsx`)
+6. **`/data-quality`** — Server D Historian 상태, 품질 통계, 포인트 현황 테이블 (`app/data-quality/page.tsx`)
+
+**수정 파일:** 12개 modified + 2개 new = 14 files, +1,449 / -107 lines
+**커밋:** `61a1101` feat: Phase 4.5 버그 수정
 
 ---
 
@@ -1269,6 +1293,8 @@ Server B 확장:
 
 ### Git 커밋 이력 (최근)
 ```
+61a1101 feat: Phase 4.5 버그 수정 — 에너지 스케일링, 유지보수 캘린더, Grafana 인증, 시나리오/데이터품질 페이지 추가
+6374cf3 fix: passlib/bcrypt 호환성 오류 수정 — 로그인 500 에러 해결
 bddd2b4 docs: history.md Phase 4 빌드 검증 결과 및 최종 산출물 요약 추가
 ad9e27f feat: 디지털 트윈 플랫폼 Phase 4 완료 — 시뮬레이션 고도화, 신규 7페이지, 30+ API
 94e6062 feat: 디지털 트윈 플랫폼 Phase 3 완료 — 알람, Grafana, JWT, BACnet, 반응형 등 11개 기능
