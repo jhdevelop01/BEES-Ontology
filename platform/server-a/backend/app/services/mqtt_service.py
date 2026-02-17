@@ -117,6 +117,8 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
 
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         logger.warning("MQTT 메시지 파싱 실패 (%s): %s", msg.topic, e)
+    except Exception as e:
+        logger.error("MQTT 메시지 처리 예외 (%s): %s", msg.topic, e, exc_info=True)
 
 
 async def connect() -> None:

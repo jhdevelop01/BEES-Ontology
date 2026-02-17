@@ -104,7 +104,15 @@ Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 �
 - ✅ **시스템 설정** — 건물명, 시간대, 단위, 알람 임계값 설정 (`/settings`)
 - ⚠️ **OpenAI API 키**: `.env`의 `OPENAI_API_KEY`에 실제 키 설정 필요
 
-### 프론트엔드 16개 페이지
+**Phase 4.5 (버그 수정, 2026.02.17)**:
+- ✅ **에너지 분석 kW 스케일링** — 에뮬레이터 정규화 값(0~100)을 장비 타입별 kW로 변환, InfluxDB 빈 쿼리 수정
+- ✅ **유지보수 캘린더 500 수정** — asyncpg 날짜 타입 변환 + equipment_metadata Neo4j 시드
+- ✅ **Server B 장비 로딩 재시도** — Neo4j 연결 5회 재시도(10초 간격) + `/devices/reload` 수동 갱신 API
+- ✅ **Grafana InfluxDB 인증** — 데이터소스 UID 명시 + HTTP Authorization 헤더 추가
+- ✅ **시나리오 관리 페이지** — Server C 시나리오 로드 + 고장 주입/해제 UI (`/scenarios`)
+- ✅ **데이터 품질 페이지** — Server D 품질 통계 + 포인트 현황 테이블 (`/data-quality`)
+
+### 프론트엔드 18개 페이지
 | 경로 | 기능 |
 |------|------|
 | `/` | 대시보드 — KPI, 장비 상태, 알람 카드, 최근 데이터 |
@@ -117,6 +125,8 @@ Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 �
 | `/chat` | AI 채팅 — LLM 자연어 질의 |
 | `/alarms` | 알람 관리 — 심각도 카운트, 확인/억제 모달, 상세 패널 |
 | `/alarms/history` | 알람 이력 — 검색/필터 아카이브, CSV 다운로드 |
+| `/scenarios` | 시나리오 — 시뮬레이션 시나리오 로드 + 고장 주입/해제 |
+| `/data-quality` | 데이터 품질 — Historian 상태, 품질 통계, 포인트 현황 |
 | `/energy` | 에너지 분석 — 실시간 전력, 프로파일, 시스템별, EUI |
 | `/maintenance` | 유지보수 — 작업 지시 CRUD, 캘린더 |
 | `/reports` | 보고서 — 프리셋 생성, 이력, 다운로드 |

@@ -36,7 +36,7 @@ from pydantic import BaseModel, Field
 
 from app.config import settings
 from app.device_registry import registry
-from app.neo4j_loader import load_devices_from_neo4j
+from app.neo4j_loader import load_devices_from_neo4j, load_devices_with_retry
 from app.bacnet_adapter import bacnet_sim
 from app.command_queue import command_queue
 
@@ -296,8 +296,8 @@ async def lifespan(app: FastAPI):
     logger.info("  등록 장비:    %d개", registry.count)
     logger.info("=" * 60)
 
-    # Neo4j에서 장비 자동 로딩 (Phase 2)
-    neo4j_count = await load_devices_from_neo4j()
+    # Neo4j에서 장비 자동 로딩 (Phase 2, Phase 4.5 재시도 로직 적용)
+    neo4j_count = await load_devices_with_retry(max_retries=5, delay=10.0)
     logger.info("Neo4j 디바이스 로딩: %d개 추가 (전체 %d개)", neo4j_count, registry.count)
 
     # BACnet 시뮬레이터에 장비 등록 (Phase 3)
@@ -500,6 +500,24 @@ async def list_devices() -> dict[str, Any]:
     devices = registry.list_all()
     return {
         "count": len(devices),
+        "devices": devices,
+    }
+
+
+# ── GET /devices/reload ────────────────────────────────────────────────────
+@app.get("/devices/reload")
+async def reload_devices() -> dict[str, Any]:
+    """
+    Neo4j에서 장비 목록을 재로딩한다.
+    운영 중 Neo4j TTL 임포트 후 수동 갱신에 사용.
+    """
+    count = await load_devices_from_neo4j()
+    devices = registry.list_all()
+    logger.info("장비 수동 재로딩: %d개 신규 등록 (전체 %d개)", count, len(devices))
+    return {
+        "success": True,
+        "new_loaded": count,
+        "total": len(devices),
         "devices": devices,
     }
 

@@ -3,8 +3,10 @@ Server B Neo4j 디바이스 로더.
 
 Neo4j에서 GEC B동 장비를 조회하여 DeviceRegistry에 자동 등록한다.
 Phase 2: 279개 전체 장비 자동 로딩.
+Phase 4.5: Neo4j 연결 재시도 로직 추가 — 컨테이너 기동 순서 문제 해결.
 """
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -156,3 +158,43 @@ async def load_devices_from_neo4j() -> int:
                 await driver.close()
             except Exception:
                 pass
+
+
+async def load_devices_with_retry(
+    max_retries: int = 5,
+    delay: float = 10.0,
+) -> int:
+    """
+    Neo4j 연결 재시도 래퍼.
+
+    컨테이너 기동 순서에 의해 Neo4j가 아직 준비되지 않았을 때
+    고정 간격으로 재시도하여 장비 로딩을 보장한다.
+
+    Args:
+        max_retries: 최대 재시도 횟수 (기본 5회)
+        delay: 재시도 간격 초 (기본 10초)
+
+    Returns:
+        등록된 장비 수. 모든 재시도 실패 시 0 반환 (Phase 1 폴백 유지).
+    """
+    for attempt in range(1, max_retries + 1):
+        count = await load_devices_from_neo4j()
+        if count > 0:
+            logger.info(
+                "Neo4j 디바이스 로딩 성공 (시도 %d/%d): %d개 장비 등록",
+                attempt, max_retries, count,
+            )
+            return count
+
+        if attempt < max_retries:
+            logger.warning(
+                "Neo4j 디바이스 로딩 실패 (시도 %d/%d) — %g초 후 재시도",
+                attempt, max_retries, delay,
+            )
+            await asyncio.sleep(delay)
+
+    logger.error(
+        "Neo4j 디바이스 로딩 %d회 모두 실패 — Phase 1 폴백(AHU_5F 1대)으로 유지",
+        max_retries,
+    )
+    return 0

@@ -23,6 +23,8 @@ import {
   Wrench,
   FileText,
   Settings,
+  Play,
+  ShieldCheck,
 } from "lucide-react";
 import { getCurrentUser, isLoggedIn, logout } from "@/lib/api";
 
@@ -43,6 +45,8 @@ const navItems: NavItem[] = [
   { href: "/history", label: "시계열 이력", icon: Clock },
   { href: "/chat", label: "AI 채팅", icon: MessageCircle },
   { href: "/alarms", label: "알람 관리", icon: Bell },
+  { href: "/scenarios", label: "시나리오", icon: Play },
+  { href: "/data-quality", label: "데이터 품질", icon: ShieldCheck },
   { href: "/energy", label: "에너지 분석", icon: Zap },
   { href: "/maintenance", label: "유지보수", icon: Wrench },
   { href: "/reports", label: "보고서", icon: FileText },

@@ -12,7 +12,7 @@
       "type": "timeseries",
       "id": 1,
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
-      "datasource": { "type": "influxdb", "uid": "" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -44,7 +44,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
           "query": "from(bucket: \"raw_7d\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"point_id\"] =~ /${point_id}/)\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"brick_class\"] =~ /Temperature/)\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -55,7 +55,7 @@
       "type": "timeseries",
       "id": 2,
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
-      "datasource": { "type": "influxdb", "uid": "" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -87,7 +87,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
           "query": "from(bucket: \"raw_7d\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"point_id\"] =~ /${point_id}/)\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"brick_class\"] =~ /Humidity/)\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -98,7 +98,7 @@
       "type": "barchart",
       "id": 3,
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
-      "datasource": { "type": "influxdb", "uid": "" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -130,7 +130,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
           "query": "from(bucket: \"raw_7d\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> filter(fn: (r) => r[\"brick_class\"] =~ /Power|Electric/)\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
           "refId": "A"
         }
@@ -141,7 +141,7 @@
       "type": "stat",
       "id": 4,
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
-      "datasource": { "type": "influxdb", "uid": "" },
+      "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -172,7 +172,7 @@
       },
       "targets": [
         {
-          "datasource": { "type": "influxdb", "uid": "" },
+          "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
           "query": "from(bucket: \"raw_7d\")\n  |> range(start: -5m)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"_field\"] == \"value\")\n  |> group(columns: [\"device_id\"])\n  |> count()\n  |> group()\n  |> count(column: \"_value\")\n  |> rename(columns: {\"_value\": \"active_devices\"})",
           "refId": "A"
         }
@@ -185,7 +185,7 @@
     "list": [
       {
         "current": { "selected": false, "text": "All", "value": "$__all" },
-        "datasource": { "type": "influxdb", "uid": "" },
+        "datasource": { "type": "influxdb", "uid": "influxdb-bees" },
         "definition": "from(bucket: \"raw_7d\") |> range(start: -1h) |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\") |> keep(columns: [\"point_id\"]) |> distinct(column: \"point_id\")",
         "includeAll": true,
         "multi": true,

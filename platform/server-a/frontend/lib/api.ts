@@ -958,3 +958,183 @@ export async function updateSettings(
     body: JSON.stringify(req),
   });
 }
+
+// ─── 시나리오 관리 (Server C) ───
+
+const EMULATOR_BASE =
+  process.env.NEXT_PUBLIC_EMULATOR_URL || "http://localhost:8012";
+
+async function fetchEmulator<T = unknown>(
+  path: string,
+  options?: RequestInit
+): Promise<T> {
+  const url = `${EMULATOR_BASE}${path}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
+  };
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "Unknown error");
+    throw new Error(`Emulator API 오류 (${res.status}): ${errorText}`);
+  }
+  return res.json();
+}
+
+export interface ScenarioInfo {
+  name: string;
+  display_name: string;
+  description: string;
+  occupancy?: number;
+  outdoor_temp_min?: number;
+  outdoor_temp_max?: number;
+  hvac_mode?: string;
+  solar_factor?: number;
+  is_active?: boolean;
+}
+
+export interface FaultTypeInfo {
+  id: string;
+  name: string;
+  description: string;
+  required_params?: string[];
+}
+
+export interface ActiveFault {
+  fault_id: string;
+  fault_type: string;
+  target_id: string;
+  params: Record<string, unknown>;
+  injected_at: string;
+}
+
+export async function getScenarios(): Promise<ScenarioInfo[]> {
+  return fetchEmulator<ScenarioInfo[]>("/scenarios");
+}
+
+export async function getActiveScenario(): Promise<ScenarioInfo> {
+  return fetchEmulator<ScenarioInfo>("/scenarios/active");
+}
+
+export async function loadScenario(
+  name: string
+): Promise<{ success: boolean; message?: string }> {
+  return fetchEmulator("/scenarios/load", {
+    method: "POST",
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function getFaultTypes(): Promise<FaultTypeInfo[]> {
+  return fetchEmulator<FaultTypeInfo[]>("/faults/types");
+}
+
+export async function getActiveFaults(): Promise<ActiveFault[]> {
+  return fetchEmulator<ActiveFault[]>("/faults/active");
+}
+
+export async function injectFault(params: {
+  fault_type: string;
+  target_id: string;
+  params?: Record<string, unknown>;
+}): Promise<{ success: boolean; fault_id?: string; error?: string }> {
+  return fetchEmulator("/faults/inject", {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+}
+
+export async function clearFault(
+  faultId: string
+): Promise<{ success: boolean; message?: string }> {
+  return fetchEmulator(`/faults/${encodeURIComponent(faultId)}/clear`, {
+    method: "POST",
+  });
+}
+
+export async function getEmulatorDevices(): Promise<
+  Array<{ device_id: string; name?: string; is_active: boolean }>
+> {
+  return fetchEmulator("/devices");
+}
+
+export async function getSimulationStatus(): Promise<Record<string, unknown>> {
+  return fetchEmulator("/simulation/status");
+}
+
+export async function getCurrentWeather(): Promise<Record<string, unknown>> {
+  return fetchEmulator("/weather/current");
+}
+
+// ─── 데이터 품질 (Server D) ───
+
+const HISTORIAN_BASE =
+  process.env.NEXT_PUBLIC_HISTORIAN_URL || "http://localhost:8013";
+
+async function fetchHistorian<T = unknown>(
+  path: string,
+  options?: RequestInit
+): Promise<T> {
+  const url = `${HISTORIAN_BASE}${path}`;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(options?.headers as Record<string, string>),
+  };
+  const res = await fetch(url, { ...options, headers });
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "Unknown error");
+    throw new Error(`Historian API 오류 (${res.status}): ${errorText}`);
+  }
+  return res.json();
+}
+
+export interface HistorianHealth {
+  status: string;
+  service: string;
+  version: string;
+  influxdb: string;
+  postgres: string;
+  mqtt: string;
+  uptime_seconds: number;
+}
+
+export interface MQTTWorkerStats {
+  mqtt_connected: boolean;
+  messages_received: number;
+  points_written: number;
+  alarms_saved: number;
+  errors: number;
+  buffer_size: number;
+  quality_stats: {
+    good: number;
+    uncertain: number;
+    bad: number;
+  };
+}
+
+export interface PointSummaryItem {
+  point_id: string;
+  last_value: number | null;
+  last_time: string | null;
+  unit: string;
+  record_count: number;
+}
+
+export interface PointSummaryResponse {
+  total_points: number;
+  points: PointSummaryItem[];
+}
+
+export async function getHistorianHealth(): Promise<HistorianHealth> {
+  return fetchHistorian<HistorianHealth>("/health");
+}
+
+export async function getHistorianInfo(): Promise<{
+  mqtt_worker: MQTTWorkerStats;
+}> {
+  return fetchHistorian("/");
+}
+
+export async function getPointsSummary(): Promise<PointSummaryResponse> {
+  return fetchHistorian<PointSummaryResponse>("/data/points/summary");
+}

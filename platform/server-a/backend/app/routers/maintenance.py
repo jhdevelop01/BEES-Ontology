@@ -11,7 +11,7 @@
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, date as date_type
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -262,16 +262,20 @@ async def get_maintenance_calendar(
 
     try:
         year, mon = month.split("-")
-        month_start = f"{year}-{mon}-01"
+        month_start = date_type(int(year), int(mon), 1)
         # 다음 달 1일
         next_mon = int(mon) + 1
         next_year = int(year)
         if next_mon > 12:
             next_mon = 1
             next_year += 1
-        month_end = f"{next_year}-{next_mon:02d}-01"
+        month_end = date_type(next_year, next_mon, 1)
     except ValueError:
         raise HTTPException(status_code=400, detail="월 형식은 YYYY-MM이어야 합니다")
+
+    # timestamptz 비교용 datetime 변환
+    month_start_ts = datetime(month_start.year, month_start.month, month_start.day)
+    month_end_ts = datetime(month_end.year, month_end.month, month_end.day)
 
     events = []
 
@@ -281,7 +285,7 @@ async def get_maintenance_calendar(
             """
             SELECT ontology_id, next_maintenance_date
             FROM equipment_metadata
-            WHERE next_maintenance_date >= $1::date AND next_maintenance_date < $2::date
+            WHERE next_maintenance_date >= $1 AND next_maintenance_date < $2
             """,
             month_start, month_end,
         )
@@ -300,16 +304,16 @@ async def get_maintenance_calendar(
                    em.ontology_id
             FROM work_orders wo
             LEFT JOIN equipment_metadata em ON wo.equipment_id = em.id
-            WHERE wo.created_at >= $1::timestamptz AND wo.created_at < $2::timestamptz
+            WHERE wo.created_at >= $1 AND wo.created_at < $2
             ORDER BY wo.created_at
             """,
-            month_start, month_end,
+            month_start_ts, month_end_ts,
         )
         for row in work_orders:
             event_type = "completed" if row["status"] == "completed" else "in_progress"
             date = row["completed_at"] or row["created_at"]
             events.append({
-                "date": date.isoformat() if date else month_start,
+                "date": date.isoformat() if date else month_start.isoformat(),
                 "type": event_type,
                 "equipment": row["ontology_id"],
                 "title": row["title"],

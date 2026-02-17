@@ -2,6 +2,7 @@ apiVersion: 1
 
 datasources:
   - name: InfluxDB-BEES
+    uid: influxdb-bees
     type: influxdb
     access: proxy
     url: http://influxdb:8086
@@ -9,7 +10,9 @@ datasources:
       version: Flux
       organization: samsung-gec
       defaultBucket: raw_7d
+      httpHeaderName1: Authorization
     secureJsonData:
       token: bees-dev-token
+      httpHeaderValue1: Token bees-dev-token
     isDefault: true
     editable: true
