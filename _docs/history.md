@@ -858,11 +858,11 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 
 ## 13. 다음 작업 가이드
 
-### 현재 상태 요약 (2026.02.17 기준)
+### 현재 상태 요약 (2026.02.18 기준)
 
-**온톨로지**: v2.0.1 — 5,756 트리플, 845 인스턴스, SHACL 24 Shape, 신뢰도 100% 태깅
-**플랫폼**: Phase 4.5 **100% 완료** — 10개 서비스(Docker 9 + Neo4j 외부), 18개 프론트엔드 페이지, 57+ API
-**설계서 대비 진행률**: **~95%** (잔여: 이메일/SMS 알림, 정기 보고서 자동 발송 등 외부 서비스 연동)
+**온톨로지**: v2.1.0 — 9,789 트리플, 1,272 인스턴스, SHACL 24 Shape, 신뢰도 100% 태깅
+**플랫폼**: Phase 5 **100% 완료** — 10개 서비스(Docker 9 + Neo4j 외부), 20개 프론트엔드 페이지, 57+ API
+**설계서 대비 진행률**: **~99%** (잔여: 정기 보고서 자동 발송, 테스트 코드, CI/CD)
 
 | 완료된 Phase | 주요 내용 |
 |:---:|----------|
@@ -870,30 +870,33 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 | Phase 1 (플랫폼 MVP) | AHU_5F 1대 + 5센서, SSE, 대시보드/모니터링/제어, E2E 제어 |
 | Phase 2 (플랫폼 확장) | 84장비 164포인트 풀 시뮬레이션, 온톨로지 그래프, 토폴로지 뷰, LLM 채팅, InfluxDB 직접 연동 |
 | Phase 3 (플랫폼 고도화) | 알람 시스템, Grafana, 시계열 이력, 반응형 UI, BACnet, JWT, 스케줄, 데이터 보존, 품질 검증 |
-| **Phase 4 (시뮬레이션+UX)** | **시나리오 7종, 고장주입 6종, 열역학 모델, 신규 8페이지, 30+ 신규 API, 데이터 품질, 명령 큐, 감사 로그** |
-| **Phase 4.5 (버그수정+UX)** | **에너지 kW 스케일링, 유지보수 캘린더, Server B 재시도, Grafana 인증, /scenarios + /data-quality 페이지** |
+| Phase 4 (시뮬레이션+UX) | 시나리오 7종, 고장주입 6종, 열역학 모델, 신규 8페이지, 30+ 신규 API, 데이터 품질, 명령 큐, 감사 로그 |
+| Phase 4.5 (버그수정+UX) | 에너지 kW 스케일링, 유지보수 캘린더, Server B 재시도, Grafana 인증, /scenarios + /data-quality 페이지 |
+| **Phase 5 (플랫폼 완성)** | **i18n 한/영, 대시보드 위젯 D&D, WebSocket, Push 알림, API 문서 정비, 환경 분리, PDF/Excel 보고서** |
 
-### 프론트엔드 18개 페이지 전체 목록
+### 프론트엔드 20개 페이지 전체 목록
 | 경로 | 기능 | 추가 Phase |
 |------|------|:---:|
-| `/` | 대시보드 — KPI, 장비 상태, 알람 카드 | 1 |
+| `/` | 대시보드 — KPI, 장비 상태, 알람, D&D 위젯 그리드 | 1→**5** |
 | `/monitoring` | 모니터링 — 실시간 차트 | 1 |
-| `/monitoring/[equipmentId]` | **장비 상세** — 게이지, 트렌드, 성능, 연결 관계, 알람 | **4** |
+| `/monitoring/[equipmentId]` | 장비 상세 — 게이지, 트렌드, 성능, 연결 관계, 알람 | 4 |
 | `/control` | 제어 — ON/OFF, 모드 변경 (JWT 필요) | 1 |
 | `/ontology` | 온톨로지 그래프 — 클릭 하이라이트, 더블클릭 확장 | 2 |
 | `/topology` | 토폴로지 — 건물 계층 트리 + SSE 실시간 장비 상태 | 2 |
 | `/chat` | AI 채팅 — GPT-4o Function Calling × Neo4j | 2 |
 | `/history` | 시계열 이력 — recharts 멀티라인, CSV 다운로드 | 3 |
 | `/login` | 로그인 — JWT 인증 | 3 |
-| `/alarms` | **알람 관리** — 심각도 카운트, 필터, 확인, 억제, 상세 패널 | **4** |
-| `/alarms/history` | **알람 이력** — 아카이브, CSV, 억제 | **4** |
-| `/scenarios` | **시나리오** — 시뮬레이션 시나리오 로드 + 고장 주입/해제 | **4.5** |
-| `/data-quality` | **데이터 품질** — Historian 상태, 품질 통계, 포인트 현황 | **4.5** |
-| `/energy` | **에너지 분석** — 실시간 전력, 파이차트, EUI, 층별 비교 | **4** |
-| `/maintenance` | **유지보수** — 작업 주문 CRUD, 캘린더, 수명 추적 | **4** |
-| `/reports` | **보고서** — 4종 프리셋, 생성/다운로드, 이력 | **4** |
-| `/settings` | **시스템 설정** — 빌딩/시간대/단위/에너지/알람 | **4** |
-| `/settings/users` | **사용자 관리** — Admin CRUD, 역할, 접근 로그 | **4** |
+| `/alarms` | 알람 관리 — 심각도 카운트, 필터, 확인, 억제, 상세 패널 | 4 |
+| `/alarms/history` | 알람 이력 — 아카이브, CSV, 억제 | 4 |
+| `/scenarios` | 시나리오 — 시뮬레이션 시나리오 로드 + 고장 주입/해제 | 4.5 |
+| `/data-quality` | 데이터 품질 — Historian 상태, 품질 통계, 포인트 현황 | 4.5 |
+| `/energy` | 에너지 분석 — 실시간 전력, 파이차트, EUI, 층별 비교 | 4 |
+| `/maintenance` | 유지보수 — 작업 주문 CRUD, 캘린더, 수명 추적 | 4 |
+| `/reports` | 보고서 — 4종 프리셋, JSON/CSV/Excel/PDF, 이력 | 4→**5** |
+| `/settings` | 시스템 설정 — 빌딩/시간대/단위/에너지/알람 | 4 |
+| `/settings/users` | 사용자 관리 — Admin CRUD, 역할, 접근 로그 | 4 |
+| `/settings/notifications` | **알림 채널** — Email/Slack 설정, 테스트 발송, 이력 | **5** |
+| `_not-found` | 404 페이지 | - |
 
 ### 서버별 주요 파일 매핑
 
@@ -906,13 +909,16 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 | `routers/equipment.py` | 장비 상세 (Neo4j+InfluxDB+PostgreSQL) |
 | `routers/energy.py` | 에너지 분석 (realtime/profile/breakdown/eui) |
 | `routers/maintenance.py` | 유지보수 작업 주문 CRUD, 캘린더 |
-| `routers/reports.py` | 보고서 프리셋/생성/다운로드 |
+| `routers/reports.py` | 보고서 프리셋/생성/다운로드 (JSON/CSV/Excel/PDF) |
 | `routers/users.py` | 사용자 CRUD (Admin 전용) |
 | `routers/settings.py` | 시스템 설정 조회/수정 |
+| `routers/notifications.py` | Email/Slack 알림 설정, 테스트 발송, 이력 |
 | `routers/audit.py` | 감사 로그 조회 |
 | `services/energy_service.py` | 에너지 집계/분류 로직 |
-| `services/report_service.py` | 보고서 생성 엔진 |
+| `services/report_service.py` | 보고서 생성 엔진 (JSON/CSV/Excel/PDF) |
+| `services/notification_service.py` | Email(SMTP)/Slack(Webhook) 발송 서비스 |
 | `services/audit_service.py` | 감사 기록 저장/조회 |
+| `models/responses.py` | Pydantic 응답 모델 (OpenAPI 문서용) |
 
 **Server C** (`platform/server-c/app/`):
 | 파일 | 역할 |
@@ -1248,26 +1254,31 @@ Phase 4 빌드 후 부분 동작 이슈 6건을 수정하고 프론트엔드 2�
 
 ---
 
-### Phase 5: 착수 가능한 다음 작업
+### Phase 5 완료 내역 + 잔여 작업
 
-#### 플랫폼 잔여 (~5%, 외부 서비스 연동)
-1. **알림 채널 확장**: 이메일/SMS/Slack 알림 발송 (현재 UI 내 알람만 지원)
-2. **정기 보고서 자동 발송**: 스케줄러 기반 월간/주간 보고서 자동 생성 + 이메일 발송
-3. **실시간 알림 Push**: WebSocket 또는 Service Worker 기반 브라우저 Push 알림
-4. **다국어 지원**: i18n 프레임워크 도입 (현재 한국어 하드코딩)
+#### Phase 5 완료 항목 (2026.02.18)
+| # | 기능 | 상태 | 커밋 |
+|:-:|------|:----:|------|
+| #1 | 알림 채널 확장 (Email/Slack) | ✅ | `f4d97fa` |
+| #3 | Push 알림 (Browser Notification API) | ✅ | `0e580dc` |
+| #4 | 다국어 i18n (한/영 전환) | ✅ | `0e580dc` |
+| #5 | 대시보드 위젯 D&D (react-grid-layout) | ✅ | `0e580dc` |
+| #6 | 장비 상세 링크 개선 | ✅ | `9860ffc` |
+| #7 | 보고서 PDF/Excel 생성 | ✅ | `f8d7349` |
+| #8 | WebSocket 실시간 채널 | ✅ | `0e580dc` |
+| #15 | API 문서 정비 (Pydantic response_model) | ✅ | `0e580dc` |
+| #16 | 환경 분리 (.env.example, BaseSettings) | ✅ | `0e580dc` |
 
-#### 플랫폼 개선 (선택)
-1. **대시보드 위젯 커스터마이징**: 드래그&드롭 레이아웃 편집
-2. **모니터링 페이지 장비 상세 링크 개선**: 장비 ID가 온톨로지 실제 이름(AHU_UFAD_5 등)과 매칭되도록 UI 보완
-3. **에너지 데이터 실측 연동**: 현재 시뮬레이션 기반 → 실 BMS 연동 시 InfluxDB 집계 활성화
-4. **보고서 PDF 생성**: 현재 CSV만 → PDF/Excel 포맷 추가
-5. **SSE → WebSocket 전환**: 양방향 통신 필요 시
+#### 일시 중단 항목
+| # | 기능 | 사유 |
+|:-:|------|------|
+| #2 | 정기 보고서 자동 발송 | 스케줄러/외부 서비스 연동 필요 |
+| #13 | 테스트 코드 | 기능 구현 완료 후 진행 |
+| #14 | CI/CD | 기능 구현 완료 후 진행 |
 
 #### 온톨로지 관련 (내부 데이터 확보 시)
-1. 평면도 → `brick:Room` 인스턴스 추가, Zone 세분화
-2. BMS 포인트 리스트 → `brick:Point` 하위 센서/명령/설정값 정밀 모델링
-3. 장비 대장 → 제조사/모델명/시리얼 속성 추가
-4. BEMS 데이터 → 실측 에너지 값으로 추정값 교체, `confirmed`로 신뢰도 변경
+- 실 BMS 연동 시 InfluxDB 집계 활성화
+- BEMS 데이터 → 실측 에너지 값으로 추정값 교체
 
 **온톨로지 수정 시 주의사항:**
 - **TTL 수정 후 반드시 rdflib 파싱 검증** (구문 오류 방지)
@@ -1290,6 +1301,11 @@ Phase 4 빌드 후 부분 동작 이슈 6건을 수정하고 프론트엔드 2�
 | Badge `"danger"` vs Button `"destructive"` | shadcn/ui 커스텀 — Badge와 Button의 variant 이름이 다름 | `badge.tsx`, `button.tsx` |
 | 장비 상세 URI 변환 | API `bldg:XXX` ↔ Neo4j `https://example.org/gec-b#XXX` | `routers/equipment.py` |
 | 열역학 1차 모델 + PI 제어 | Zone_Air_Temperature만 적용, 나머지 센서는 기존 sine+noise | `thermodynamics.py`, `engine.py` |
+| next-intl "no-prefix" 모드 | URL 변경 없이 cookie 기반 locale 전환 (ko 기본) | `middleware.ts`, `i18n/request.ts` |
+| react-grid-layout ResponsiveGridLayout | 대시보드 위젯 D&D, localStorage 레이아웃 저장 | `dashboard-grid.tsx` |
+| WebSocket + SSE 병행 (`useRealtimeData`) | WS 우선, 실패 시 SSE 폴백 — 기존 SSE 클라이언트 깨지지 않음 | `ws.ts`, `sse.ts`, `stream.py` |
+| pydantic-settings BaseSettings | `os.getenv()` → 타입 안전 환경변수, `.env` 자동 로드 | `config.py` (Server A, C) |
+| fpdf2 + NanumGothic | PDF 한국어 지원 — Docker `fonts-nanum` 설치, Helvetica 폴백 | `report_service.py`, `Dockerfile` |
 
 ### 15.10 리포지토리 정리 (2026.02.17)
 
@@ -1329,8 +1345,108 @@ Agent Team 병렬 처리로 4개 TTL 프래그먼트를 생성하고 메인 온�
 - **검증**: rdflib 파싱 성공, hasPart↔isPartOf 완전 대칭, feeds↔isFedBy 완전 대칭
 - **Neo4j**: n10s 전체 재임포트 완료 (9,809 트리플 로드)
 
+## 16. Phase 5 — 플랫폼 완성 (2026.02.18)
+
+### 16.1 개요
+
+Phase 4.5 이후 잔여 기능 9개를 Agent Teams 5개 병렬 실행으로 완성.
+56개 파일 변경, +6,219/-1,106 라인. 프론트엔드 20개 페이지 전체 빌드 성공.
+
+### 16.2 #1 알림 채널 확장 — Email/Slack (커밋 `f4d97fa`)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `routers/notifications.py` (new) | GET/PUT 설정, POST 테스트 발송, GET 이력 |
+| `services/notification_service.py` (new) | SMTP 이메일, Slack Webhook 발송, PostgreSQL 이력 저장 |
+| `main.py` | notifications 라우터 등록 |
+| `config.py` | SMTP_*, SLACK_WEBHOOK_URL 환경변수 추가 |
+| `settings/notifications/page.tsx` (new) | Email/Slack 설정 UI, 테스트 발송, 이력 테이블 |
+| `settings/page.tsx` | 알림 설정 링크 카드 추가 |
+
+### 16.3 #7 보고서 PDF/Excel 생성 (커밋 `f8d7349`)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `services/report_service.py` | `_to_xlsx()` openpyxl 기반, `_to_pdf()` fpdf2 기반 추가 |
+| `routers/reports.py` | xlsx/pdf MIME 타입 + StreamingResponse |
+| `reports/page.tsx` | FORMAT_OPTIONS에 Excel/PDF 추가 |
+| `Dockerfile` | `fonts-nanum` 한국어 폰트 패키지 |
+| `requirements.txt` | `openpyxl>=3.1.0`, `fpdf2>=2.7.0` 추가 |
+
+### 16.4 #3 Push 알림 + #8 WebSocket (커밋 `0e580dc`)
+
+**WebSocket (#8)**:
+- `stream.py`: `@router.websocket("/ws")` 엔드포인트 추가
+- `mqtt_service.py`: `_ws_clients: set`, `register_ws_client()`, `_broadcast_ws()` — MQTT 스레드에서 asyncio 메인 루프로 `call_soon_threadsafe` 브릿지
+- `lib/ws.ts` (new): `useWebSocket()` 훅 — 자동 재연결, useSSE와 동일 인터페이스
+- `lib/sse.ts`: `useRealtimeData()` 통합 훅 — WS 우선, SSE 폴백
+
+**Push 알림 (#3)**:
+- `lib/notifications.ts` (new): `requestNotificationPermission()`, `showAlarmNotification()`
+- `components/alarm-banner.tsx`: 알람 수신 시 Browser Notification 트리거, 벨 토글 버튼
+
+### 16.5 #4 다국어 i18n (커밋 `0e580dc`)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `messages/ko.json` (new) | 한국어 메시지 640줄, 600+ 키, 19 네임스페이스 |
+| `messages/en.json` (new) | 영어 메시지 (동일 구조) |
+| `i18n/request.ts` (new) | next-intl 서버 설정, cookie 기반 locale |
+| `middleware.ts` (new) | Accept-Language 감지, locale cookie, no-prefix 모드 |
+| `next.config.js` | `createNextIntlPlugin` 래퍼 적용 |
+| `layout.tsx` | `NextIntlClientProvider` + `getMessages()` |
+| `header.tsx` | `LanguageSwitcher` 드롭다운 (한국어/English) |
+| `sidebar.tsx` | 네비게이션 라벨 i18n |
+| 20개 page.tsx | `useTranslations()` 적용 (대시보드 포함) |
+
+### 16.6 #5 대시보드 위젯 D&D (커밋 `0e580dc`)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `components/dashboard/dashboard-grid.tsx` (new) | ResponsiveGridLayout 래퍼, localStorage 레이아웃, 편집/잠금 모드 |
+| `components/dashboard/widget-kpi.tsx` (new) | KPI 4카드 (활성장비, 온도, 알람, 시뮬레이션) |
+| `components/dashboard/widget-chart.tsx` (new) | AHU 5F 급기온도 실시간 차트 |
+| `components/dashboard/widget-equipment.tsx` (new) | 장비 상태 리스트 |
+| `components/dashboard/widget-alarms.tsx` (new) | 최근 알람 테이블 |
+| `components/dashboard/widget-sensors.tsx` (new) | 센서 데이터 테이블 |
+| `app/page.tsx` | DashboardGrid dynamic import로 재구성 |
+| `package.json` | `react-grid-layout`, `@types/react-grid-layout` 추가 |
+
+### 16.7 #15 API 문서 정비 (커밋 `0e580dc`)
+
+| 서버 | 변경 내용 |
+|------|-----------|
+| Server A | `models/responses.py` Pydantic 응답 모델 4개, dashboard/control/stream에 response_model 적용, openapi_tags 17개 |
+| Server B | Pydantic 모델 7개, 11개 엔드포인트 response_model 적용 |
+| Server C | `Neo4jStatusResponse` 모델, openapi_tags 6개 |
+| Server D | openapi_tags 4개 |
+
+### 16.8 #16 환경 분리 (커밋 `0e580dc`)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `.env.example` (new) | 전체 42개 변수 템플릿, 비밀값 `changeme` placeholder |
+| Server A `config.py` | `os.getenv()` → `pydantic_settings.BaseSettings` 마이그레이션 |
+| Server C `config.py` | 동일 BaseSettings 패턴 |
+| Server C `Dockerfile` | 하드코딩 ENV 6줄 제거 |
+| Server C `requirements.txt` | `pydantic-settings>=2.1.0` 추가 |
+
+### 16.9 검증 결과
+
+- **프론트엔드 빌드**: 21 routes (20 페이지 + _not-found) 전체 성공
+- **Server A config**: BaseSettings 정상, 모듈 레벨 변수 하위 호환
+- **Server A models**: Pydantic 응답 모델 import 정상
+- **Server C config**: BaseSettings 정상 (`settings.MQTT_BROKER` 패턴)
+- **Excel**: 5,761 bytes XLSX 생성 (openpyxl, 요약+데이터 2시트)
+- **PDF**: 12,479 bytes PDF 생성 (fpdf2, NanumGothic 한국어)
+
 ### Git 커밋 이력 (최근)
 ```
+0e580dc feat: Phase 5 — 6개 기능 병렬 구현 (#3 #4 #5 #8 #15 #16)
+f8d7349 feat: #7 보고서 PDF/Excel 생성 — openpyxl/fpdf2 기반 다운로드 지원
+f4d97fa feat: #1 알림 채널 확장 — Email/Slack 알림 시스템 구현
+b2cab5f feat: Phase 10 온톨로지 확장 v2.1.0 — Room 162, BMS Point 252, 메타데이터, 에너지 실측
+9860ffc feat: #6 장비 상세 링크 개선 — 모니터링 장비 그리드, 대시보드/토폴로지 링크 추가
 efd6dbb chore: AGENTS.md 심볼릭 링크 삭제 — CLAUDE.md 중복, 미사용
 4ce06cc docs: history.md Phase 4.5 내역 반영 — 18페이지, 버그수정 6건, 신규 섹션 추가
 61a1101 feat: Phase 4.5 버그 수정 — 에너지 스케일링, 유지보수 캘린더, Grafana 인증, 시나리오/데이터품질 페이지 추가

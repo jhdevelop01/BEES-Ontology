@@ -52,7 +52,7 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
 ## 디지털 트윈 IoT 시뮬레이션 플랫폼 (Phase 9)
 
 ### 개요
-Brick Schema 온톨로지(1,272 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 플랫폼. Phase 3 완료.
+Brick Schema 온톨로지(1,272 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 플랫폼. Phase 5 완료.
 
 ### 아키텍처
 ```
@@ -83,39 +83,26 @@ Brick Schema 온톨로지(1,272 인스턴스)를 기반으로 4개 독립 서버
 | Grafana | 3001 | admin / bees2024 |
 | Neo4j (외부 컨테이너) | 7476/7689 | neo4j / bees2024 |
 
-### Phase 4 현재 상태 (2026.02.17) — ✅ 전체 완료
+### Phase 5 현재 상태 (2026.02.18) — ✅ 전체 완료
 
-**Phase 2~3 (유지)**: 84개 장비 + 164개 포인트 실시간 시뮬레이션, 온톨로지 그래프, 토폴로지, LLM 채팅, InfluxDB, 알람, Grafana, BACnet, JWT 인증, 반응형 디자인
+**Phase 2~4.5 (유지)**: 84개 장비 + 164개 포인트 실시간 시뮬레이션, 온톨로지 그래프, 토폴로지, LLM 채팅, InfluxDB, 알람, Grafana, BACnet, JWT 인증, 반응형 디자인, 시나리오/고장주입, 열역학 모델, 데이터 품질
 
-**Phase 4 (신규)**:
-- ✅ **시나리오 관리** — 6개 프리셋 + 커스텀 시나리오 (Server C)
-- ✅ **고장 주입 시스템** — 6개 고장 유형 실시간 주입/해제 (Server C)
-- ✅ **HVAC 열역학 모델링** — 외기온/습도/태양복사 기반 열부하 계산 (Server C)
-- ✅ **데이터 품질 체크** — 범위/변화율/통계 3단계 검증 (Server D)
-- ✅ **명령 큐잉** — 지수 백오프 재시도, TTL 30분 (Server B)
-- ✅ **감사 로깅** — PostgreSQL audit_log, IP 추적 (Server A)
-- ✅ **InfluxDB 다운샘플링** — Flux 태스크 5분/1시간 평균 자동 집계
-- ✅ **알람 관리 페이지** — 심각도 카운트, 확인/억제 모달, 상세 패널, 이력 아카이브 (`/alarms`)
-- ✅ **장비 상세 모니터링** — 실시간 게이지, 트렌드 차트, 성능 지표, 연결 관계 (`/monitoring/[id]`)
-- ✅ **에너지 분석 대시보드** — 실시간 전력, 프로파일, 시스템별 내역, EUI (`/energy`)
-- ✅ **유지보수 관리** — 작업 지시 CRUD, 캘린더 뷰 (`/maintenance`)
-- ✅ **보고서** — 프리셋 보고서 생성, 이력 관리 (`/reports`)
-- ✅ **사용자 관리** — CRUD, 접근 로그 (`/settings/users`)
-- ✅ **시스템 설정** — 건물명, 시간대, 단위, 알람 임계값 설정 (`/settings`)
+**Phase 5 (신규, 2026.02.18)**:
+- ✅ **알림 채널 확장** — Email(SMTP)/Slack(Webhook) 알림, 설정 UI, 발송 이력 (`/settings/notifications`)
+- ✅ **Push 알림** — Browser Notification API, 알람 수신 시 브라우저 Push
+- ✅ **다국어 i18n** — next-intl 한/영 전환, 20개 페이지 600키, 헤더 언어 스위처
+- ✅ **대시보드 위젯 D&D** — react-grid-layout, 6개 위젯 분리, localStorage 레이아웃 저장
+- ✅ **WebSocket** — FastAPI WS 엔드포인트 + useWebSocket 훅, SSE 폴백 통합
+- ✅ **보고서 PDF/Excel** — openpyxl/fpdf2 기반 4포맷(JSON/CSV/Excel/PDF) 다운로드
+- ✅ **장비 상세 링크** — 모니터링 장비 그리드, 대시보드/토폴로지 링크 개선
+- ✅ **API 문서 정비** — 4개 서버 Pydantic response_model, OpenAPI tags 정비
+- ✅ **환경 분리** — `.env.example`, pydantic-settings BaseSettings 마이그레이션
 - ⚠️ **OpenAI API 키**: `.env`의 `OPENAI_API_KEY`에 실제 키 설정 필요
 
-**Phase 4.5 (버그 수정, 2026.02.17)**:
-- ✅ **에너지 분석 kW 스케일링** — 에뮬레이터 정규화 값(0~100)을 장비 타입별 kW로 변환, InfluxDB 빈 쿼리 수정
-- ✅ **유지보수 캘린더 500 수정** — asyncpg 날짜 타입 변환 + equipment_metadata Neo4j 시드
-- ✅ **Server B 장비 로딩 재시도** — Neo4j 연결 5회 재시도(10초 간격) + `/devices/reload` 수동 갱신 API
-- ✅ **Grafana InfluxDB 인증** — 데이터소스 UID 명시 + HTTP Authorization 헤더 추가
-- ✅ **시나리오 관리 페이지** — Server C 시나리오 로드 + 고장 주입/해제 UI (`/scenarios`)
-- ✅ **데이터 품질 페이지** — Server D 품질 통계 + 포인트 현황 테이블 (`/data-quality`)
-
-### 프론트엔드 18개 페이지
+### 프론트엔드 20개 페이지
 | 경로 | 기능 |
 |------|------|
-| `/` | 대시보드 — KPI, 장비 상태, 알람 카드, 최근 데이터 |
+| `/` | 대시보드 — KPI, 장비 상태, 알람, D&D 위젯 그리드 |
 | `/monitoring` | 모니터링 — 실시간 차트 |
 | `/monitoring/[equipmentId]` | 장비 상세 — 게이지, 트렌드, 성능, 연결 관계, 알람 |
 | `/control` | 제어 — ON/OFF, 모드 변경 (JWT 인증 필요) |
@@ -129,9 +116,10 @@ Brick Schema 온톨로지(1,272 인스턴스)를 기반으로 4개 독립 서버
 | `/data-quality` | 데이터 품질 — Historian 상태, 품질 통계, 포인트 현황 |
 | `/energy` | 에너지 분석 — 실시간 전력, 프로파일, 시스템별, EUI |
 | `/maintenance` | 유지보수 — 작업 지시 CRUD, 캘린더 |
-| `/reports` | 보고서 — 프리셋 생성, 이력, 다운로드 |
+| `/reports` | 보고서 — 4종 프리셋, JSON/CSV/Excel/PDF 다운로드 |
 | `/settings` | 시스템 설정 — 건물명, 시간대, 단위, 알람 임계값 |
 | `/settings/users` | 사용자 관리 — CRUD, 접근 로그 |
+| `/settings/notifications` | 알림 채널 — Email/Slack 설정, 테스트 발송, 이력 |
 | `/login` | 로그인 — JWT 인증 |
 
 ### 기동 방법
@@ -144,19 +132,22 @@ open http://localhost:3000                               # 프론트엔드
 
 ### 주요 기술 결정 사항
 - **MQTT 타임스탬프**: Server C는 ISO 8601 발행, Server A `_parse_ts()`가 Unix로 변환
-- **SSE**: `asyncio.Event` 크로스스레드 불가 → polling 방식 사용 (Python 3.12+)
+- **SSE + WebSocket 병행**: `useRealtimeData()` 통합 훅 — WS 우선, SSE 폴백
 - **Neo4j**: docker-compose에서 제거, 외부 `neo4j-bees` 컨테이너 사용 (`host.docker.internal:7689`)
 - **NEXT_PUBLIC_* 환경변수**: 빌드 시 bake됨, 런타임 변경 불가
 - **Cytoscape.js**: dynamic import (SSR 회피), `as any` 타입 캐스팅으로 strict 타입 우회
 - **n10s 노드 필터**: `n.uri STARTS WITH 'https://example.org/gec-b#'`로 스키마 노드 제외
+- **i18n**: next-intl "no-prefix" 모드, cookie 기반 locale 전환 (ko 기본)
+- **환경설정**: pydantic-settings BaseSettings (Server A, C), `.env.example` 제공
+- **PDF 한국어**: fpdf2 + NanumGothic (Docker `fonts-nanum`), Helvetica 폴백
 
 ### 상세 참조
-- **전체 구현 상세/디버깅 이력/다음 작업 가이드**: `_docs/history.md` (섹션 10~14)
+- **전체 구현 상세/디버깅 이력/다음 작업 가이드**: `_docs/history.md` (섹션 10~16)
 - **전체 아키텍처 설계서**: `_docs/10_디지털트윈_플랫폼_설계.md`
 
 ## 작업 시작 전
 1. **`_docs/08_개발_원칙.md`를 반드시 읽을 것** — TTL-First 원칙, 변경 워크플로우, Neo4j 동기화 규칙
-2. **플랫폼 작업 시 `_docs/history.md` 섹션 10~14을 반드시 읽을 것** — 서버별 API/구현 상세, Phase 3 완료 내역, 다음 작업 가이드
+2. **플랫폼 작업 시 `_docs/history.md` 섹션 10~16을 반드시 읽을 것** — 서버별 API/구현 상세, Phase 5 완료 내역, 다음 작업 가이드
 3. 온톨로지 맥락이 필요하면 `_docs/history.md` 섹션 1~11을 읽을 것
 
 ## 언어
