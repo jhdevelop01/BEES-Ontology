@@ -34,7 +34,7 @@ class ReportGenerateRequest(BaseModel):
     preset_id: Optional[str] = Field(default=None, description="프리셋 ID (energy_monthly, maintenance_status, comfort, alarm_summary)")
     custom: Optional[dict[str, Any]] = Field(default=None, description="사용자 정의 설정 (metrics, equipment_ids 등)")
     period: ReportPeriod = Field(..., description="보고서 기간")
-    format: str = Field(default="json", description="출력 형식 (csv, json)")
+    format: str = Field(default="json", description="출력 형식 (json, csv, xlsx, pdf)")
 
 
 # ── API 엔드포인트 ────────────────────────────────────────────────────────
@@ -59,8 +59,8 @@ async def generate(req: ReportGenerateRequest) -> dict[str, Any]:
         fmt=req.format,
     )
 
-    # CSV인 경우 download_url 포함
-    if req.format == "csv":
+    # 파일 다운로드가 필요한 포맷 (csv, xlsx, pdf)
+    if req.format in ("csv", "xlsx", "pdf"):
         result["download_url"] = f"/api/reports/{result['report_id']}/download"
 
     return {
@@ -74,11 +74,23 @@ async def generate(req: ReportGenerateRequest) -> dict[str, Any]:
 
 @router.get("/{report_id}/download")
 async def download_report(report_id: str):
-    """보고서 다운로드 (CSV 또는 JSON 스트림)."""
+    """보고서 다운로드 (CSV, JSON, Excel, PDF)."""
     report = get_report(report_id)
     if report is None:
         raise HTTPException(status_code=404, detail=f"보고서 {report_id} 없음")
 
+    fmt = report.get("format", "json")
+
+    # Excel / PDF (바이너리)
+    if fmt in ("xlsx", "pdf") and report.get("binary_content"):
+        import io as _io
+        return StreamingResponse(
+            _io.BytesIO(report["binary_content"]),
+            media_type=report["content_type"],
+            headers={"Content-Disposition": f"attachment; filename=report_{report_id}.{fmt}"},
+        )
+
+    # CSV
     if report.get("csv_content"):
         return StreamingResponse(
             iter([report["csv_content"]]),
@@ -86,7 +98,7 @@ async def download_report(report_id: str):
             headers={"Content-Disposition": f"attachment; filename=report_{report_id}.csv"},
         )
 
-    # JSON 형식
+    # JSON 형식 (기본)
     import json
     content = json.dumps(report.get("data", {}), ensure_ascii=False, indent=2)
     return StreamingResponse(

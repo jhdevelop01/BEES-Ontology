@@ -16,6 +16,7 @@ import {
 } from "@/lib/api";
 import {
   FileText,
+  FileSpreadsheet,
   Zap,
   Wrench,
   Thermometer,
@@ -38,6 +39,8 @@ const PRESET_ICONS: Record<string, React.ComponentType<{ className?: string }>> 
 const FORMAT_OPTIONS = [
   { label: "JSON", value: "json" },
   { label: "CSV", value: "csv" },
+  { label: "Excel", value: "xlsx" },
+  { label: "PDF", value: "pdf" },
 ] as const;
 
 /* ── 메인 페이지 ── */
