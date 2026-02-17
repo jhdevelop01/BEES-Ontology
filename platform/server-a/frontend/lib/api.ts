@@ -372,6 +372,35 @@ export async function getChatStatus(): Promise<ChatStatusResponse> {
   return fetchJSON<ChatStatusResponse>("/api/chat/status");
 }
 
+// ─── 장비 목록 ───
+
+export interface EquipmentListItem {
+  id: string;
+  name: string;
+  brick_class: string[];
+  location: string | null;
+  type: string;
+  is_active: boolean | null;
+}
+
+export interface EquipmentListResponse {
+  items: EquipmentListItem[];
+  total: number;
+}
+
+export async function getEquipmentList(params?: {
+  type?: string;
+  floor?: string;
+}): Promise<EquipmentListResponse> {
+  const sp = new URLSearchParams();
+  if (params?.type) sp.set("type", params.type);
+  if (params?.floor) sp.set("floor", params.floor);
+  const qs = sp.toString();
+  return fetchJSON<EquipmentListResponse>(
+    `/api/equipment${qs ? `?${qs}` : ""}`
+  );
+}
+
 // ─── 장비 상세 ───
 
 export interface EquipmentConnection {

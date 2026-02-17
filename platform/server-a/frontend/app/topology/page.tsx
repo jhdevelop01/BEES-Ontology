@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ import {
   Loader2,
   AlertCircle,
   Activity,
+  ExternalLink,
 } from "lucide-react";
 
 /* ── 타입 아이콘 매핑 ── */
@@ -45,6 +47,17 @@ function getTypeLabel(type: string): string {
   if (t.includes("system")) return "시스템";
   if (t.includes("sensor")) return "센서";
   return "장비";
+}
+
+/* ── 토폴로지 노드 ID → 모니터링 페이지용 ID 변환 ── */
+
+function toMonitoringId(nodeId: string): string {
+  // URI 형태인 경우 이름만 추출
+  if (nodeId.includes("#")) {
+    return "bldg:" + nodeId.split("#").pop();
+  }
+  if (nodeId.startsWith("bldg:")) return nodeId;
+  return "bldg:" + nodeId;
 }
 
 /* ── 트리 아이템 컴포넌트 ── */
@@ -216,6 +229,15 @@ function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCa
             {new Date(lastUpdate * 1000).toLocaleTimeString("ko-KR")}
           </p>
         )}
+
+        {/* 장비 상세 링크 */}
+        <Link
+          href={`/monitoring/${encodeURIComponent(toMonitoringId(node.id))}`}
+          className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-500 hover:text-blue-700"
+          onClick={(e) => e.stopPropagation()}
+        >
+          상세 보기 →
+        </Link>
       </CardContent>
     </Card>
   );
@@ -455,6 +477,17 @@ export default function TopologyPage() {
                   </div>
                 </div>
               </div>
+
+              {/* 장비 노드 선택: 상세 모니터링 링크 */}
+              {isEquipmentNode(selectedNode) && (
+                <Link
+                  href={`/monitoring/${encodeURIComponent(toMonitoringId(selectedNode.id))}`}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  장비 상세 모니터링
+                </Link>
+              )}
 
               {/* 장비 노드 선택: 센서 데이터 표시 */}
               {isEquipmentNode(selectedNode) && (

@@ -144,6 +144,67 @@ async def get_equipment_count() -> int:
         return 42
 
 
+async def get_equipment_list(
+    equipment_type: str | None = None, floor: str | None = None,
+) -> list[dict[str, Any]]:
+    """장비 목록 조회 — Equipment 라벨을 가진 모든 인스턴스."""
+    if not _driver:
+        return []
+    try:
+        async with _driver.session() as session:
+            # Equipment 계열 라벨을 가진 노드 + 위치 정보
+            result = await session.run("""
+                MATCH (n)
+                WHERE n.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND any(label IN labels(n) WHERE label IN [
+                    'AHU', 'Chiller', 'Boiler', 'Pump', 'Fan', 'Cooling_Tower',
+                    'FCU', 'Elevator', 'VFD', 'Heat_Exchanger', 'Valve',
+                    'CRAC', 'Condenser', 'Compressor', 'Damper',
+                    'Air_Handler_Unit', 'Cooling_Coil', 'Heating_Coil',
+                    'Supply_Fan', 'Return_Fan', 'Exhaust_Fan'
+                  ])
+                OPTIONAL MATCH (n)-[:hasLocation]->(loc)
+                WHERE loc.uri STARTS WITH 'https://example.org/gec-b#'
+                RETURN n.uri AS uri, labels(n) AS labels,
+                       loc.uri AS location_uri
+                ORDER BY n.uri
+            """)
+            records = [record.data() async for record in result]
+            # 응답 빌드
+            equipment_list = []
+            for rec in records:
+                uri = rec.get("uri", "")
+                labels = [l for l in rec.get("labels", []) if l != "Resource"]
+                name = uri.rsplit("#", 1)[-1] if "#" in uri else uri
+                brick_id = "bldg:" + name
+                loc_uri = rec.get("location_uri")
+                location = loc_uri.rsplit("#", 1)[-1] if loc_uri and "#" in loc_uri else None
+
+                # type 필터
+                if equipment_type:
+                    if not any(equipment_type.lower() in l.lower() for l in labels):
+                        continue
+                # floor 필터
+                if floor:
+                    if not location or floor.lower() not in location.lower():
+                        continue
+
+                equipment_list.append({
+                    "id": brick_id,
+                    "name": name,
+                    "brick_class": labels,
+                    "location": location,
+                    "type": next(
+                        (l for l in labels if l not in ("Equipment", "Resource")),
+                        "Equipment",
+                    ),
+                })
+            return equipment_list
+    except Exception as e:
+        logger.warning("장비 목록 조회 실패: %s", e)
+        return []
+
+
 def _build_tree_from_records(records: list[dict]) -> list[dict]:
     """Neo4j 레코드를 트리 구조 JSON으로 변환"""
     tree: dict[str, Any] = {}

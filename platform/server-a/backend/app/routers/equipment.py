@@ -58,6 +58,26 @@ def _brick_id_to_uri(brick_id: str) -> str:
 
 # ── API 엔드포인트 ────────────────────────────────────────────────────────
 
+@router.get("")
+async def list_equipment(
+    type: str | None = Query(None, description="장비 유형 필터 (AHU, Chiller, Pump 등)"),
+    floor: str | None = Query(None, description="층 필터 (5F, B1F 등)"),
+) -> dict[str, Any]:
+    """전체 장비 목록 조회."""
+    items = await neo4j_service.get_equipment_list(equipment_type=type, floor=floor)
+
+    # MQTT 디바이스 캐시에서 활성 상태 매칭
+    device_cache = mqtt_service.get_device_cache()
+    for item in items:
+        device = device_cache.get(item["id"]) or device_cache.get(item["name"])
+        item["is_active"] = device.get("is_active", False) if device else None
+
+    return {
+        "items": items,
+        "total": len(items),
+    }
+
+
 @router.get("/{equipment_id}")
 async def get_equipment_detail(equipment_id: str) -> dict[str, Any]:
     """

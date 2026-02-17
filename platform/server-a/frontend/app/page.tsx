@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
+import Link from "next/link";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -233,9 +234,12 @@ export default function DashboardPage() {
                         ) : (
                           <PowerOff className="h-4 w-4 text-gray-300" />
                         )}
-                        <span className="text-sm font-medium">
+                        <Link
+                          href={`/monitoring/${encodeURIComponent(device.device_id)}`}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                        >
                           {device.device_id}
-                        </span>
+                        </Link>
                       </div>
                       <Badge
                         variant={device.is_active ? "success" : "secondary"}
