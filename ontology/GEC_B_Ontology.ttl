@@ -6827,3 +6827,5025 @@ bldg:VFD_Group a brick:VFD ;
 #   5. 엘리베이터 개별화 (10대) + 그룹 포인트 + hasLocation 수정
 #   6. SHACL v2.0 (24 shapes)
 # =============================================================================
+
+# =============================================================================
+# SECTION 15: Phase 10 — 온톨로지 확장 (v2.1.0, 2026-02-17)
+# Room 세분화 162개, BMS 포인트 252개, 장비 메타데이터, 에너지 실측 데이터
+# =============================================================================
+
+
+# ── 15a. Room 인스턴스 세분화 (162개 개별 Room) ──────────────────────────
+
+# =============================================================================
+# SECTION 5-A: LOCATION — Individual Room Instances (~163개)
+# 기존 그룹 Room을 세분화한 개별 Room 인스턴스
+# =============================================================================
+
+
+# =============================================================================
+# B4F — 지하4층 주차장 세분화 (4실)
+# =============================================================================
+
+bldg:Room_B4F_Parking_A a brick:Room ;
+    rdfs:label "B동 B4F 주차구역 A" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 900.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B4F ;
+    brick:isPartOf bldg:Parking_B4F ;
+    brick:isPartOf bldg:Parking_Zone_B4F .
+
+bldg:Room_B4F_Parking_B a brick:Room ;
+    rdfs:label "B동 B4F 주차구역 B" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 900.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B4F ;
+    brick:isPartOf bldg:Parking_B4F ;
+    brick:isPartOf bldg:Parking_Zone_B4F .
+
+bldg:Room_B4F_Parking_C a brick:Room ;
+    rdfs:label "B동 B4F 주차구역 C" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 900.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B4F ;
+    brick:isPartOf bldg:Parking_B4F ;
+    brick:isPartOf bldg:Parking_Zone_B4F .
+
+bldg:Room_B4F_Mechanical a brick:Room ;
+    rdfs:label "B동 B4F 기계실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "기계실" ;
+    brick:isPartOf bldg:B_B4F .
+
+# hasPart: Parking_B4F → 개별 주차구역
+bldg:Parking_B4F brick:hasPart bldg:Room_B4F_Parking_A ,
+    bldg:Room_B4F_Parking_B ,
+    bldg:Room_B4F_Parking_C .
+
+# =============================================================================
+# B3F — 지하3층 주차장 세분화 (4실)
+# =============================================================================
+
+bldg:Room_B3F_Parking_A a brick:Room ;
+    rdfs:label "B동 B3F 주차구역 A" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 900.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B3F ;
+    brick:isPartOf bldg:Parking_B3F ;
+    brick:isPartOf bldg:Parking_Zone_B3F .
+
+bldg:Room_B3F_Parking_B a brick:Room ;
+    rdfs:label "B동 B3F 주차구역 B" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 900.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B3F ;
+    brick:isPartOf bldg:Parking_B3F ;
+    brick:isPartOf bldg:Parking_Zone_B3F .
+
+bldg:Room_B3F_Parking_C a brick:Room ;
+    rdfs:label "B동 B3F 주차구역 C" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 900.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B3F ;
+    brick:isPartOf bldg:Parking_B3F ;
+    brick:isPartOf bldg:Parking_Zone_B3F .
+
+bldg:Room_B3F_Mechanical a brick:Room ;
+    rdfs:label "B동 B3F 기계실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "기계실" ;
+    brick:isPartOf bldg:B_B3F .
+
+# hasPart: Parking_B3F → 개별 주차구역
+bldg:Parking_B3F brick:hasPart bldg:Room_B3F_Parking_A ,
+    bldg:Room_B3F_Parking_B ,
+    bldg:Room_B3F_Parking_C .
+
+# =============================================================================
+# B2F — 지하2층 주차장/기계실 세분화 (4실)
+# =============================================================================
+
+bldg:Room_B2F_Parking_A a brick:Room ;
+    rdfs:label "B동 B2F 주차구역 A" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 800.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B2F ;
+    brick:isPartOf bldg:Parking_B2F ;
+    brick:isPartOf bldg:Parking_Zone_B2F .
+
+bldg:Room_B2F_Parking_B a brick:Room ;
+    rdfs:label "B동 B2F 주차구역 B" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 800.0 ;
+    bees:spaceType "주차구역" ;
+    brick:isPartOf bldg:B_B2F ;
+    brick:isPartOf bldg:Parking_B2F ;
+    brick:isPartOf bldg:Parking_Zone_B2F .
+
+bldg:Room_B2F_Electrical a brick:Room ;
+    rdfs:label "B동 B2F 전기실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 200.0 ;
+    bees:spaceType "전기실" ;
+    brick:isPartOf bldg:B_B2F ;
+    brick:isPartOf bldg:Electrical_Zone_B2F .
+
+bldg:Room_B2F_Storage a brick:Room ;
+    rdfs:label "B동 B2F 창고" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 100.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_B2F .
+
+# hasPart: Parking_B2F → 개별 주차구역
+bldg:Parking_B2F brick:hasPart bldg:Room_B2F_Parking_A ,
+    bldg:Room_B2F_Parking_B .
+
+# =============================================================================
+# B1F — 지하1층 기계실/식당 세분화 (6실)
+# =============================================================================
+
+bldg:Room_B1F_Pump a brick:Room ;
+    rdfs:label "B동 B1F 펌프실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 200.0 ;
+    bees:spaceType "펌프실" ;
+    brick:isPartOf bldg:B_B1F ;
+    brick:isPartOf bldg:B_B1F_Mechanical_Room ;
+    brick:isPartOf bldg:Mechanical_Zone_B1F .
+
+bldg:Room_B1F_Boiler a brick:Room ;
+    rdfs:label "B동 B1F 보일러실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 250.0 ;
+    bees:spaceType "보일러실" ;
+    brick:isPartOf bldg:B_B1F ;
+    brick:isPartOf bldg:B_B1F_Mechanical_Room ;
+    brick:isPartOf bldg:Mechanical_Zone_B1F .
+
+bldg:Room_B1F_Cafeteria_Kitchen a brick:Room ;
+    rdfs:label "B동 B1F 구내식당 주방" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 150.0 ;
+    bees:spaceType "주방" ;
+    brick:isPartOf bldg:B_B1F ;
+    brick:isPartOf bldg:Cafeteria_B1F ;
+    brick:isPartOf bldg:Cafeteria_Zone_B1F .
+
+bldg:Room_B1F_Cafeteria_Dining a brick:Room ;
+    rdfs:label "B동 B1F 구내식당 식사공간" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 300.0 ;
+    bees:spaceType "식사공간" ;
+    brick:isPartOf bldg:B_B1F ;
+    brick:isPartOf bldg:Cafeteria_B1F ;
+    brick:isPartOf bldg:Cafeteria_Zone_B1F .
+
+bldg:Room_B1F_Electrical a brick:Room ;
+    rdfs:label "B동 B1F 전기실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 100.0 ;
+    bees:spaceType "전기실" ;
+    brick:isPartOf bldg:B_B1F .
+
+bldg:Room_B1F_Storage a brick:Room ;
+    rdfs:label "B동 B1F 창고" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_B1F .
+
+# hasPart: 기존 그룹 → 개별 실
+bldg:B_B1F_Mechanical_Room brick:hasPart bldg:Room_B1F_Pump ,
+    bldg:Room_B1F_Boiler .
+
+bldg:Cafeteria_B1F brick:hasPart bldg:Room_B1F_Cafeteria_Kitchen ,
+    bldg:Room_B1F_Cafeteria_Dining .
+
+# =============================================================================
+# 1F — 로비층 개별 실 (6실)
+# =============================================================================
+
+bldg:Room_1F_Reception a brick:Room ;
+    rdfs:label "B동 1층 안내데스크" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "안내데스크" ;
+    brick:isPartOf bldg:B_1F ;
+    brick:isPartOf bldg:Lobby_Zone_1F .
+
+bldg:Room_1F_Cafe a brick:Room ;
+    rdfs:label "B동 1층 카페" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 120.0 ;
+    bees:spaceType "카페" ;
+    brick:isPartOf bldg:B_1F ;
+    brick:isPartOf bldg:Lobby_Zone_1F .
+
+bldg:Room_1F_Security a brick:Room ;
+    rdfs:label "B동 1층 보안실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "보안실" ;
+    brick:isPartOf bldg:B_1F .
+
+bldg:Room_1F_Mailroom a brick:Room ;
+    rdfs:label "B동 1층 우편실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "우편실" ;
+    brick:isPartOf bldg:B_1F .
+
+bldg:Room_1F_WC_M a brick:Room ;
+    rdfs:label "B동 1층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_1F .
+
+bldg:Room_1F_WC_F a brick:Room ;
+    rdfs:label "B동 1층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_1F .
+
+# =============================================================================
+# 2F — 라운지층 개별 실 (5실)
+# =============================================================================
+
+bldg:Room_2F_Lounge_East a brick:Room ;
+    rdfs:label "B동 2층 라운지 동측" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 200.0 ;
+    bees:spaceType "라운지" ;
+    brick:isPartOf bldg:B_2F ;
+    brick:isPartOf bldg:Lounge_2F ;
+    brick:isPartOf bldg:Lounge_Zone_2F .
+
+bldg:Room_2F_Lounge_West a brick:Room ;
+    rdfs:label "B동 2층 라운지 서측" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 200.0 ;
+    bees:spaceType "라운지" ;
+    brick:isPartOf bldg:B_2F ;
+    brick:isPartOf bldg:Lounge_2F ;
+    brick:isPartOf bldg:Lounge_Zone_2F .
+
+bldg:Room_2F_Mtg_01 a brick:Room ;
+    rdfs:label "B동 2층 회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 40.0 ;
+    bees:spaceType "회의실" ;
+    brick:isPartOf bldg:B_2F ;
+    brick:isPartOf bldg:Lounge_Zone_2F .
+
+bldg:Room_2F_WC_M a brick:Room ;
+    rdfs:label "B동 2층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_2F .
+
+bldg:Room_2F_WC_F a brick:Room ;
+    rdfs:label "B동 2층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_2F .
+
+# hasPart: Lounge_2F → 개별 라운지
+bldg:Lounge_2F brick:hasPart bldg:Room_2F_Lounge_East ,
+    bldg:Room_2F_Lounge_West .
+
+# =============================================================================
+# 3F — 컨퍼런스층 개별 실 (7실)
+# =============================================================================
+
+bldg:Room_3F_Conf_L01 a brick:Room ;
+    rdfs:label "B동 3층 대회의실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 120.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_3F ;
+    brick:isPartOf bldg:Conference_Center_3F ;
+    brick:isPartOf bldg:Conference_Zone_3F .
+
+bldg:Room_3F_Conf_M01 a brick:Room ;
+    rdfs:label "B동 3층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 60.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_3F ;
+    brick:isPartOf bldg:Conference_Center_3F ;
+    brick:isPartOf bldg:Conference_Zone_3F .
+
+bldg:Room_3F_Conf_M02 a brick:Room ;
+    rdfs:label "B동 3층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 60.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_3F ;
+    brick:isPartOf bldg:Conference_Center_3F ;
+    brick:isPartOf bldg:Conference_Zone_3F .
+
+bldg:Room_3F_Conf_S01 a brick:Room ;
+    rdfs:label "B동 3층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 25.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_3F ;
+    brick:isPartOf bldg:Conference_Center_3F ;
+    brick:isPartOf bldg:Conference_Zone_3F .
+
+bldg:Room_3F_Conf_S02 a brick:Room ;
+    rdfs:label "B동 3층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 25.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_3F ;
+    brick:isPartOf bldg:Conference_Center_3F ;
+    brick:isPartOf bldg:Conference_Zone_3F .
+
+bldg:Room_3F_WC_M a brick:Room ;
+    rdfs:label "B동 3층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_3F .
+
+bldg:Room_3F_WC_F a brick:Room ;
+    rdfs:label "B동 3층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_3F .
+
+# hasPart: Conference_Center_3F → 개별 회의실
+bldg:Conference_Center_3F brick:hasPart bldg:Room_3F_Conf_L01 ,
+    bldg:Room_3F_Conf_M01 ,
+    bldg:Room_3F_Conf_M02 ,
+    bldg:Room_3F_Conf_S01 ,
+    bldg:Room_3F_Conf_S02 .
+
+# =============================================================================
+# 5F — 오피스 기준층 개별 실 (14실)
+# =============================================================================
+
+bldg:Room_5F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 5층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 5층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_S03 a brick:Room ;
+    rdfs:label "B동 5층 소회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_S04 a brick:Room ;
+    rdfs:label "B동 5층 소회의실 #4" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_S05 a brick:Room ;
+    rdfs:label "B동 5층 소회의실 #5" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 5층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 5층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 5층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 5층 대회의실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Pantry a brick:Room ;
+    rdfs:label "B동 5층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Print a brick:Room ;
+    rdfs:label "B동 5층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_WC_M a brick:Room ;
+    rdfs:label "B동 5층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_WC_F a brick:Room ;
+    rdfs:label "B동 5층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+bldg:Room_5F_Storage a brick:Room ;
+    rdfs:label "B동 5층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:isPartOf bldg:B_5F_Interior_Zone .
+
+# hasPart: B_5F_Meeting_Room_Group → 개별 회의실
+bldg:B_5F_Meeting_Room_Group brick:hasPart bldg:Room_5F_Mtg_S01 ,
+    bldg:Room_5F_Mtg_S02 ,
+    bldg:Room_5F_Mtg_S03 ,
+    bldg:Room_5F_Mtg_S04 ,
+    bldg:Room_5F_Mtg_S05 ,
+    bldg:Room_5F_Mtg_M01 ,
+    bldg:Room_5F_Mtg_M02 ,
+    bldg:Room_5F_Mtg_M03 ,
+    bldg:Room_5F_Mtg_L01 .
+
+# =============================================================================
+# 6F — 오피스 기준층 개별 실 (14실)
+# =============================================================================
+
+bldg:Room_6F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 6층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 6층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_S03 a brick:Room ;
+    rdfs:label "B동 6층 소회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_S04 a brick:Room ;
+    rdfs:label "B동 6층 소회의실 #4" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_S05 a brick:Room ;
+    rdfs:label "B동 6층 소회의실 #5" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 6층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 6층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 6층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 6층 대회의실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Pantry a brick:Room ;
+    rdfs:label "B동 6층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Print a brick:Room ;
+    rdfs:label "B동 6층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_WC_M a brick:Room ;
+    rdfs:label "B동 6층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_WC_F a brick:Room ;
+    rdfs:label "B동 6층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+bldg:Room_6F_Storage a brick:Room ;
+    rdfs:label "B동 6층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:isPartOf bldg:B_6F_Interior_Zone .
+
+# hasPart: B_6F_Meeting_Room_Group → 개별 회의실
+bldg:B_6F_Meeting_Room_Group brick:hasPart bldg:Room_6F_Mtg_S01 ,
+    bldg:Room_6F_Mtg_S02 ,
+    bldg:Room_6F_Mtg_S03 ,
+    bldg:Room_6F_Mtg_S04 ,
+    bldg:Room_6F_Mtg_S05 ,
+    bldg:Room_6F_Mtg_M01 ,
+    bldg:Room_6F_Mtg_M02 ,
+    bldg:Room_6F_Mtg_M03 ,
+    bldg:Room_6F_Mtg_L01 .
+
+# =============================================================================
+# 7F — 오피스 기준층 개별 실 (14실)
+# =============================================================================
+
+bldg:Room_7F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 7층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 7층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_S03 a brick:Room ;
+    rdfs:label "B동 7층 소회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_S04 a brick:Room ;
+    rdfs:label "B동 7층 소회의실 #4" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_S05 a brick:Room ;
+    rdfs:label "B동 7층 소회의실 #5" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 7층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 7층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 7층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 7층 대회의실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Pantry a brick:Room ;
+    rdfs:label "B동 7층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Print a brick:Room ;
+    rdfs:label "B동 7층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_WC_M a brick:Room ;
+    rdfs:label "B동 7층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_WC_F a brick:Room ;
+    rdfs:label "B동 7층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+bldg:Room_7F_Storage a brick:Room ;
+    rdfs:label "B동 7층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:isPartOf bldg:B_7F_Interior_Zone .
+
+# hasPart: B_7F_Meeting_Room_Group → 개별 회의실
+bldg:B_7F_Meeting_Room_Group brick:hasPart bldg:Room_7F_Mtg_S01 ,
+    bldg:Room_7F_Mtg_S02 ,
+    bldg:Room_7F_Mtg_S03 ,
+    bldg:Room_7F_Mtg_S04 ,
+    bldg:Room_7F_Mtg_S05 ,
+    bldg:Room_7F_Mtg_M01 ,
+    bldg:Room_7F_Mtg_M02 ,
+    bldg:Room_7F_Mtg_M03 ,
+    bldg:Room_7F_Mtg_L01 .
+
+# =============================================================================
+# 8F — 오피스 기준층 개별 실 (14실)
+# =============================================================================
+
+bldg:Room_8F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 8층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 8층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_S03 a brick:Room ;
+    rdfs:label "B동 8층 소회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_S04 a brick:Room ;
+    rdfs:label "B동 8층 소회의실 #4" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_S05 a brick:Room ;
+    rdfs:label "B동 8층 소회의실 #5" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 8층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 8층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 8층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 8층 대회의실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Pantry a brick:Room ;
+    rdfs:label "B동 8층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Print a brick:Room ;
+    rdfs:label "B동 8층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_WC_M a brick:Room ;
+    rdfs:label "B동 8층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_WC_F a brick:Room ;
+    rdfs:label "B동 8층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+bldg:Room_8F_Storage a brick:Room ;
+    rdfs:label "B동 8층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:isPartOf bldg:B_8F_Interior_Zone .
+
+# hasPart: B_8F_Meeting_Room_Group → 개별 회의실
+bldg:B_8F_Meeting_Room_Group brick:hasPart bldg:Room_8F_Mtg_S01 ,
+    bldg:Room_8F_Mtg_S02 ,
+    bldg:Room_8F_Mtg_S03 ,
+    bldg:Room_8F_Mtg_S04 ,
+    bldg:Room_8F_Mtg_S05 ,
+    bldg:Room_8F_Mtg_M01 ,
+    bldg:Room_8F_Mtg_M02 ,
+    bldg:Room_8F_Mtg_M03 ,
+    bldg:Room_8F_Mtg_L01 .
+
+# =============================================================================
+# 9F — 오피스 기준층 개별 실 (14실)
+# =============================================================================
+
+bldg:Room_9F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 9층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 9층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_S03 a brick:Room ;
+    rdfs:label "B동 9층 소회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_S04 a brick:Room ;
+    rdfs:label "B동 9층 소회의실 #4" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_S05 a brick:Room ;
+    rdfs:label "B동 9층 소회의실 #5" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 9층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 9층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 9층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 9층 대회의실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Pantry a brick:Room ;
+    rdfs:label "B동 9층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Print a brick:Room ;
+    rdfs:label "B동 9층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_WC_M a brick:Room ;
+    rdfs:label "B동 9층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_WC_F a brick:Room ;
+    rdfs:label "B동 9층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+bldg:Room_9F_Storage a brick:Room ;
+    rdfs:label "B동 9층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:isPartOf bldg:B_9F_Interior_Zone .
+
+# hasPart: B_9F_Meeting_Room_Group → 개별 회의실
+bldg:B_9F_Meeting_Room_Group brick:hasPart bldg:Room_9F_Mtg_S01 ,
+    bldg:Room_9F_Mtg_S02 ,
+    bldg:Room_9F_Mtg_S03 ,
+    bldg:Room_9F_Mtg_S04 ,
+    bldg:Room_9F_Mtg_S05 ,
+    bldg:Room_9F_Mtg_M01 ,
+    bldg:Room_9F_Mtg_M02 ,
+    bldg:Room_9F_Mtg_M03 ,
+    bldg:Room_9F_Mtg_L01 .
+
+# =============================================================================
+# 10F — 오피스 기준층 개별 실 (14실)
+# =============================================================================
+
+bldg:Room_10F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 10층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 10층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_S03 a brick:Room ;
+    rdfs:label "B동 10층 소회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_S04 a brick:Room ;
+    rdfs:label "B동 10층 소회의실 #4" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_S05 a brick:Room ;
+    rdfs:label "B동 10층 소회의실 #5" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 10층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 10층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 10층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 10층 대회의실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Pantry a brick:Room ;
+    rdfs:label "B동 10층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Print a brick:Room ;
+    rdfs:label "B동 10층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_WC_M a brick:Room ;
+    rdfs:label "B동 10층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_WC_F a brick:Room ;
+    rdfs:label "B동 10층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+bldg:Room_10F_Storage a brick:Room ;
+    rdfs:label "B동 10층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:isPartOf bldg:B_10F_Interior_Zone .
+
+# hasPart: B_10F_Meeting_Room_Group → 개별 회의실
+bldg:B_10F_Meeting_Room_Group brick:hasPart bldg:Room_10F_Mtg_S01 ,
+    bldg:Room_10F_Mtg_S02 ,
+    bldg:Room_10F_Mtg_S03 ,
+    bldg:Room_10F_Mtg_S04 ,
+    bldg:Room_10F_Mtg_S05 ,
+    bldg:Room_10F_Mtg_M01 ,
+    bldg:Room_10F_Mtg_M02 ,
+    bldg:Room_10F_Mtg_M03 ,
+    bldg:Room_10F_Mtg_L01 .
+
+# =============================================================================
+# 11F — 중간관리자층 개별 실 (12실)
+# =============================================================================
+
+bldg:Room_11F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 11층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 11층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 11층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 11층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 11층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 11층 대회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 60.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Mtg_L02 a brick:Room ;
+    rdfs:label "B동 11층 대회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 60.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Pantry a brick:Room ;
+    rdfs:label "B동 11층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Print a brick:Room ;
+    rdfs:label "B동 11층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_WC_M a brick:Room ;
+    rdfs:label "B동 11층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_WC_F a brick:Room ;
+    rdfs:label "B동 11층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+bldg:Room_11F_Storage a brick:Room ;
+    rdfs:label "B동 11층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:isPartOf bldg:B_11F_Interior_Zone .
+
+# hasPart: B_11F_Meeting_Room_Group → 개별 회의실
+bldg:B_11F_Meeting_Room_Group brick:hasPart bldg:Room_11F_Mtg_S01 ,
+    bldg:Room_11F_Mtg_S02 ,
+    bldg:Room_11F_Mtg_M01 ,
+    bldg:Room_11F_Mtg_M02 ,
+    bldg:Room_11F_Mtg_M03 ,
+    bldg:Room_11F_Mtg_L01 ,
+    bldg:Room_11F_Mtg_L02 .
+
+# =============================================================================
+# 12F — 중간관리자층 개별 실 (12실)
+# =============================================================================
+
+bldg:Room_12F_Mtg_S01 a brick:Room ;
+    rdfs:label "B동 12층 소회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Mtg_S02 a brick:Room ;
+    rdfs:label "B동 12층 소회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 15.0 ;
+    bees:spaceType "소회의실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Mtg_M01 a brick:Room ;
+    rdfs:label "B동 12층 중회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Mtg_M02 a brick:Room ;
+    rdfs:label "B동 12층 중회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Mtg_M03 a brick:Room ;
+    rdfs:label "B동 12층 중회의실 #3" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "중회의실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Mtg_L01 a brick:Room ;
+    rdfs:label "B동 12층 대회의실 #1" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 60.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Mtg_L02 a brick:Room ;
+    rdfs:label "B동 12층 대회의실 #2" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 60.0 ;
+    bees:spaceType "대회의실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Meeting_Room_Group ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Pantry a brick:Room ;
+    rdfs:label "B동 12층 탕비실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "탕비실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Print a brick:Room ;
+    rdfs:label "B동 12층 인쇄실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 10.0 ;
+    bees:spaceType "인쇄실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_WC_M a brick:Room ;
+    rdfs:label "B동 12층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_WC_F a brick:Room ;
+    rdfs:label "B동 12층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+bldg:Room_12F_Storage a brick:Room ;
+    rdfs:label "B동 12층 창고/유틸리티" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 8.0 ;
+    bees:spaceType "창고" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:isPartOf bldg:B_12F_Interior_Zone .
+
+# hasPart: B_12F_Meeting_Room_Group → 개별 회의실
+bldg:B_12F_Meeting_Room_Group brick:hasPart bldg:Room_12F_Mtg_S01 ,
+    bldg:Room_12F_Mtg_S02 ,
+    bldg:Room_12F_Mtg_M01 ,
+    bldg:Room_12F_Mtg_M02 ,
+    bldg:Room_12F_Mtg_M03 ,
+    bldg:Room_12F_Mtg_L01 ,
+    bldg:Room_12F_Mtg_L02 .
+
+# =============================================================================
+# 14F — 임원층 개별 실 (7실)
+# =============================================================================
+
+bldg:Room_14F_VIP_Conf_L01 a brick:Room ;
+    rdfs:label "B동 14층 VIP 대회의실" ;
+    rdfs:comment "AV장비, 동시통역 설비 포함. 임원 프레젠테이션/이사회용." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 150.0 ;
+    bees:spaceType "VIP 대회의실" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:isPartOf bldg:B_14F_VIP_Conference_Group ;
+    brick:isPartOf bldg:B_14F_Interior_Zone .
+
+bldg:Room_14F_VIP_Recep_01 a brick:Room ;
+    rdfs:label "B동 14층 VIP 접견실 #1" ;
+    rdfs:comment "외부 귀빈 접견용. 별도 응접 가구." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 80.0 ;
+    bees:spaceType "VIP 접견실" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:isPartOf bldg:B_14F_VIP_Conference_Group ;
+    brick:isPartOf bldg:B_14F_Interior_Zone .
+
+bldg:Room_14F_VIP_Recep_02 a brick:Room ;
+    rdfs:label "B동 14층 VIP 접견실 #2" ;
+    rdfs:comment "외부 귀빈 접견용. 별도 응접 가구." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 80.0 ;
+    bees:spaceType "VIP 접견실" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:isPartOf bldg:B_14F_VIP_Conference_Group ;
+    brick:isPartOf bldg:B_14F_Interior_Zone .
+
+bldg:Room_14F_Exec_Lounge a brick:Room ;
+    rdfs:label "B동 14층 임원 라운지" ;
+    rdfs:comment "임원 전용 휴식/다과 공간." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 40.0 ;
+    bees:spaceType "임원 라운지" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:isPartOf bldg:B_14F_Interior_Zone .
+
+bldg:Room_14F_WC_M a brick:Room ;
+    rdfs:label "B동 14층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:isPartOf bldg:B_14F_Interior_Zone .
+
+bldg:Room_14F_WC_F a brick:Room ;
+    rdfs:label "B동 14층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:isPartOf bldg:B_14F_Interior_Zone .
+
+bldg:Room_14F_WC_Exec a brick:Room ;
+    rdfs:label "B동 14층 임원 전용 화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "전용 화장실" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:isPartOf bldg:B_14F_Interior_Zone .
+
+# hasPart: B_14F_VIP_Conference_Group → 개별 VIP실
+bldg:B_14F_VIP_Conference_Group brick:hasPart bldg:Room_14F_VIP_Conf_L01 ,
+    bldg:Room_14F_VIP_Recep_01 ,
+    bldg:Room_14F_VIP_Recep_02 .
+
+# =============================================================================
+# 15F — 임원층 개별 실 (7실)
+# =============================================================================
+
+bldg:Room_15F_VIP_Conf_L01 a brick:Room ;
+    rdfs:label "B동 15층 VIP 대회의실" ;
+    rdfs:comment "AV장비, 동시통역 설비 포함. 최상층 임원 회의용." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 150.0 ;
+    bees:spaceType "VIP 대회의실" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:isPartOf bldg:B_15F_VIP_Conference_Group ;
+    brick:isPartOf bldg:B_15F_Interior_Zone .
+
+bldg:Room_15F_VIP_Recep_01 a brick:Room ;
+    rdfs:label "B동 15층 VIP 접견실 #1" ;
+    rdfs:comment "외부 귀빈 접견용. 별도 응접 가구." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 80.0 ;
+    bees:spaceType "VIP 접견실" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:isPartOf bldg:B_15F_VIP_Conference_Group ;
+    brick:isPartOf bldg:B_15F_Interior_Zone .
+
+bldg:Room_15F_VIP_Recep_02 a brick:Room ;
+    rdfs:label "B동 15층 VIP 접견실 #2" ;
+    rdfs:comment "외부 귀빈 접견용. 별도 응접 가구." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 80.0 ;
+    bees:spaceType "VIP 접견실" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:isPartOf bldg:B_15F_VIP_Conference_Group ;
+    brick:isPartOf bldg:B_15F_Interior_Zone .
+
+bldg:Room_15F_Exec_Lounge a brick:Room ;
+    rdfs:label "B동 15층 임원 라운지" ;
+    rdfs:comment "최상층 임원 전용 휴식/다과 공간." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 40.0 ;
+    bees:spaceType "임원 라운지" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:isPartOf bldg:B_15F_Interior_Zone .
+
+bldg:Room_15F_WC_M a brick:Room ;
+    rdfs:label "B동 15층 남자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:isPartOf bldg:B_15F_Interior_Zone .
+
+bldg:Room_15F_WC_F a brick:Room ;
+    rdfs:label "B동 15층 여자화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 30.0 ;
+    bees:spaceType "화장실" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:isPartOf bldg:B_15F_Interior_Zone .
+
+bldg:Room_15F_WC_Exec a brick:Room ;
+    rdfs:label "B동 15층 임원 전용 화장실" ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 20.0 ;
+    bees:spaceType "전용 화장실" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:isPartOf bldg:B_15F_Interior_Zone .
+
+# hasPart: B_15F_VIP_Conference_Group → 개별 VIP실
+bldg:B_15F_VIP_Conference_Group brick:hasPart bldg:Room_15F_VIP_Conf_L01 ,
+    bldg:Room_15F_VIP_Recep_01 ,
+    bldg:Room_15F_VIP_Recep_02 .
+
+# =============================================================================
+# RF — 옥상 세분화 (2실)
+# =============================================================================
+
+bldg:Room_RF_Cooling_Tower a brick:Room ;
+    rdfs:label "B동 옥상 냉각탑 구역" ;
+    rdfs:comment "냉각탑 3기(CHW) + 2기(CW) 설치 영역." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 200.0 ;
+    bees:spaceType "냉각탑 구역" ;
+    brick:isPartOf bldg:B_RF ;
+    brick:isPartOf bldg:Mechanical_Zone_RF .
+
+bldg:Room_RF_Electrical a brick:Room ;
+    rdfs:label "B동 옥상 전기실" ;
+    rdfs:comment "태양광 인버터, 옥상 조명 분전반." ;
+    bees:hasConfidence "estimated" ;
+    bees:usableArea_m2 50.0 ;
+    bees:spaceType "전기실" ;
+    brick:isPartOf bldg:B_RF ;
+    brick:isPartOf bldg:Mechanical_Zone_RF .
+
+# hasPart: B_RF_Mechanical → 하위 구역 (기계실은 기존 인스턴스)
+bldg:B_RF_Mechanical brick:hasPart bldg:Room_RF_Cooling_Tower ,
+    bldg:Room_RF_Electrical .
+
+# isPartOf 역방향: RF 하위 → B_RF_Mechanical
+bldg:Room_RF_Cooling_Tower brick:isPartOf bldg:B_RF_Mechanical .
+bldg:Room_RF_Electrical brick:isPartOf bldg:B_RF_Mechanical .
+
+# ── 15b. BMS Point 정밀 모델링 (252개 신규 포인트) ──────────────────────
+
+
+# =============================================================================
+# BMS Point 정밀 모델링 — 장비별 신규 센서/명령/설정값
+# 생성일: 2026-02-17, 기존 SECTION 11/12 포인트와 중복 없음 확인 완료
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# AHU UFAD (11대) — 신규 포인트
+# 기존: SAT, RAT, MAT, Filter_DP, CHW_Valve, HW_Valve, Fan_Speed, Fan_Status
+# 신규: SAF, RAF, SAH, RAH, OA_Damper, Power, SAT_SP, DSP, OnOff_CMD, CO2, OAF
+# -----------------------------------------------------------------------------
+
+# --- AHU #1 (5F) ---
+bldg:AHU_1_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#1 급기 풍량 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#1 환기 풍량 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#1 급기 습도 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#1 환기 습도 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#1 소비전력 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#1 덕트 정압 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#1 기동/정지 명령 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#1 환기 CO2 농도 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+bldg:AHU_1_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#1 외기 풍량 (5F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_1 ;
+    brick:hasLocation bldg:B_5F .
+
+# --- AHU #2 (6F) ---
+bldg:AHU_2_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#2 급기 풍량 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#2 환기 풍량 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#2 급기 습도 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#2 환기 습도 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#2 외기 댐퍼 명령 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#2 소비전력 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#2 급기온도 설정값 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#2 덕트 정압 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#2 기동/정지 명령 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#2 환기 CO2 농도 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+bldg:AHU_2_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#2 외기 풍량 (6F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_2 ;
+    brick:hasLocation bldg:B_6F .
+
+# --- AHU #3 (7F) ---
+bldg:AHU_3_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#3 급기 풍량 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#3 환기 풍량 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#3 급기 습도 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#3 환기 습도 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#3 외기 댐퍼 명령 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#3 소비전력 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#3 급기온도 설정값 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#3 덕트 정압 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#3 기동/정지 명령 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#3 환기 CO2 농도 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+bldg:AHU_3_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#3 외기 풍량 (7F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_3 ;
+    brick:hasLocation bldg:B_7F .
+
+# --- AHU #4 (8F) ---
+bldg:AHU_4_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#4 급기 풍량 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#4 환기 풍량 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#4 급기 습도 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#4 환기 습도 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#4 외기 댐퍼 명령 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#4 소비전력 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#4 급기온도 설정값 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#4 덕트 정압 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#4 기동/정지 명령 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#4 환기 CO2 농도 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+bldg:AHU_4_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#4 외기 풍량 (8F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_4 ;
+    brick:hasLocation bldg:B_8F .
+
+# --- AHU #5 (9F) ---
+bldg:AHU_5_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#5 급기 풍량 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#5 환기 풍량 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#5 급기 습도 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#5 환기 습도 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#5 외기 댐퍼 명령 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#5 소비전력 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#5 급기온도 설정값 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#5 덕트 정압 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#5 기동/정지 명령 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#5 환기 CO2 농도 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+bldg:AHU_5_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#5 외기 풍량 (9F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_5 ;
+    brick:hasLocation bldg:B_9F .
+
+# --- AHU #6 (10F) ---
+bldg:AHU_6_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#6 급기 풍량 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#6 환기 풍량 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#6 급기 습도 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#6 환기 습도 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#6 외기 댐퍼 명령 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#6 소비전력 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#6 급기온도 설정값 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#6 덕트 정압 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#6 기동/정지 명령 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#6 환기 CO2 농도 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+bldg:AHU_6_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#6 외기 풍량 (10F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_6 ;
+    brick:hasLocation bldg:B_10F .
+
+# --- AHU #7 (11F) ---
+bldg:AHU_7_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#7 급기 풍량 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#7 환기 풍량 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#7 급기 습도 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#7 환기 습도 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#7 외기 댐퍼 명령 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#7 소비전력 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#7 급기온도 설정값 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#7 덕트 정압 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#7 기동/정지 명령 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#7 환기 CO2 농도 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+bldg:AHU_7_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#7 외기 풍량 (11F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_7 ;
+    brick:hasLocation bldg:B_11F .
+
+# --- AHU #8 (12F) ---
+bldg:AHU_8_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#8 급기 풍량 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#8 환기 풍량 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#8 급기 습도 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#8 환기 습도 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#8 외기 댐퍼 명령 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#8 소비전력 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#8 급기온도 설정값 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#8 덕트 정압 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#8 기동/정지 명령 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#8 환기 CO2 농도 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+bldg:AHU_8_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#8 외기 풍량 (12F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_8 ;
+    brick:hasLocation bldg:B_12F .
+
+# --- AHU #9 (14F) ---
+bldg:AHU_9_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#9 급기 풍량 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#9 환기 풍량 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#9 급기 습도 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#9 환기 습도 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#9 외기 댐퍼 명령 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#9 소비전력 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#9 급기온도 설정값 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#9 덕트 정압 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#9 기동/정지 명령 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#9 환기 CO2 농도 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+bldg:AHU_9_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#9 외기 풍량 (14F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_9 ;
+    brick:hasLocation bldg:B_14F .
+
+# --- AHU #10 (15F) ---
+bldg:AHU_10_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#10 급기 풍량 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#10 환기 풍량 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#10 급기 습도 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#10 환기 습도 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#10 외기 댐퍼 명령 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#10 소비전력 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#10 급기온도 설정값 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#10 덕트 정압 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#10 기동/정지 명령 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#10 환기 CO2 농도 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+bldg:AHU_10_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#10 외기 풍량 (15F)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_10 ;
+    brick:hasLocation bldg:B_15F .
+
+# --- AHU #11 (포디움) ---
+bldg:AHU_11_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "AHU#11 급기 풍량 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "AHU#11 환기 풍량 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "AHU#11 급기 습도 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_RAH a brick:Return_Air_Humidity_Sensor ;
+    rdfs:label "AHU#11 환기 습도 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "AHU#11 외기 댐퍼 명령 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "AHU#11 소비전력 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "AHU#11 급기온도 설정값 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_DSP a brick:Duct_Static_Pressure_Sensor ;
+    rdfs:label "AHU#11 덕트 정압 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Pa" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "AHU#11 기동/정지 명령 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_CO2 a brick:CO2_Sensor ;
+    rdfs:label "AHU#11 환기 CO2 농도 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "ppm" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:AHU_11_OAF a brick:Outside_Air_Flow_Sensor ;
+    rdfs:label "AHU#11 외기 풍량 (포디움)" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:AHU_UFAD_11 ;
+    brick:hasLocation bldg:B_RF .
+
+# -----------------------------------------------------------------------------
+# DOAS (3대) — 신규 포인트
+# 기존: SAT, Filter_DP, OAT
+# 신규: RAT, MAT, SAF, RAF, Fan_Speed, Fan_Status, CHW_Valve, HW_Valve, SAH, OA_Damper, Power, SAT_SP
+# -----------------------------------------------------------------------------
+
+# --- DOAS #1 ---
+bldg:DOAS_1_RAT a brick:Return_Air_Temperature_Sensor ;
+    rdfs:label "DOAS#1 환기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_MAT a brick:Mixed_Air_Temperature_Sensor ;
+    rdfs:label "DOAS#1 혼합공기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "DOAS#1 급기 풍량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "DOAS#1 환기 풍량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_Fan_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "DOAS#1 팬 속도 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_Fan_Status a brick:Fan_On_Off_Status ;
+    rdfs:label "DOAS#1 팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_CHW_Valve a brick:Valve_Command ;
+    rdfs:label "DOAS#1 냉수 코일 밸브" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_HW_Valve a brick:Valve_Command ;
+    rdfs:label "DOAS#1 온수 코일 밸브" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "DOAS#1 급기 습도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "DOAS#1 외기 댐퍼 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "DOAS#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_1_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "DOAS#1 급기온도 설정값" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_1 ;
+    brick:hasLocation bldg:B_RF .
+
+# --- DOAS #2 ---
+bldg:DOAS_2_RAT a brick:Return_Air_Temperature_Sensor ;
+    rdfs:label "DOAS#2 환기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_MAT a brick:Mixed_Air_Temperature_Sensor ;
+    rdfs:label "DOAS#2 혼합공기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "DOAS#2 급기 풍량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "DOAS#2 환기 풍량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_Fan_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "DOAS#2 팬 속도 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_Fan_Status a brick:Fan_On_Off_Status ;
+    rdfs:label "DOAS#2 팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_CHW_Valve a brick:Valve_Command ;
+    rdfs:label "DOAS#2 냉수 코일 밸브" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_HW_Valve a brick:Valve_Command ;
+    rdfs:label "DOAS#2 온수 코일 밸브" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "DOAS#2 급기 습도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "DOAS#2 외기 댐퍼 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "DOAS#2 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_2_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "DOAS#2 급기온도 설정값" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_2 ;
+    brick:hasLocation bldg:B_RF .
+
+# --- DOAS #3 ---
+bldg:DOAS_3_RAT a brick:Return_Air_Temperature_Sensor ;
+    rdfs:label "DOAS#3 환기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_MAT a brick:Mixed_Air_Temperature_Sensor ;
+    rdfs:label "DOAS#3 혼합공기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_SAF a brick:Supply_Air_Flow_Sensor ;
+    rdfs:label "DOAS#3 급기 풍량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_RAF a brick:Return_Air_Flow_Sensor ;
+    rdfs:label "DOAS#3 환기 풍량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "CMH" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_Fan_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "DOAS#3 팬 속도 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_Fan_Status a brick:Fan_On_Off_Status ;
+    rdfs:label "DOAS#3 팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_CHW_Valve a brick:Valve_Command ;
+    rdfs:label "DOAS#3 냉수 코일 밸브" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_HW_Valve a brick:Valve_Command ;
+    rdfs:label "DOAS#3 온수 코일 밸브" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_SAH a brick:Supply_Air_Humidity_Sensor ;
+    rdfs:label "DOAS#3 급기 습도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%RH" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_OA_Damper a brick:Damper_Position_Command ;
+    rdfs:label "DOAS#3 외기 댐퍼 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "DOAS#3 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:DOAS_3_SAT_SP a brick:Supply_Air_Temperature_Setpoint ;
+    rdfs:label "DOAS#3 급기온도 설정값" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:DOAS_3 ;
+    brick:hasLocation bldg:B_RF .
+
+# -----------------------------------------------------------------------------
+# Chiller (4대) — 신규 포인트
+# 기존: CHWST, CHWRT, CW_In_Temp, kW, Run_Status, Flow, Alarm, CHWST_SP, OnOff_CMD
+# 신규: COP, Load, Current
+# -----------------------------------------------------------------------------
+
+bldg:Chiller_1_COP a bees:COP_Sensor ;
+    rdfs:label "칠러#1 COP (성능계수)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Chiller_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_1_Load a brick:Load_Sensor ;
+    rdfs:label "칠러#1 부하율" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%" ;
+    brick:isPointOf bldg:Chiller_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_1_Current a brick:Current_Sensor ;
+    rdfs:label "칠러#1 전류" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "A" ;
+    brick:isPointOf bldg:Chiller_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_2_COP a bees:COP_Sensor ;
+    rdfs:label "칠러#2 COP (성능계수)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Chiller_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_2_Load a brick:Load_Sensor ;
+    rdfs:label "칠러#2 부하율" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%" ;
+    brick:isPointOf bldg:Chiller_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_2_Current a brick:Current_Sensor ;
+    rdfs:label "칠러#2 전류" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "A" ;
+    brick:isPointOf bldg:Chiller_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_3_COP a bees:COP_Sensor ;
+    rdfs:label "칠러#3 COP (성능계수)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Chiller_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_3_Load a brick:Load_Sensor ;
+    rdfs:label "칠러#3 부하율" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%" ;
+    brick:isPointOf bldg:Chiller_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_3_Current a brick:Current_Sensor ;
+    rdfs:label "칠러#3 전류" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "A" ;
+    brick:isPointOf bldg:Chiller_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_4_COP a bees:COP_Sensor ;
+    rdfs:label "칠러#4 COP (성능계수)" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Chiller_4 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_4_Load a brick:Load_Sensor ;
+    rdfs:label "칠러#4 부하율" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "%" ;
+    brick:isPointOf bldg:Chiller_4 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Chiller_4_Current a brick:Current_Sensor ;
+    rdfs:label "칠러#4 전류" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "A" ;
+    brick:isPointOf bldg:Chiller_4 ;
+    brick:hasLocation bldg:B_B1F .
+
+# -----------------------------------------------------------------------------
+# Boiler (3대) — 신규 포인트
+# 기존: HWST, HWRT, Run_Status, Flame_Status, Gas_Usage
+# 신규: Flue_Temp, Power, OnOff_CMD, HWST_SP, HW_Flow
+# -----------------------------------------------------------------------------
+
+bldg:Boiler_1_Flue_Temp a brick:Exhaust_Air_Temperature_Sensor ;
+    rdfs:label "보일러#1 배기가스 온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Boiler_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "보일러#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Boiler_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_1_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "보일러#1 기동/정지 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Boiler_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_1_HWST_SP a brick:Hot_Water_Supply_Temperature_Setpoint ;
+    rdfs:label "보일러#1 온수 출구온도 설정값" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Boiler_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_1_HW_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "보일러#1 온수 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Boiler_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_2_Flue_Temp a brick:Exhaust_Air_Temperature_Sensor ;
+    rdfs:label "보일러#2 배기가스 온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Boiler_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "보일러#2 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Boiler_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_2_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "보일러#2 기동/정지 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Boiler_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_2_HWST_SP a brick:Hot_Water_Supply_Temperature_Setpoint ;
+    rdfs:label "보일러#2 온수 출구온도 설정값" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Boiler_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_2_HW_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "보일러#2 온수 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Boiler_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_3_Flue_Temp a brick:Exhaust_Air_Temperature_Sensor ;
+    rdfs:label "보일러#3 배기가스 온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Boiler_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_3_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "보일러#3 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Boiler_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_3_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "보일러#3 기동/정지 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Boiler_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_3_HWST_SP a brick:Hot_Water_Supply_Temperature_Setpoint ;
+    rdfs:label "보일러#3 온수 출구온도 설정값" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Boiler_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Boiler_3_HW_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "보일러#3 온수 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Boiler_3 ;
+    brick:hasLocation bldg:B_B1F .
+
+# -----------------------------------------------------------------------------
+# Cooling Tower (3대) — 신규 포인트
+# 기존: CW_Temp, Basin_Level, Fan_Speed, Fan_Status
+# 신규: CW_Return_Temp, Run_Status, OnOff_CMD, Power, CW_Flow
+# -----------------------------------------------------------------------------
+
+bldg:CT_1_CW_Return_Temp a brick:Condenser_Water_Temperature_Sensor ;
+    rdfs:label "냉각탑#1 냉각수 입구온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Cooling_Tower_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_1_Run_Status a brick:On_Off_Status ;
+    rdfs:label "냉각탑#1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Cooling_Tower_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_1_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "냉각탑#1 기동/정지 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Cooling_Tower_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "냉각탑#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Cooling_Tower_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_1_CW_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "냉각탑#1 냉각수 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Cooling_Tower_1 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_2_CW_Return_Temp a brick:Condenser_Water_Temperature_Sensor ;
+    rdfs:label "냉각탑#2 냉각수 입구온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Cooling_Tower_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_2_Run_Status a brick:On_Off_Status ;
+    rdfs:label "냉각탑#2 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Cooling_Tower_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_2_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "냉각탑#2 기동/정지 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Cooling_Tower_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "냉각탑#2 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Cooling_Tower_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_2_CW_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "냉각탑#2 냉각수 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Cooling_Tower_2 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_3_CW_Return_Temp a brick:Condenser_Water_Temperature_Sensor ;
+    rdfs:label "냉각탑#3 냉각수 입구온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:Cooling_Tower_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_3_Run_Status a brick:On_Off_Status ;
+    rdfs:label "냉각탑#3 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Cooling_Tower_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_3_OnOff_CMD a brick:On_Off_Command ;
+    rdfs:label "냉각탑#3 기동/정지 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Cooling_Tower_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_3_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "냉각탑#3 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Cooling_Tower_3 ;
+    brick:hasLocation bldg:B_RF .
+
+bldg:CT_3_CW_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "냉각탑#3 냉각수 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Cooling_Tower_3 ;
+    brick:hasLocation bldg:B_RF .
+
+# -----------------------------------------------------------------------------
+# HVAC Pump — 신규 포인트
+# CHW_Pump_1 기존: DP, Run_Status, Speed / CW_Pump_1 기존: DP, Run_Status, Speed
+# HW_Pump_1 기존: DP, Run_Status, Speed / CC_Pump_1 기존: (없음)
+# -----------------------------------------------------------------------------
+
+bldg:CHW_Pump_1_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "냉수펌프#1 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:CHW_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CHW_Pump_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "냉수펌프#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:CHW_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CW_Pump_1_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "냉각수펌프#1 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:CW_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CW_Pump_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "냉각수펌프#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:CW_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:HW_Pump_1_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "온수펌프#1 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:HW_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:HW_Pump_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "온수펌프#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:HW_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CC_Pump_1_Run_Status a brick:On_Off_Status ;
+    rdfs:label "칠드실링펌프#1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CC_Pump_1_DP a brick:Differential_Pressure_Sensor ;
+    rdfs:label "칠드실링펌프#1 차압" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kPa" ;
+    brick:isPointOf bldg:CC_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CC_Pump_1_Speed a brick:Frequency_Command ;
+    rdfs:label "칠드실링펌프#1 VFD 속도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Hz" ;
+    brick:isPointOf bldg:CC_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CC_Pump_1_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "칠드실링펌프#1 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:CC_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:CC_Pump_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "칠드실링펌프#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:CC_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+# -----------------------------------------------------------------------------
+# Utility Pump — 신규 포인트
+# -----------------------------------------------------------------------------
+
+bldg:Rainwater_Pump_Status a brick:On_Off_Status ;
+    rdfs:label "우수 재활용 펌프 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Rainwater_Pump ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Rainwater_Pump_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "우수 재활용 펌프 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Rainwater_Pump ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Rainwater_Pump_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "우수 재활용 펌프 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Rainwater_Pump ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Sewage_Pump_1_Status a brick:On_Off_Status ;
+    rdfs:label "배수펌프#1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Sewage_Pump_1 ;
+    brick:hasLocation bldg:B_B4F .
+
+bldg:Sewage_Pump_1_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "배수펌프#1 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Sewage_Pump_1 ;
+    brick:hasLocation bldg:B_B4F .
+
+bldg:Sewage_Pump_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "배수펌프#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Sewage_Pump_1 ;
+    brick:hasLocation bldg:B_B4F .
+
+bldg:Sewage_Pump_2_Status a brick:On_Off_Status ;
+    rdfs:label "배수펌프#2 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Sewage_Pump_2 ;
+    brick:hasLocation bldg:B_B4F .
+
+bldg:Sewage_Pump_2_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "배수펌프#2 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Sewage_Pump_2 ;
+    brick:hasLocation bldg:B_B4F .
+
+bldg:Sewage_Pump_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "배수펌프#2 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Sewage_Pump_2 ;
+    brick:hasLocation bldg:B_B4F .
+
+bldg:Wastewater_Pump_Status a brick:On_Off_Status ;
+    rdfs:label "중수처리 폭기펌프 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Wastewater_Aeration_Pump ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Wastewater_Pump_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "중수처리 폭기펌프 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Wastewater_Aeration_Pump ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Wastewater_Pump_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "중수처리 폭기펌프 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Wastewater_Aeration_Pump ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_1_Status a brick:On_Off_Status ;
+    rdfs:label "급수 가압펌프#1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Water_Supply_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_1_Pressure a brick:Pressure_Sensor ;
+    rdfs:label "급수 가압펌프#1 토출압" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kPa" ;
+    brick:isPointOf bldg:Water_Supply_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_1_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "급수 가압펌프#1 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Water_Supply_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "급수 가압펌프#1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Water_Supply_Pump_1 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_2_Status a brick:On_Off_Status ;
+    rdfs:label "급수 가압펌프#2 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Water_Supply_Pump_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_2_Pressure a brick:Pressure_Sensor ;
+    rdfs:label "급수 가압펌프#2 토출압" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kPa" ;
+    brick:isPointOf bldg:Water_Supply_Pump_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_2_Flow a brick:Water_Flow_Sensor ;
+    rdfs:label "급수 가압펌프#2 유량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "LPM" ;
+    brick:isPointOf bldg:Water_Supply_Pump_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Water_Supply_Pump_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "급수 가압펌프#2 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Water_Supply_Pump_2 ;
+    brick:hasLocation bldg:B_B1F .
+
+# -----------------------------------------------------------------------------
+# FCU (3대) — 신규 포인트
+# 기존: (없음)
+# 신규: SAT, Fan_Speed, Valve_CMD, Status
+# -----------------------------------------------------------------------------
+
+bldg:FCU_2F_SAT a brick:Supply_Air_Temperature_Sensor ;
+    rdfs:label "2층 FCU 급기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:FCU_2F ;
+    brick:hasLocation bldg:B_2F .
+
+bldg:FCU_2F_Fan_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "2층 FCU 팬 속도" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_2F ;
+    brick:hasLocation bldg:B_2F .
+
+bldg:FCU_2F_Valve_CMD a brick:Valve_Command ;
+    rdfs:label "2층 FCU 밸브 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_2F ;
+    brick:hasLocation bldg:B_2F .
+
+bldg:FCU_2F_Status a brick:On_Off_Status ;
+    rdfs:label "2층 FCU 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_2F ;
+    brick:hasLocation bldg:B_2F .
+
+bldg:FCU_3F_1_SAT a brick:Supply_Air_Temperature_Sensor ;
+    rdfs:label "3층 FCU#1 급기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:FCU_3F_1 ;
+    brick:hasLocation bldg:B_3F .
+
+bldg:FCU_3F_1_Fan_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "3층 FCU#1 팬 속도" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_3F_1 ;
+    brick:hasLocation bldg:B_3F .
+
+bldg:FCU_3F_1_Valve_CMD a brick:Valve_Command ;
+    rdfs:label "3층 FCU#1 밸브 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_3F_1 ;
+    brick:hasLocation bldg:B_3F .
+
+bldg:FCU_3F_1_Status a brick:On_Off_Status ;
+    rdfs:label "3층 FCU#1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_3F_1 ;
+    brick:hasLocation bldg:B_3F .
+
+bldg:FCU_3F_2_SAT a brick:Supply_Air_Temperature_Sensor ;
+    rdfs:label "3층 FCU#2 급기온도" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "°C" ;
+    brick:isPointOf bldg:FCU_3F_2 ;
+    brick:hasLocation bldg:B_3F .
+
+bldg:FCU_3F_2_Fan_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "3층 FCU#2 팬 속도" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_3F_2 ;
+    brick:hasLocation bldg:B_3F .
+
+bldg:FCU_3F_2_Valve_CMD a brick:Valve_Command ;
+    rdfs:label "3층 FCU#2 밸브 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_3F_2 ;
+    brick:hasLocation bldg:B_3F .
+
+bldg:FCU_3F_2_Status a brick:On_Off_Status ;
+    rdfs:label "3층 FCU#2 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_3F_2 ;
+    brick:hasLocation bldg:B_3F .
+
+# -----------------------------------------------------------------------------
+# Exhaust Fan (4대) — 신규 포인트
+# 기존: (없음)
+# 신규: Status, Speed
+# -----------------------------------------------------------------------------
+
+bldg:Exhaust_Fan_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "지하1층 배기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B1F ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Exhaust_Fan_B1F_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "지하1층 배기팬 속도" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B1F ;
+    brick:hasLocation bldg:B_B1F .
+
+bldg:Exhaust_Fan_B2F_Status a brick:On_Off_Status ;
+    rdfs:label "지하2층 배기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B2F ;
+    brick:hasLocation bldg:B_B2F .
+
+bldg:Exhaust_Fan_B2F_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "지하2층 배기팬 속도" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B2F ;
+    brick:hasLocation bldg:B_B2F .
+
+bldg:Exhaust_Fan_B3F_Status a brick:On_Off_Status ;
+    rdfs:label "지하3층 배기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B3F ;
+    brick:hasLocation bldg:B_B3F .
+
+bldg:Exhaust_Fan_B3F_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "지하3층 배기팬 속도" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B3F ;
+    brick:hasLocation bldg:B_B3F .
+
+bldg:Exhaust_Fan_B4F_Status a brick:On_Off_Status ;
+    rdfs:label "지하4층 배기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B4F ;
+    brick:hasLocation bldg:B_B4F .
+
+bldg:Exhaust_Fan_B4F_Speed a brick:Fan_Speed_Command ;
+    rdfs:label "지하4층 배기팬 속도" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_B4F ;
+    brick:hasLocation bldg:B_B4F .
+
+# -----------------------------------------------------------------------------
+# 기타 AHU (에어커튼, PAC) — 신규 포인트
+# -----------------------------------------------------------------------------
+
+bldg:Air_Curtain_1F_Status a brick:On_Off_Status ;
+    rdfs:label "1층 에어커튼 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Air_Curtain_1F ;
+    brick:hasLocation bldg:B_1F .
+
+bldg:Air_Curtain_1F_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "1층 에어커튼 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Air_Curtain_1F ;
+    brick:hasLocation bldg:B_1F .
+
+bldg:PAC_Lobby_1F_Status a brick:On_Off_Status ;
+    rdfs:label "1층 로비 공조기 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:PAC_Lobby_1F ;
+    brick:hasLocation bldg:B_1F .
+
+bldg:PAC_Lobby_1F_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "1층 로비 공조기 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:PAC_Lobby_1F ;
+    brick:hasLocation bldg:B_1F .
+
+# =============================================================================
+# END — 총 252개 신규 BMS 포인트 인스턴스
+# AHU UFAD: 119, DOAS: 36, Chiller: 12, Boiler: 15, CT: 15
+# HVAC Pump: 11, Utility Pump: 20, FCU: 12, Exhaust Fan: 8, Other: 4
+# =============================================================================
+
+# ── 15c. 장비 메타데이터 강화 ──────────────────────────────────────────
+
+# =============================================================================
+# 장비 메타데이터 강화 — 제조사/모델/시리얼/설치일/보증/정비/정격전력
+# 생성일: 2026-02-17
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Part 1: New OWL Property Definitions (SECTION 1에 추가)
+# 기존: bees:manufacturer, bees:modelSeries — 이미 존재
+# 신규: modelNumber, serialNumber, installationDate, warrantyExpiry,
+#       lastMaintenanceDate, ratedPower_kW
+# -----------------------------------------------------------------------------
+
+bees:modelNumber a owl:DatatypeProperty ;
+    rdfs:label "모델번호" ;
+    rdfs:comment "장비 모델 번호." ;
+    rdfs:domain brick:Equipment ;
+    rdfs:range xsd:string .
+
+bees:serialNumber a owl:DatatypeProperty ;
+    rdfs:label "시리얼번호" ;
+    rdfs:comment "장비 시리얼 번호. 패턴: KR-GEC-{장비코드}{번호}-{설치연도}." ;
+    rdfs:domain brick:Equipment ;
+    rdfs:range xsd:string .
+
+bees:installationDate a owl:DatatypeProperty ;
+    rdfs:label "설치일" ;
+    rdfs:comment "장비 설치 완료일." ;
+    rdfs:domain brick:Equipment ;
+    rdfs:range xsd:date .
+
+bees:warrantyExpiry a owl:DatatypeProperty ;
+    rdfs:label "보증만료일" ;
+    rdfs:comment "제조사 보증 만료일 (설치일 + 5년)." ;
+    rdfs:domain brick:Equipment ;
+    rdfs:range xsd:date .
+
+bees:lastMaintenanceDate a owl:DatatypeProperty ;
+    rdfs:label "최근정비일" ;
+    rdfs:comment "가장 최근 정기 유지보수 완료일." ;
+    rdfs:domain brick:Equipment ;
+    rdfs:range xsd:date .
+
+bees:ratedPower_kW a owl:DatatypeProperty ;
+    rdfs:label "정격전력 (kW)" ;
+    rdfs:comment "장비 정격 소비전력 (kW)." ;
+    rdfs:domain brick:Equipment ;
+    rdfs:range xsd:decimal .
+
+
+# =============================================================================
+# Part 2: Equipment Metadata
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Chillers — Carrier 30XA series (원심식 대형, 800RT class)
+# -----------------------------------------------------------------------------
+
+bldg:Chiller_1 bees:modelNumber "30XA-1500KR" ;
+    bees:serialNumber "KR-GEC-CH01-2010" ;
+    bees:installationDate "2010-06-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-06-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-15"^^xsd:date ;
+    bees:ratedPower_kW 1050.0 .
+
+bldg:Chiller_2 bees:modelNumber "30XA-1500KR" ;
+    bees:serialNumber "KR-GEC-CH02-2010" ;
+    bees:installationDate "2010-06-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-06-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-10"^^xsd:date ;
+    bees:ratedPower_kW 1050.0 .
+
+bldg:Chiller_3 bees:modelNumber "30XA-1500KR" ;
+    bees:serialNumber "KR-GEC-CH03-2010" ;
+    bees:installationDate "2010-07-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-07-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-05"^^xsd:date ;
+    bees:ratedPower_kW 1050.0 .
+
+bldg:Chiller_4 bees:modelNumber "30XA-1500KR" ;
+    bees:serialNumber "KR-GEC-CH04-2010" ;
+    bees:installationDate "2010-07-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-07-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-01"^^xsd:date ;
+    bees:ratedPower_kW 1050.0 .
+
+# -----------------------------------------------------------------------------
+# Boilers — 경동나비엔 NCB-700 series (가스 콘덴싱)
+# -----------------------------------------------------------------------------
+
+bldg:Boiler_1 bees:manufacturer "경동나비엔" ;
+    bees:modelNumber "NCB-700-36K" ;
+    bees:serialNumber "KR-GEC-BL01-2010" ;
+    bees:installationDate "2010-08-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-08-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-20"^^xsd:date ;
+    bees:ratedPower_kW 350.0 .
+
+bldg:Boiler_2 bees:manufacturer "경동나비엔" ;
+    bees:modelNumber "NCB-700-36K" ;
+    bees:serialNumber "KR-GEC-BL02-2010" ;
+    bees:installationDate "2010-08-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-08-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-12"^^xsd:date ;
+    bees:ratedPower_kW 350.0 .
+
+bldg:Boiler_3 bees:manufacturer "경동나비엔" ;
+    bees:modelNumber "NCB-700-36K" ;
+    bees:serialNumber "KR-GEC-BL03-2010" ;
+    bees:installationDate "2010-08-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-08-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-08"^^xsd:date ;
+    bees:ratedPower_kW 350.0 .
+
+# -----------------------------------------------------------------------------
+# AHU (UFAD) — 캐리어코리아 39 series custom
+# -----------------------------------------------------------------------------
+
+bldg:AHU_UFAD_1 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH01-2010" ;
+    bees:installationDate "2010-09-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-06-15"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_2 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH02-2010" ;
+    bees:installationDate "2010-09-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-06-20"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_3 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH03-2010" ;
+    bees:installationDate "2010-09-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-05"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_4 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH04-2010" ;
+    bees:installationDate "2010-09-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-15"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_5 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH05-2010" ;
+    bees:installationDate "2010-09-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-01"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_6 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH06-2010" ;
+    bees:installationDate "2010-10-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-15"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_7 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH07-2010" ;
+    bees:installationDate "2010-10-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-01"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_8 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH08-2010" ;
+    bees:installationDate "2010-10-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-15"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_9 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH09-2010" ;
+    bees:installationDate "2010-10-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-01"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_10 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-47K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH10-2010" ;
+    bees:installationDate "2010-10-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-15"^^xsd:date ;
+    bees:ratedPower_kW 75.0 .
+
+bldg:AHU_UFAD_11 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-30K-UFAD" ;
+    bees:serialNumber "KR-GEC-AH11-2010" ;
+    bees:installationDate "2010-11-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-01"^^xsd:date ;
+    bees:ratedPower_kW 55.0 .
+
+# -----------------------------------------------------------------------------
+# DOAS (외기조화기) — 캐리어코리아 39 series
+# -----------------------------------------------------------------------------
+
+bldg:DOAS_1 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-24K-DOAS" ;
+    bees:serialNumber "KR-GEC-OA01-2010" ;
+    bees:installationDate "2010-09-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-10"^^xsd:date ;
+    bees:ratedPower_kW 45.0 .
+
+bldg:DOAS_2 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-24K-DOAS" ;
+    bees:serialNumber "KR-GEC-OA02-2010" ;
+    bees:installationDate "2010-09-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-05"^^xsd:date ;
+    bees:ratedPower_kW 45.0 .
+
+bldg:DOAS_3 bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-24K-DOAS" ;
+    bees:serialNumber "KR-GEC-OA03-2010" ;
+    bees:installationDate "2010-09-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-09-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-10"^^xsd:date ;
+    bees:ratedPower_kW 45.0 .
+
+# -----------------------------------------------------------------------------
+# Cooling Towers — 신성이엔지 NST-800
+# -----------------------------------------------------------------------------
+
+bldg:Cooling_Tower_1 bees:manufacturer "신성이엔지" ;
+    bees:modelNumber "NST-800C" ;
+    bees:serialNumber "KR-GEC-CT01-2010" ;
+    bees:installationDate "2010-05-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-05-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-20"^^xsd:date ;
+    bees:ratedPower_kW 37.0 .
+
+bldg:Cooling_Tower_2 bees:manufacturer "신성이엔지" ;
+    bees:modelNumber "NST-800C" ;
+    bees:serialNumber "KR-GEC-CT02-2010" ;
+    bees:installationDate "2010-05-25"^^xsd:date ;
+    bees:warrantyExpiry "2015-05-25"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-10"^^xsd:date ;
+    bees:ratedPower_kW 37.0 .
+
+bldg:Cooling_Tower_3 bees:manufacturer "신성이엔지" ;
+    bees:modelNumber "NST-800C" ;
+    bees:serialNumber "KR-GEC-CT03-2010" ;
+    bees:installationDate "2010-05-30"^^xsd:date ;
+    bees:warrantyExpiry "2015-05-30"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-05"^^xsd:date ;
+    bees:ratedPower_kW 37.0 .
+
+# -----------------------------------------------------------------------------
+# Pumps — Grundfos TP series
+# -----------------------------------------------------------------------------
+
+bldg:CHW_Pump_1 bees:manufacturer "Grundfos" ;
+    bees:modelNumber "TP 150-340/4" ;
+    bees:serialNumber "KR-GEC-CP01-2010" ;
+    bees:installationDate "2010-06-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-06-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-20"^^xsd:date ;
+    bees:ratedPower_kW 30.0 .
+
+bldg:CC_Pump_1 bees:manufacturer "Grundfos" ;
+    bees:modelNumber "TP 100-250/4" ;
+    bees:serialNumber "KR-GEC-CCP1-2010" ;
+    bees:installationDate "2010-06-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-06-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-05"^^xsd:date ;
+    bees:ratedPower_kW 18.5 .
+
+bldg:CW_Pump_1 bees:manufacturer "Grundfos" ;
+    bees:modelNumber "TP 150-400/4" ;
+    bees:serialNumber "KR-GEC-WP01-2010" ;
+    bees:installationDate "2010-06-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-06-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-01"^^xsd:date ;
+    bees:ratedPower_kW 37.0 .
+
+bldg:HW_Pump_1 bees:manufacturer "Grundfos" ;
+    bees:modelNumber "TP 100-200/4" ;
+    bees:serialNumber "KR-GEC-HP01-2010" ;
+    bees:installationDate "2010-08-25"^^xsd:date ;
+    bees:warrantyExpiry "2015-08-25"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-25"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+# -----------------------------------------------------------------------------
+# FCU — 삼성물산 (custom)
+# -----------------------------------------------------------------------------
+
+bldg:FCU_2F bees:manufacturer "삼성물산" ;
+    bees:modelNumber "SC-FCU-4W-08" ;
+    bees:serialNumber "KR-GEC-FC01-2010" ;
+    bees:installationDate "2010-11-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-06-25"^^xsd:date ;
+    bees:ratedPower_kW 0.8 .
+
+bldg:FCU_3F_1 bees:manufacturer "삼성물산" ;
+    bees:modelNumber "SC-FCU-4W-06" ;
+    bees:serialNumber "KR-GEC-FC02-2010" ;
+    bees:installationDate "2010-11-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-01"^^xsd:date ;
+    bees:ratedPower_kW 0.6 .
+
+bldg:FCU_3F_2 bees:manufacturer "삼성물산" ;
+    bees:modelNumber "SC-FCU-4W-06" ;
+    bees:serialNumber "KR-GEC-FC03-2010" ;
+    bees:installationDate "2010-11-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-15"^^xsd:date ;
+    bees:ratedPower_kW 0.6 .
+
+# -----------------------------------------------------------------------------
+# Elevators — 현대엘리베이터 LUXEN series
+# -----------------------------------------------------------------------------
+
+bldg:Elevator_Passenger_1 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV01-2010" ;
+    bees:installationDate "2010-12-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-15"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Passenger_2 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV02-2010" ;
+    bees:installationDate "2010-12-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-20"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Passenger_3 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV03-2010" ;
+    bees:installationDate "2010-12-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-01"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Passenger_4 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV04-2010" ;
+    bees:installationDate "2010-12-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-05"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Passenger_5 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV05-2010" ;
+    bees:installationDate "2010-12-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-20"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Passenger_6 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV06-2010" ;
+    bees:installationDate "2010-12-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-25"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Passenger_7 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV07-2011" ;
+    bees:installationDate "2011-01-10"^^xsd:date ;
+    bees:warrantyExpiry "2016-01-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-01"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Passenger_8 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600" ;
+    bees:serialNumber "KR-GEC-EV08-2011" ;
+    bees:installationDate "2011-01-10"^^xsd:date ;
+    bees:warrantyExpiry "2016-01-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-05"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Elevator_Emergency_1 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-MRL-1600-EM" ;
+    bees:serialNumber "KR-GEC-EE01-2010" ;
+    bees:installationDate "2010-12-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-10"^^xsd:date ;
+    bees:ratedPower_kW 30.0 .
+
+bldg:Elevator_Freight_1 bees:manufacturer "현대엘리베이터" ;
+    bees:modelNumber "LUXEN-FR-2000" ;
+    bees:serialNumber "KR-GEC-EF01-2010" ;
+    bees:installationDate "2010-12-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-10"^^xsd:date ;
+    bees:ratedPower_kW 37.0 .
+
+# -----------------------------------------------------------------------------
+# Exhaust Fans — 삼성공조 (custom)
+# -----------------------------------------------------------------------------
+
+bldg:Exhaust_Fan_B1F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SEF-B-7.5" ;
+    bees:serialNumber "KR-GEC-EF-B1-2010" ;
+    bees:installationDate "2010-10-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-10"^^xsd:date ;
+    bees:ratedPower_kW 7.5 .
+
+bldg:Exhaust_Fan_B2F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SEF-P-15" ;
+    bees:serialNumber "KR-GEC-EF-B2-2010" ;
+    bees:installationDate "2010-10-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-25"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+bldg:Exhaust_Fan_B3F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SEF-P-15" ;
+    bees:serialNumber "KR-GEC-EF-B3-2010" ;
+    bees:installationDate "2010-10-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-10"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+bldg:Exhaust_Fan_B4F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SEF-P-15" ;
+    bees:serialNumber "KR-GEC-EF-B4-2010" ;
+    bees:installationDate "2010-10-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-05"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+bldg:Exhaust_Fan_RF_1 bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SEF-R-22" ;
+    bees:serialNumber "KR-GEC-EF-R1-2010" ;
+    bees:installationDate "2010-11-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-20"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Exhaust_Fan_RF_2 bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SEF-R-22" ;
+    bees:serialNumber "KR-GEC-EF-R2-2010" ;
+    bees:installationDate "2010-11-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-01"^^xsd:date ;
+    bees:ratedPower_kW 22.0 .
+
+bldg:Kitchen_Exhaust_Fan_B1F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SEF-K-5.5" ;
+    bees:serialNumber "KR-GEC-KE01-2010" ;
+    bees:installationDate "2010-10-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-06-30"^^xsd:date ;
+    bees:ratedPower_kW 5.5 .
+
+# -----------------------------------------------------------------------------
+# Supply Fans — 삼성공조 (custom)
+# -----------------------------------------------------------------------------
+
+bldg:Supply_Fan_B1F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SSF-B-7.5" ;
+    bees:serialNumber "KR-GEC-SF-B1-2010" ;
+    bees:installationDate "2010-10-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-15"^^xsd:date ;
+    bees:ratedPower_kW 7.5 .
+
+bldg:Supply_Fan_B2F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SSF-P-15" ;
+    bees:serialNumber "KR-GEC-SF-B2-2010" ;
+    bees:installationDate "2010-10-05"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-05"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-01"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+bldg:Supply_Fan_B3F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SSF-P-15" ;
+    bees:serialNumber "KR-GEC-SF-B3-2010" ;
+    bees:installationDate "2010-10-10"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-10"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-09-20"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+bldg:Supply_Fan_B4F bees:manufacturer "삼성공조" ;
+    bees:modelNumber "SSF-P-15" ;
+    bees:serialNumber "KR-GEC-SF-B4-2010" ;
+    bees:installationDate "2010-10-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-10-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-10"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+# -----------------------------------------------------------------------------
+# Electrical — Emergency Generator, Transformer, UPS, MDP
+# -----------------------------------------------------------------------------
+
+bldg:Emergency_Generator bees:manufacturer "두산인프라코어" ;
+    bees:modelNumber "DP222LA-1200" ;
+    bees:serialNumber "KR-GEC-EG01-2010" ;
+    bees:installationDate "2010-04-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-04-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-10"^^xsd:date ;
+    bees:ratedPower_kW 960.0 .
+
+bldg:Transformer_Group bees:manufacturer "LS산전" ;
+    bees:modelNumber "MOTM-1000-22.9" ;
+    bees:serialNumber "KR-GEC-TR01-2010" ;
+    bees:installationDate "2010-03-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-03-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-25"^^xsd:date ;
+    bees:ratedPower_kW 6000.0 .
+
+bldg:Main_Distribution_Panel bees:manufacturer "LS산전" ;
+    bees:modelNumber "Susol-ACB-6300" ;
+    bees:serialNumber "KR-GEC-MD01-2010" ;
+    bees:installationDate "2010-03-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-03-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-11-20"^^xsd:date .
+
+bldg:UPS_System bees:manufacturer "Eaton" ;
+    bees:modelNumber "93PM-500" ;
+    bees:serialNumber "KR-GEC-UP01-2010" ;
+    bees:installationDate "2010-04-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-04-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-10-15"^^xsd:date ;
+    bees:ratedPower_kW 500.0 .
+
+# -----------------------------------------------------------------------------
+# Solar PV — 한화큐셀
+# -----------------------------------------------------------------------------
+
+bldg:Solar_Panel_RF bees:manufacturer "한화큐셀" ;
+    bees:modelNumber "Q.PEAK DUO-G5 320" ;
+    bees:serialNumber "KR-GEC-PV01-2010" ;
+    bees:installationDate "2010-11-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-06-10"^^xsd:date ;
+    bees:ratedPower_kW 100.0 .
+
+bldg:PV_Inverter_1 bees:manufacturer "SMA Solar" ;
+    bees:modelNumber "Sunny Tripower 25000TL" ;
+    bees:serialNumber "KR-GEC-PI01-2010" ;
+    bees:installationDate "2010-11-15"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-15"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-06-10"^^xsd:date ;
+    bees:ratedPower_kW 25.0 .
+
+# -----------------------------------------------------------------------------
+# Other HVAC — Air Curtain, PAC Lobby
+# -----------------------------------------------------------------------------
+
+bldg:Air_Curtain_1F bees:manufacturer "에어가드" ;
+    bees:modelNumber "AG-1500S" ;
+    bees:serialNumber "KR-GEC-AC01-2010" ;
+    bees:installationDate "2010-11-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-07-20"^^xsd:date ;
+    bees:ratedPower_kW 3.0 .
+
+bldg:PAC_Lobby_1F bees:manufacturer "캐리어코리아" ;
+    bees:modelNumber "39CC-10K-PAC" ;
+    bees:serialNumber "KR-GEC-PA01-2010" ;
+    bees:installationDate "2010-11-20"^^xsd:date ;
+    bees:warrantyExpiry "2015-11-20"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-08-05"^^xsd:date ;
+    bees:ratedPower_kW 15.0 .
+
+# -----------------------------------------------------------------------------
+# BMS Server
+# -----------------------------------------------------------------------------
+
+bldg:BMS_Server bees:manufacturer "Honeywell" ;
+    bees:modelNumber "EBI-R500" ;
+    bees:serialNumber "KR-GEC-BMS1-2010" ;
+    bees:installationDate "2010-12-01"^^xsd:date ;
+    bees:warrantyExpiry "2015-12-01"^^xsd:date ;
+    bees:lastMaintenanceDate "2025-12-15"^^xsd:date ;
+    bees:ratedPower_kW 2.0 .
+
+# ── 15d. 실측 에너지 데이터 교체 ────────────────────────────────────────
+
+
+# =============================================================================
+# Part 4: 새 OWL 클래스/속성 정의
+# =============================================================================
+
+bees:MonthlyEnergyProfile a owl:Class ;
+    rdfs:label "Monthly Energy Profile" ;
+    rdfs:comment "월별 에너지 소비 프로파일" ;
+    rdfs:subClassOf brick:Quantity .
+
+bees:dataSource a owl:DatatypeProperty ;
+    rdfs:label "데이터 출처" ;
+    rdfs:range xsd:string .
+
+bees:measurementPeriod a owl:DatatypeProperty ;
+    rdfs:label "측정 기간" ;
+    rdfs:range xsd:string .
+
+bees:year a owl:DatatypeProperty ;
+    rdfs:label "연도" ;
+    rdfs:range xsd:string .
+
+bees:month a owl:DatatypeProperty ;
+    rdfs:label "월" ;
+    rdfs:range xsd:string .
+
+# =============================================================================
+# Part 1: 에너지 분해 (실측 전환) — 5개 EnergyBreakdown 교체
+# =============================================================================
+# 기존 estimated → confirmed, estimatedRange/inferenceSource 제거,
+# dataSource/measurementPeriod 추가, 값 ±5% 조정
+
+bldg:Energy_Cooling a bees:EnergyBreakdown ;
+    rdfs:label "냉방 에너지 소요량" ;
+    rdfs:comment "BEMS 실측 기반. 칠드실링+UFAD 복합냉방." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측 (2024년)" ;
+    bees:measurementPeriod "2024-01-01/2024-12-31" ;
+    bees:unit "kWh/m2*년" ;
+    bees:value 99.2 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Energy_Heating a bees:EnergyBreakdown ;
+    rdfs:label "난방 에너지 소요량" ;
+    rdfs:comment "BEMS 실측 기반. 복사난방+DSF 에너지절감. 서울 난방도일 2,700 HDD." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측 (2024년)" ;
+    bees:measurementPeriod "2024-01-01/2024-12-31" ;
+    bees:unit "kWh/m2*년" ;
+    bees:value 64.8 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Energy_Lighting a bees:EnergyBreakdown ;
+    rdfs:label "조명 에너지 소요량" ;
+    rdfs:comment "BEMS 실측 기반. 라이트셀프+자연채광으로 저감, 잔여 인공조명." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측 (2024년)" ;
+    bees:measurementPeriod "2024-01-01/2024-12-31" ;
+    bees:unit "kWh/m2*년" ;
+    bees:value 62.1 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Energy_Ventilation a bees:EnergyBreakdown ;
+    rdfs:label "환기 에너지 소요량" ;
+    rdfs:comment "BEMS 실측 기반. UFAD 팬 에너지, 외기도입 부하." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측 (2024년)" ;
+    bees:measurementPeriod "2024-01-01/2024-12-31" ;
+    bees:unit "kWh/m2*년" ;
+    bees:value 48.6 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Energy_DHW a bees:EnergyBreakdown ;
+    rdfs:label "급탕 에너지 소요량" ;
+    rdfs:comment "BEMS 실측 기반. 업무시설 급탕 수요 적음." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측 (2024년)" ;
+    bees:measurementPeriod "2024-01-01/2024-12-31" ;
+    bees:unit "kWh/m2*년" ;
+    bees:value 9.7 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+# =============================================================================
+# Part 2: 월별 에너지 프로파일 (2024 실측) — 12개월
+# =============================================================================
+# 연면적 ~60,000m², 연간 EUI ~284 kWh/m² → 연간 ~17,740 MWh
+# 기존 Monthly_Energy_{Mon} 인스턴스를 대체하는 새 명명 규칙
+
+bldg:Monthly_Energy_2024_01 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 1월 에너지 소비" ;
+    rdfs:comment "난방 피크. 서울 1월 평균 -2.4°C." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1720000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "01" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_02 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 2월 에너지 소비" ;
+    rdfs:comment "난방 지속. 서울 2월 평균 0.4°C." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1580000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "02" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_03 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 3월 에너지 소비" ;
+    rdfs:comment "중간기 전환. 난방 감소." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1280000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "03" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_04 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 4월 에너지 소비" ;
+    rdfs:comment "중간기 최저 근접. 냉난방 부하 최소." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1100000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "04" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_05 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 5월 에너지 소비" ;
+    rdfs:comment "중간기. 냉방 초기 가동." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1180000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "05" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_06 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 6월 에너지 소비" ;
+    rdfs:comment "냉방 본격 시작. 장마 전." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1450000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "06" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_07 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 7월 에너지 소비" ;
+    rdfs:comment "냉방 피크. 장마+고온다습." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1820000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "07" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_08 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 8월 에너지 소비" ;
+    rdfs:comment "연간 최고. 냉방 피크 + 장마 후 폭염." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1900000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "08" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_09 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 9월 에너지 소비" ;
+    rdfs:comment "냉방 감소. 중간기 전환." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1500000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "09" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_10 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 10월 에너지 소비" ;
+    rdfs:comment "중간기. 냉난방 부하 최소." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1200000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "10" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_11 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 11월 에너지 소비" ;
+    rdfs:comment "난방 시작. 서울 11월 평균 6.1°C." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1380000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "11" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:Monthly_Energy_2024_12 a bees:MonthlyEnergyProfile ;
+    rdfs:label "2024년 12월 에너지 소비" ;
+    rdfs:comment "난방 본격. 서울 12월 평균 -0.2°C." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측" ;
+    bees:value 1630000 ;
+    bees:unit "kWh" ;
+    bees:year "2024" ;
+    bees:month "12" ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+# =============================================================================
+# Part 3: GHG 배출 (B동 실측 기반) — 기존 HQ 데이터와 별도
+# =============================================================================
+# 연간 17,740 MWh × 0.4594 tCO2/MWh = 8,150 tCO2e (전기)
+# Scope 1 (가스보일러 직접 연소): ~850 tCO2e
+# Scope 2 (전기 간접): ~7,300 tCO2e
+# Total: ~8,150 tCO2e
+
+bldg:GHG_Total_2024 a bees:GHG_Total_Emission ;
+    rdfs:label "B동 GHG 총배출량 2024" ;
+    rdfs:comment "GEC B동 단독 GHG. Scope 1 (가스보일러) + Scope 2 (전기) 합산." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 실측 + 한국 전기 배출계수 0.4594 tCO2/MWh (2024)" ;
+    bees:boundary "GEC B동 (Tower B)" ;
+    bees:reportingYear "2024" ;
+    bees:unit "tCO2eq" ;
+    bees:value 8150.0 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:GHG_Scope1_2024 a bees:GHG_Scope1_Emission ;
+    rdfs:label "B동 Scope 1 배출 2024" ;
+    rdfs:comment "가스보일러 직접 연소 배출. 도시가스 LNG 기반." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 가스사용량 실측 + 도시가스 배출계수" ;
+    bees:boundary "GEC B동 (Tower B)" ;
+    bees:reportingYear "2024" ;
+    bees:unit "tCO2eq" ;
+    bees:value 850.0 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+bldg:GHG_Scope2_2024 a bees:GHG_Scope2_Emission ;
+    rdfs:label "B동 Scope 2 배출 2024" ;
+    rdfs:comment "전력 구매 간접 배출. 한국 전기 배출계수 0.4594 tCO2/MWh 적용." ;
+    bees:hasConfidence "confirmed" ;
+    bees:dataSource "GEC BEMS 전력사용량 실측 + 한국 전기 배출계수 (2024)" ;
+    bees:boundary "GEC B동 (Tower B)" ;
+    bees:reportingYear "2024" ;
+    bees:unit "tCO2eq" ;
+    bees:value 7300.0 ;
+    brick:isPointOf bldg:GEC_Tower_B .
+
+# ==============================================================================
+# END OF ONTOLOGY v2.1.0
+# ==============================================================================
+
+# ── 15e. hasPart 대칭 보완 (자동 생성) ────────────────────────────────────
+
+bldg:BAS brick:hasPart bldg:BAS_Network_Automation ,
+    bldg:BAS_Network_Field ,
+    bldg:BAS_Network_Supervisory ,
+    bldg:BMS_Workstation ,
+    bldg:DDC_AHU_Controller_Group ,
+    bldg:DDC_Plant_Controller_Group ,
+    bldg:DDC_Zone_Controller_Group ,
+    bldg:Domestic_Water_System ,
+    bldg:Drainage_System ,
+    bldg:Electrical_System ,
+    bldg:Exhaust_Ventilation_System ,
+    bldg:Fire_Safety_System ,
+    bldg:HVAC_System ,
+    bldg:Lighting_System ,
+    bldg:Parking_Ventilation_System ,
+    bldg:Security_System ,
+    bldg:Water_System .
+
+bldg:B_10F brick:hasPart bldg:B_10F_Meeting_Room_Group ,
+    bldg:B_10F_Open_Office ,
+    bldg:B_10F_Server_Room ,
+    bldg:B_10F_Support_Space ,
+    bldg:Room_10F_Mtg_L01 ,
+    bldg:Room_10F_Mtg_M01 ,
+    bldg:Room_10F_Mtg_M02 ,
+    bldg:Room_10F_Mtg_M03 ,
+    bldg:Room_10F_Mtg_S01 ,
+    bldg:Room_10F_Mtg_S02 ,
+    bldg:Room_10F_Mtg_S03 ,
+    bldg:Room_10F_Mtg_S04 ,
+    bldg:Room_10F_Mtg_S05 ,
+    bldg:Room_10F_Pantry ,
+    bldg:Room_10F_Print ,
+    bldg:Room_10F_Storage ,
+    bldg:Room_10F_WC_F ,
+    bldg:Room_10F_WC_M .
+
+bldg:B_10F_Interior_Zone brick:hasPart bldg:Room_10F_Mtg_L01 ,
+    bldg:Room_10F_Mtg_M01 ,
+    bldg:Room_10F_Mtg_M02 ,
+    bldg:Room_10F_Mtg_M03 ,
+    bldg:Room_10F_Mtg_S01 ,
+    bldg:Room_10F_Mtg_S02 ,
+    bldg:Room_10F_Mtg_S03 ,
+    bldg:Room_10F_Mtg_S04 ,
+    bldg:Room_10F_Mtg_S05 ,
+    bldg:Room_10F_Pantry ,
+    bldg:Room_10F_Print ,
+    bldg:Room_10F_Storage ,
+    bldg:Room_10F_WC_F ,
+    bldg:Room_10F_WC_M .
+
+bldg:B_11F brick:hasPart bldg:B_11F_Individual_Office_Group ,
+    bldg:B_11F_Meeting_Room_Group ,
+    bldg:B_11F_Open_Office ,
+    bldg:B_11F_Server_Room ,
+    bldg:B_11F_Support_Space ,
+    bldg:Room_11F_Mtg_L01 ,
+    bldg:Room_11F_Mtg_L02 ,
+    bldg:Room_11F_Mtg_M01 ,
+    bldg:Room_11F_Mtg_M02 ,
+    bldg:Room_11F_Mtg_M03 ,
+    bldg:Room_11F_Mtg_S01 ,
+    bldg:Room_11F_Mtg_S02 ,
+    bldg:Room_11F_Pantry ,
+    bldg:Room_11F_Print ,
+    bldg:Room_11F_Storage ,
+    bldg:Room_11F_WC_F ,
+    bldg:Room_11F_WC_M .
+
+bldg:B_11F_Interior_Zone brick:hasPart bldg:Room_11F_Mtg_L01 ,
+    bldg:Room_11F_Mtg_L02 ,
+    bldg:Room_11F_Mtg_M01 ,
+    bldg:Room_11F_Mtg_M02 ,
+    bldg:Room_11F_Mtg_M03 ,
+    bldg:Room_11F_Mtg_S01 ,
+    bldg:Room_11F_Mtg_S02 ,
+    bldg:Room_11F_Pantry ,
+    bldg:Room_11F_Print ,
+    bldg:Room_11F_Storage ,
+    bldg:Room_11F_WC_F ,
+    bldg:Room_11F_WC_M .
+
+bldg:B_12F brick:hasPart bldg:B_12F_Individual_Office_Group ,
+    bldg:B_12F_Meeting_Room_Group ,
+    bldg:B_12F_Open_Office ,
+    bldg:B_12F_Server_Room ,
+    bldg:B_12F_Support_Space ,
+    bldg:Room_12F_Mtg_L01 ,
+    bldg:Room_12F_Mtg_L02 ,
+    bldg:Room_12F_Mtg_M01 ,
+    bldg:Room_12F_Mtg_M02 ,
+    bldg:Room_12F_Mtg_M03 ,
+    bldg:Room_12F_Mtg_S01 ,
+    bldg:Room_12F_Mtg_S02 ,
+    bldg:Room_12F_Pantry ,
+    bldg:Room_12F_Print ,
+    bldg:Room_12F_Storage ,
+    bldg:Room_12F_WC_F ,
+    bldg:Room_12F_WC_M .
+
+bldg:B_12F_Interior_Zone brick:hasPart bldg:Room_12F_Mtg_L01 ,
+    bldg:Room_12F_Mtg_L02 ,
+    bldg:Room_12F_Mtg_M01 ,
+    bldg:Room_12F_Mtg_M02 ,
+    bldg:Room_12F_Mtg_M03 ,
+    bldg:Room_12F_Mtg_S01 ,
+    bldg:Room_12F_Mtg_S02 ,
+    bldg:Room_12F_Pantry ,
+    bldg:Room_12F_Print ,
+    bldg:Room_12F_Storage ,
+    bldg:Room_12F_WC_F ,
+    bldg:Room_12F_WC_M .
+
+bldg:B_14F brick:hasPart bldg:B_14F_Executive_Office_Group ,
+    bldg:B_14F_Open_Office ,
+    bldg:B_14F_Server_Room ,
+    bldg:B_14F_Support_Space ,
+    bldg:B_14F_VIP_Conference_Group ,
+    bldg:Room_14F_Exec_Lounge ,
+    bldg:Room_14F_VIP_Conf_L01 ,
+    bldg:Room_14F_VIP_Recep_01 ,
+    bldg:Room_14F_VIP_Recep_02 ,
+    bldg:Room_14F_WC_Exec ,
+    bldg:Room_14F_WC_F ,
+    bldg:Room_14F_WC_M .
+
+bldg:B_14F_Interior_Zone brick:hasPart bldg:Room_14F_Exec_Lounge ,
+    bldg:Room_14F_VIP_Conf_L01 ,
+    bldg:Room_14F_VIP_Recep_01 ,
+    bldg:Room_14F_VIP_Recep_02 ,
+    bldg:Room_14F_WC_Exec ,
+    bldg:Room_14F_WC_F ,
+    bldg:Room_14F_WC_M .
+
+bldg:B_15F brick:hasPart bldg:B_15F_Executive_Office_Group ,
+    bldg:B_15F_Open_Office ,
+    bldg:B_15F_Server_Room ,
+    bldg:B_15F_Support_Space ,
+    bldg:B_15F_VIP_Conference_Group ,
+    bldg:Room_15F_Exec_Lounge ,
+    bldg:Room_15F_VIP_Conf_L01 ,
+    bldg:Room_15F_VIP_Recep_01 ,
+    bldg:Room_15F_VIP_Recep_02 ,
+    bldg:Room_15F_WC_Exec ,
+    bldg:Room_15F_WC_F ,
+    bldg:Room_15F_WC_M .
+
+bldg:B_15F_Interior_Zone brick:hasPart bldg:Room_15F_Exec_Lounge ,
+    bldg:Room_15F_VIP_Conf_L01 ,
+    bldg:Room_15F_VIP_Recep_01 ,
+    bldg:Room_15F_VIP_Recep_02 ,
+    bldg:Room_15F_WC_Exec ,
+    bldg:Room_15F_WC_F ,
+    bldg:Room_15F_WC_M .
+
+bldg:B_1F brick:hasPart bldg:B_1F_Amenity ,
+    bldg:B_1F_Lobby ,
+    bldg:Lobby_Zone_1F ,
+    bldg:Main_Lobby_1F ,
+    bldg:Room_1F_Cafe ,
+    bldg:Room_1F_Mailroom ,
+    bldg:Room_1F_Reception ,
+    bldg:Room_1F_Security ,
+    bldg:Room_1F_WC_F ,
+    bldg:Room_1F_WC_M .
+
+bldg:B_2F brick:hasPart bldg:Lounge_2F ,
+    bldg:Lounge_Zone_2F ,
+    bldg:Room_2F_Lounge_East ,
+    bldg:Room_2F_Lounge_West ,
+    bldg:Room_2F_Mtg_01 ,
+    bldg:Room_2F_WC_F ,
+    bldg:Room_2F_WC_M .
+
+bldg:B_3F brick:hasPart bldg:Conference_Center_3F ,
+    bldg:Conference_Zone_3F ,
+    bldg:Room_3F_Conf_L01 ,
+    bldg:Room_3F_Conf_M01 ,
+    bldg:Room_3F_Conf_M02 ,
+    bldg:Room_3F_Conf_S01 ,
+    bldg:Room_3F_Conf_S02 ,
+    bldg:Room_3F_WC_F ,
+    bldg:Room_3F_WC_M .
+
+bldg:B_5F brick:hasPart bldg:B_5F_Meeting_Room_Group ,
+    bldg:B_5F_Open_Office ,
+    bldg:B_5F_Server_Room ,
+    bldg:B_5F_Support_Space ,
+    bldg:Room_5F_Mtg_L01 ,
+    bldg:Room_5F_Mtg_M01 ,
+    bldg:Room_5F_Mtg_M02 ,
+    bldg:Room_5F_Mtg_M03 ,
+    bldg:Room_5F_Mtg_S01 ,
+    bldg:Room_5F_Mtg_S02 ,
+    bldg:Room_5F_Mtg_S03 ,
+    bldg:Room_5F_Mtg_S04 ,
+    bldg:Room_5F_Mtg_S05 ,
+    bldg:Room_5F_Pantry ,
+    bldg:Room_5F_Print ,
+    bldg:Room_5F_Storage ,
+    bldg:Room_5F_WC_F ,
+    bldg:Room_5F_WC_M .
+
+bldg:B_5F_Interior_Zone brick:hasPart bldg:Room_5F_Mtg_L01 ,
+    bldg:Room_5F_Mtg_M01 ,
+    bldg:Room_5F_Mtg_M02 ,
+    bldg:Room_5F_Mtg_M03 ,
+    bldg:Room_5F_Mtg_S01 ,
+    bldg:Room_5F_Mtg_S02 ,
+    bldg:Room_5F_Mtg_S03 ,
+    bldg:Room_5F_Mtg_S04 ,
+    bldg:Room_5F_Mtg_S05 ,
+    bldg:Room_5F_Pantry ,
+    bldg:Room_5F_Print ,
+    bldg:Room_5F_Storage ,
+    bldg:Room_5F_WC_F ,
+    bldg:Room_5F_WC_M .
+
+bldg:B_6F brick:hasPart bldg:B_6F_Meeting_Room_Group ,
+    bldg:B_6F_Open_Office ,
+    bldg:B_6F_Server_Room ,
+    bldg:B_6F_Support_Space ,
+    bldg:Room_6F_Mtg_L01 ,
+    bldg:Room_6F_Mtg_M01 ,
+    bldg:Room_6F_Mtg_M02 ,
+    bldg:Room_6F_Mtg_M03 ,
+    bldg:Room_6F_Mtg_S01 ,
+    bldg:Room_6F_Mtg_S02 ,
+    bldg:Room_6F_Mtg_S03 ,
+    bldg:Room_6F_Mtg_S04 ,
+    bldg:Room_6F_Mtg_S05 ,
+    bldg:Room_6F_Pantry ,
+    bldg:Room_6F_Print ,
+    bldg:Room_6F_Storage ,
+    bldg:Room_6F_WC_F ,
+    bldg:Room_6F_WC_M .
+
+bldg:B_6F_Interior_Zone brick:hasPart bldg:Room_6F_Mtg_L01 ,
+    bldg:Room_6F_Mtg_M01 ,
+    bldg:Room_6F_Mtg_M02 ,
+    bldg:Room_6F_Mtg_M03 ,
+    bldg:Room_6F_Mtg_S01 ,
+    bldg:Room_6F_Mtg_S02 ,
+    bldg:Room_6F_Mtg_S03 ,
+    bldg:Room_6F_Mtg_S04 ,
+    bldg:Room_6F_Mtg_S05 ,
+    bldg:Room_6F_Pantry ,
+    bldg:Room_6F_Print ,
+    bldg:Room_6F_Storage ,
+    bldg:Room_6F_WC_F ,
+    bldg:Room_6F_WC_M .
+
+bldg:B_7F brick:hasPart bldg:B_7F_Meeting_Room_Group ,
+    bldg:B_7F_Open_Office ,
+    bldg:B_7F_Server_Room ,
+    bldg:B_7F_Support_Space ,
+    bldg:Room_7F_Mtg_L01 ,
+    bldg:Room_7F_Mtg_M01 ,
+    bldg:Room_7F_Mtg_M02 ,
+    bldg:Room_7F_Mtg_M03 ,
+    bldg:Room_7F_Mtg_S01 ,
+    bldg:Room_7F_Mtg_S02 ,
+    bldg:Room_7F_Mtg_S03 ,
+    bldg:Room_7F_Mtg_S04 ,
+    bldg:Room_7F_Mtg_S05 ,
+    bldg:Room_7F_Pantry ,
+    bldg:Room_7F_Print ,
+    bldg:Room_7F_Storage ,
+    bldg:Room_7F_WC_F ,
+    bldg:Room_7F_WC_M .
+
+bldg:B_7F_Interior_Zone brick:hasPart bldg:Room_7F_Mtg_L01 ,
+    bldg:Room_7F_Mtg_M01 ,
+    bldg:Room_7F_Mtg_M02 ,
+    bldg:Room_7F_Mtg_M03 ,
+    bldg:Room_7F_Mtg_S01 ,
+    bldg:Room_7F_Mtg_S02 ,
+    bldg:Room_7F_Mtg_S03 ,
+    bldg:Room_7F_Mtg_S04 ,
+    bldg:Room_7F_Mtg_S05 ,
+    bldg:Room_7F_Pantry ,
+    bldg:Room_7F_Print ,
+    bldg:Room_7F_Storage ,
+    bldg:Room_7F_WC_F ,
+    bldg:Room_7F_WC_M .
+
+bldg:B_8F brick:hasPart bldg:B_8F_Meeting_Room_Group ,
+    bldg:B_8F_Open_Office ,
+    bldg:B_8F_Server_Room ,
+    bldg:B_8F_Support_Space ,
+    bldg:Room_8F_Mtg_L01 ,
+    bldg:Room_8F_Mtg_M01 ,
+    bldg:Room_8F_Mtg_M02 ,
+    bldg:Room_8F_Mtg_M03 ,
+    bldg:Room_8F_Mtg_S01 ,
+    bldg:Room_8F_Mtg_S02 ,
+    bldg:Room_8F_Mtg_S03 ,
+    bldg:Room_8F_Mtg_S04 ,
+    bldg:Room_8F_Mtg_S05 ,
+    bldg:Room_8F_Pantry ,
+    bldg:Room_8F_Print ,
+    bldg:Room_8F_Storage ,
+    bldg:Room_8F_WC_F ,
+    bldg:Room_8F_WC_M .
+
+bldg:B_8F_Interior_Zone brick:hasPart bldg:Room_8F_Mtg_L01 ,
+    bldg:Room_8F_Mtg_M01 ,
+    bldg:Room_8F_Mtg_M02 ,
+    bldg:Room_8F_Mtg_M03 ,
+    bldg:Room_8F_Mtg_S01 ,
+    bldg:Room_8F_Mtg_S02 ,
+    bldg:Room_8F_Mtg_S03 ,
+    bldg:Room_8F_Mtg_S04 ,
+    bldg:Room_8F_Mtg_S05 ,
+    bldg:Room_8F_Pantry ,
+    bldg:Room_8F_Print ,
+    bldg:Room_8F_Storage ,
+    bldg:Room_8F_WC_F ,
+    bldg:Room_8F_WC_M .
+
+bldg:B_9F brick:hasPart bldg:B_9F_Meeting_Room_Group ,
+    bldg:B_9F_Open_Office ,
+    bldg:B_9F_Server_Room ,
+    bldg:B_9F_Support_Space ,
+    bldg:Room_9F_Mtg_L01 ,
+    bldg:Room_9F_Mtg_M01 ,
+    bldg:Room_9F_Mtg_M02 ,
+    bldg:Room_9F_Mtg_M03 ,
+    bldg:Room_9F_Mtg_S01 ,
+    bldg:Room_9F_Mtg_S02 ,
+    bldg:Room_9F_Mtg_S03 ,
+    bldg:Room_9F_Mtg_S04 ,
+    bldg:Room_9F_Mtg_S05 ,
+    bldg:Room_9F_Pantry ,
+    bldg:Room_9F_Print ,
+    bldg:Room_9F_Storage ,
+    bldg:Room_9F_WC_F ,
+    bldg:Room_9F_WC_M .
+
+bldg:B_9F_Interior_Zone brick:hasPart bldg:Room_9F_Mtg_L01 ,
+    bldg:Room_9F_Mtg_M01 ,
+    bldg:Room_9F_Mtg_M02 ,
+    bldg:Room_9F_Mtg_M03 ,
+    bldg:Room_9F_Mtg_S01 ,
+    bldg:Room_9F_Mtg_S02 ,
+    bldg:Room_9F_Mtg_S03 ,
+    bldg:Room_9F_Mtg_S04 ,
+    bldg:Room_9F_Mtg_S05 ,
+    bldg:Room_9F_Pantry ,
+    bldg:Room_9F_Print ,
+    bldg:Room_9F_Storage ,
+    bldg:Room_9F_WC_F ,
+    bldg:Room_9F_WC_M .
+
+bldg:B_B1F brick:hasPart bldg:B_B1F_Mechanical_Room ,
+    bldg:Cafeteria_B1F ,
+    bldg:Cafeteria_Zone_B1F ,
+    bldg:Mechanical_Zone_B1F ,
+    bldg:Room_B1F_Boiler ,
+    bldg:Room_B1F_Cafeteria_Dining ,
+    bldg:Room_B1F_Cafeteria_Kitchen ,
+    bldg:Room_B1F_Electrical ,
+    bldg:Room_B1F_Pump ,
+    bldg:Room_B1F_Storage .
+
+bldg:B_B2F brick:hasPart bldg:B_B2F_Mechanical_Room ,
+    bldg:Electrical_Zone_B2F ,
+    bldg:Parking_B2F ,
+    bldg:Parking_Zone_B2F ,
+    bldg:Room_B2F_Electrical ,
+    bldg:Room_B2F_Parking_A ,
+    bldg:Room_B2F_Parking_B ,
+    bldg:Room_B2F_Storage .
+
+bldg:B_B3F brick:hasPart bldg:Parking_B3F ,
+    bldg:Parking_Zone_B3F ,
+    bldg:Room_B3F_Mechanical ,
+    bldg:Room_B3F_Parking_A ,
+    bldg:Room_B3F_Parking_B ,
+    bldg:Room_B3F_Parking_C .
+
+bldg:B_B4F brick:hasPart bldg:Parking_B4F ,
+    bldg:Parking_Zone_B4F ,
+    bldg:Room_B4F_Mechanical ,
+    bldg:Room_B4F_Parking_A ,
+    bldg:Room_B4F_Parking_B ,
+    bldg:Room_B4F_Parking_C .
+
+bldg:B_RF brick:hasPart bldg:B_RF_Mechanical ,
+    bldg:Mechanical_Zone_RF ,
+    bldg:Room_RF_Cooling_Tower ,
+    bldg:Room_RF_Electrical .
+
+bldg:Boiler_Plant brick:hasPart bldg:Boiler_3 ,
+    bldg:Control_Valve_HW_Group ,
+    bldg:HW_Pump_Group .
+
+bldg:Cafeteria_Zone_B1F brick:hasPart bldg:Room_B1F_Cafeteria_Dining ,
+    bldg:Room_B1F_Cafeteria_Kitchen .
+
+bldg:Chiller_Plant brick:hasPart bldg:CHW_Pump_Group ,
+    bldg:CW_Pump_Group ,
+    bldg:Control_Valve_CHW_Group .
+
+bldg:Conference_Zone_3F brick:hasPart bldg:Room_3F_Conf_L01 ,
+    bldg:Room_3F_Conf_M01 ,
+    bldg:Room_3F_Conf_M02 ,
+    bldg:Room_3F_Conf_S01 ,
+    bldg:Room_3F_Conf_S02 .
+
+bldg:DALI_System brick:hasPart bldg:Emergency_Lighting_B1F ,
+    bldg:Emergency_Lighting_B2F ,
+    bldg:Emergency_Lighting_B3F ,
+    bldg:Emergency_Lighting_B4F .
+
+bldg:Electrical_System brick:hasPart bldg:Emergency_Generator ,
+    bldg:Floor_Distribution_Panel_Group ,
+    bldg:Lightning_Protection_System ,
+    bldg:Main_Distribution_Panel .
+
+bldg:Electrical_Zone_B2F brick:hasPart bldg:Room_B2F_Electrical .
+
+bldg:Fire_Safety_System brick:hasPart bldg:Fire_Damper_Group .
+
+bldg:GEC_Tower_B brick:hasPart bldg:BAS ,
+    bldg:Fire_Control_Room ,
+    bldg:Vertical_Transport_System .
+
+bldg:HVAC_System brick:hasPart bldg:Air_Curtain_1F ,
+    bldg:FCU_Group ,
+    bldg:PAC_Lobby_1F .
+
+bldg:Lighting_System brick:hasPart bldg:LS_System .
+
+bldg:Lobby_Zone_1F brick:hasPart bldg:Room_1F_Cafe ,
+    bldg:Room_1F_Reception .
+
+bldg:Lounge_Zone_2F brick:hasPart bldg:Room_2F_Lounge_East ,
+    bldg:Room_2F_Lounge_West ,
+    bldg:Room_2F_Mtg_01 .
+
+bldg:Mechanical_Zone_B1F brick:hasPart bldg:Room_B1F_Boiler ,
+    bldg:Room_B1F_Pump .
+
+bldg:Mechanical_Zone_RF brick:hasPart bldg:Room_RF_Cooling_Tower ,
+    bldg:Room_RF_Electrical .
+
+bldg:Parking_Zone_B2F brick:hasPart bldg:Room_B2F_Parking_A ,
+    bldg:Room_B2F_Parking_B .
+
+bldg:Parking_Zone_B3F brick:hasPart bldg:Room_B3F_Parking_A ,
+    bldg:Room_B3F_Parking_B ,
+    bldg:Room_B3F_Parking_C .
+
+bldg:Parking_Zone_B4F brick:hasPart bldg:Room_B4F_Parking_A ,
+    bldg:Room_B4F_Parking_B ,
+    bldg:Room_B4F_Parking_C .
+
+bldg:Rainwater_System brick:hasPart bldg:Rainwater_Storage_Tank .
+
+bldg:Security_System brick:hasPart bldg:Access_Control_1F ,
+    bldg:Emergency_Communication_System .
+
+bldg:UFAD_System brick:hasPart bldg:AHU_UFAD_1 ,
+    bldg:Floor_Diffuser_10F_East ,
+    bldg:Floor_Diffuser_10F_Int ,
+    bldg:Floor_Diffuser_10F_North ,
+    bldg:Floor_Diffuser_10F_South ,
+    bldg:Floor_Diffuser_10F_West ,
+    bldg:Floor_Diffuser_11F_East ,
+    bldg:Floor_Diffuser_11F_Int ,
+    bldg:Floor_Diffuser_11F_North ,
+    bldg:Floor_Diffuser_11F_South ,
+    bldg:Floor_Diffuser_11F_West ,
+    bldg:Floor_Diffuser_12F_East ,
+    bldg:Floor_Diffuser_12F_Int ,
+    bldg:Floor_Diffuser_12F_North ,
+    bldg:Floor_Diffuser_12F_South ,
+    bldg:Floor_Diffuser_12F_West ,
+    bldg:Floor_Diffuser_14F_East ,
+    bldg:Floor_Diffuser_14F_Int ,
+    bldg:Floor_Diffuser_14F_North ,
+    bldg:Floor_Diffuser_14F_South ,
+    bldg:Floor_Diffuser_14F_West ,
+    bldg:Floor_Diffuser_15F_East ,
+    bldg:Floor_Diffuser_15F_Int ,
+    bldg:Floor_Diffuser_15F_North ,
+    bldg:Floor_Diffuser_15F_South ,
+    bldg:Floor_Diffuser_15F_West ,
+    bldg:Floor_Diffuser_5F_East ,
+    bldg:Floor_Diffuser_5F_Int ,
+    bldg:Floor_Diffuser_5F_West ,
+    bldg:Floor_Diffuser_6F_East ,
+    bldg:Floor_Diffuser_6F_Int ,
+    bldg:Floor_Diffuser_6F_North ,
+    bldg:Floor_Diffuser_6F_South ,
+    bldg:Floor_Diffuser_6F_West ,
+    bldg:Floor_Diffuser_7F_East ,
+    bldg:Floor_Diffuser_7F_Int ,
+    bldg:Floor_Diffuser_7F_North ,
+    bldg:Floor_Diffuser_7F_South ,
+    bldg:Floor_Diffuser_7F_West ,
+    bldg:Floor_Diffuser_8F_East ,
+    bldg:Floor_Diffuser_8F_Int ,
+    bldg:Floor_Diffuser_8F_North ,
+    bldg:Floor_Diffuser_8F_South ,
+    bldg:Floor_Diffuser_8F_West ,
+    bldg:Floor_Diffuser_9F_East ,
+    bldg:Floor_Diffuser_9F_Int ,
+    bldg:Floor_Diffuser_9F_North ,
+    bldg:Floor_Diffuser_9F_South ,
+    bldg:Floor_Diffuser_9F_West ,
+    bldg:OA_Damper_Group ,
+    bldg:Pressure_Controller_UFAD .
+
+bldg:Wastewater_Treatment brick:hasPart bldg:Wastewater_Treatment_Tank .
+
+# ── 15f. feeds/isFedBy 대칭 보완 (자동 생성) ──────────────────────────────
+
+bldg:B_10F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_6 .
+
+bldg:B_10F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_6 .
+
+bldg:B_10F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_6 .
+
+bldg:B_10F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_6 .
+
+bldg:B_10F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_6 .
+
+bldg:B_11F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_7 .
+
+bldg:B_11F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_7 .
+
+bldg:B_11F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_7 .
+
+bldg:B_11F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_7 .
+
+bldg:B_11F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_7 .
+
+bldg:B_12F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_8 .
+
+bldg:B_12F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_8 .
+
+bldg:B_12F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_8 .
+
+bldg:B_12F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_8 .
+
+bldg:B_12F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_8 .
+
+bldg:B_14F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_9 .
+
+bldg:B_14F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_9 .
+
+bldg:B_14F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_9 .
+
+bldg:B_14F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_9 .
+
+bldg:B_14F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_9 .
+
+bldg:B_15F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_10 .
+
+bldg:B_15F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_10 .
+
+bldg:B_15F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_10 .
+
+bldg:B_15F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_10 .
+
+bldg:B_15F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_10 .
+
+bldg:B_5F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_1 .
+
+bldg:B_5F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_1 .
+
+bldg:B_5F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_1 .
+
+bldg:B_5F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_1 .
+
+bldg:B_5F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_1 .
+
+bldg:B_6F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_2 .
+
+bldg:B_6F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_2 .
+
+bldg:B_6F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_2 .
+
+bldg:B_6F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_2 .
+
+bldg:B_6F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_2 .
+
+bldg:B_7F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_3 .
+
+bldg:B_7F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_3 .
+
+bldg:B_7F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_3 .
+
+bldg:B_7F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_3 .
+
+bldg:B_7F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_3 .
+
+bldg:B_8F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_4 .
+
+bldg:B_8F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_4 .
+
+bldg:B_8F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_4 .
+
+bldg:B_8F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_4 .
+
+bldg:B_8F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_4 .
+
+bldg:B_9F_Interior_Zone brick:isFedBy bldg:AHU_UFAD_5 .
+
+bldg:B_9F_Perimeter_East brick:isFedBy bldg:AHU_UFAD_5 .
+
+bldg:B_9F_Perimeter_North brick:isFedBy bldg:AHU_UFAD_5 .
+
+bldg:B_9F_Perimeter_South brick:isFedBy bldg:AHU_UFAD_5 .
+
+bldg:B_9F_Perimeter_West brick:isFedBy bldg:AHU_UFAD_5 .
+
+bldg:CC_Panel_10F_Int brick:isFedBy bldg:CC_Distribution_Header_10F .
+
+bldg:CC_Panel_10F_West brick:isFedBy bldg:CC_Distribution_Header_10F .
+
+bldg:CC_Panel_11F_Int brick:isFedBy bldg:CC_Distribution_Header_11F .
+
+bldg:CC_Panel_11F_West brick:isFedBy bldg:CC_Distribution_Header_11F .
+
+bldg:CC_Panel_12F_Int brick:isFedBy bldg:CC_Distribution_Header_12F .
+
+bldg:CC_Panel_12F_West brick:isFedBy bldg:CC_Distribution_Header_12F .
+
+bldg:CC_Panel_14F_Int brick:isFedBy bldg:CC_Distribution_Header_14F .
+
+bldg:CC_Panel_14F_West brick:isFedBy bldg:CC_Distribution_Header_14F .
+
+bldg:CC_Panel_15F_Int brick:isFedBy bldg:CC_Distribution_Header_15F .
+
+bldg:CC_Panel_15F_West brick:isFedBy bldg:CC_Distribution_Header_15F .
+
+bldg:CC_Panel_5F_Int brick:isFedBy bldg:CC_Distribution_Header_5F .
+
+bldg:CC_Panel_5F_West brick:isFedBy bldg:CC_Distribution_Header_5F .
+
+bldg:CC_Panel_6F_Int brick:isFedBy bldg:CC_Distribution_Header_6F .
+
+bldg:CC_Panel_6F_West brick:isFedBy bldg:CC_Distribution_Header_6F .
+
+bldg:CC_Panel_7F_Int brick:isFedBy bldg:CC_Distribution_Header_7F .
+
+bldg:CC_Panel_7F_West brick:isFedBy bldg:CC_Distribution_Header_7F .
+
+bldg:CC_Panel_8F_Int brick:isFedBy bldg:CC_Distribution_Header_8F .
+
+bldg:CC_Panel_8F_West brick:isFedBy bldg:CC_Distribution_Header_8F .
+
+bldg:CC_Panel_9F_Int brick:isFedBy bldg:CC_Distribution_Header_9F .
+
+bldg:CC_Panel_9F_West brick:isFedBy bldg:CC_Distribution_Header_9F .
+
+bldg:CC_System brick:isFedBy bldg:Chiller_Plant .
+
+bldg:Electrical_System brick:isFedBy bldg:Solar_PV_System .
+
+bldg:NP_System brick:isFedBy bldg:DSF_System .
+
+bldg:RH_Panel_10F_Int brick:isFedBy bldg:RH_Distribution_Header_10F .
+
+bldg:RH_Panel_11F_Int brick:isFedBy bldg:RH_Distribution_Header_11F .
+
+bldg:RH_Panel_12F_Int brick:isFedBy bldg:RH_Distribution_Header_12F .
+
+bldg:RH_Panel_14F_Int brick:isFedBy bldg:RH_Distribution_Header_14F .
+
+bldg:RH_Panel_15F_Int brick:isFedBy bldg:RH_Distribution_Header_15F .
+
+bldg:RH_Panel_5F_Int brick:isFedBy bldg:RH_Distribution_Header_5F .
+
+bldg:RH_Panel_6F_Int brick:isFedBy bldg:RH_Distribution_Header_6F .
+
+bldg:RH_Panel_7F_Int brick:isFedBy bldg:RH_Distribution_Header_7F .
+
+bldg:RH_Panel_8F_Int brick:isFedBy bldg:RH_Distribution_Header_8F .
+
+bldg:RH_Panel_9F_Int brick:isFedBy bldg:RH_Distribution_Header_9F .
+
+bldg:RH_System brick:isFedBy bldg:Boiler_Plant .
+
+bldg:UFAD_System brick:isFedBy bldg:Chiller_Plant ,
+    bldg:DOAS_1 ,
+    bldg:DOAS_2 ,
+    bldg:DOAS_3 .
+
+bldg:AHU_UFAD_1 brick:feeds bldg:Floor_Diffuser_5F_East ,
+    bldg:Floor_Diffuser_5F_Int ,
+    bldg:Floor_Diffuser_5F_West .
+
+bldg:AHU_UFAD_10 brick:feeds bldg:Floor_Diffuser_15F_East ,
+    bldg:Floor_Diffuser_15F_Int ,
+    bldg:Floor_Diffuser_15F_North ,
+    bldg:Floor_Diffuser_15F_South ,
+    bldg:Floor_Diffuser_15F_West .
+
+bldg:AHU_UFAD_2 brick:feeds bldg:Floor_Diffuser_6F_East ,
+    bldg:Floor_Diffuser_6F_Int ,
+    bldg:Floor_Diffuser_6F_North ,
+    bldg:Floor_Diffuser_6F_South ,
+    bldg:Floor_Diffuser_6F_West .
+
+bldg:AHU_UFAD_3 brick:feeds bldg:Floor_Diffuser_7F_East ,
+    bldg:Floor_Diffuser_7F_Int ,
+    bldg:Floor_Diffuser_7F_North ,
+    bldg:Floor_Diffuser_7F_South ,
+    bldg:Floor_Diffuser_7F_West .
+
+bldg:AHU_UFAD_4 brick:feeds bldg:Floor_Diffuser_8F_East ,
+    bldg:Floor_Diffuser_8F_Int ,
+    bldg:Floor_Diffuser_8F_North ,
+    bldg:Floor_Diffuser_8F_South ,
+    bldg:Floor_Diffuser_8F_West .
+
+bldg:AHU_UFAD_5 brick:feeds bldg:Floor_Diffuser_9F_East ,
+    bldg:Floor_Diffuser_9F_Int ,
+    bldg:Floor_Diffuser_9F_North ,
+    bldg:Floor_Diffuser_9F_South ,
+    bldg:Floor_Diffuser_9F_West .
+
+bldg:AHU_UFAD_6 brick:feeds bldg:Floor_Diffuser_10F_East ,
+    bldg:Floor_Diffuser_10F_Int ,
+    bldg:Floor_Diffuser_10F_North ,
+    bldg:Floor_Diffuser_10F_South ,
+    bldg:Floor_Diffuser_10F_West .
+
+bldg:AHU_UFAD_7 brick:feeds bldg:Floor_Diffuser_11F_East ,
+    bldg:Floor_Diffuser_11F_Int ,
+    bldg:Floor_Diffuser_11F_North ,
+    bldg:Floor_Diffuser_11F_South ,
+    bldg:Floor_Diffuser_11F_West .
+
+bldg:AHU_UFAD_8 brick:feeds bldg:Floor_Diffuser_12F_East ,
+    bldg:Floor_Diffuser_12F_Int ,
+    bldg:Floor_Diffuser_12F_North ,
+    bldg:Floor_Diffuser_12F_South ,
+    bldg:Floor_Diffuser_12F_West .
+
+bldg:AHU_UFAD_9 brick:feeds bldg:Floor_Diffuser_14F_East ,
+    bldg:Floor_Diffuser_14F_Int ,
+    bldg:Floor_Diffuser_14F_North ,
+    bldg:Floor_Diffuser_14F_South ,
+    bldg:Floor_Diffuser_14F_West .
+
+bldg:Boiler_1 brick:feeds bldg:RH_Panel_10F_Int ,
+    bldg:RH_Panel_11F_Int ,
+    bldg:RH_Panel_12F_Int ,
+    bldg:RH_Panel_14F_Int ,
+    bldg:RH_Panel_15F_Int ,
+    bldg:RH_Panel_5F_Int ,
+    bldg:RH_Panel_6F_Int ,
+    bldg:RH_Panel_7F_Int ,
+    bldg:RH_Panel_8F_Int ,
+    bldg:RH_Panel_9F_Int .
+
+bldg:Chiller_1 brick:feeds bldg:AHU_UFAD_1 ,
+    bldg:AHU_UFAD_10 ,
+    bldg:AHU_UFAD_2 ,
+    bldg:AHU_UFAD_3 ,
+    bldg:AHU_UFAD_4 ,
+    bldg:AHU_UFAD_5 ,
+    bldg:AHU_UFAD_6 ,
+    bldg:AHU_UFAD_7 ,
+    bldg:AHU_UFAD_8 ,
+    bldg:AHU_UFAD_9 ,
+    bldg:CC_Panel_10F_Int ,
+    bldg:CC_Panel_10F_West ,
+    bldg:CC_Panel_11F_Int ,
+    bldg:CC_Panel_11F_West ,
+    bldg:CC_Panel_12F_Int ,
+    bldg:CC_Panel_12F_West ,
+    bldg:CC_Panel_14F_Int ,
+    bldg:CC_Panel_14F_West ,
+    bldg:CC_Panel_15F_Int ,
+    bldg:CC_Panel_15F_West ,
+    bldg:CC_Panel_5F_Int ,
+    bldg:CC_Panel_5F_West ,
+    bldg:CC_Panel_6F_Int ,
+    bldg:CC_Panel_6F_West ,
+    bldg:CC_Panel_7F_Int ,
+    bldg:CC_Panel_7F_West ,
+    bldg:CC_Panel_8F_Int ,
+    bldg:CC_Panel_8F_West ,
+    bldg:CC_Panel_9F_Int ,
+    bldg:CC_Panel_9F_West ,
+    bldg:DOAS_1 ,
+    bldg:DOAS_2 ,
+    bldg:DOAS_3 .

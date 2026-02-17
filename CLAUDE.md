@@ -12,7 +12,7 @@
 ## 핵심 파일
 | 파일 | 위치 | 설명 |
 |------|------|------|
-| GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (v2.0.1, ~6,830줄, 5,756 트리플, 845 인스턴스) |
+| GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (v2.1.0, ~11,600줄, 9,789 트리플, 1,272 인스턴스) |
 | GEC_B_SHACL.ttl | `ontology/` | SHACL 검증 Shape (v2.0, 24개) |
 | docker-compose.yml | 루트 | 디지털 트윈 플랫폼 9서비스 Docker 오케스트레이션 |
 | .env | 루트 | 환경변수 (Neo4j, MQTT, InfluxDB, PostgreSQL, 서버 간 URL) |
@@ -46,13 +46,13 @@ pyshacl -s ontology/GEC_B_SHACL.ttl -d ontology/GEC_B_Ontology.ttl
 
 # 범위 검증 (Site 참조 ~12개 허용 - 최소 컨텍스트 + 에너지 실측)
 grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
-# v2.0.1: ~6,830줄, 5,756 트리플, 845 인스턴스, 전층 모델 (지하~옥상)
+# v2.1.0: ~11,600줄, 9,789 트리플, 1,272 인스턴스, 전층 모델 (지하~옥상)
 ```
 
 ## 디지털 트윈 IoT 시뮬레이션 플랫폼 (Phase 9)
 
 ### 개요
-Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 플랫폼. Phase 3 완료.
+Brick Schema 온톨로지(1,272 인스턴스)를 기반으로 4개 독립 서버 구성의 디지털 트윈 플랫폼. Phase 3 완료.
 
 ### 아키텍처
 ```
