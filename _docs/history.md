@@ -858,44 +858,155 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 \
 
 ## 13. 다음 작업 가이드
 
-### 현재 상태 요약 (2026.02.12 기준)
+### 현재 상태 요약 (2026.02.17 기준)
 
 **온톨로지**: v2.0.1 — 5,756 트리플, 845 인스턴스, SHACL 24 Shape, 신뢰도 100% 태깅
-**플랫폼**: Phase 3 **100% 완료** — 10개 서비스(Docker 9 + Neo4j 외부), 8개 프론트엔드 페이지
+**플랫폼**: Phase 4 **100% 완료** — 10개 서비스(Docker 9 + Neo4j 외부), 16개 프론트엔드 페이지, 57+ API
+**설계서 대비 진행률**: **~95%** (잔여: 이메일/SMS 알림, 정기 보고서 자동 발송 등 외부 서비스 연동)
 
 | 완료된 Phase | 주요 내용 |
 |:---:|----------|
 | Phase 1 (온톨로지) | v1.0~v2.0.1, 10단계 구축, B동 전용, 845 인스턴스 |
 | Phase 1 (플랫폼 MVP) | AHU_5F 1대 + 5센서, SSE, 대시보드/모니터링/제어, E2E 제어 |
 | Phase 2 (플랫폼 확장) | 84장비 164포인트 풀 시뮬레이션, 온톨로지 그래프, 토폴로지 뷰, LLM 채팅, InfluxDB 직접 연동 |
-| **Phase 3 (플랫폼 고도화)** | **알람 시스템, Grafana, 시계열 이력, 반응형 UI, BACnet 어댑터, JWT 인증, 스케줄 관리, 데이터 보존, 품질 검증** |
+| Phase 3 (플랫폼 고도화) | 알람 시스템, Grafana, 시계열 이력, 반응형 UI, BACnet, JWT, 스케줄, 데이터 보존, 품질 검증 |
+| **Phase 4 (시뮬레이션+UX)** | **시나리오 7종, 고장주입 6종, 열역학 모델, 신규 8페이지, 30+ 신규 API, 데이터 품질, 명령 큐, 감사 로그** |
+
+### 프론트엔드 16개 페이지 전체 목록
+| 경로 | 기능 | 추가 Phase |
+|------|------|:---:|
+| `/` | 대시보드 — KPI, 장비 상태, 알람 카드 | 1 |
+| `/monitoring` | 모니터링 — 실시간 차트 | 1 |
+| `/monitoring/[equipmentId]` | **장비 상세** — 게이지, 트렌드, 성능, 연결 관계, 알람 | **4** |
+| `/control` | 제어 — ON/OFF, 모드 변경 (JWT 필요) | 1 |
+| `/ontology` | 온톨로지 그래프 — 클릭 하이라이트, 더블클릭 확장 | 2 |
+| `/topology` | 토폴로지 — 건물 계층 트리 + SSE 실시간 장비 상태 | 2 |
+| `/chat` | AI 채팅 — GPT-4o Function Calling × Neo4j | 2 |
+| `/history` | 시계열 이력 — recharts 멀티라인, CSV 다운로드 | 3 |
+| `/login` | 로그인 — JWT 인증 | 3 |
+| `/alarms` | **알람 관리** — 심각도 카운트, 필터, 확인, 억제, 상세 패널 | **4** |
+| `/alarms/history` | **알람 이력** — 아카이브, CSV, 억제 | **4** |
+| `/energy` | **에너지 분석** — 실시간 전력, 파이차트, EUI, 층별 비교 | **4** |
+| `/maintenance` | **유지보수** — 작업 주문 CRUD, 캘린더, 수명 추적 | **4** |
+| `/reports` | **보고서** — 4종 프리셋, 생성/다운로드, 이력 | **4** |
+| `/settings` | **시스템 설정** — 빌딩/시간대/단위/에너지/알람 | **4** |
+| `/settings/users` | **사용자 관리** — Admin CRUD, 역할, 접근 로그 | **4** |
+
+### 서버별 주요 파일 매핑
+
+**Server A Backend** (`platform/server-a/backend/app/`):
+| 라우터 | 주요 엔드포인트 |
+|--------|----------------|
+| `routers/stream.py` | SSE 실시간 스트림, 스냅샷 |
+| `routers/control.py` | 장비 제어 + 감사 로깅 |
+| `routers/alarm.py` | 알람 CRUD, 억제/해제, 통계 |
+| `routers/equipment.py` | 장비 상세 (Neo4j+InfluxDB+PostgreSQL) |
+| `routers/energy.py` | 에너지 분석 (realtime/profile/breakdown/eui) |
+| `routers/maintenance.py` | 유지보수 작업 주문 CRUD, 캘린더 |
+| `routers/reports.py` | 보고서 프리셋/생성/다운로드 |
+| `routers/users.py` | 사용자 CRUD (Admin 전용) |
+| `routers/settings.py` | 시스템 설정 조회/수정 |
+| `routers/audit.py` | 감사 로그 조회 |
+| `services/energy_service.py` | 에너지 집계/분류 로직 |
+| `services/report_service.py` | 보고서 생성 엔진 |
+| `services/audit_service.py` | 감사 기록 저장/조회 |
+
+**Server C** (`platform/server-c/app/`):
+| 파일 | 역할 |
+|------|------|
+| `engine.py` | 시뮬레이션 엔진 (열역학+시나리오+고장 통합) |
+| `scenarios.py` | ScenarioManager — 7종 프리셋 + 커스텀 |
+| `fault_injection.py` | FaultManager — 6종 고장 유형 |
+| `thermodynamics.py` | ThermalModel — 1차 에너지 밸런스 + PI 제어 |
+| `weather.py` | WeatherProvider — 서울 TMY 12개월 기상 데이터 |
+
+**Server B** (`platform/server-b/app/`):
+| 파일 | 역할 |
+|------|------|
+| `command_queue.py` | CommandQueue — FIFO, 지수 백오프 재시도 |
+
+**Server D** (`platform/server-d/app/`):
+| 파일 | 역할 |
+|------|------|
+| `quality.py` | DataQualityChecker — 범위/변화율/±3σ 이상치 |
+| `downsampling.py` | InfluxDB Flux 다운샘플링 Task |
+| `routers/export.py` | 데이터 내보내기 (CSV/JSON) |
 
 ### 주의사항 (다음 세션 필독)
 
-1. **OpenAI API 키 미설정**: `.env`의 `OPENAI_API_KEY=your-api-key-here`를 실제 키로 교체해야 LLM 채팅 동작
+1. **OpenAI API 키 미설정**: `.env`의 `OPENAI_API_KEY=your-api-key-here`를 실제 키로 교체해야 LLM 채팅(`/chat`) 동작
 2. **Neo4j 외부 컨테이너**: `neo4j-bees`는 docker-compose에 포함되지 않음, 별도 `docker start neo4j-bees` 필요
-3. **start.sh / stop.sh**: 프로젝트 루트에 전체 기동/종료 스크립트 있음 (Phase 3부터 시뮬레이션 자동 시작)
+3. **Neo4j TTL 임포트**: 컨테이너 재생성 시 n10s 설정 + TTL 재임포트 필요 (아래 체크리스트 참조)
+4. **Server C Neo4j 로딩 순서**: Neo4j에 데이터가 있어야 84장비 164포인트 시뮬레이션. 없으면 AHU_5F 1대 폴백
+5. **Badge vs Button variant**: Badge에는 `"danger"`, Button에는 `"destructive"` 사용 (동일하지 않음)
+6. **장비 ID 형식**: API는 `bldg:AHU_UFAD_11` 형태, Neo4j 내부는 `https://example.org/gec-b#AHU_UFAD_11` URI
 
 ### 플랫폼 기동 체크리스트 (새 세션 시작 시)
 ```bash
-# 방법 1: start.sh 사용 (권장)
 cd /Users/mckim64/Projects/SAMSUNG/BEES-Ontology
-./start.sh
 
-# 방법 2: 수동 기동
-docker start neo4j-bees                                 # 1. Neo4j 시작
-docker compose up -d                                    # 2. Docker Compose 9서비스 (시뮬레이션 자동 시작)
-sleep 5                                                  # 3. 서비스 안정화 대기
+# 1. Neo4j 시작 (외부 컨테이너)
+docker start neo4j-bees
 
-# 상태 확인
-docker compose ps && docker ps --filter name=neo4j-bees
-curl -s http://localhost:8010/api/stream/snapshot | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'포인트: {d[\"point_count\"]}개, 디바이스: {d[\"device_count\"]}개')"
-curl -s "http://localhost:8010/api/ontology/graph?limit=50" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'노드: {d[\"stats\"][\"node_count\"]}개, 엣지: {d[\"stats\"][\"edge_count\"]}개')"
-curl -s "http://localhost:8010/api/history/bldg:Zone_Air_Temp_5F_Interior?start=-1h" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'source: {d[\"source\"]}, data: {len(d[\"data\"])}건')"
+# 2. Neo4j 데이터 확인 (0이면 재임포트 필요)
+curl -s -u neo4j:bees2024 http://localhost:7476/db/neo4j/tx/commit \
+  -H 'Content-Type: application/json' \
+  -d '{"statements":[{"statement":"MATCH (n) WHERE n.uri STARTS WITH \"https://example.org/gec-b#\" RETURN count(n) as cnt"}]}' \
+  | python3 -c "import json,sys; print(f'Neo4j 노드: {json.load(sys.stdin)[\"results\"][0][\"data\"][0][\"row\"][0]}개')"
+
+# ※ Neo4j 데이터가 0이면 아래 재임포트 실행:
+# curl -s -u neo4j:bees2024 http://localhost:7476/db/neo4j/tx/commit \
+#   -H 'Content-Type: application/json' \
+#   -d '{"statements":[
+#     {"statement":"MATCH (n) DETACH DELETE n"},
+#     {"statement":"CALL n10s.graphconfig.init({handleVocabUris: \"MAP\", handleMultival: \"ARRAY\", handleRDFTypes: \"LABELS\", applyNeo4jNaming: false})"}
+#   ]}'
+# curl -s -u neo4j:bees2024 http://localhost:7476/db/neo4j/tx/commit \
+#   -H 'Content-Type: application/json' \
+#   -d '{"statements":[{"statement":"CREATE CONSTRAINT n10s_unique_uri IF NOT EXISTS FOR (r:Resource) REQUIRE r.uri IS UNIQUE"}]}'
+# docker cp ontology/GEC_B_Ontology.ttl neo4j-bees:/tmp/GEC_B_Ontology.ttl
+# curl -s -u neo4j:bees2024 http://localhost:7476/db/neo4j/tx/commit \
+#   -H 'Content-Type: application/json' \
+#   -d '{"statements":[{"statement":"CALL n10s.rdf.import.fetch(\"file:///tmp/GEC_B_Ontology.ttl\", \"Turtle\")"}]}'
+
+# 3. Docker Compose 전체 기동 (9서비스 + 시뮬레이션 자동 시작)
+docker compose up -d
+
+# 4. 서비스 안정화 대기 (15초)
+sleep 15
+
+# 5. 상태 확인
+docker compose ps
+curl -s http://localhost:8010/health
+curl -s http://localhost:8012/health | python3 -c "import json,sys; d=json.load(sys.stdin); sim=d['simulation']; print(f'시뮬레이션: {sim[\"status\"]}, 장비: {sim[\"device_count\"]}, 포인트: {sim[\"point_count\"]}, Neo4j: {sim[\"neo4j_loaded\"]}')"
+curl -s http://localhost:8010/api/stream/snapshot | python3 -c "import json,sys; d=json.load(sys.stdin); print(f'SSE 포인트: {len(d.get(\"points\",{}))}개, 디바이스: {len(d.get(\"devices\",{}))}개')"
+
+# ※ Neo4j가 늦게 로딩되었으면 Server C 재시작:
+# docker compose restart server-c && sleep 15
+
+# 6. 브라우저 열기
 open http://localhost:3000
+```
 
-# 종료
-./stop.sh
+### 검증 명령 (전체 서비스 + Phase 4 API)
+```bash
+# 서버 헬스체크
+curl -s http://localhost:8010/health    # Server A
+curl -s http://localhost:8011/health    # Server B
+curl -s http://localhost:8012/health    # Server C (simulation status 포함)
+curl -s http://localhost:8013/health    # Server D
+
+# Phase 4 신규 API
+curl -s http://localhost:8010/api/energy/realtime           # 에너지
+curl -s http://localhost:8010/api/alarms/stats              # 알람 통계
+curl -s http://localhost:8010/api/maintenance/work-orders   # 유지보수
+curl -s http://localhost:8010/api/reports/presets            # 보고서 4종
+curl -s http://localhost:8010/api/settings                  # 시스템 설정
+curl -s "http://localhost:8010/api/equipment/bldg:AHU_UFAD_11"  # 장비 상세
+curl -s http://localhost:8012/scenarios                     # 시나리오 7종
+curl -s http://localhost:8012/faults/types                  # 고장 유형 6종
+curl -s http://localhost:8011/command-queue                 # 명령 큐
+curl -s "http://localhost:8013/export?format=csv&start=-1h" # 데이터 내보내기
 ```
 
 ---
@@ -1115,9 +1226,20 @@ Server B 확장:
 
 ### Phase 5: 착수 가능한 다음 작업
 
-### 온톨로지 관련 (내부 데이터 확보 시)
+#### 플랫폼 잔여 (~5%, 외부 서비스 연동)
+1. **알림 채널 확장**: 이메일/SMS/Slack 알림 발송 (현재 UI 내 알람만 지원)
+2. **정기 보고서 자동 발송**: 스케줄러 기반 월간/주간 보고서 자동 생성 + 이메일 발송
+3. **실시간 알림 Push**: WebSocket 또는 Service Worker 기반 브라우저 Push 알림
+4. **다국어 지원**: i18n 프레임워크 도입 (현재 한국어 하드코딩)
 
-**만약 내부 데이터가 확보되면:**
+#### 플랫폼 개선 (선택)
+1. **대시보드 위젯 커스터마이징**: 드래그&드롭 레이아웃 편집
+2. **모니터링 페이지 장비 상세 링크 개선**: 장비 ID가 온톨로지 실제 이름(AHU_UFAD_5 등)과 매칭되도록 UI 보완
+3. **에너지 데이터 실측 연동**: 현재 시뮬레이션 기반 → 실 BMS 연동 시 InfluxDB 집계 활성화
+4. **보고서 PDF 생성**: 현재 CSV만 → PDF/Excel 포맷 추가
+5. **SSE → WebSocket 전환**: 양방향 통신 필요 시
+
+#### 온톨로지 관련 (내부 데이터 확보 시)
 1. 평면도 → `brick:Room` 인스턴스 추가, Zone 세분화
 2. BMS 포인트 리스트 → `brick:Point` 하위 센서/명령/설정값 정밀 모델링
 3. 장비 대장 → 제조사/모델명/시리얼 속성 추가
@@ -1141,6 +1263,17 @@ Server B 확장:
 | Cytoscape.js `as any` 캐스팅 | strict TypeScript + Cytoscape.js 타입 불일치 | `ontology/page.tsx` |
 | InfluxDB 3단계 폴백 | InfluxDB 직접 → Server D 프록시 → MQTT 캐시 | `history.py` |
 | InfluxDB 스키마: `sensor_data` / `point_id` tag / `value` field | Server D `mqtt_worker.py`와 동일 스키마 공유 | `influxdb_service.py` |
+| Badge `"danger"` vs Button `"destructive"` | shadcn/ui 커스텀 — Badge와 Button의 variant 이름이 다름 | `badge.tsx`, `button.tsx` |
+| 장비 상세 URI 변환 | API `bldg:XXX` ↔ Neo4j `https://example.org/gec-b#XXX` | `routers/equipment.py` |
+| 열역학 1차 모델 + PI 제어 | Zone_Air_Temperature만 적용, 나머지 센서는 기존 sine+noise | `thermodynamics.py`, `engine.py` |
+
+### Git 커밋 이력 (최근)
+```
+bddd2b4 docs: history.md Phase 4 빌드 검증 결과 및 최종 산출물 요약 추가
+ad9e27f feat: 디지털 트윈 플랫폼 Phase 4 완료 — 시뮬레이션 고도화, 신규 7페이지, 30+ API
+94e6062 feat: 디지털 트윈 플랫폼 Phase 3 완료 — 알람, Grafana, JWT, BACnet, 반응형 등 11개 기능
+38b585c feat: 디지털 트윈 플랫폼 Phase 2 완료 — 풀 시뮬레이션, 온톨로지 뷰, LLM 채팅, InfluxDB 직접 연동
+```
 
 ---
 
