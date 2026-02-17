@@ -23,6 +23,7 @@ import asyncpg
 
 from .config import settings
 from .database import get_pg_pool
+from .quality import quality_checker
 
 logger = logging.getLogger("server-d.mqtt")
 
@@ -221,7 +222,6 @@ class MQTTWorker:
             # 페이로드 파싱
             payload = json.loads(msg.payload.decode("utf-8"))
             value = float(payload["value"])
-            quality = payload.get("quality", "good")
             unit = payload.get("unit", "")
 
             # 타임스탬프 파싱 (없으면 현재 UTC 시각)
@@ -230,6 +230,15 @@ class MQTTWorker:
                 ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
             else:
                 ts = datetime.now(timezone.utc)
+
+            # 데이터 품질 검사 (Phase 4)
+            sensor_type = quality_checker.infer_sensor_type(point_id)
+            quality = quality_checker.check(point_id, value, sensor_type)
+            if quality == "bad":
+                logger.warning(
+                    "데이터 품질 불량: point=%s, value=%.2f, type=%s",
+                    point_id, value, sensor_type,
+                )
 
             # InfluxDB Point 생성
             point = (
@@ -425,6 +434,7 @@ class MQTTWorker:
             "alarms_saved": self._alarms_saved,
             "errors": self._errors,
             "buffer_size": len(self._buffer),
+            "quality_stats": quality_checker.stats,
         }
 
 

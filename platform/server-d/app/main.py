@@ -19,9 +19,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import close_influxdb, close_postgres, init_influxdb, init_postgres
+from .downsampling import ensure_downsampling_tasks
 from .mqtt_worker import mqtt_worker
 from .retention import ensure_buckets
-from .routers import admin, health, points
+from .routers import admin, health, points, export
 from .routers.health import set_start_time
 
 # ─────────────────────────────────────────────
@@ -81,6 +82,10 @@ async def lifespan(app: FastAPI):
         # 보존 정책 버킷 확인/생성
         bucket_count = ensure_buckets()
         logger.info("InfluxDB 보존 정책 확인 완료 (신규 버킷: %d개)", bucket_count)
+
+        # 다운샘플링 태스크 확인/등록 (Phase 4)
+        task_count = ensure_downsampling_tasks()
+        logger.info("다운샘플링 태스크 확인 완료 (신규 태스크: %d개)", task_count)
     except Exception as e:
         logger.error("InfluxDB 초기화 실패 — 서비스 제한 모드: %s", e)
 
@@ -130,6 +135,7 @@ app.add_middleware(
 app.include_router(points.router)
 app.include_router(admin.router)
 app.include_router(health.router)
+app.include_router(export.router)
 
 
 # ── 루트 엔드포인트 ──

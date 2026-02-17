@@ -18,6 +18,11 @@ import {
   LogIn,
   LogOut,
   User,
+  Bell,
+  Zap,
+  Wrench,
+  FileText,
+  Settings,
 } from "lucide-react";
 import { getCurrentUser, isLoggedIn, logout } from "@/lib/api";
 
@@ -37,6 +42,11 @@ const navItems: NavItem[] = [
   { href: "/topology", label: "토폴로지", icon: Network },
   { href: "/history", label: "시계열 이력", icon: Clock },
   { href: "/chat", label: "AI 채팅", icon: MessageCircle },
+  { href: "/alarms", label: "알람 관리", icon: Bell },
+  { href: "/energy", label: "에너지 분석", icon: Zap },
+  { href: "/maintenance", label: "유지보수", icon: Wrench },
+  { href: "/reports", label: "보고서", icon: FileText },
+  { href: "/settings", label: "설정", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -197,7 +207,7 @@ export function Sidebar() {
             </Link>
           )}
           <div className={cn("text-xs text-gray-400 px-2", "md:text-center lg:text-left")}>
-            <p>Phase 3</p>
+            <p>Phase 4</p>
           </div>
         </div>
       </aside>

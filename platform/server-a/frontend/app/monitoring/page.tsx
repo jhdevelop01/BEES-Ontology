@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +69,7 @@ const SENSORS = [
 ];
 
 export default function MonitoringPage() {
+  const router = useRouter();
   const { points, pointHistory, connected } = useSSE(60);
 
   // 각 센서의 차트 데이터 생성
@@ -96,6 +98,16 @@ export default function MonitoringPage() {
       />
 
       <div className="p-3 md:p-6 space-y-6">
+        {/* 장비 상세 링크 */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push("/monitoring/bldg:AHU_5F")}
+            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            AHU 5층 상세 모니터링 →
+          </button>
+        </div>
+
         {/* 센서 현재값 카드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
           {SENSORS.map((sensor) => {

@@ -3,16 +3,18 @@
 장비 제어 명령을 Server B (BAS Adapter)로 전달한다.
 """
 
+import json
 import logging
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from app.config import SERVER_B_URL
 from app.dependencies import CurrentUser, require_role
 from app.services import mqtt_service
+from app.services import audit_service
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +40,7 @@ class ControlResponse(BaseModel):
 @router.post("/control", response_model=ControlResponse)
 async def send_control_command(
     cmd: ControlCommand,
+    request: Request,
     current_user: CurrentUser = Depends(require_role("operator", "admin")),
 ) -> ControlResponse:
     """
@@ -45,6 +48,7 @@ async def send_control_command(
     Server B가 오프라인이면 에러 반환.
     """
     logger.info("제어 명령 수신: %s → %s", cmd.deviceId, cmd.command)
+    client_ip = request.client.host if request.client else None
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -60,6 +64,21 @@ async def send_control_command(
             response.raise_for_status()
             result = response.json()
 
+            # 감사 로그 기록 (Phase 4)
+            await audit_service.log_action(
+                user_id=current_user.user_id,
+                action="command",
+                target_equipment=cmd.deviceId,
+                old_value=None,
+                new_value=json.dumps({
+                    "command": cmd.command,
+                    "params": cmd.params,
+                    "result": "success",
+                }),
+                source="dashboard",
+                ip_address=client_ip,
+            )
+
             return ControlResponse(
                 success=result.get("success", True),
                 message=result.get("message", f"{cmd.command} 명령 전송 성공"),
@@ -69,7 +88,20 @@ async def send_control_command(
 
     except httpx.ConnectError:
         logger.warning("Server B 연결 실패: %s", SERVER_B_URL)
-        # Phase 1: Server B 미가동 시에도 동작하도록 폴백
+        # 감사 로그: Server B 오프라인
+        await audit_service.log_action(
+            user_id=current_user.user_id,
+            action="command",
+            target_equipment=cmd.deviceId,
+            old_value=None,
+            new_value=json.dumps({
+                "command": cmd.command,
+                "params": cmd.params,
+                "result": "server_b_offline",
+            }),
+            source="dashboard",
+            ip_address=client_ip,
+        )
         return ControlResponse(
             success=True,
             message=f"{cmd.command} 명령 전송 (Server B 오프라인 — 시뮬레이션 모드)",

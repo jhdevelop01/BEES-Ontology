@@ -83,38 +83,45 @@ Brick Schema 온톨로지(845 인스턴스)를 기반으로 4개 독립 서버 �
 | Grafana | 3001 | admin / bees2024 |
 | Neo4j (외부 컨테이너) | 7476/7689 | neo4j / bees2024 |
 
-### Phase 3 현재 상태 (2026.02.13) — ✅ 전체 완료
-**Phase 2 (유지)**:
-- ✅ **84개 장비 + 164개 포인트** 실시간 시뮬레이션 (Neo4j 자동 로딩, 5초 간격)
-- ✅ **온톨로지 그래프 뷰** — Cytoscape.js, 노드 클릭 하이라이트, 더블클릭 이웃 확장, 검색+포커스 (`/ontology`)
-- ✅ **토폴로지 뷰** — 18층 건물 트리 + SSE 실시간 장비 상태 + 반응형 디자인 (`/topology`)
-- ✅ **LLM 채팅** — OpenAI GPT-4o Function Calling × 6도구 → Neo4j Cypher (`/chat`)
-- ✅ **InfluxDB 직접 연동** — 3단계 폴백: InfluxDB 직접 → Server D 프록시 → MQTT 캐시
+### Phase 4 현재 상태 (2026.02.17) — ✅ 전체 완료
 
-**Phase 3 (신규)**:
-- ✅ **시뮬레이션 자동 시작** — Server C 기동 시 자동 시작 (수동 POST 불필요)
-- ✅ **알람 시스템** — Server C 임계값 체크 → MQTT 발행 → Server A 캐시 → Server D PostgreSQL 저장
-- ✅ **Grafana 대시보드** — InfluxDB 자동 연동, 4패널 오버뷰 (포트 3001)
-- ✅ **시계열 이력 페이지** — recharts 멀티라인 차트, 기간/집계 선택, CSV 다운로드 (`/history`)
-- ✅ **반응형 디자인** — 모바일/태블릿/데스크탑 3단계 전 페이지 적용
-- ✅ **BACnet/IP 어댑터** — Brick→BACnet 매핑, 시뮬레이션 모드, 5개 REST API
-- ✅ **데이터 보존 정책** — InfluxDB 3단계 다운샘플링 (7d→30d→365d)
-- ✅ **스케줄 관리 API** — PostgreSQL 기반 CRUD 5개 엔드포인트
-- ✅ **JWT 인증** — 로그인/등록/역할 기반 접근 제어, 프론트엔드 로그인 페이지
-- ✅ **알람 UI** — SSE 알람 배너 + 대시보드 알람 카드
-- ✅ **온톨로지 품질 스크립트** — 5가지 자동 구조 검증 (`scripts/ontology_quality_check.py`)
+**Phase 2~3 (유지)**: 84개 장비 + 164개 포인트 실시간 시뮬레이션, 온톨로지 그래프, 토폴로지, LLM 채팅, InfluxDB, 알람, Grafana, BACnet, JWT 인증, 반응형 디자인
+
+**Phase 4 (신규)**:
+- ✅ **시나리오 관리** — 6개 프리셋 + 커스텀 시나리오 (Server C)
+- ✅ **고장 주입 시스템** — 6개 고장 유형 실시간 주입/해제 (Server C)
+- ✅ **HVAC 열역학 모델링** — 외기온/습도/태양복사 기반 열부하 계산 (Server C)
+- ✅ **데이터 품질 체크** — 범위/변화율/통계 3단계 검증 (Server D)
+- ✅ **명령 큐잉** — 지수 백오프 재시도, TTL 30분 (Server B)
+- ✅ **감사 로깅** — PostgreSQL audit_log, IP 추적 (Server A)
+- ✅ **InfluxDB 다운샘플링** — Flux 태스크 5분/1시간 평균 자동 집계
+- ✅ **알람 관리 페이지** — 심각도 카운트, 확인/억제 모달, 상세 패널, 이력 아카이브 (`/alarms`)
+- ✅ **장비 상세 모니터링** — 실시간 게이지, 트렌드 차트, 성능 지표, 연결 관계 (`/monitoring/[id]`)
+- ✅ **에너지 분석 대시보드** — 실시간 전력, 프로파일, 시스템별 내역, EUI (`/energy`)
+- ✅ **유지보수 관리** — 작업 지시 CRUD, 캘린더 뷰 (`/maintenance`)
+- ✅ **보고서** — 프리셋 보고서 생성, 이력 관리 (`/reports`)
+- ✅ **사용자 관리** — CRUD, 접근 로그 (`/settings/users`)
+- ✅ **시스템 설정** — 건물명, 시간대, 단위, 알람 임계값 설정 (`/settings`)
 - ⚠️ **OpenAI API 키**: `.env`의 `OPENAI_API_KEY`에 실제 키 설정 필요
 
-### 프론트엔드 8개 페이지
+### 프론트엔드 16개 페이지
 | 경로 | 기능 |
 |------|------|
 | `/` | 대시보드 — KPI, 장비 상태, 알람 카드, 최근 데이터 |
 | `/monitoring` | 모니터링 — 실시간 차트 |
+| `/monitoring/[equipmentId]` | 장비 상세 — 게이지, 트렌드, 성능, 연결 관계, 알람 |
 | `/control` | 제어 — ON/OFF, 모드 변경 (JWT 인증 필요) |
 | `/ontology` | 온톨로지 그래프 — 클릭 하이라이트, 더블클릭 확장, 검색+포커스 |
 | `/topology` | 토폴로지 — 건물 계층 트리 + SSE 실시간 장비 상태 |
-| `/chat` | AI 채팅 — LLM 자연어 질의 |
 | `/history` | 시계열 이력 — recharts 멀티라인, 기간/집계, CSV 다운로드 |
+| `/chat` | AI 채팅 — LLM 자연어 질의 |
+| `/alarms` | 알람 관리 — 심각도 카운트, 확인/억제 모달, 상세 패널 |
+| `/alarms/history` | 알람 이력 — 검색/필터 아카이브, CSV 다운로드 |
+| `/energy` | 에너지 분석 — 실시간 전력, 프로파일, 시스템별, EUI |
+| `/maintenance` | 유지보수 — 작업 지시 CRUD, 캘린더 |
+| `/reports` | 보고서 — 프리셋 생성, 이력, 다운로드 |
+| `/settings` | 시스템 설정 — 건물명, 시간대, 단위, 알람 임계값 |
+| `/settings/users` | 사용자 관리 — CRUD, 접근 로그 |
 | `/login` | 로그인 — JWT 인증 |
 
 ### 기동 방법

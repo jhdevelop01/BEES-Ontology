@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.13 (Phase 11 — 디지털 트윈 플랫폼 Phase 3 완료, 11/11 항목 100%)
+> **최종 업데이트:** 2026.02.17 (Phase 4 — 시뮬레이션 고도화 + 프론트엔드 16페이지 확장 완료)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -987,7 +987,80 @@ Server B 신규 엔드포인트:
 
 - **A2: OpenAI API 키 연동 + E2E 테스트** — 사용자 의도적 제외 (실제 API 키 필요)
 
-### Phase 4: 착수 가능한 다음 작업
+---
+
+## 15. Phase 4 — 시뮬레이션 고도화 + 프론트엔드 확장 (2026.02.17)
+
+### 15.1 개요
+
+Phase 3 완료 후, 시뮬레이션 고도화(시나리오/고장 주입/열역학 모델링)와 프론트엔드 신규 페이지 8개를 추가.
+팀 기반 병렬 개발로 4명 에이전트가 동시 작업.
+
+### 15.2 Server C 고도화 (simulation-eng)
+
+- **시나리오 관리**: 6개 프리셋(normal, emergency, peak_load, summer, winter, night_weekend) + 커스텀 시나리오 생성
+- **고장 주입 시스템**: 6개 고장 유형(stuck_damper, sensor_stuck, sensor_drift, comm_loss, degraded_performance, valve_leak), 실시간 주입/해제
+- **HVAC 열역학 모델링**: 외기온/습도/태양복사 기반 열부하 계산, 냉난방 응답 시뮬레이션
+- **기상 데이터 제공**: 계절별 외기 프로필, 일주기 패턴
+
+### 15.3 백엔드 API 확장 (backend-api)
+
+Server A 신규 엔드포인트:
+- `GET /api/equipment/{id}` — 장비 상세 (Neo4j 연동)
+- `GET /api/equipment/{id}/performance` — 장비 성능 (InfluxDB)
+- `GET /api/equipment/{id}/alarms` — 장비 알람 이력
+- `GET /api/alarms/stats` — 심각도별 알람 통계
+- `POST /api/alarms/{id}/suppress` — 알람 억제
+- `GET /api/alarms/suppressed` — 억제 알람 목록
+- `DELETE /api/alarms/suppress/{id}` — 억제 해제
+- `GET /api/energy/realtime` — 실시간 전력
+- `GET /api/energy/profile` — 에너지 프로파일
+- `GET /api/energy/breakdown` — 에너지 내역 (시스템별/층별)
+- `GET /api/energy/comparison` — 기간 비교
+- `GET /api/energy/eui` — EUI 지표
+- `GET/POST /api/maintenance/work-orders` — 작업 지시 CRUD
+- `GET /api/maintenance/calendar` — 유지보수 캘린더
+- `GET /api/reports/presets` — 보고서 프리셋
+- `POST /api/reports/generate` — 보고서 생성
+- `GET /api/reports/history` — 보고서 이력
+- `GET /api/users` — 사용자 관리 CRUD
+- `GET/PUT /api/settings` — 시스템 설정
+- `GET /api/audit-log` — 감사 로그
+- `GET /data/export/{format}` — 데이터 내보내기 (CSV/JSON)
+
+Server B 확장:
+- `GET /command-queue` — 명령 큐 상태 (실패 명령 자동 재시도)
+
+### 15.4 인프라 품질 (infra-quality)
+
+- **데이터 품질 체커**: Server D mqtt_worker 통합, 3단계 검증 (범위/변화율/통계 이상치 ±3σ)
+- **명령 큐잉**: Server B asyncio.Queue, 지수 백오프 재시도 (1s→2s→4s→8s→16s), TTL 30분
+- **감사 로깅**: PostgreSQL audit_log 테이블, 제어 명령 IP 추적
+- **InfluxDB 다운샘플링**: Flux 태스크 (5분 평균 → 30d, 1시간 평균 → 365d)
+
+### 15.5 프론트엔드 확장 (frontend-2 + infra-quality)
+
+기존 8페이지 → **16페이지** (8개 신규):
+```
+신규 페이지:
+/alarms              — 알람 관리 (심각도 카운트, 필터, 확인 모달, 억제 모달, 상세 패널)
+/alarms/history      — 알람 이력 아카이브 (CSV 다운로드, 억제)
+/energy              — 에너지 분석 대시보드
+/maintenance         — 유지보수 관리 (작업 지시 CRUD)
+/reports             — 보고서 생성/이력
+/settings            — 시스템 설정
+/settings/users      — 사용자 관리 (CRUD)
+/monitoring/[equipmentId] — 장비 상세 모니터링 (실시간 게이지, 트렌드, 성능, 연결 관계, 알람)
+```
+
+사이드바 12개 메뉴: 대시보드, 모니터링, 제어, 온톨로지, 토폴로지, 시계열 이력, AI 채팅, 알람 관리, 에너지 분석, 유지보수, 보고서, 설정
+
+### 15.6 lib/api.ts 추가 함수
+
+총 60+ API 함수: 기존 Phase 3 + 신규 Phase 4 포함.
+주요 신규: getAlarmStats, suppressAlarm, getSuppressedAlarms, unsuppressAlarm, getEquipmentDetail, getEquipmentPerformance, getEquipmentAlarms, getAuditLog, getEnergyRealtime, getEnergyProfile, getEnergyBreakdown, getEnergyComparison, getEnergyEUI, getWorkOrders, createWorkOrder, getMaintenanceCalendar, getReportPresets, generateReport, getUsers, createUser, updateUser, deleteUser, getSettings, updateSettings
+
+### Phase 5: 착수 가능한 다음 작업
 
 ### 온톨로지 관련 (내부 데이터 확보 시)
 

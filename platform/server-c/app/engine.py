@@ -4,6 +4,12 @@
 EmulatorEngine: AsyncIO 기반 메인 루프로 5초 간격 데이터 생성.
 DeviceState: 장비 런타임 상태 관리.
 데이터 생성 공식: value = base_value + noise * random(-1,1) + daily_pattern(hour) + equipment_effect + seasonal + drift
+
+Phase 4 추가:
+- ScenarioManager: 시나리오별 파라미터(재실률, 외기온, HVAC 모드) 반영
+- FaultManager: 고장 주입(센서 고착, 드리프트, 통신 단절 등) 반영
+- ThermalModel: Zone_Air_Temperature_Sensor를 1차 에너지 밸런스로 대체
+- WeatherProvider: 서울 TMY 기반 외기 조건 제공
 """
 
 import asyncio
@@ -19,6 +25,7 @@ import paho.mqtt.client as mqtt
 
 from .alarm_checker import AlarmChecker
 from .config import settings
+from .fault_injection import FaultManager
 from .profiles.ahu_5f import AHU_5F_DEVICE, AHU_5F_PROFILES, DataProfile, DeviceProfile
 from .profiles.profile_factory import (
     POINT_SPECS,
@@ -27,6 +34,9 @@ from .profiles.profile_factory import (
     seasonal_correction,
     _strip_namespace,
 )
+from .scenarios import ScenarioManager
+from .thermodynamics import ThermalModel
+from .weather import WeatherProvider
 from . import neo4j_loader
 
 logger = logging.getLogger("server-c.engine")
@@ -44,6 +54,9 @@ _SETPOINT_CLASSES: set[str] = {
     "Zone_Air_Temperature_Setpoint",
     "Chilled_Water_Supply_Temperature_Setpoint",
 }
+
+# 존 공기 온도 센서 — 열역학 모델 사용
+_ZONE_TEMP_CLASS = "Zone_Air_Temperature_Sensor"
 
 
 # ─────────────────────────────────────────────────────────────
@@ -80,6 +93,7 @@ class EmulatorEngine:
     - AsyncIO 메인 루프로 지정 간격마다 센서 데이터 생성
     - MQTT로 센서 데이터 및 장비 상태 발행
     - REST API를 통한 장비 제어 명령 수신
+    - Phase 4: 시나리오, 고장 주입, 열역학 모델 통합
     """
 
     def __init__(self):
@@ -110,6 +124,18 @@ class EmulatorEngine:
 
         # Neo4j 로딩 상태 (Phase 2)
         self._neo4j_loaded: bool = False
+
+        # Phase 4: 시나리오 관리자
+        self.scenario_manager = ScenarioManager()
+
+        # Phase 4: 고장 주입 관리자
+        self.fault_manager = FaultManager()
+
+        # Phase 4: 기상 데이터 제공자
+        self.weather_provider = WeatherProvider()
+
+        # Phase 4: 존별 열역학 모델 {point_id: ThermalModel}
+        self._thermal_models: dict[str, ThermalModel] = {}
 
     # ─────────────── 초기화 ───────────────
 
@@ -165,6 +191,14 @@ class EmulatorEngine:
                 )
                 if data_profile:
                     self._register_profile(data_profile)
+
+                    # Phase 4: Zone_Air_Temperature_Sensor는 열역학 모델 초기화
+                    if _strip_namespace(f"brick:{pt_class}") == _ZONE_TEMP_CLASS:
+                        zone_id = loc_id if loc_id != "unknown" else pt_id
+                        self._thermal_models[pt_id] = ThermalModel(
+                            zone_id=zone_id, initial_temp=24.0
+                        )
+                        logger.debug(f"열역학 모델 초기화: {pt_id} (zone: {zone_id})")
                 else:
                     skipped_points += 1
                     logger.debug(
@@ -177,12 +211,14 @@ class EmulatorEngine:
             "device_count": len(self._devices),
             "point_count": len(self._profiles),
             "skipped_points": skipped_points,
+            "thermal_models": len(self._thermal_models),
         }
         logger.info(
             f"Neo4j 기반 프로파일 생성 완료: "
             f"장비 {result['device_count']}개, "
             f"포인트 {result['point_count']}개, "
-            f"스킵 {skipped_points}개"
+            f"스킵 {skipped_points}개, "
+            f"열역학 모델 {len(self._thermal_models)}개"
         )
         return result
 
@@ -272,16 +308,73 @@ class EmulatorEngine:
             return profile.off_base_value - profile.base_value
         return 0.0
 
-    def _generate_value(self, profile: DataProfile, now: datetime) -> float:
+    def _apply_scenario_effects(self, profile: DataProfile, base_value: float) -> float:
+        """시나리오 파라미터에 따른 값 보정."""
+        class_name = _strip_namespace(profile.brick_class)
+        scenario = self.scenario_manager.active
+
+        # 재실률이 CO2에 영향
+        if "CO2" in class_name:
+            # 재실률 높으면 CO2 증가 (기본 0.7 대비 비례)
+            occupancy_factor = scenario.occupancy / 0.7
+            return base_value * occupancy_factor
+
+        # 재실률이 내부 발열에 영향 → 전력 센서 반영
+        if "Power" in class_name:
+            occupancy_factor = 0.3 + 0.7 * scenario.occupancy
+            return base_value * occupancy_factor
+
+        # HVAC 모드가 급기온도에 영향
+        if "Supply_Air_Temperature" in class_name and class_name not in _SETPOINT_CLASSES:
+            if scenario.hvac_mode == "max_cooling":
+                return base_value - 2.0   # 급기온 낮춤
+            elif scenario.hvac_mode == "heating":
+                return base_value + 6.0   # 급기온 높임 (난방)
+            elif scenario.hvac_mode == "eco":
+                return base_value + 2.0   # 에코 → 약간 높은 급기온
+            elif scenario.hvac_mode == "max_ventilation":
+                # 최대 환기 → 외기온에 근접
+                outdoor = self.weather_provider.get_current_conditions()["outdoor_temp"]
+                return (base_value + outdoor) / 2.0
+
+        # HVAC 모드가 팬속도에 영향
+        if "Fan_Speed" in class_name:
+            if scenario.hvac_mode == "max_ventilation":
+                return 95.0
+            elif scenario.hvac_mode == "max_cooling":
+                return 90.0
+            elif scenario.hvac_mode == "eco":
+                return 30.0
+
+        return base_value
+
+    def _generate_value(self, profile: DataProfile, now: datetime) -> Optional[float]:
         """
         센서 데이터 생성 공식:
         value = base_value + noise * random(-1, 1) + daily_pattern(hour) + equipment_effect + seasonal + drift
 
+        Phase 4 추가:
+        - 시나리오 파라미터 반영 (재실률, 외기온, HVAC 모드)
+        - 고장 주입 효과 반영 (센서 고착, 드리프트, 통신 단절 등)
+        - Zone_Air_Temperature_Sensor는 열역학 모델 사용
+
         특수 처리:
         - 바이너리 클래스 (On_Off_Status, Fan_On_Off_Status, Alarm): 0.0 또는 1.0
         - Setpoint 클래스: 고정 base_value (노이즈/일간패턴 없음)
+
+        Returns:
+            생성된 센서값. 통신 단절 시 None 반환.
         """
         class_name = _strip_namespace(profile.brick_class)
+
+        # ── Phase 4: 통신 단절 고장 확인 ──
+        if self.fault_manager.has_comm_loss(profile.equipment_dependency):
+            return None
+
+        # ── Phase 4: 센서 고착 고장 확인 ──
+        stuck_value = self.fault_manager.get_sensor_stuck_value(profile.point_id)
+        if stuck_value is not None:
+            return stuck_value
 
         # ── 바이너리 포인트 (상태/알람) ──
         if class_name in _BINARY_CLASSES:
@@ -294,10 +387,17 @@ class EmulatorEngine:
         if class_name in _SETPOINT_CLASSES:
             return profile.base_value
 
+        # ── Phase 4: Zone_Air_Temperature_Sensor → 열역학 모델 ──
+        if class_name == _ZONE_TEMP_CLASS and profile.point_id in self._thermal_models:
+            return self._generate_thermal_value(profile, now)
+
         # ── 일반 센서 데이터 생성 ──
         hour = now.hour + now.minute / 60.0
 
-        # 기본값 + 랜덤 노이즈
+        # 기본값 + 시나리오 보정
+        base = self._apply_scenario_effects(profile, profile.base_value)
+
+        # 랜덤 노이즈
         noise = profile.noise_range * random.uniform(-1, 1)
 
         # 일간 패턴
@@ -307,7 +407,6 @@ class EmulatorEngine:
         eq_effect = self._equipment_effect(profile)
 
         # 계절 보정 (서울 기후)
-        spec = None
         from .profiles.profile_factory import _find_spec
         spec = _find_spec(profile.brick_class)
         seasonal = 0.0
@@ -319,8 +418,74 @@ class EmulatorEngine:
         # 드리프트 (점진 변화, 예: 필터 오염)
         drift = self._drift_accumulator.get(profile.point_id, 0.0)
 
+        # Phase 4: 고장 주입 드리프트
+        fault_drift = self.fault_manager.get_sensor_drift(
+            profile.point_id, settings.SIMULATION_INTERVAL / 3600.0
+        )
+
+        # Phase 4: 장비 성능 저하 효과
+        capacity_reduction = self.fault_manager.get_capacity_reduction(profile.equipment_dependency)
+        degraded_effect = 0.0
+        if capacity_reduction > 0 and "Temperature" in class_name:
+            # 성능 저하 → HVAC 출력 감소 → 실온이 외기 방향으로 이동
+            weather = self.weather_provider.get_current_conditions(now)
+            outdoor_temp = weather["outdoor_temp"]
+            degraded_effect = capacity_reduction * (outdoor_temp - profile.base_value) * 0.3
+
+        # Phase 4: 밸브 누설 효과
+        valve_leak = self.fault_manager.get_valve_leak(profile.equipment_dependency)
+        leak_effect = 0.0
+        if valve_leak > 0 and "Temperature" in class_name:
+            leak_effect = valve_leak * random.uniform(-2.0, 2.0)
+
         # 최종값 계산
-        value = profile.base_value + noise + daily + eq_effect + seasonal + drift
+        value = base + noise + daily + eq_effect + seasonal + drift + fault_drift + degraded_effect + leak_effect
+
+        # 물리적 범위 클리핑
+        value = max(profile.min_value, min(profile.max_value, value))
+
+        return round(value, 2)
+
+    def _generate_thermal_value(self, profile: DataProfile, now: datetime) -> float:
+        """Zone_Air_Temperature_Sensor를 열역학 모델로 생성."""
+        model = self._thermal_models[profile.point_id]
+        scenario = self.scenario_manager.active
+
+        # 기상 조건 가져오기
+        weather = self.weather_provider.get_current_conditions(now)
+        outdoor_temp = weather["outdoor_temp"]
+
+        # 장비 상태 확인
+        device = self._devices.get(profile.equipment_dependency)
+        hvac_active = device.is_active if device else False
+
+        # 시나리오에 따른 설정온도
+        setpoint = profile.base_value  # 기본 24°C
+        if scenario.hvac_mode == "eco":
+            setpoint += 2.0  # 에코 → 설정온도 높임 (냉방 절감)
+        elif scenario.hvac_mode == "max_cooling":
+            setpoint -= 2.0  # 최대 냉방 → 설정온도 낮춤
+
+        # Phase 4: 고장 효과
+        capacity_reduction = self.fault_manager.get_capacity_reduction(profile.equipment_dependency)
+        valve_leak = self.fault_manager.get_valve_leak(profile.equipment_dependency)
+
+        # 열역학 모델 스텝
+        new_temp = model.step(
+            dt=settings.SIMULATION_INTERVAL,
+            outdoor_temp=outdoor_temp,
+            occupancy=scenario.occupancy,
+            hvac_active=hvac_active,
+            setpoint=setpoint,
+            solar_radiation=weather["solar_radiation"],
+            solar_factor=scenario.solar_factor,
+            capacity_reduction=capacity_reduction,
+            valve_leak=valve_leak,
+        )
+
+        # 약간의 노이즈 추가 (센서 정밀도 한계)
+        noise = random.uniform(-0.15, 0.15)
+        value = new_temp + noise
 
         # 물리적 범위 클리핑
         value = max(profile.min_value, min(profile.max_value, value))
@@ -346,15 +511,48 @@ class EmulatorEngine:
             f"시뮬레이션 루프 시작 (간격: {settings.SIMULATION_INTERVAL}초)"
         )
 
+        # Phase 4: 시나리오에 따른 외기온 오버라이드 적용
+        scenario = self.scenario_manager.active
+        self.weather_provider.set_temp_override(
+            scenario.outdoor_temp_min, scenario.outdoor_temp_max
+        )
+
         while self._running:
             try:
                 now = datetime.now(timezone.utc)
                 self._tick_count += 1
 
+                # Phase 4: 시나리오 변경 감지 시 기상 오버라이드 업데이트
+                current_scenario = self.scenario_manager.active
+                if current_scenario.name != scenario.name:
+                    scenario = current_scenario
+                    self.weather_provider.set_temp_override(
+                        scenario.outdoor_temp_min, scenario.outdoor_temp_max
+                    )
+                    logger.info(f"시나리오 변경 감지: {scenario.name}")
+
                 # 모든 센서 프로파일에 대해 데이터 생성
                 for point_id, profile in self._profiles.items():
+
+                    # Phase 4: 통신 단절 장비의 포인트는 건너뜀
+                    if self.fault_manager.has_comm_loss(profile.equipment_dependency):
+                        # 통신 단절 시 quality=bad로 발행
+                        payload = {
+                            "value": None,
+                            "ts": now.isoformat(),
+                            "unit": profile.unit,
+                            "quality": "comm_loss",
+                        }
+                        self._latest_values[point_id] = payload
+                        topic = f"bees/points/{point_id}"
+                        self._publish_mqtt(topic, payload)
+                        continue
+
                     # 값 생성
                     value = self._generate_value(profile, now)
+
+                    if value is None:
+                        continue
 
                     # 드리프트 업데이트
                     self._update_drift(profile, settings.SIMULATION_INTERVAL)
@@ -388,11 +586,20 @@ class EmulatorEngine:
 
                 # 장비 상태 발행
                 for device_id, device in self._devices.items():
-                    state_payload = {
-                        "is_active": device.is_active,
-                        "mode": device.mode,
-                        "ts": now.isoformat(),
-                    }
+                    # Phase 4: 통신 단절 장비는 offline 상태로 발행
+                    if self.fault_manager.has_comm_loss(device_id):
+                        state_payload = {
+                            "is_active": False,
+                            "mode": "offline",
+                            "ts": now.isoformat(),
+                            "comm_loss": True,
+                        }
+                    else:
+                        state_payload = {
+                            "is_active": device.is_active,
+                            "mode": device.mode,
+                            "ts": now.isoformat(),
+                        }
                     topic = f"bees/devices/{device_id}/state"
                     self._publish_mqtt(topic, state_payload)
 
@@ -420,6 +627,10 @@ class EmulatorEngine:
         # 드리프트 초기화
         for point_id in self._drift_accumulator:
             self._drift_accumulator[point_id] = 0.0
+
+        # 열역학 모델 리셋
+        for model in self._thermal_models.values():
+            model.reset()
 
         # MQTT 연결
         self._setup_mqtt()
@@ -475,6 +686,9 @@ class EmulatorEngine:
             "neo4j_loaded": self._neo4j_loaded,
             "alarm_total": self._alarm_checker.total_alarms,
             "alarm_suppressed": self._alarm_checker.suppressed_count,
+            "active_scenario": self.scenario_manager.active.name,
+            "active_faults": self.fault_manager.active_count,
+            "thermal_models": len(self._thermal_models),
         }
 
     def get_all_devices(self) -> list[dict]:

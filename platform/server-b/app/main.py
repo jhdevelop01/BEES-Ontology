@@ -38,6 +38,7 @@ from app.config import settings
 from app.device_registry import registry
 from app.neo4j_loader import load_devices_from_neo4j
 from app.bacnet_adapter import bacnet_sim
+from app.command_queue import command_queue
 
 # ---------------------------------------------------------------------------
 # 로깅 설정
@@ -262,6 +263,25 @@ async def _fetch_audit_logs(limit: int = 100) -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Server C 호출 헬퍼 (명령 큐에서 사용)
+# ---------------------------------------------------------------------------
+async def _send_to_server_c(device_id: str, command: str, params: dict) -> bool:
+    """Server C에 명령을 전달한다. 성공 시 True, 실패 시 False."""
+    if _http_client is None:
+        return False
+    try:
+        response = await _http_client.post(
+            f"/devices/{device_id}/command",
+            json={"command": command, "params": params},
+        )
+        response.raise_for_status()
+        return True
+    except Exception as e:
+        logger.warning("Server C 명령 전달 실패: %s — %s", device_id, e)
+        return False
+
+
+# ---------------------------------------------------------------------------
 # Lifespan (앱 시작/종료 시 리소스 관리)
 # ---------------------------------------------------------------------------
 @asynccontextmanager
@@ -299,10 +319,16 @@ async def lifespan(app: FastAPI):
         timeout=httpx.Timeout(settings.SERVER_C_TIMEOUT),
     )
 
+    # 명령 큐 프로세서 시작 (Phase 4)
+    command_queue.set_send_function(_send_to_server_c)
+    await command_queue.start_processor()
+    logger.info("명령 큐 프로세서 시작 완료")
+
     yield
 
     # 종료 정리
     logger.info("Server B 종료 중...")
+    await command_queue.stop_processor()
     if _mqtt_client is not None:
         _mqtt_client.loop_stop()
         _mqtt_client.disconnect()
@@ -399,50 +425,38 @@ async def send_command(req: CommandRequest) -> CommandResponse:
         command_success = True
         logger.info("Server C 응답 성공: %s → %s", req.deviceId, req.command)
 
-    except httpx.TimeoutException:
-        logger.error("Server C 호출 타임아웃 (%s초): %s", settings.SERVER_C_TIMEOUT, req.deviceId)
-        await _save_audit_log(
-            user_id=req.userId,
-            action="command_failed",
-            target_equipment=req.deviceId,
-            old_value=None,
-            new_value=json.dumps({"command": req.command, "reason": "timeout"}),
+    except (httpx.TimeoutException, httpx.HTTPStatusError, httpx.ConnectError) as e:
+        # Server C 호출 실패 → 명령 큐에 추가하여 재시도 (Phase 4)
+        reason = "timeout" if isinstance(e, httpx.TimeoutException) else (
+            "connection_error" if isinstance(e, httpx.ConnectError) else "server_c_error"
         )
-        raise HTTPException(
-            status_code=503,
-            detail=f"Server C 응답 타임아웃 ({settings.SERVER_C_TIMEOUT}초). 에뮬레이터가 응답하지 않습니다.",
-        )
+        logger.warning("Server C 호출 실패 (%s): %s → 큐 추가", reason, req.deviceId)
 
-    except httpx.HTTPStatusError as e:
-        logger.error("Server C HTTP 에러: %s %s", e.response.status_code, e.response.text)
+        cmd_id = await command_queue.enqueue({
+            "deviceId": req.deviceId,
+            "command": req.command,
+            "params": req.params,
+            "userId": req.userId,
+        })
         await _save_audit_log(
             user_id=req.userId,
-            action="command_failed",
+            action="command_queued",
             target_equipment=req.deviceId,
             old_value=None,
             new_value=json.dumps({
                 "command": req.command,
-                "reason": "server_c_error",
-                "status_code": e.response.status_code,
+                "reason": reason,
+                "queue_id": cmd_id,
             }),
         )
-        raise HTTPException(
-            status_code=503,
-            detail=f"Server C 오류 응답: {e.response.status_code}",
-        )
 
-    except httpx.ConnectError:
-        logger.error("Server C 연결 실패: %s", settings.SERVER_C_URL)
-        await _save_audit_log(
-            user_id=req.userId,
-            action="command_failed",
-            target_equipment=req.deviceId,
-            old_value=None,
-            new_value=json.dumps({"command": req.command, "reason": "connection_error"}),
-        )
-        raise HTTPException(
-            status_code=503,
-            detail="Server C에 연결할 수 없습니다. 에뮬레이터가 실행 중인지 확인하세요.",
+        return CommandResponse(
+            success=True,
+            deviceId=req.deviceId,
+            command=req.command,
+            message=f"Server C 일시 장애 — 명령이 재시도 큐에 등록되었습니다 (id={cmd_id})",
+            server_c_response=None,
+            timestamp=ts_str,
         )
 
     # 4. MQTT 발행
@@ -593,6 +607,13 @@ async def get_audit_log(limit: int = 100) -> dict[str, Any]:
         "limit": limit,
         "logs": serialized,
     }
+
+
+# ── GET /command-queue ─────────────────────────────────────────────────────
+@app.get("/command-queue")
+async def get_command_queue_status() -> dict[str, Any]:
+    """명령 재시도 큐 상태를 조회한다."""
+    return command_queue.get_status()
 
 
 # ---------------------------------------------------------------------------

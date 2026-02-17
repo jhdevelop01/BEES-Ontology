@@ -3,18 +3,21 @@ Server C: 가상 건물 에뮬레이터 — FastAPI 메인 애플리케이션.
 
 삼성물산 GEC B동의 장비/센서를 시뮬레이션하여 MQTT로 실시간 데이터를 발행한다.
 Phase 1 MVP: AHU_5F 1대 + 연결 센서 5개.
+Phase 4: 시나리오 관리, 고장 주입, HVAC 열역학 모델링.
 """
 
 import logging
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from .config import settings
 from .engine import EmulatorEngine
+from .fault_injection import FAULT_TYPES
 
 # ─────────────────────────────────────────────────────────────
 # 로깅 설정
@@ -80,9 +83,10 @@ app = FastAPI(
     title="BEES Server C — 가상 건물 에뮬레이터",
     description=(
         "삼성물산 GEC B동 가상 건물 에뮬레이터. "
-        "Brick Schema 온톨로지 기반 장비/센서 시뮬레이션 및 MQTT 데이터 발행."
+        "Brick Schema 온톨로지 기반 장비/센서 시뮬레이션 및 MQTT 데이터 발행. "
+        "Phase 4: 시나리오 관리, 고장 주입, HVAC 열역학 모델링."
     ),
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan,
 )
 
@@ -122,6 +126,30 @@ class HealthResponse(BaseModel):
     simulation: dict
 
 
+class ScenarioLoadRequest(BaseModel):
+    """시나리오 로드 요청."""
+    name: str = Field(..., description="시나리오 이름 (예: normal, summer, peak_load)")
+
+
+class CustomScenarioRequest(BaseModel):
+    """커스텀 시나리오 생성 요청."""
+    name: str = Field(..., description="시나리오 이름")
+    display_name: str = Field(default="사용자 정의", description="표시명")
+    description: str = Field(default="", description="설명")
+    occupancy: float = Field(default=0.7, ge=0.0, le=1.0, description="재실률 (0.0~1.0)")
+    outdoor_temp_min: float = Field(default=15.0, description="외기온 최소 (°C)")
+    outdoor_temp_max: float = Field(default=25.0, description="외기온 최대 (°C)")
+    hvac_mode: str = Field(default="auto", description="HVAC 모드: auto, cooling, heating, max_cooling, max_ventilation, eco")
+    solar_factor: float = Field(default=1.0, ge=0.0, le=2.0, description="태양 복사 보정 계수 (0.0~2.0)")
+
+
+class FaultInjectRequest(BaseModel):
+    """고장 주입 요청."""
+    fault_type: str = Field(..., description="고장 유형: stuck_damper, sensor_stuck, sensor_drift, comm_loss, degraded_performance, valve_leak")
+    target_id: str = Field(..., description="대상 장비/센서 ID (예: bldg:AHU_5F)")
+    params: dict = Field(default_factory=dict, description="고장 파라미터 (유형별 상이)")
+
+
 # ─────────────────────────────────────────────────────────────
 # API 엔드포인트 — 헬스체크
 # ─────────────────────────────────────────────────────────────
@@ -132,7 +160,7 @@ async def health_check():
     return HealthResponse(
         status="healthy",
         service="server-c-emulator",
-        version="1.0.0",
+        version="2.0.0",
         timestamp=datetime.now(timezone.utc).isoformat(),
         simulation=engine.get_status(),
     )
@@ -210,3 +238,124 @@ async def device_command(device_id: str, request: CommandRequest):
     if not result.get("success"):
         raise HTTPException(status_code=400, detail=result.get("error"))
     return result
+
+
+# ─────────────────────────────────────────────────────────────
+# API 엔드포인트 — 시나리오 관리 (Phase 4)
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/scenarios", tags=["시나리오"])
+async def list_scenarios():
+    """전체 시나리오 목록 조회 (프리셋 + 커스텀)."""
+    return engine.scenario_manager.list_scenarios()
+
+
+@app.get("/scenarios/active", tags=["시나리오"])
+async def get_active_scenario():
+    """현재 활성 시나리오 조회."""
+    return engine.scenario_manager.get_active()
+
+
+@app.get("/scenarios/{scenario_id}", tags=["시나리오"])
+async def get_scenario(scenario_id: str):
+    """특정 시나리오 상세 조회."""
+    result = engine.scenario_manager.get_scenario(scenario_id)
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"시나리오를 찾을 수 없습니다: {scenario_id}",
+        )
+    return result
+
+
+@app.post("/scenarios/load", tags=["시나리오"])
+async def load_scenario(request: ScenarioLoadRequest):
+    """
+    시나리오 로드 (프리셋 또는 커스텀).
+
+    사용 가능한 프리셋: normal, emergency, peak_load, summer, winter, night_weekend
+    """
+    result = engine.scenario_manager.load_scenario(request.name)
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    return result
+
+
+@app.post("/scenarios/custom", tags=["시나리오"])
+async def create_custom_scenario(request: CustomScenarioRequest):
+    """
+    커스텀 시나리오 생성 및 즉시 활성화.
+
+    재실률, 외기온 범위, HVAC 모드, 태양 복사 계수를 자유롭게 설정.
+    """
+    result = engine.scenario_manager.create_custom(
+        name=request.name,
+        display_name=request.display_name,
+        description=request.description,
+        occupancy=request.occupancy,
+        outdoor_temp_min=request.outdoor_temp_min,
+        outdoor_temp_max=request.outdoor_temp_max,
+        hvac_mode=request.hvac_mode,
+        solar_factor=request.solar_factor,
+    )
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    return result
+
+
+# ─────────────────────────────────────────────────────────────
+# API 엔드포인트 — 고장 주입 (Phase 4)
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/faults/types", tags=["고장 주입"])
+async def list_fault_types():
+    """사용 가능한 고장 유형 및 설명 조회."""
+    return list(FAULT_TYPES.values())
+
+
+@app.get("/faults/active", tags=["고장 주입"])
+async def list_active_faults():
+    """현재 활성 고장 목록 조회."""
+    return engine.fault_manager.get_active_faults()
+
+
+@app.post("/faults/inject", tags=["고장 주입"])
+async def inject_fault(request: FaultInjectRequest):
+    """
+    고장 주입.
+
+    고장 유형별 필수 파라미터:
+    - **stuck_damper**: `{stuck_position: 30}` (%)
+    - **sensor_stuck**: `{fixed_value: 25.0}`
+    - **sensor_drift**: `{drift_rate: 0.5}` (단위/시간)
+    - **comm_loss**: 파라미터 불필요
+    - **degraded_performance**: `{capacity_reduction: 40}` (%)
+    - **valve_leak**: `{leak_percentage: 20}` (%)
+    """
+    result = engine.fault_manager.inject(
+        fault_type=request.fault_type,
+        target_id=request.target_id,
+        params=request.params,
+    )
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error"))
+    return result
+
+
+@app.post("/faults/{fault_id}/clear", tags=["고장 주입"])
+async def clear_fault(fault_id: str):
+    """고장 해제."""
+    result = engine.fault_manager.clear(fault_id)
+    if not result.get("success"):
+        raise HTTPException(status_code=404, detail=result.get("error"))
+    return result
+
+
+# ─────────────────────────────────────────────────────────────
+# API 엔드포인트 — 기상/열역학 정보 (Phase 4)
+# ─────────────────────────────────────────────────────────────
+
+@app.get("/weather/current", tags=["기상"])
+async def get_current_weather():
+    """현재 기상 조건 조회 (외기온, 습도, 태양 복사)."""
+    return engine.weather_provider.get_current_conditions()

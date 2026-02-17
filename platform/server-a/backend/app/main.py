@@ -17,7 +17,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.services import neo4j_service, mqtt_service, openai_service, influxdb_service, postgres_service
-from app.routers import alarm, auth, dashboard, control, stream, ontology, history, chat, schedule
+from app.routers import (
+    alarm, audit, auth, dashboard, control, stream, ontology, history, chat, schedule,
+    equipment, energy, maintenance, reports, users, settings,
+)
 
 # 로깅 설정
 logging.basicConfig(
@@ -79,6 +82,7 @@ app.add_middleware(
 # 라우터 등록
 app.include_router(auth.router)
 app.include_router(alarm.router)
+app.include_router(audit.router)
 app.include_router(dashboard.router)
 app.include_router(control.router)
 app.include_router(stream.router)
@@ -86,6 +90,12 @@ app.include_router(ontology.router)
 app.include_router(history.router)
 app.include_router(chat.router)
 app.include_router(schedule.router)
+app.include_router(equipment.router)
+app.include_router(energy.router)
+app.include_router(maintenance.router)
+app.include_router(reports.router)
+app.include_router(users.router)
+app.include_router(settings.router)
 
 
 @app.get("/health", tags=["시스템"])
@@ -118,6 +128,7 @@ async def root():
             "ontology_graph": "/api/ontology/graph",
             "ontology_node": "/api/ontology/node/{node_id}",
             "schedules": "/api/schedules",
+            "audit_log": "/api/audit-log",
             "docs": "/docs",
         },
     }
