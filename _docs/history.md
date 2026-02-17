@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.17 (Phase 4.5 — 버그 수정 6건 + 프론트엔드 18페이지 확장 완료)
+> **최종 업데이트:** 2026.02.17 (Phase 4.5 완료 + 리포지토리 정리)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1291,8 +1291,15 @@ Phase 4 빌드 후 부분 동작 이슈 6건을 수정하고 프론트엔드 2�
 | 장비 상세 URI 변환 | API `bldg:XXX` ↔ Neo4j `https://example.org/gec-b#XXX` | `routers/equipment.py` |
 | 열역학 1차 모델 + PI 제어 | Zone_Air_Temperature만 적용, 나머지 센서는 기존 sine+noise | `thermodynamics.py`, `engine.py` |
 
+### 15.10 리포지토리 정리 (2026.02.17)
+
+- **AGENTS.md 심볼릭 링크 삭제** — CLAUDE.md를 가리키는 심볼릭 링크로, GitHub Copilot 미사용으로 불필요. 삭제하여 리포지토리 정리.
+- **커밋:** `efd6dbb` chore: AGENTS.md 심볼릭 링크 삭제 — CLAUDE.md 중복, 미사용
+
 ### Git 커밋 이력 (최근)
 ```
+efd6dbb chore: AGENTS.md 심볼릭 링크 삭제 — CLAUDE.md 중복, 미사용
+4ce06cc docs: history.md Phase 4.5 내역 반영 — 18페이지, 버그수정 6건, 신규 섹션 추가
 61a1101 feat: Phase 4.5 버그 수정 — 에너지 스케일링, 유지보수 캘린더, Grafana 인증, 시나리오/데이터품질 페이지 추가
 6374cf3 fix: passlib/bcrypt 호환성 오류 수정 — 로그인 500 에러 해결
 bddd2b4 docs: history.md Phase 4 빌드 검증 결과 및 최종 산출물 요약 추가
