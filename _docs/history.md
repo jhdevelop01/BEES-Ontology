@@ -1060,6 +1060,59 @@ Server B 확장:
 총 60+ API 함수: 기존 Phase 3 + 신규 Phase 4 포함.
 주요 신규: getAlarmStats, suppressAlarm, getSuppressedAlarms, unsuppressAlarm, getEquipmentDetail, getEquipmentPerformance, getEquipmentAlarms, getAuditLog, getEnergyRealtime, getEnergyProfile, getEnergyBreakdown, getEnergyComparison, getEnergyEUI, getWorkOrders, createWorkOrder, getMaintenanceCalendar, getReportPresets, generateReport, getUsers, createUser, updateUser, deleteUser, getSettings, updateSettings
 
+### 15.7 Docker 빌드 테스트 및 검증 (2026.02.17)
+
+**빌드 오류 수정 2건:**
+1. `Badge variant="destructive"` → `"danger"` — Badge 컴포넌트에 destructive variant 없음 (Button에만 있음)
+2. `Record<string, string | number>[]` → `MultiLineData[]` — 타입 명시 (`monitoring/[equipmentId]/page.tsx`)
+
+**전체 서비스 기동 검증 (9/9 정상):**
+| 서비스 | 상태 |
+|--------|------|
+| Frontend (3000) | HTTP 200 |
+| Server A (8010) | healthy |
+| Server B (8011) | healthy |
+| Server C (8012) | healthy |
+| Server D (8013) | healthy |
+| Mosquitto (1885) | healthy |
+| InfluxDB (8088) | healthy |
+| PostgreSQL (5434) | healthy |
+| Grafana (3001) | 200 |
+
+**프론트엔드 16개 페이지 전체 HTTP 200 확인:**
+/, /monitoring, /control, /alarms, /alarms/history, /energy, /maintenance, /reports, /settings, /settings/users, /ontology, /topology, /chat, /history, /login (+ /monitoring/[equipmentId] 동적 라우트)
+
+**신규 API 검증 결과:**
+- 에너지 API (realtime/breakdown/eui): 정상 응답
+- 유지보수 API (work-orders CRUD): 정상 응답
+- 보고서 API (presets 4종): 정상 응답
+- 설정 API (빌딩명/시간대/단위): 정상 응답
+- 감사 로그 API: 정상 응답
+- 알람 통계/억제 API: 정상 응답
+- 시나리오 로드 (peak_load → normal): 성공
+- 고장 주입 (sensor_stuck) → 해제: 성공
+- 명령 큐 상태 조회: 정상 응답
+- 데이터 내보내기 (CSV): HTTP 200
+
+**커밋:** `ad9e27f` — 40 files changed, +8,907 / -100 lines
+
+### 15.8 Phase 4 최종 산출물 요약
+
+| 카테고리 | 수량 |
+|---------|------|
+| 신규 파일 | 26개 |
+| 수정 파일 | 14개 |
+| 신규 코드 | ~8,900줄 |
+| 프론트엔드 페이지 | 8 → 16개 |
+| API 엔드포인트 | ~30 → 57+개 |
+| 시뮬레이션 시나리오 | 7종 (프리셋 6 + 커스텀) |
+| 고장 주입 유형 | 6종 |
+| 설계서 대비 진행률 | ~95% |
+
+**잔여 (~5%):** 이메일/SMS 알림 채널, 정기 보고서 자동 발송 등 외부 서비스 연동
+
+---
+
 ### Phase 5: 착수 가능한 다음 작업
 
 ### 온톨로지 관련 (내부 데이터 확보 시)
