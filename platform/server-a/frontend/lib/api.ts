@@ -1167,3 +1167,84 @@ export async function getHistorianInfo(): Promise<{
 export async function getPointsSummary(): Promise<PointSummaryResponse> {
   return fetchHistorian<PointSummaryResponse>("/data/points/summary");
 }
+
+// ─── 알림 채널 ───
+
+export interface NotificationChannelConfig {
+  email: {
+    enabled: boolean;
+    recipients: string;
+    min_severity: string;
+  };
+  slack: {
+    enabled: boolean;
+    webhook_url: string;
+    min_severity: string;
+  };
+  rate_limit_minutes: number;
+}
+
+export interface NotificationLogItem {
+  id: number;
+  channel: string;
+  alarm_equipment: string;
+  alarm_severity: string;
+  alarm_type: string;
+  recipient: string;
+  status: string;
+  error_message: string | null;
+  created_at: string;
+}
+
+export interface NotificationLogResponse {
+  total: number;
+  items: NotificationLogItem[];
+}
+
+export interface NotificationLogStats {
+  email: { success: number; failed: number };
+  slack: { success: number; failed: number };
+}
+
+export async function getNotificationChannels(): Promise<NotificationChannelConfig> {
+  return fetchJSON<NotificationChannelConfig>("/api/notifications/channels");
+}
+
+export async function updateNotificationChannels(
+  config: Partial<NotificationChannelConfig>
+): Promise<NotificationChannelConfig> {
+  return fetchJSON<NotificationChannelConfig>("/api/notifications/channels", {
+    method: "PUT",
+    body: JSON.stringify(config),
+  });
+}
+
+export async function sendTestNotification(
+  channel: "email" | "slack"
+): Promise<{ success: boolean; message: string }> {
+  return fetchJSON("/api/notifications/test", {
+    method: "POST",
+    body: JSON.stringify({ channel }),
+  });
+}
+
+export async function getNotificationLog(params?: {
+  channel?: string;
+  status?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<NotificationLogResponse> {
+  const sp = new URLSearchParams();
+  if (params?.channel) sp.set("channel", params.channel);
+  if (params?.status) sp.set("status", params.status);
+  if (params?.limit) sp.set("limit", String(params.limit));
+  if (params?.offset) sp.set("offset", String(params.offset));
+  const qs = sp.toString();
+  return fetchJSON<NotificationLogResponse>(
+    `/api/notifications/log${qs ? `?${qs}` : ""}`
+  );
+}
+
+export async function getNotificationLogStats(): Promise<NotificationLogStats> {
+  return fetchJSON<NotificationLogStats>("/api/notifications/log/stats");
+}

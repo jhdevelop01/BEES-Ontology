@@ -7,13 +7,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
+import Link from "next/link";
 import {
   getCurrentUser,
   getSettings,
   updateSettings,
+  getNotificationChannels,
+  updateNotificationChannels,
+  sendTestNotification,
   type SystemSettings,
+  type NotificationChannelConfig,
 } from "@/lib/api";
-import { Settings, Building2, Zap, Bell, Loader2, Save } from "lucide-react";
+import { Settings, Building2, Zap, Bell, Loader2, Save, Mail, MessageSquare, Send, ExternalLink } from "lucide-react";
 
 /* ── 메인 페이지 ── */
 
@@ -42,6 +47,17 @@ export default function SettingsPage() {
   const [alarmHumidityLow, setAlarmHumidityLow] = useState(30);
   const [alarmCo2High, setAlarmCo2High] = useState(1000);
 
+  // 알림 채널 상태
+  const [notifConfig, setNotifConfig] = useState<NotificationChannelConfig | null>(null);
+  const [emailEnabled, setEmailEnabled] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState("");
+  const [emailSeverity, setEmailSeverity] = useState("warning");
+  const [slackEnabled, setSlackEnabled] = useState(false);
+  const [slackWebhook, setSlackWebhook] = useState("");
+  const [slackSeverity, setSlackSeverity] = useState("critical");
+  const [rateLimitMin, setRateLimitMin] = useState(10);
+  const [testingChannel, setTestingChannel] = useState<string | null>(null);
+
   // 설정 로드
   useEffect(() => {
     setLoading(true);
@@ -69,6 +85,22 @@ export default function SettingsPage() {
         setFloorArea(60000);
       })
       .finally(() => setLoading(false));
+
+    // 알림 채널 설정 로드
+    getNotificationChannels()
+      .then((nc) => {
+        setNotifConfig(nc);
+        setEmailEnabled(nc.email.enabled);
+        setEmailRecipients(nc.email.recipients);
+        setEmailSeverity(nc.email.min_severity);
+        setSlackEnabled(nc.slack.enabled);
+        setSlackWebhook(nc.slack.webhook_url);
+        setSlackSeverity(nc.slack.min_severity);
+        setRateLimitMin(nc.rate_limit_minutes);
+      })
+      .catch(() => {
+        // 기본값 유지
+      });
   }, []);
 
   // 저장
@@ -91,6 +123,27 @@ export default function SettingsPage() {
         },
       });
       setSettings(updated);
+
+      // 알림 채널 설정도 저장
+      try {
+        const updatedNotif = await updateNotificationChannels({
+          email: {
+            enabled: emailEnabled,
+            recipients: emailRecipients,
+            min_severity: emailSeverity,
+          },
+          slack: {
+            enabled: slackEnabled,
+            webhook_url: slackWebhook,
+            min_severity: slackSeverity,
+          },
+          rate_limit_minutes: rateLimitMin,
+        });
+        setNotifConfig(updatedNotif);
+      } catch {
+        // 알림 설정 저장 실패 시에도 시스템 설정 저장은 성공 처리
+      }
+
       addToast({ title: "설정이 저장되었습니다", variant: "success" });
     } catch (err) {
       addToast({
@@ -100,6 +153,23 @@ export default function SettingsPage() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // 알림 테스트 전송
+  const handleTestNotif = async (channel: "email" | "slack") => {
+    setTestingChannel(channel);
+    try {
+      const result = await sendTestNotification(channel);
+      addToast({ title: result.message || "테스트 전송 완료", variant: "success" });
+    } catch (err) {
+      addToast({
+        title: "테스트 실패",
+        description: err instanceof Error ? err.message : "",
+        variant: "error",
+      });
+    } finally {
+      setTestingChannel(null);
     }
   };
 
@@ -292,6 +362,170 @@ export default function SettingsPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 알림 채널 설정 */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Mail className="h-4 w-4" />
+                알림 채널 설정
+              </CardTitle>
+              <Link href="/settings/notifications">
+                <Button variant="ghost" size="sm" className="text-xs text-gray-500">
+                  알림 이력 <ExternalLink className="h-3 w-3 ml-1" />
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Rate Limit */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Rate Limit (동일 장비 재알림 방지)
+              </label>
+              <select
+                value={rateLimitMin}
+                onChange={(e) => setRateLimitMin(parseInt(e.target.value))}
+                disabled={!isAdmin}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+              >
+                <option value={5}>5분</option>
+                <option value={10}>10분</option>
+                <option value={30}>30분</option>
+                <option value={60}>60분</option>
+              </select>
+            </div>
+
+            {/* Email 설정 */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-500" /> Email
+                </h4>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={emailEnabled}
+                    onChange={(e) => setEmailEnabled(e.target.checked)}
+                    disabled={!isAdmin}
+                    className="rounded text-blue-600"
+                  />
+                  <span className="text-sm">{emailEnabled ? "활성" : "비활성"}</span>
+                </label>
+              </div>
+              {emailEnabled && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">수신자 (쉼표 구분)</label>
+                    <input
+                      type="text"
+                      value={emailRecipients}
+                      onChange={(e) => setEmailRecipients(e.target.value)}
+                      disabled={!isAdmin}
+                      placeholder="admin@example.com, ops@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">최소 심각도</label>
+                      <select
+                        value={emailSeverity}
+                        onChange={(e) => setEmailSeverity(e.target.value)}
+                        disabled={!isAdmin}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                      >
+                        <option value="info">정보 이상</option>
+                        <option value="warning">경고 이상</option>
+                        <option value="critical">위험만</option>
+                      </select>
+                    </div>
+                    <div className="pt-5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTestNotif("email")}
+                        disabled={testingChannel === "email" || !isAdmin}
+                      >
+                        {testingChannel === "email" ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : (
+                          <Send className="h-3 w-3 mr-1" />
+                        )}
+                        테스트
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Slack 설정 */}
+            <div className="border rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-purple-500" /> Slack
+                </h4>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={slackEnabled}
+                    onChange={(e) => setSlackEnabled(e.target.checked)}
+                    disabled={!isAdmin}
+                    className="rounded text-purple-600"
+                  />
+                  <span className="text-sm">{slackEnabled ? "활성" : "비활성"}</span>
+                </label>
+              </div>
+              {slackEnabled && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Webhook URL</label>
+                    <input
+                      type="text"
+                      value={slackWebhook}
+                      onChange={(e) => setSlackWebhook(e.target.value)}
+                      disabled={!isAdmin}
+                      placeholder="https://hooks.slack.com/services/..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-50"
+                    />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">최소 심각도</label>
+                      <select
+                        value={slackSeverity}
+                        onChange={(e) => setSlackSeverity(e.target.value)}
+                        disabled={!isAdmin}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-50"
+                      >
+                        <option value="info">정보 이상</option>
+                        <option value="warning">경고 이상</option>
+                        <option value="critical">위험만</option>
+                      </select>
+                    </div>
+                    <div className="pt-5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleTestNotif("slack")}
+                        disabled={testingChannel === "slack" || !isAdmin}
+                      >
+                        {testingChannel === "slack" ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : (
+                          <Send className="h-3 w-3 mr-1" />
+                        )}
+                        테스트
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

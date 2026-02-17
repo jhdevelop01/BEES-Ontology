@@ -100,6 +100,22 @@ CREATE INDEX idx_audit_log_created ON audit_log(created_at DESC);
 CREATE INDEX idx_work_orders_status ON work_orders(status);
 CREATE INDEX idx_work_orders_equipment ON work_orders(equipment_id);
 
+-- 알림 이력 (Email/Slack)
+CREATE TABLE IF NOT EXISTS notification_log (
+    id SERIAL PRIMARY KEY,
+    channel VARCHAR(20) NOT NULL,
+    alarm_equipment VARCHAR(255),
+    alarm_severity VARCHAR(20),
+    alarm_type VARCHAR(100),
+    recipient VARCHAR(255),
+    status VARCHAR(20) NOT NULL,
+    error_message TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notification_log_created ON notification_log(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notification_log_channel ON notification_log(channel);
+
 -- 기본 계정 (비밀번호: admin123 / viewer123)
 INSERT INTO users (email, name, role, department, password_hash)
 VALUES

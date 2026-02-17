@@ -39,6 +39,9 @@ _counter_lock = threading.Lock()
 # MQTT 클라이언트
 _client: mqtt.Client | None = None
 
+# 메인 이벤트 루프 참조 (connect() 시 저장, MQTT 스레드에서 사용)
+_main_loop: asyncio.AbstractEventLoop | None = None
+
 
 def _on_connect(client: mqtt.Client, userdata: Any, flags: Any, rc: int, properties: Any = None) -> None:
     """MQTT 연결 성공 콜백"""
@@ -109,6 +112,13 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
             }
             # 알람 캐시에 저장 (Phase 3)
             _alarm_cache.append(alarm_data)
+            # 알림 채널 디스패치 (Phase 5)
+            if _main_loop is not None and _main_loop.is_running():
+                try:
+                    from app.services.notification_service import dispatch_alarm
+                    _main_loop.call_soon_threadsafe(asyncio.ensure_future, dispatch_alarm(alarm_data))
+                except Exception as e:
+                    logger.warning("알림 디스패치 실패: %s", e)
             # SSE 이벤트 큐에도 추가
             event = {"type": "alarm", "data": alarm_data}
             _event_queue.append(event)
@@ -123,7 +133,10 @@ def _on_message(client: mqtt.Client, userdata: Any, msg: mqtt.MQTTMessage) -> No
 
 async def connect() -> None:
     """MQTT 클라이언트 연결 (백그라운드 스레드)"""
-    global _client
+    global _client, _main_loop
+
+    # 메인 이벤트 루프 참조 저장 (MQTT 스레드에서 알림 디스패치 시 사용)
+    _main_loop = asyncio.get_running_loop()
 
     _client = mqtt.Client(
         mqtt.CallbackAPIVersion.VERSION2,

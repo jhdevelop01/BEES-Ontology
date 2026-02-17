@@ -19,7 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.services import neo4j_service, mqtt_service, openai_service, influxdb_service, postgres_service
 from app.routers import (
     alarm, audit, auth, dashboard, control, stream, ontology, history, chat, schedule,
-    equipment, energy, maintenance, reports, users, settings,
+    equipment, energy, maintenance, reports, users, settings, notification,
 )
 
 # 로깅 설정
@@ -163,6 +163,7 @@ app.include_router(maintenance.router)
 app.include_router(reports.router)
 app.include_router(users.router)
 app.include_router(settings.router)
+app.include_router(notification.router)
 
 
 @app.get("/health", tags=["시스템"])

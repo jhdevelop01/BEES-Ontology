@@ -42,3 +42,14 @@ OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
 # JWT 인증
 JWT_SECRET = os.getenv("JWT_SECRET", "bees-dev-secret-key-change-in-production")
+
+# Email 알림 (SMTP)
+SMTP_HOST = os.getenv("SMTP_HOST", "")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+SMTP_FROM = os.getenv("SMTP_FROM", "")
+SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "true").lower() == "true"
+
+# Slack 알림
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "")
