@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.17 (Phase 4.5 완료 + 리포지토리 정리)
+> **최종 업데이트:** 2026.02.18 (Phase 5 완료 + 리포지토리 정리)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1442,6 +1442,11 @@ Phase 4.5 이후 잔여 기능 9개를 Agent Teams 5개 병렬 실행으로 완�
 
 ### Git 커밋 이력 (최근)
 ```
+51f9023 chore: 리포지토리 정리 — .gitignore 보강, 404 페이지, 통계 수정
+0e3f382 docs: 프로젝트 결과물 요약 v1.4 — Phase 5 + 온톨로지 v2.1.0 전체 반영
+3fa2091 docs: next.md 잔여 작업 후순위 정리
+01de5b4 docs: history.md/CLAUDE.md/next.md Phase 5 완료 반영
+3c95aab docs: history.md 리포지토리 정리 반영 + next.md 다음 작업 계획 작성
 0e580dc feat: Phase 5 — 6개 기능 병렬 구현 (#3 #4 #5 #8 #15 #16)
 f8d7349 feat: #7 보고서 PDF/Excel 생성 — openpyxl/fpdf2 기반 다운로드 지원
 f4d97fa feat: #1 알림 채널 확장 — Email/Slack 알림 시스템 구현
