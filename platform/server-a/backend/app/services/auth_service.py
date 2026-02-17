@@ -8,8 +8,8 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 logger = logging.getLogger("server-a.auth")
 
@@ -18,18 +18,15 @@ SECRET_KEY = os.getenv("JWT_SECRET", "bees-dev-secret-key-change-in-production")
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
 
-# 비밀번호 해싱
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
-    """비밀번호 해싱."""
-    return pwd_context.hash(password)
+    """비밀번호 해싱 (bcrypt)."""
+    return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """비밀번호 검증."""
-    return pwd_context.verify(plain, hashed)
+    """비밀번호 검증 (bcrypt)."""
+    return bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
 
 
 def create_access_token(
