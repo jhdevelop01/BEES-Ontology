@@ -138,7 +138,7 @@ export default function OntologyPage() {
   // 필터
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [layoutName, setLayoutName] = useState("cose-bilkent");
-  const [nodeLimit, setNodeLimit] = useState(2000);
+  const [nodeLimit, setNodeLimit] = useState(500);
 
   // 검색
   const [searchQuery, setSearchQuery] = useState("");
@@ -153,6 +153,9 @@ export default function OntologyPage() {
   // 이웃 확장 상태
   const [expanding, setExpanding] = useState(false);
 
+  // 로딩 단계 표시
+  const [loadingStage, setLoadingStage] = useState<"api" | "init" | "layout" | null>(null);
+
   // Cypher 쿼리
   const [cypherOpen, setCypherOpen] = useState(false);
   const [cypherQuery, setCypherQuery] = useState("");
@@ -166,6 +169,7 @@ export default function OntologyPage() {
     async (nodeType?: string) => {
       setLoading(true);
       setError(null);
+      setLoadingStage("api");
       try {
         const data = await getOntologyGraph({
           nodeType: nodeType || undefined,
@@ -196,12 +200,15 @@ export default function OntologyPage() {
     let dragSimRAF: number | null = null;
 
     async function initCytoscape() {
-      const cytoscapeModule = await import("cytoscape");
-      const coseBilkentModule = await import("cytoscape-cose-bilkent");
+      const [cytoscapeModule, coseBilkentModule] = await Promise.all([
+        import("cytoscape"),
+        import("cytoscape-cose-bilkent"),
+      ]);
       const cytoscape = cytoscapeModule.default;
       const coseBilkent = coseBilkentModule.default;
 
       if (destroyed) return;
+      setLoadingStage("init");
 
       // 플러그인 등록 (중복 등록 방지)
       try {
@@ -249,6 +256,8 @@ export default function OntologyPage() {
           },
         });
       }
+
+      setLoadingStage("layout");
 
       const cy = cytoscape({
         container: containerRef.current!,
@@ -371,10 +380,11 @@ export default function OntologyPage() {
           nodeDimensionsIncludeLabels: true,
           ...(layoutName === "cose-bilkent"
             ? {
-                idealEdgeLength: elements.length > 600 ? 80 : 120,
-                nodeRepulsion: elements.length > 600 ? 4500 : 6000,
-                gravity: elements.length > 600 ? 0.4 : 0.25,
-                numIter: elements.length > 600 ? 1500 : 2500,
+                idealEdgeLength: elements.length > 2000 ? 60 : elements.length > 600 ? 80 : 120,
+                nodeRepulsion: elements.length > 2000 ? 3000 : elements.length > 600 ? 4500 : 6000,
+                gravity: elements.length > 2000 ? 0.6 : elements.length > 600 ? 0.4 : 0.25,
+                numIter: elements.length > 2000 ? 500 : elements.length > 600 ? 800 : 2500,
+                tile: true,
               }
             : {}),
           ...(layoutName === "breadthfirst"
@@ -629,6 +639,8 @@ export default function OntologyPage() {
       });
 
       cyRef.current = cy;
+      setLoading(false);
+      setLoadingStage(null);
     }
 
     initCytoscape();
@@ -696,10 +708,11 @@ export default function OntologyPage() {
       nodeDimensionsIncludeLabels: true,
       ...(layoutName === "cose-bilkent"
         ? {
-            idealEdgeLength: cy.nodes().length > 500 ? 80 : 120,
-            nodeRepulsion: cy.nodes().length > 500 ? 4500 : 6000,
-            gravity: cy.nodes().length > 500 ? 0.4 : 0.25,
-            numIter: cy.nodes().length > 500 ? 1500 : 2500,
+            idealEdgeLength: cy.nodes().length > 1000 ? 60 : cy.nodes().length > 300 ? 80 : 120,
+            nodeRepulsion: cy.nodes().length > 1000 ? 3000 : cy.nodes().length > 300 ? 4500 : 6000,
+            gravity: cy.nodes().length > 1000 ? 0.6 : cy.nodes().length > 300 ? 0.4 : 0.25,
+            numIter: cy.nodes().length > 1000 ? 500 : cy.nodes().length > 300 ? 800 : 2500,
+            tile: true,
           }
         : {}),
       ...(layoutName === "breadthfirst" ? { directed: true, spacingFactor: 1.2 } : {}),
@@ -1023,7 +1036,12 @@ export default function OntologyPage() {
                 <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
                   <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">{t("graphLoading")}</p>
+                    <p className="text-sm text-gray-500">
+                      {loadingStage === "api" ? t("loadingApi")
+                        : loadingStage === "init" ? t("loadingInit")
+                        : loadingStage === "layout" ? t("loadingLayout")
+                        : t("graphLoading")}
+                    </p>
                   </div>
                 </div>
               )}

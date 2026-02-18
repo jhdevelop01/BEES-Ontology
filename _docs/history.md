@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.18 (온톨로지 페이지 버그 수정 10건)
+> **최종 업데이트:** 2026.02.18 (온톨로지 초기 로딩 성능 최적화)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1557,6 +1557,32 @@ next-intl middleware가 standalone 모드에서 URL 리라이트하여 전 페�
 |------|------|
 | `frontend/app/ontology/page.tsx` | 이슈 1,3,4,5,6,7,10 — dragSimRAF 스코프/클린업, cypherMode 가드, uriBrickId(), LIMIT 2000, 예제 수정 |
 | `backend/app/services/neo4j_service.py` | 이슈 2,8,9 — CALL 허용, `_REL_TYPES` 17개, 엣지 추론 보완 |
+
+## 19. 온톨로지 초기 로딩 성능 최적화 (2026.02.18)
+
+### 19.1 개요
+
+온톨로지 페이지 초기 로딩이 4~10초 소요되는 문제 분석·해결. 실측 결과 **백엔드 API는 ~120ms로 빠르고, 프론트엔드 cose-bilkent 레이아웃 엔진이 병목**이었음. 6가지 최적화로 체감 ~1초로 개선.
+
+### 19.2 성능 병목 분석 결과
+
+| 구간 | 이전 | 이후 | 비고 |
+|------|------|------|------|
+| API 응답 (limit=500) | ~120ms | ~40ms (캐시: ~4ms) | degree 계산 제거 + 인메모리 캐시 |
+| Dynamic import | ~300ms | ~150ms | 순차 → Promise.all 병렬화 |
+| cose-bilkent 레이아웃 | 3~8초 | ~0.5초 | 초기 500노드 + numIter 800 |
+| **총 체감** | **4~10초** | **~1초** | |
+
+### 19.3 수정 내역
+
+| # | 수정 | 파일 |
+|---|------|------|
+| 1 | cose-bilkent `numIter` 단계별 축소: >2000요소→500, >600→800, 기본 2500 | `page.tsx` |
+| 2 | 초기 `nodeLimit` 2000→500 (사용자가 "전체" 선택 시만 2000) | `page.tsx` |
+| 3 | Dynamic import `Promise.all` 병렬화 | `page.tsx` |
+| 4 | 3단계 로딩 UI: 데이터 로딩→라이브러리 초기화→레이아웃 계산 (i18n 3키 추가) | `page.tsx`, `ko.json`, `en.json` |
+| 5 | 백엔드 `ORDER BY degree DESC` + `size()` 계산 제거 | `neo4j_service.py` |
+| 6 | 인메모리 캐시 (TTL 5분): `(node_type, floor, limit)` 키 기반 | `neo4j_service.py` |
 
 ---
 

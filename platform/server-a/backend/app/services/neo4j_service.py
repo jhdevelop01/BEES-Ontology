@@ -545,6 +545,11 @@ async def run_cypher(cypher: str, params: dict | None = None) -> list[dict[str, 
         return [{"error": str(e)}]
 
 
+# 인메모리 캐시 (온톨로지는 자주 변하지 않으므로 TTL 5분)
+_graph_cache: dict[tuple, tuple[float, dict[str, Any]]] = {}
+_CACHE_TTL = 300  # 5분
+
+
 async def get_graph_data(
     node_type: str | None = None,
     floor: str | None = None,
@@ -552,8 +557,16 @@ async def get_graph_data(
 ) -> dict[str, Any]:
     """
     Cytoscape.js 호환 그래프 데이터 반환.
-    nodes와 edges를 포함하며, 필터링 지원.
+    nodes와 edges를 포함하며, 필터링 지원. 결과는 5분 캐싱.
     """
+    # 캐시 확인
+    cache_key = (node_type, floor, limit)
+    now = time.time()
+    if cache_key in _graph_cache:
+        ts, cached_data = _graph_cache[cache_key]
+        if now - ts < _CACHE_TTL:
+            return cached_data
+
     if not _driver:
         return _get_fallback_graph_data(node_type, floor, limit)
 
@@ -590,8 +603,6 @@ async def get_graph_data(
             node_query = f"""
                 MATCH (n)
                 {full_where}
-                WITH n, size([(n)-[]-() | 1]) AS degree
-                ORDER BY degree DESC
                 RETURN n.uri AS uri, labels(n) AS labels
                 LIMIT $limit
             """
@@ -695,7 +706,7 @@ async def get_graph_data(
                     type_counts[t] = type_counts.get(t, 0) + 1
                     primary_count += 1
 
-            return {
+            result = {
                 "nodes": nodes,
                 "edges": edges,
                 "stats": {
@@ -705,6 +716,8 @@ async def get_graph_data(
                     "primary_count": primary_count,
                 },
             }
+            _graph_cache[cache_key] = (time.time(), result)
+            return result
 
     except Exception as e:
         logger.warning("그래프 데이터 조회 실패: %s", e)
