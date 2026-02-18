@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.18 (온톨로지 그래프 시각화 대폭 개선)
+> **최종 업데이트:** 2026.02.18 (온톨로지 페이지 버그 수정 10건)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1519,6 +1519,44 @@ next-intl middleware가 standalone 모드에서 URL 리라이트하여 전 페�
 | `frontend/middleware.ts` | next-intl → 단순 cookie middleware |
 | `frontend/next.config.js` | outputFileTracingIncludes 추가 |
 | `frontend/Dockerfile` | messages 디렉토리 COPY 추가 |
+
+## 18. 온톨로지 페이지 버그 수정 10건 (2026.02.18)
+
+### 18.1 개요
+
+섹션 17에서 추가한 온톨로지 그래프 시각화 + Cypher 쿼리 UI를 전면 검토하여 **10개 버그**를 발견·수정.
+
+### 18.2 HIGH 이슈 (3건)
+
+| # | 이슈 | 수정 |
+|---|------|------|
+| 1 | `dragSimRAF` useEffect cleanup 미정리 → 메모리 누수 | `dragSimRAF`를 useEffect 스코프로 끌어올리고 cleanup에서 `cancelAnimationFrame()` 호출 |
+| 2 | `sanitize_cypher()`에서 `CALL` 키워드 차단 → `CALL db.labels()` 등 읽기 전용 프로시저 사용 불가 | `CALL` 제거, `_DANGEROUS_PROCS` 정규식으로 위험 프로시저(`apoc.export`, `dbms.security` 등)만 차단 |
+| 3 | Cypher 모드에서 타입 필터 클릭 시 `loadGraph` 재호출 → Cypher 결과 덮어씀 | `useEffect`에 `if (cypherMode) return;` 가드 추가 |
+
+### 18.3 MEDIUM 이슈 (6건)
+
+| # | 이슈 | 수정 |
+|---|------|------|
+| 4 | LIMIT "전체" = 1500 (백엔드 최대 2000) | 1500 → 2000, 초기값도 2000 |
+| 5 | 검색 결과 노드 포커스 실패 — `getElementById(uri)` 호출하지만 노드 id는 `bldg:XXX` | `uriBrickId()` 변환 함수 추가, `getElementById(uriBrickId(result.uri))` |
+| 6 | 상세 패널 연결 클릭 포커스 실패 — 동일 원인 | `getElementById(uriBrickId(conn.target_uri))` |
+| 7 | 더블클릭 확장 시 `layout.run()` ↔ `dragSimRAF` 동시 실행 → 떨림 | 레이아웃 실행 전 `cancelAnimationFrame(dragSimRAF)` |
+| 8 | `rel_types` 7개 하드코딩 → Brick 추가 관계 누락 | `_REL_TYPES` 상수 17개로 확장 (`controls`, `meters`, `serves` 등) |
+| 9 | Cypher 엣지 추론에서 관계 딕셔너리 미처리 | `isinstance(val, dict) and "type" in val` 분기 추가 |
+
+### 18.4 LOW 이슈 (1건)
+
+| # | 이슈 | 수정 |
+|---|------|------|
+| 10 | Cypher 예제 "5F 장비" 쿼리 0건 가능 | `n.uri CONTAINS '_5_'` OR 조건 추가, 라벨 "5층 장비"로 변경 |
+
+### 18.5 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `frontend/app/ontology/page.tsx` | 이슈 1,3,4,5,6,7,10 — dragSimRAF 스코프/클린업, cypherMode 가드, uriBrickId(), LIMIT 2000, 예제 수정 |
+| `backend/app/services/neo4j_service.py` | 이슈 2,8,9 — CALL 허용, `_REL_TYPES` 17개, 엣지 추론 보완 |
 
 ---
 

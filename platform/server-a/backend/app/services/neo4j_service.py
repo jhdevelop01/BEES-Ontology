@@ -352,18 +352,38 @@ def _classify_node_type(labels: list[str]) -> str:
 
 
 _WRITE_KEYWORDS = re.compile(
-    r"\b(CREATE|DELETE|SET|REMOVE|MERGE|DROP|DETACH|CALL)\b",
+    r"\b(CREATE|DELETE|SET|REMOVE|MERGE|DROP|DETACH)\b",
     re.IGNORECASE,
 )
+
+_DANGEROUS_PROCS = re.compile(
+    r"\bCALL\s+(apoc\.(export|trigger)|dbms\.(security|cluster))",
+    re.IGNORECASE,
+)
+
+# 공통 관계 타입 리스트 (Brick Schema 주요 관계)
+_REL_TYPES = [
+    "feeds", "isFedBy", "hasPart", "isPartOf",
+    "hasLocation", "isLocationOf",
+    "isPointOf", "hasPoint",
+    "controls", "isControlledBy",
+    "meters", "isMeteredBy",
+    "regulates", "isRegulatedBy",
+    "serves", "isServedBy",
+    "hasAssociatedTag",
+]
 
 
 def sanitize_cypher(cypher: str) -> str | None:
     """
     Cypher 쿼리 안전성 검증.
-    쓰기 작업 및 프로시저 호출 차단, LIMIT 자동 추가.
+    쓰기 작업 및 위험 프로시저 호출 차단, LIMIT 자동 추가.
+    CALL은 읽기 전용 프로시저(db.labels 등)를 허용하되 위험 프로시저만 차단.
     Returns: 정제된 쿼리, 또는 None (차단 시).
     """
     if _WRITE_KEYWORDS.search(cypher):
+        return None
+    if _DANGEROUS_PROCS.search(cypher):
         return None
     if not re.search(r"\bLIMIT\b", cypher, re.IGNORECASE):
         cypher = cypher.rstrip().rstrip(";") + " LIMIT 200"
@@ -437,12 +457,15 @@ async def run_cypher_graph(cypher: str) -> dict[str, Any]:
                         node_uris.append(val)
 
                 # 같은 행에 2개 이상 노드가 있으면 엣지를 추론
-                # (RETURN n, r, m 패턴에서 r이 관계 타입 문자열)
+                # (RETURN n, r, m 패턴에서 r이 관계 타입 문자열 또는 관계 딕셔너리)
                 if len(node_uris) >= 2:
                     # 관계 타입 추출 시도
                     rel_type = "related"
                     for key, val in row.items():
-                        if isinstance(val, str) and val not in node_uris and not val.startswith("http"):
+                        if isinstance(val, dict) and "type" in val and not val.get("uri"):
+                            rel_type = val.get("type", "related")
+                            break
+                        elif isinstance(val, str) and val not in node_uris and not val.startswith("http"):
                             rel_type = val
                             break
 
@@ -471,14 +494,12 @@ async def run_cypher_graph(cypher: str) -> dict[str, Any]:
             # 별도 엣지 조회: 감지된 노드들 사이의 실제 관계
             if nodes_map and len(nodes_map) <= 500:
                 uri_list = list(nodes_map.keys())
-                rel_types = ["feeds", "isPartOf", "hasLocation", "isPointOf",
-                             "hasPart", "isFedBy", "hasPoint"]
                 edge_result = await session.run("""
                     MATCH (a)-[r]->(b)
                     WHERE a.uri IN $uris AND b.uri IN $uris
                       AND type(r) IN $rel_types
                     RETURN a.uri AS source, b.uri AS target, type(r) AS rel_type
-                """, parameters={"uris": uri_list, "rel_types": rel_types})
+                """, parameters={"uris": uri_list, "rel_types": _REL_TYPES})
                 edge_records = [rec.data() async for rec in edge_result]
                 for er in edge_records:
                     _add_edge(er["source"], er["target"], er["rel_type"])
@@ -602,8 +623,6 @@ async def get_graph_data(
                 })
 
             # --- 1-2) 타입 필터 시 이웃 노드 추가 ---
-            rel_types = ["feeds", "isPartOf", "hasLocation", "isPointOf", "hasPart", "isFedBy", "hasPoint"]
-
             if node_type:
                 neighbor_query = """
                     MATCH (n)-[r]-(m)
@@ -618,7 +637,7 @@ async def get_graph_data(
                 """
                 result = await session.run(
                     neighbor_query,
-                    parameters={"uris": list(uri_set), "rel_types": rel_types},
+                    parameters={"uris": list(uri_set), "rel_types": _REL_TYPES},
                 )
                 neighbor_records = [record.data() async for record in result]
 
@@ -648,7 +667,7 @@ async def get_graph_data(
             """
             result = await session.run(
                 edge_query,
-                parameters={"uris": list(uri_set), "rel_types": rel_types},
+                parameters={"uris": list(uri_set), "rel_types": _REL_TYPES},
             )
             edge_records = [record.data() async for record in result]
 

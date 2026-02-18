@@ -81,7 +81,7 @@ const LIMIT_OPTIONS = [
   { label: "200", value: 200 },
   { label: "500", value: 500 },
   { label: "1000", value: 1000 },
-  { label: "전체", value: 1500 },
+  { label: "전체", value: 2000 },
 ];
 
 const CYPHER_EXAMPLES = [
@@ -94,14 +94,22 @@ const CYPHER_EXAMPLES = [
     cypher: "MATCH (n)-[r]-(m) WHERE any(l IN labels(n) WHERE l CONTAINS 'Chiller') RETURN n, r, m LIMIT 50",
   },
   {
-    label: "5F 장비",
-    cypher: "MATCH (n)-[r]-(m) WHERE n.uri CONTAINS '5F' AND any(l IN labels(n) WHERE l IN ['AHU','FCU','VAV','Fan','Pump']) RETURN n, r, m LIMIT 100",
+    label: "5층 장비",
+    cypher: "MATCH (n)-[r]-(m) WHERE (n.uri CONTAINS '5F' OR n.uri CONTAINS '_5_') AND any(l IN labels(n) WHERE l IN ['AHU','FCU','VAV','Fan','Pump']) RETURN n, r, m LIMIT 100",
   },
   {
     label: "시스템 구조",
     cypher: "MATCH (s)-[:hasPart]->(e) WHERE any(l IN labels(s) WHERE l CONTAINS 'System') RETURN s, e LIMIT 100",
   },
 ];
+
+function uriBrickId(uri: string): string {
+  if (uri.includes("https://example.org/gec-b#")) {
+    return "bldg:" + uri.replace("https://example.org/gec-b#", "");
+  }
+  const last = uri.split("#").pop() || uri.split("/").pop() || uri;
+  return "bldg:" + last;
+}
 
 function resolveNodeType(labels: string[]): string {
   for (const t of [
@@ -130,7 +138,7 @@ export default function OntologyPage() {
   // 필터
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [layoutName, setLayoutName] = useState("cose-bilkent");
-  const [nodeLimit, setNodeLimit] = useState(1500);
+  const [nodeLimit, setNodeLimit] = useState(2000);
 
   // 검색
   const [searchQuery, setSearchQuery] = useState("");
@@ -176,14 +184,16 @@ export default function OntologyPage() {
   );
 
   useEffect(() => {
+    if (cypherMode) return; // Cypher 모드에서는 loadGraph 스킵
     loadGraph(selectedType || undefined);
-  }, [selectedType, loadGraph]);
+  }, [selectedType, loadGraph, cypherMode]);
 
   /* ── Cytoscape 초기화 ── */
   useEffect(() => {
     if (!graphData || !containerRef.current) return;
 
     let destroyed = false;
+    let dragSimRAF: number | null = null;
 
     async function initCytoscape() {
       const cytoscapeModule = await import("cytoscape");
@@ -398,7 +408,6 @@ export default function OntologyPage() {
       const MIN_DIST = 40;
       const REPULSION = 0.5;
 
-      let dragSimRAF: number | null = null;
       const velocities = new Map<string, { vx: number; vy: number }>();
       let simNeighbors: { id: string; hop: number; node: any; ox: number; oy: number }[] = [];
 
@@ -575,6 +584,12 @@ export default function OntologyPage() {
           }
 
           if (newElements.length > 0) {
+            // 드래그 물리 중단 (layout 충돌 방지)
+            if (dragSimRAF) {
+              cancelAnimationFrame(dragSimRAF);
+              dragSimRAF = null;
+            }
+
             const added = cy.add(newElements as any);
             // 새로 추가된 노드에 표시
             added.nodes().addClass("newly-added");
@@ -620,6 +635,10 @@ export default function OntologyPage() {
 
     return () => {
       destroyed = true;
+      if (dragSimRAF) {
+        cancelAnimationFrame(dragSimRAF);
+        dragSimRAF = null;
+      }
       if (cyRef.current) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (cyRef.current as any).destroy();
@@ -696,7 +715,7 @@ export default function OntologyPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cy = cyRef.current as any;
     if (cy) {
-      const node = cy.getElementById(result.uri);
+      const node = cy.getElementById(uriBrickId(result.uri));
       if (node && node.length > 0) {
         // 카메라 이동 + 하이라이트
         cy.animate({
@@ -1161,7 +1180,7 @@ export default function OntologyPage() {
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const cy = cyRef.current as any;
                                 if (cy) {
-                                  const node = cy.getElementById(conn.target_uri);
+                                  const node = cy.getElementById(uriBrickId(conn.target_uri));
                                   if (node && node.length > 0) {
                                     cy.animate(
                                       { center: { eles: node }, zoom: 2 },
