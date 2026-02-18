@@ -272,6 +272,7 @@ export interface GraphNode {
     type: string;
     labels: string[];
     uri: string;
+    secondary?: boolean;
   };
 }
 
@@ -307,6 +308,29 @@ export async function getOntologyGraph(params?: {
   return fetchJSON<GraphResponse>(
     `/api/ontology/graph${qs ? `?${qs}` : ""}`
   );
+}
+
+// ─── Cypher 쿼리 ───
+
+export interface CypherResponse {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  raw_results: Record<string, unknown>[];
+  stats: {
+    node_count: number;
+    edge_count: number;
+    execution_ms: number;
+  };
+  cypher: string;
+}
+
+export async function runCypherQuery(
+  cypher: string
+): Promise<CypherResponse> {
+  return fetchJSON<CypherResponse>("/api/ontology/cypher", {
+    method: "POST",
+    body: JSON.stringify({ cypher }),
+  });
 }
 
 // ─── 노드 상세 ───

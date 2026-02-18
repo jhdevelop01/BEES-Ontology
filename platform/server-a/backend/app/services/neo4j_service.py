@@ -4,6 +4,8 @@ Neo4j 그래프 DB 서비스
 """
 
 import logging
+import re
+import time
 from typing import Any
 
 from neo4j import AsyncGraphDatabase, AsyncDriver
@@ -349,6 +351,160 @@ def _classify_node_type(labels: list[str]) -> str:
     return "Other"
 
 
+_WRITE_KEYWORDS = re.compile(
+    r"\b(CREATE|DELETE|SET|REMOVE|MERGE|DROP|DETACH|CALL)\b",
+    re.IGNORECASE,
+)
+
+
+def sanitize_cypher(cypher: str) -> str | None:
+    """
+    Cypher 쿼리 안전성 검증.
+    쓰기 작업 및 프로시저 호출 차단, LIMIT 자동 추가.
+    Returns: 정제된 쿼리, 또는 None (차단 시).
+    """
+    if _WRITE_KEYWORDS.search(cypher):
+        return None
+    if not re.search(r"\bLIMIT\b", cypher, re.IGNORECASE):
+        cypher = cypher.rstrip().rstrip(";") + " LIMIT 200"
+    return cypher
+
+
+async def run_cypher_graph(cypher: str) -> dict[str, Any]:
+    """
+    Cypher 실행 후 결과를 Cytoscape.js 호환 그래프 포맷으로 변환.
+    record.data()로 딕셔너리 변환 후 uri 필드를 기반으로 노드를 감지한다.
+    """
+    if not _driver:
+        return {"nodes": [], "edges": [], "raw_results": [], "stats": {
+            "node_count": 0, "edge_count": 0, "execution_ms": 0,
+        }, "cypher": cypher}
+
+    t0 = time.time()
+    nodes_map: dict[str, dict] = {}
+    edges_set: set[tuple[str, str, str]] = set()
+    edges_list: list[dict] = []
+    raw_results: list[dict] = []
+
+    def _add_node(uri: str, labels: list[str] | None = None) -> None:
+        if not uri or uri in nodes_map:
+            return
+        lbls = labels or []
+        nodes_map[uri] = {
+            "data": {
+                "id": _uri_to_brick_id(uri),
+                "label": _extract_name(uri),
+                "type": _classify_node_type(lbls),
+                "labels": lbls,
+                "uri": uri,
+            }
+        }
+
+    def _add_edge(src_uri: str, tgt_uri: str, rel_type: str) -> None:
+        if not src_uri or not tgt_uri:
+            return
+        key = (src_uri, tgt_uri, rel_type)
+        if key in edges_set:
+            return
+        edges_set.add(key)
+        edges_list.append({
+            "data": {
+                "id": f"ce{len(edges_list)}",
+                "source": _uri_to_brick_id(src_uri),
+                "target": _uri_to_brick_id(tgt_uri),
+                "label": rel_type,
+                "type": rel_type,
+            }
+        })
+
+    try:
+        async with _driver.session() as session:
+            result = await session.run(cypher)
+            records = [record.data() async for record in result]
+            raw_results = records
+
+            # 레코드에서 노드 감지 (uri 필드가 있는 dict)
+            for row in records:
+                node_uris: list[str] = []
+                for key, val in row.items():
+                    if isinstance(val, dict) and "uri" in val:
+                        uri = val["uri"]
+                        lbls = [l for l in val.get("labels", []) if l != "Resource"] if "labels" in val else []
+                        _add_node(uri, lbls)
+                        node_uris.append(uri)
+                    elif isinstance(val, str) and val.startswith("https://example.org/gec-b#"):
+                        _add_node(val)
+                        node_uris.append(val)
+
+                # 같은 행에 2개 이상 노드가 있으면 엣지를 추론
+                # (RETURN n, r, m 패턴에서 r이 관계 타입 문자열)
+                if len(node_uris) >= 2:
+                    # 관계 타입 추출 시도
+                    rel_type = "related"
+                    for key, val in row.items():
+                        if isinstance(val, str) and val not in node_uris and not val.startswith("http"):
+                            rel_type = val
+                            break
+
+            # 노드가 없으면 URI 패턴으로 재시도
+            if not nodes_map:
+                for row in records:
+                    for key, val in row.items():
+                        if isinstance(val, str) and "example.org/gec-b#" in val:
+                            _add_node(val)
+
+            # labels가 비어있는 노드에 labels 보강
+            need_labels = [uri for uri, n in nodes_map.items() if not n["data"]["labels"]]
+            if need_labels:
+                lbl_result = await session.run("""
+                    MATCH (n) WHERE n.uri IN $uris
+                    RETURN n.uri AS uri, labels(n) AS labels
+                """, parameters={"uris": need_labels})
+                lbl_records = [rec.data() async for rec in lbl_result]
+                for lr in lbl_records:
+                    uri = lr.get("uri", "")
+                    if uri in nodes_map:
+                        lbls = [l for l in lr.get("labels", []) if l != "Resource"]
+                        nodes_map[uri]["data"]["labels"] = lbls
+                        nodes_map[uri]["data"]["type"] = _classify_node_type(lbls)
+
+            # 별도 엣지 조회: 감지된 노드들 사이의 실제 관계
+            if nodes_map and len(nodes_map) <= 500:
+                uri_list = list(nodes_map.keys())
+                rel_types = ["feeds", "isPartOf", "hasLocation", "isPointOf",
+                             "hasPart", "isFedBy", "hasPoint"]
+                edge_result = await session.run("""
+                    MATCH (a)-[r]->(b)
+                    WHERE a.uri IN $uris AND b.uri IN $uris
+                      AND type(r) IN $rel_types
+                    RETURN a.uri AS source, b.uri AS target, type(r) AS rel_type
+                """, parameters={"uris": uri_list, "rel_types": rel_types})
+                edge_records = [rec.data() async for rec in edge_result]
+                for er in edge_records:
+                    _add_edge(er["source"], er["target"], er["rel_type"])
+
+    except Exception as e:
+        logger.warning("Cypher 그래프 실행 실패: %s — %s", cypher[:100], e)
+        return {"nodes": [], "edges": [], "raw_results": [{"error": str(e)}],
+                "stats": {"node_count": 0, "edge_count": 0, "execution_ms": 0},
+                "cypher": cypher}
+
+    elapsed_ms = round((time.time() - t0) * 1000, 1)
+    nodes = list(nodes_map.values())
+
+    return {
+        "nodes": nodes,
+        "edges": edges_list,
+        "raw_results": raw_results,
+        "stats": {
+            "node_count": len(nodes),
+            "edge_count": len(edges_list),
+            "execution_ms": elapsed_ms,
+        },
+        "cypher": cypher,
+    }
+
+
 async def run_cypher(cypher: str, params: dict | None = None) -> list[dict[str, Any]]:
     """
     범용 Cypher 실행 — LLM 채팅 등에서 사용.
@@ -371,7 +527,7 @@ async def run_cypher(cypher: str, params: dict | None = None) -> list[dict[str, 
 async def get_graph_data(
     node_type: str | None = None,
     floor: str | None = None,
-    limit: int = 200,
+    limit: int = 1500,
 ) -> dict[str, Any]:
     """
     Cytoscape.js 호환 그래프 데이터 반환.
@@ -413,6 +569,8 @@ async def get_graph_data(
             node_query = f"""
                 MATCH (n)
                 {full_where}
+                WITH n, size([(n)-[]-() | 1]) AS degree
+                ORDER BY degree DESC
                 RETURN n.uri AS uri, labels(n) AS labels
                 LIMIT $limit
             """
@@ -424,6 +582,7 @@ async def get_graph_data(
 
             # URI 집합 (엣지 필터링용)
             uri_set = {r["uri"] for r in node_records if r.get("uri")}
+            primary_uris = set(uri_set)
 
             # 노드 생성
             nodes = []
@@ -438,11 +597,49 @@ async def get_graph_data(
                         "type": _classify_node_type(lbls),
                         "labels": lbls,
                         "uri": uri,
+                        "secondary": False,
                     }
                 })
 
+            # --- 1-2) 타입 필터 시 이웃 노드 추가 ---
+            rel_types = ["feeds", "isPartOf", "hasLocation", "isPointOf", "hasPart", "isFedBy", "hasPoint"]
+
+            if node_type:
+                neighbor_query = """
+                    MATCH (n)-[r]-(m)
+                    WHERE n.uri IN $uris
+                      AND m.uri IS NOT NULL
+                      AND m.uri STARTS WITH 'https://example.org/gec-b#'
+                      AND NOT any(l IN labels(m) WHERE l IN
+                          ['DatatypeProperty','ObjectProperty','Class','Relationship','Property'])
+                      AND NOT m.uri IN $uris
+                      AND type(r) IN $rel_types
+                    RETURN DISTINCT m.uri AS uri, labels(m) AS labels
+                """
+                result = await session.run(
+                    neighbor_query,
+                    parameters={"uris": list(uri_set), "rel_types": rel_types},
+                )
+                neighbor_records = [record.data() async for record in result]
+
+                for r in neighbor_records:
+                    uri = r.get("uri", "")
+                    if uri and uri not in uri_set:
+                        lbls = r.get("labels", [])
+                        brick_id = _uri_to_brick_id(uri)
+                        nodes.append({
+                            "data": {
+                                "id": brick_id,
+                                "label": _extract_name(uri),
+                                "type": _classify_node_type(lbls),
+                                "labels": lbls,
+                                "uri": uri,
+                                "secondary": True,
+                            }
+                        })
+                        uri_set.add(uri)
+
             # --- 2) 엣지 조회 ---
-            rel_types = ["feeds", "isPartOf", "hasLocation", "isPointOf", "hasPart", "isFedBy"]
             edge_query = """
                 MATCH (a)-[r]->(b)
                 WHERE a.uri IN $uris AND b.uri IN $uris
@@ -470,11 +667,14 @@ async def get_graph_data(
                     }
                 })
 
-            # 통계
+            # 통계 (primary 노드만 카운트)
             type_counts: dict[str, int] = {}
+            primary_count = 0
             for n in nodes:
-                t = n["data"]["type"]
-                type_counts[t] = type_counts.get(t, 0) + 1
+                if not n["data"].get("secondary"):
+                    t = n["data"]["type"]
+                    type_counts[t] = type_counts.get(t, 0) + 1
+                    primary_count += 1
 
             return {
                 "nodes": nodes,
@@ -483,6 +683,7 @@ async def get_graph_data(
                     "node_count": len(nodes),
                     "edge_count": len(edges),
                     "type_counts": type_counts,
+                    "primary_count": primary_count,
                 },
             }
 

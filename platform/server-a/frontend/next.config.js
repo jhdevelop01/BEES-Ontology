@@ -6,6 +6,11 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  experimental: {
+    outputFileTracingIncludes: {
+      '/*': ['./messages/**/*', './node_modules/next-intl/**/*', './node_modules/use-intl/**/*'],
+    },
+  },
 }
 
 module.exports = withNextIntl(nextConfig)

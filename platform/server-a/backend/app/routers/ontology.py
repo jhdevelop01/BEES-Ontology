@@ -5,9 +5,14 @@ Neo4j를 통한 Brick Schema 인스턴스 검색 및 건물 토폴로지 트리 
 
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel
 
 from app.services import neo4j_service
+
+
+class CypherRequest(BaseModel):
+    cypher: str
 
 router = APIRouter(prefix="/api", tags=["온톨로지"])
 
@@ -33,7 +38,7 @@ async def search_ontology(
 async def get_ontology_graph(
     node_type: str | None = Query(None, description="노드 타입 필터 (Equipment, Point, System 등)"),
     floor: str | None = Query(None, description="층 필터 (예: 5F, B1F)"),
-    limit: int = Query(200, ge=1, le=1000, description="최대 노드 수"),
+    limit: int = Query(1500, ge=1, le=2000, description="최대 노드 수"),
 ) -> dict[str, Any]:
     """
     Cytoscape.js 호환 그래프 데이터 반환.
@@ -45,6 +50,21 @@ async def get_ontology_graph(
         limit=limit,
     )
     return data
+
+
+@router.post("/ontology/cypher")
+async def run_cypher_query(body: CypherRequest) -> dict[str, Any]:
+    """
+    Cypher 쿼리 실행 (읽기 전용).
+    결과를 Cytoscape.js 호환 그래프 포맷으로 반환.
+    """
+    sanitized = neo4j_service.sanitize_cypher(body.cypher)
+    if sanitized is None:
+        raise HTTPException(
+            status_code=400,
+            detail="쓰기 작업(CREATE/DELETE/SET/MERGE/DROP 등)은 허용되지 않습니다.",
+        )
+    return await neo4j_service.run_cypher_graph(sanitized)
 
 
 @router.get("/ontology/node/{node_id:path}")

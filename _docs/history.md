@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.18 (Phase 5 완료 + 리포지토리 정리)
+> **최종 업데이트:** 2026.02.18 (온톨로지 그래프 시각화 대폭 개선)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1461,6 +1461,64 @@ ad9e27f feat: 디지털 트윈 플랫폼 Phase 4 완료 — 시뮬레이션 고�
 94e6062 feat: 디지털 트윈 플랫폼 Phase 3 완료 — 알람, Grafana, JWT, BACnet, 반응형 등 11개 기능
 38b585c feat: 디지털 트윈 플랫폼 Phase 2 완료 — 풀 시뮬레이션, 온톨로지 뷰, LLM 채팅, InfluxDB 직접 연동
 ```
+
+## 17. 온톨로지 그래프 시각화 대폭 개선 (2026.02.18)
+
+### 17.1 개요
+
+온톨로지 페이지(`/ontology`)의 그래프 시각화를 전면 개선. 기존 200개 랜덤 노드/39개 엣지만 표시되던 문제를 해결하여 전체 1,272 노드/3,495 엣지를 정상 표시하고, Neo4j Browser 스타일의 Cypher 쿼리 UI와 드래그 물리를 추가.
+
+### 17.2 그래프 데이터 표시 수정
+
+**문제**: 프론트엔드 `limit: 200` 고정, 백엔드 ORDER BY 없이 랜덤 노드 200개 반환, 엣지 쿼리가 해당 200개 내부 연결만 조회 → 39개 엣지.
+
+**수정**:
+- `neo4j_service.py`: 기본 limit 200→1500, `ORDER BY degree DESC`, `hasPoint` 관계 추가 (7종)
+- `ontology.py`: max limit 1000→2000
+- `page.tsx`: `nodeLimit` 상태 변수 + UI 버튼 (200/500/1000/전체)
+- Cytoscape shape/line-style을 `"data(shape)"`, `"data(lineStyle)"`로 데이터 기반 전환
+
+### 17.3 타입 필터 시 Secondary 노드
+
+**문제**: "장비" 필터 시 27개 장비가 독립적으로 표시 (cross-type 엣지 누락).
+
+**수정**: 타입 필터 시 이웃 노드를 `secondary: true`로 추가 → 작고 흐린 스타일로 표시, 엣지 쿼리에 포함. 장비 필터: 16 edges → 174 edges.
+
+### 17.4 Cypher 쿼리 UI (Neo4j Browser 스타일)
+
+| 파일 | 변경 내용 |
+|------|-----------|
+| `ontology.py` | `POST /api/ontology/cypher` 엔드포인트 추가 |
+| `neo4j_service.py` | `sanitize_cypher()` 쓰기 차단 + 자동 LIMIT 200, `run_cypher_graph()` Cytoscape 포맷 변환 |
+| `api.ts` | `CypherResponse` 인터페이스, `runCypherQuery()` 함수 |
+| `page.tsx` | 접이식 다크 쿼리 바 (neo4j$ 프롬프트), Ctrl+Enter 실행, 예시 쿼리 칩 4개 |
+
+보안: `CREATE/DELETE/SET/REMOVE/MERGE/DROP/DETACH/CALL` 키워드 차단, LIMIT 미지정 시 자동 200 추가.
+
+### 17.5 드래그 물리 (오프셋 보존 + 반발)
+
+Neo4j Browser 스타일의 부드러운 드래그 물리 구현:
+- `grab` 시점에 이웃 노드의 **상대 오프셋(ox, oy)** 저장
+- `requestAnimationFrame` 기반 연속 시뮬레이션: velocity + damping(0.85)
+- 스프링 target = `dragPos + offset` → 이웃이 원래 간격 유지하며 따라옴
+- 이웃 간 최소 거리 40px 반발력 → 겹침 방지
+
+### 17.6 Next.js 404 수정
+
+next-intl middleware가 standalone 모드에서 URL 리라이트하여 전 페이지 404 발생. cookie 기반 단순 middleware로 교체하여 해결.
+
+### 17.7 수정 파일 목록
+
+| 파일 | 변경 |
+|------|------|
+| `backend/app/routers/ontology.py` | Cypher 엔드포인트 추가 |
+| `backend/app/services/neo4j_service.py` | limit/ORDER BY 수정, secondary 노드, sanitize_cypher, run_cypher_graph |
+| `frontend/app/ontology/page.tsx` | 노드 제한 UI, 드래그 물리, Cypher 쿼리 바, secondary 스타일 |
+| `frontend/lib/api.ts` | CypherResponse, runCypherQuery, GraphNode.secondary |
+| `frontend/messages/ko.json`, `en.json` | Cypher 관련 i18n 키 |
+| `frontend/middleware.ts` | next-intl → 단순 cookie middleware |
+| `frontend/next.config.js` | outputFileTracingIncludes 추가 |
+| `frontend/Dockerfile` | messages 디렉토리 COPY 추가 |
 
 ---
 
