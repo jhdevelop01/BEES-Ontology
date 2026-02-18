@@ -59,7 +59,7 @@ async def send_control_command(
                     "deviceId": cmd.deviceId,
                     "command": cmd.command,
                     "params": cmd.params,
-                    "userId": cmd.userId,
+                    "userId": current_user.user_id,
                 },
             )
             response.raise_for_status()

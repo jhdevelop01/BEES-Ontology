@@ -76,7 +76,7 @@ class CommandRequest(BaseModel):
     deviceId: str = Field(..., description="온톨로지 장비 ID (예: bldg:AHU_5F)")
     command: str = Field(..., description="명령어 (ON, OFF, setpoint)")
     params: dict[str, Any] = Field(default_factory=dict, description="추가 파라미터")
-    userId: int = Field(..., description="요청 사용자 ID")
+    userId: int | None = Field(None, description="요청 사용자 ID")
 
 
 class CommandResponse(BaseModel):
@@ -253,7 +253,7 @@ async def _init_pg() -> Optional[asyncpg.Pool]:
 
 
 async def _save_audit_log(
-    user_id: int,
+    user_id: int | None,
     action: str,
     target_equipment: str,
     old_value: Optional[str],

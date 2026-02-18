@@ -30,19 +30,38 @@ async function fetchJSON<T = unknown>(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-  // 401 → 로그인 페이지로 리다이렉트
-  if (res.status === 401 && typeof window !== "undefined") {
-    localStorage.removeItem("bees_token");
-    localStorage.removeItem("bees_user");
-    if (!window.location.pathname.startsWith("/login")) {
-      window.location.href = "/login";
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    if (err instanceof DOMException && err.name === "AbortError") {
+      throw new Error("요청 시간 초과 (15초)");
     }
-    throw new Error("인증이 필요합니다. 로그인 페이지로 이동합니다.");
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  // 401 → 로그인 필요 (throw 먼저 → 호출자의 catch/finally 실행 보장)
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("bees_token");
+      localStorage.removeItem("bees_user");
+    }
+    const err = new Error("로그인이 필요합니다.");
+    // 비동기로 리다이렉트 (throw가 먼저 전파되도록)
+    if (typeof window !== "undefined" && !window.location.pathname.startsWith("/login")) {
+      setTimeout(() => { window.location.href = "/login"; }, 100);
+    }
+    throw err;
   }
 
   if (!res.ok) {

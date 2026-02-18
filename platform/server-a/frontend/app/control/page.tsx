@@ -80,9 +80,14 @@ export default function ControlPage() {
   const handleCommand = async (deviceId: string, command: string) => {
     setLoading((prev) => ({ ...prev, [deviceId]: true }));
 
+    // 안전장치: 15초 후 강제 로딩 해제
+    const safetyTimer = setTimeout(() => {
+      setLoading((prev) => ({ ...prev, [deviceId]: false }));
+    }, 15000);
+
     try {
       const result = await sendControlCommand({
-        deviceId: `bldg:${deviceId}`,
+        deviceId: deviceId.startsWith("bldg:") ? deviceId : `bldg:${deviceId}`,
         command,
       });
 
@@ -121,6 +126,7 @@ export default function ControlPage() {
         variant: "error",
       });
     } finally {
+      clearTimeout(safetyTimer);
       setLoading((prev) => ({ ...prev, [deviceId]: false }));
     }
   };

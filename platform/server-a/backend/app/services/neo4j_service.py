@@ -17,6 +17,19 @@ logger = logging.getLogger(__name__)
 _driver: AsyncDriver | None = None
 
 
+def _convert_neo4j_value(val: Any) -> Any:
+    """neo4j.time.Date/DateTime 등을 JSON 직렬화 가능한 값으로 변환."""
+    if hasattr(val, "iso_format"):       # neo4j.time.Date, DateTime, Time
+        return val.iso_format()
+    if hasattr(val, "isoformat"):        # Python datetime.date, datetime
+        return val.isoformat()
+    if isinstance(val, dict):
+        return {k: _convert_neo4j_value(v) for k, v in val.items()}
+    if isinstance(val, list):
+        return [_convert_neo4j_value(v) for v in val]
+    return val
+
+
 async def connect() -> None:
     """Neo4j 드라이버 초기화"""
     global _driver
@@ -795,7 +808,7 @@ async def get_node_detail(node_id: str) -> dict[str, Any]:
                 "name": _extract_name(uri),
                 "labels": lbls,
                 "type": _classify_node_type(lbls),
-                "properties": {k: v for k, v in props.items() if k != "uri"},
+                "properties": _convert_neo4j_value({k: v for k, v in props.items() if k != "uri"}),
                 "connections": connections,
                 "stats": {
                     "outgoing": len(out_records),

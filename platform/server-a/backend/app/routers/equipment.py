@@ -12,6 +12,7 @@ from typing import Any, Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException, Query
+from app.services.neo4j_service import _convert_neo4j_value
 
 from app.config import SERVER_D_URL
 from app.services import neo4j_service, mqtt_service, influxdb_service, postgres_service
@@ -187,7 +188,7 @@ async def get_equipment_detail(equipment_id: str) -> dict[str, Any]:
         "sensors": sensors,
         "connections": connections,
         "metadata": metadata,
-        "properties": {k: v for k, v in props.items() if k != "uri"},
+        "properties": _convert_neo4j_value({k: v for k, v in props.items() if k != "uri"}),
     }
 
 

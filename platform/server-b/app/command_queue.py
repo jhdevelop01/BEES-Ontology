@@ -29,7 +29,7 @@ class QueuedCommand:
     device_id: str
     command: str
     params: dict[str, Any]
-    user_id: int
+    user_id: int = 0
     retry_count: int = 0
     created_at: float = field(default_factory=time.time)
 
