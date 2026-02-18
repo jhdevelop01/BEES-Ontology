@@ -410,63 +410,53 @@ export default function OntologyPage() {
         cy.elements().removeClass("dimmed").removeClass("highlighted");
       };
 
-      // ── 부드러운 드래그 물리 (오프셋 보존 + 반발) ──
-      const SPRING_1HOP = 0.02;
-      const SPRING_2HOP = 0.005;
-      const DAMPING = 0.85;
-      const MIN_VEL = 0.1;
-      const MIN_DIST = 40;
-      const REPULSION = 0.5;
+      // ── 드래그 물리 (Neo4j 스타일 엣지 스프링) ──
+      const SPRING_K = 0.004;       // 스프링 상수 (약함 — Neo4j와 유사)
+      const DAMPING = 0.7;          // 감쇠 계수
+      const MIN_FORCE = 0.1;        // 최소 힘 임계값
 
-      const velocities = new Map<string, { vx: number; vy: number }>();
-      let simNeighbors: { id: string; hop: number; node: any; ox: number; oy: number }[] = [];
+      let simEdges: { node: any; restLength: number }[] = [];
+      let velocities = new Map<string, { vx: number; vy: number }>();
 
       const runDragSim = (draggedNode: any) => {
-        const pos = draggedNode.position();
+        const dpos = draggedNode.position();
         let anyMoving = false;
 
-        // 1) 스프링: 각 이웃을 (dragPos + offset) 방향으로 당김
-        for (const entry of simNeighbors) {
-          if (entry.node.grabbed()) continue;
-          const vel = velocities.get(entry.id);
-          if (!vel) continue;
-          const npos = entry.node.position();
-          const targetX = pos.x + entry.ox;
-          const targetY = pos.y + entry.oy;
-          const strength = entry.hop === 1 ? SPRING_1HOP : SPRING_2HOP;
-          vel.vx += (targetX - npos.x) * strength;
-          vel.vy += (targetY - npos.y) * strength;
-        }
+        cy.batch(() => {
+          for (const entry of simEdges) {
+            if (entry.node.grabbed()) continue;
+            const npos = entry.node.position();
+            const vel = velocities.get(entry.node.id());
+            if (!vel) continue;
 
-        // 2) 반발: 이웃 간 너무 가까우면 밀어냄
-        for (let i = 0; i < simNeighbors.length; i++) {
-          for (let j = i + 1; j < simNeighbors.length; j++) {
-            const a = simNeighbors[i], b = simNeighbors[j];
-            const apos = a.node.position(), bpos = b.node.position();
-            const rdx = apos.x - bpos.x, rdy = apos.y - bpos.y;
-            const dist = Math.sqrt(rdx * rdx + rdy * rdy) || 1;
-            if (dist < MIN_DIST) {
-              const force = ((MIN_DIST - dist) * REPULSION) / dist;
-              const va = velocities.get(a.id), vb = velocities.get(b.id);
-              if (va) { va.vx += rdx * force; va.vy += rdy * force; }
-              if (vb) { vb.vx -= rdx * force; vb.vy -= rdy * force; }
+            // 현재 엣지 길이
+            const dx = dpos.x - npos.x;
+            const dy = dpos.y - npos.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+
+            // 늘어남 = 현재 길이 - 초기 길이 (양수일 때만 당김)
+            const stretch = dist - entry.restLength;
+            if (stretch > 0) {
+              const fx = (dx / dist) * stretch * SPRING_K;
+              const fy = (dy / dist) * stretch * SPRING_K;
+              vel.vx += fx;
+              vel.vy += fy;
+            }
+
+            // 감쇠
+            vel.vx *= DAMPING;
+            vel.vy *= DAMPING;
+
+            // 적용
+            if (Math.abs(vel.vx) > MIN_FORCE || Math.abs(vel.vy) > MIN_FORCE) {
+              entry.node.position({
+                x: npos.x + vel.vx,
+                y: npos.y + vel.vy,
+              });
+              anyMoving = true;
             }
           }
-        }
-
-        // 3) 감쇠 + 적용
-        for (const entry of simNeighbors) {
-          if (entry.node.grabbed()) continue;
-          const vel = velocities.get(entry.id);
-          if (!vel) continue;
-          vel.vx *= DAMPING;
-          vel.vy *= DAMPING;
-          if (Math.abs(vel.vx) > MIN_VEL || Math.abs(vel.vy) > MIN_VEL) {
-            const npos = entry.node.position();
-            entry.node.position({ x: npos.x + vel.vx, y: npos.y + vel.vy });
-            anyMoving = true;
-          }
-        }
+        });
 
         if (anyMoving || draggedNode.grabbed()) {
           dragSimRAF = requestAnimationFrame(() => runDragSim(draggedNode));
@@ -478,24 +468,19 @@ export default function OntologyPage() {
       cy.on("grab", "node", (evt: unknown) => {
         const node = (evt as any).target;
         const pos = node.position();
+        simEdges = [];
         velocities.clear();
-        simNeighbors = [];
-        const visited = new Set<string>([node.id()]);
 
+        // 직접 연결된 노드만 수집 (1-hop, 엣지 기반)
         node.neighborhood("node").forEach((n: any) => {
           if (n.grabbed()) return;
-          visited.add(n.id());
           const npos = n.position();
-          velocities.set(n.id(), { vx: 0, vy: 0 });
-          simNeighbors.push({ id: n.id(), hop: 1, node: n, ox: npos.x - pos.x, oy: npos.y - pos.y });
-        });
+          const dx = pos.x - npos.x;
+          const dy = pos.y - npos.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-        node.neighborhood("node").neighborhood("node").forEach((n: any) => {
-          if (visited.has(n.id()) || n.grabbed()) return;
-          visited.add(n.id());
-          const npos = n.position();
+          simEdges.push({ node: n, restLength: dist });
           velocities.set(n.id(), { vx: 0, vy: 0 });
-          simNeighbors.push({ id: n.id(), hop: 2, node: n, ox: npos.x - pos.x, oy: npos.y - pos.y });
         });
 
         if (dragSimRAF) cancelAnimationFrame(dragSimRAF);
@@ -503,7 +488,7 @@ export default function OntologyPage() {
       });
 
       cy.on("free", "node", () => {
-        // 관성: rAF가 velocity < MIN_VEL까지 자동 감속
+        // 관성: rAF가 velocity < MIN_FORCE까지 자동 감속
       });
 
       // 노드 클릭 이벤트 — 하이라이트 + 상세 패널

@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.18 (온톨로지 초기 로딩 성능 최적화)
+> **최종 업데이트:** 2026.02.18 (Neo4j 스타일 드래그 물리 구현)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1583,6 +1583,74 @@ next-intl middleware가 standalone 모드에서 URL 리라이트하여 전 페�
 | 4 | 3단계 로딩 UI: 데이터 로딩→라이브러리 초기화→레이아웃 계산 (i18n 3키 추가) | `page.tsx`, `ko.json`, `en.json` |
 | 5 | 백엔드 `ORDER BY degree DESC` + `size()` 계산 제거 | `neo4j_service.py` |
 | 6 | 인메모리 캐시 (TTL 5분): `(node_type, floor, limit)` 키 기반 | `neo4j_service.py` |
+
+## 20. 온톨로지 그래프 드래그 물리 — Neo4j 스타일 엣지 스프링 (2026.02.18)
+
+### 20.1 개요
+
+온톨로지 페이지에서 노드 드래그 시 연결 노드의 움직임이 부자연스러운 문제를 Neo4j Browser와 동일한 **엣지 스프링 모델**로 해결. 기존 BFS 기반 가중치 모델에서 발생하던 "관계 없는 노드가 함께 이동하는 버그"도 근본적으로 해결됨.
+
+### 20.2 문제
+
+| # | 문제 | 원인 |
+|---|------|------|
+| 1 | 드래그 시 관계 없는 노드까지 이동 | BFS가 6-hop(최대 150개)까지 수집하여 간접 연결 노드 포함 |
+| 2 | 노드 움직임이 부자연스럽 (평행이동) | delta × weight 고정 비율 모델로 모든 노드가 같은 방향으로 이동 |
+
+### 20.3 시도한 접근 (5회 반복)
+
+| # | 접근 | 결과 | 실패 원인 |
+|---|------|------|-----------|
+| 1 | Spring+Velocity+Damping | 너무 느림 | half-life ~4.2초 |
+| 2 | Lerp (선형 보간) | 2-hop 평행이동 | 모든 노드가 드래그 노드 기준 offset 유지 |
+| 3 | Lerp+BFS Chain (부모 추종) | 체인 미작동 | `cy.batch()` 내 position() 반환값 stale |
+| 4 | Delta 전파 | 2-hop 이상 미동 | 동일 `cy.batch()` 문제 |
+| 5 | 직접 가중치 (dragDelta×weight) | 관계 없는 노드 이동 | BFS 150개 수집 |
+
+### 20.4 최종 해결: Neo4j 스타일 엣지 스프링 모델
+
+Neo4j Browser는 **d3-force** 시뮬레이션 기반으로 동작. 핵심 원리를 Cytoscape.js에 구현:
+
+**동작 원리:**
+1. 노드 grab → 직접 연결(1-hop) 노드만 수집 + 각 엣지의 초기 길이(restLength) 저장
+2. 매 프레임: 현재 엣지 길이 - restLength = stretch (늘어남)
+3. stretch > 0이면 스프링 힘으로 드래그 노드 **방향으로** 당김
+4. velocity + damping(0.7)으로 자연스러운 감속
+5. 릴리즈 후 ~170ms에 자연 정지
+
+**파라미터:**
+```typescript
+const SPRING_K = 0.004;   // 스프링 상수 (매우 약함)
+const DAMPING = 0.7;      // 감쇠 계수
+const MIN_FORCE = 0.1;    // 최소 힘 임계값
+```
+
+**이전 모델과의 핵심 차이:**
+
+| | 이전 (직접 가중치) | Neo4j 스타일 (엣지 스프링) |
+|--|--|--|
+| 대상 | BFS 6-hop, 150개 | **1-hop 직접 연결만** |
+| 기준 | dragDelta × weight | **엣지 stretch × SPRING_K** |
+| 효과 | 모두 같은 방향 평행이동 | 드래그 노드 **방향으로** 당겨짐 |
+| 힘 원천 | 고정 비율 | **늘어난 거리에 비례** |
+| 관성 | INERTIA_DECAY=0.85 | **velocity+DAMPING=0.7** |
+
+### 20.5 함께 수정: degree 정렬 복원
+
+섹션 19 성능 최적화에서 `ORDER BY degree DESC`를 제거했으나, 이로 인해 **500개 중 211개(42%)가 고립 노드**로 표시되는 문제 발생. degree 정렬을 복원하여 연결이 많은 노드 우선 로딩, 고립 노드 0으로 해결.
+
+```python
+# neo4j_service.py — degree 정렬 복원
+WITH n, size([(n)-[]-() | 1]) AS degree
+ORDER BY degree DESC
+```
+
+### 20.6 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `frontend/app/ontology/page.tsx` | 드래그 물리: BFS 직접 가중치 → Neo4j 스타일 엣지 스프링 모델 |
+| `backend/app/services/neo4j_service.py` | `ORDER BY degree DESC` 복원 (고립 노드 211→0) |
 
 ---
 

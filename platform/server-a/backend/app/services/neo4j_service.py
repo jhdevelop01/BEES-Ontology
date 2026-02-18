@@ -603,6 +603,8 @@ async def get_graph_data(
             node_query = f"""
                 MATCH (n)
                 {full_where}
+                WITH n, size([(n)-[]-() | 1]) AS degree
+                ORDER BY degree DESC
                 RETURN n.uri AS uri, labels(n) AS labels
                 LIMIT $limit
             """
