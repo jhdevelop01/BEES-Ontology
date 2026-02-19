@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,13 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { useSSE } from "@/lib/sse";
-import { sendControlCommand, getDeviceStatus, type DeviceStatus } from "@/lib/api";
-import { Power, PowerOff, Loader2, Send } from "lucide-react";
+import {
+  sendControlCommand,
+  getDeviceStatus,
+  startSimulation,
+  stopSimulation,
+  getSimulationStatusFromBackend,
+  type DeviceStatus,
+} from "@/lib/api";
+import { Power, PowerOff, Loader2, Send, PlayCircle, StopCircle, Activity } from "lucide-react";
 import { getDisplayName, localizeType, formatLocation } from "@/lib/utils";
 
 /**
  * 제어 페이지
- * AHU_5F ON/OFF 토글 + 현재 상태 + 명령 결과 토스트
+ * 전체 시뮬레이션 가동/정지 + 개별 장비 ON/OFF 토글
  */
 export default function ControlPage() {
   const { devices, connected } = useSSE();
@@ -23,6 +30,8 @@ export default function ControlPage() {
   const locale = useLocale();
   const [deviceList, setDeviceList] = useState<DeviceStatus[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [simStatus, setSimStatus] = useState<string>("unknown");
+  const [simLoading, setSimLoading] = useState(false);
   const [commandHistory, setCommandHistory] = useState<
     Array<{
       id: string;
@@ -34,19 +43,31 @@ export default function ControlPage() {
     }>
   >([]);
 
-  // 초기 장비 상태 로딩
+  // 시뮬레이션 상태 폴링
+  const fetchSimStatus = useCallback(async () => {
+    try {
+      const data = await getSimulationStatusFromBackend();
+      setSimStatus((data.status as string) || "unknown");
+    } catch {
+      setSimStatus("disconnected");
+    }
+  }, []);
+
+  // 초기 장비 상태 + 시뮬레이션 상태 로딩
   useEffect(() => {
     const fetchDevices = async () => {
       try {
         const data = await getDeviceStatus();
         setDeviceList(data.devices);
       } catch {
-        // API 미연결 시 빈 목록
         setDeviceList([]);
       }
     };
     fetchDevices();
-  }, []);
+    fetchSimStatus();
+    const interval = setInterval(fetchSimStatus, 10000);
+    return () => clearInterval(interval);
+  }, [fetchSimStatus]);
 
   // MQTT 실시간 업데이트 반영
   useEffect(() => {
@@ -68,11 +89,72 @@ export default function ControlPage() {
     }
   }, [devices]);
 
-  // 제어 명령 전송
+  // 전체 시뮬레이션 시작
+  const handleStartAll = async () => {
+    setSimLoading(true);
+    try {
+      const result = await startSimulation();
+      addToast({
+        title: t("startAllSuccess"),
+        description: result.message,
+        variant: "success",
+      });
+      setSimStatus("running");
+      // 명령 이력 추가
+      setCommandHistory((prev) => [{
+        id: Math.random().toString(36).substring(7),
+        deviceId: "ALL",
+        command: "START_ALL",
+        success: true,
+        message: result.message,
+        timestamp: new Date(),
+      }, ...prev.slice(0, 9)]);
+    } catch (error) {
+      addToast({
+        title: t("commandError"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "error",
+      });
+    } finally {
+      setSimLoading(false);
+    }
+  };
+
+  // 전체 시뮬레이션 정지
+  const handleStopAll = async () => {
+    setSimLoading(true);
+    try {
+      const result = await stopSimulation();
+      addToast({
+        title: t("stopAllSuccess"),
+        description: result.message,
+        variant: "success",
+      });
+      setSimStatus("stopped");
+      // 명령 이력 추가
+      setCommandHistory((prev) => [{
+        id: Math.random().toString(36).substring(7),
+        deviceId: "ALL",
+        command: "STOP_ALL",
+        success: true,
+        message: result.message,
+        timestamp: new Date(),
+      }, ...prev.slice(0, 9)]);
+    } catch (error) {
+      addToast({
+        title: t("commandError"),
+        description: error instanceof Error ? error.message : t("unknownError"),
+        variant: "error",
+      });
+    } finally {
+      setSimLoading(false);
+    }
+  };
+
+  // 개별 제어 명령 전송
   const handleCommand = async (deviceId: string, command: string) => {
     setLoading((prev) => ({ ...prev, [deviceId]: true }));
 
-    // 안전장치: 15초 후 강제 로딩 해제
     const safetyTimer = setTimeout(() => {
       setLoading((prev) => ({ ...prev, [deviceId]: false }));
     }, 15000);
@@ -83,7 +165,6 @@ export default function ControlPage() {
         command,
       });
 
-      // 명령 이력 추가
       const entry = {
         id: Math.random().toString(36).substring(7),
         deviceId,
@@ -94,14 +175,12 @@ export default function ControlPage() {
       };
       setCommandHistory((prev) => [entry, ...prev.slice(0, 9)]);
 
-      // 토스트 알림
       addToast({
         title: result.success ? t("commandSuccess") : t("commandFailed"),
         description: result.message,
         variant: result.success ? "success" : "error",
       });
 
-      // 로컬 상태 즉시 업데이트 (낙관적 업데이트)
       if (result.success) {
         setDeviceList((prev) =>
           prev.map((d) =>
@@ -123,6 +202,8 @@ export default function ControlPage() {
     }
   };
 
+  const isRunning = simStatus === "running";
+
   return (
     <div className="min-h-screen">
       <Header
@@ -132,6 +213,60 @@ export default function ControlPage() {
       />
 
       <div className="p-3 md:p-6 space-y-6">
+        {/* 전체 시뮬레이션 제어 패널 */}
+        <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+          <CardContent className="py-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Activity className={`h-5 w-5 ${isRunning ? "text-green-500" : "text-gray-400"}`} />
+                <div>
+                  <h3 className="font-semibold text-gray-900">{t("simulationControl")}</h3>
+                  <p className="text-sm text-gray-500">
+                    {t("simulationDesc")}
+                  </p>
+                </div>
+                <Badge
+                  variant={isRunning ? "success" : simStatus === "stopped" ? "secondary" : "danger"}
+                  className="ml-2"
+                >
+                  {isRunning ? t("simRunning") : simStatus === "stopped" ? t("simStopped") : t("simDisconnected")}
+                </Badge>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="success"
+                  size="lg"
+                  disabled={simLoading || isRunning}
+                  onClick={handleStartAll}
+                  className="min-w-[140px]"
+                >
+                  {simLoading && !isRunning ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <PlayCircle className="h-4 w-4 mr-2" />
+                  )}
+                  {t("startAll")}
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="lg"
+                  disabled={simLoading || !isRunning}
+                  onClick={handleStopAll}
+                  className="min-w-[140px]"
+                >
+                  {simLoading && isRunning ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <StopCircle className="h-4 w-4 mr-2" />
+                  )}
+                  {t("stopAll")}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* 장비 제어 카드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {deviceList.map((device) => {
@@ -140,7 +275,6 @@ export default function ControlPage() {
 
             return (
               <Card key={device.device_id} className="relative overflow-hidden">
-                {/* 상단 상태 바 */}
                 <div
                   className={`absolute top-0 left-0 right-0 h-1 ${
                     isActive ? "bg-green-500" : "bg-gray-300"
@@ -179,7 +313,6 @@ export default function ControlPage() {
                 </CardHeader>
 
                 <CardContent className="space-y-4">
-                  {/* 장비 정보 */}
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
                       <span className="text-gray-500">{t("operationMode")}</span>
@@ -203,7 +336,6 @@ export default function ControlPage() {
                     </div>
                   </div>
 
-                  {/* ON/OFF 토글 버튼 */}
                   <div className="flex gap-3">
                     <Button
                       variant={isActive ? "outline" : "success"}

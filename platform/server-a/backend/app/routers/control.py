@@ -11,7 +11,7 @@ import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from app.config import SERVER_B_URL
+from app.config import SERVER_B_URL, SERVER_C_URL
 from app.dependencies import CurrentUser, require_role
 from app.models import DeviceStatusResponse
 from app.services import mqtt_service
@@ -151,3 +151,95 @@ async def get_all_device_status() -> dict[str, Any]:
 
     active = sum(1 for d in devices if d.get("is_active", False))
     return {"devices": devices, "total": len(devices), "active": active}
+
+
+# ── 시뮬레이션 전체 제어 (Server C 프록시) ──
+
+class SimulationResponse(BaseModel):
+    """시뮬레이션 제어 응답"""
+    status: str
+    message: str
+
+
+@router.post("/simulation/start", response_model=SimulationResponse)
+async def simulation_start(
+    request: Request,
+    current_user: CurrentUser = Depends(require_role("operator", "admin")),
+) -> SimulationResponse:
+    """에뮬레이터 시뮬레이션 전체 시작 (Server C 프록시)."""
+    logger.info("시뮬레이션 시작 요청 — user=%s", current_user.user_id)
+    client_ip = request.client.host if request.client else None
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(f"{SERVER_C_URL}/simulation/start")
+            resp.raise_for_status()
+            result = resp.json()
+
+        await audit_service.log_action(
+            user_id=current_user.user_id,
+            action="simulation_start",
+            target_equipment="ALL",
+            old_value=None,
+            new_value=json.dumps({"result": result.get("status", "started")}),
+            source="dashboard",
+            ip_address=client_ip,
+        )
+        return SimulationResponse(
+            status=result.get("status", "started"),
+            message=result.get("message", "시뮬레이션이 시작되었습니다."),
+        )
+    except httpx.ConnectError:
+        logger.warning("Server C 연결 실패: %s", SERVER_C_URL)
+        return SimulationResponse(status="error", message="에뮬레이터(Server C)에 연결할 수 없습니다.")
+    except Exception as e:
+        logger.error("시뮬레이션 시작 실패: %s", e)
+        raise HTTPException(status_code=500, detail=f"시뮬레이션 시작 실패: {str(e)}")
+
+
+@router.post("/simulation/stop", response_model=SimulationResponse)
+async def simulation_stop(
+    request: Request,
+    current_user: CurrentUser = Depends(require_role("operator", "admin")),
+) -> SimulationResponse:
+    """에뮬레이터 시뮬레이션 전체 정지 (Server C 프록시)."""
+    logger.info("시뮬레이션 정지 요청 — user=%s", current_user.user_id)
+    client_ip = request.client.host if request.client else None
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(f"{SERVER_C_URL}/simulation/stop")
+            resp.raise_for_status()
+            result = resp.json()
+
+        await audit_service.log_action(
+            user_id=current_user.user_id,
+            action="simulation_stop",
+            target_equipment="ALL",
+            old_value=None,
+            new_value=json.dumps({"result": result.get("status", "stopped")}),
+            source="dashboard",
+            ip_address=client_ip,
+        )
+        return SimulationResponse(
+            status=result.get("status", "stopped"),
+            message=result.get("message", "시뮬레이션이 정지되었습니다."),
+        )
+    except httpx.ConnectError:
+        logger.warning("Server C 연결 실패: %s", SERVER_C_URL)
+        return SimulationResponse(status="error", message="에뮬레이터(Server C)에 연결할 수 없습니다.")
+    except Exception as e:
+        logger.error("시뮬레이션 정지 실패: %s", e)
+        raise HTTPException(status_code=500, detail=f"시뮬레이션 정지 실패: {str(e)}")
+
+
+@router.get("/simulation/status")
+async def simulation_status() -> dict[str, Any]:
+    """에뮬레이터 시뮬레이션 상태 조회 (Server C 프록시)."""
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.get(f"{SERVER_C_URL}/simulation/status")
+            resp.raise_for_status()
+            return resp.json()
+    except httpx.ConnectError:
+        return {"status": "disconnected", "message": "에뮬레이터 연결 불가"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}

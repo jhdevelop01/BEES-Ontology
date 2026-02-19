@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (다국어 장비명 표시 + Neo4j 동기화 완성 + 언어 스위처 버그 수정)
+> **최종 업데이트:** 2026.02.19 (시뮬레이션 전체 가동/정지 제어 기능 추가)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -2028,6 +2028,62 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 - **Phase 6~7에서 이미 반영 완료** (3-Tier 층별 모델, 지하/저층/옥상 전면 보완)
 - AHU: 5F~15F 각 층 ✅, 냉각천장: 각 층 2개씩 ✅
 - FCU: 2F/3F만 존재, 5F~15F 부재 → UFAD+냉각천장 복합 시스템이므로 설명 가능, 실측 데이터 확보 시 정밀화 (next.md 후순위)
+
+## 25. 시뮬레이션 전체 가동/정지 제어 기능 (2026.02.19)
+
+### 25.1 배경
+
+제어 페이지(`/control`)에서 개별 장비 ON/OFF만 가능하고, 에뮬레이터(Server C)의 전체 시뮬레이션을 일괄 시작/정지하는 기능이 없었음. Server C에는 이미 `/simulation/start`, `/simulation/stop`, `/simulation/status` API가 존재했으나, 프론트엔드에서 직접 접근할 경로가 없었음.
+
+### 25.2 Agent Teams 병렬 작업
+
+3개 리서치 에이전트(Server C API 조사, 제어 페이지/API 조사, Server B 구조 조사)를 병렬 실행하여 분석 후, 2개 구현 에이전트(백엔드, 프론트엔드)로 병렬 구현.
+
+### 25.3 수정 내용
+
+#### Part A: 백엔드 (2파일)
+
+| 파일 | 변경 |
+|------|------|
+| `config.py` | `SERVER_C_URL` 설정 추가 (pydantic-settings BaseSettings + 모듈 레벨 export) |
+| `control.py` | `SimulationResponse` 모델 + 3개 엔드포인트 추가 |
+
+**새 API 엔드포인트:**
+| 메서드 | 경로 | 인증 | 설명 |
+|--------|------|:----:|------|
+| POST | `/api/simulation/start` | JWT (operator/admin) | Server C 시뮬레이션 시작 프록시 + 감사 로그 |
+| POST | `/api/simulation/stop` | JWT (operator/admin) | Server C 시뮬레이션 정지 프록시 + 감사 로그 |
+| GET | `/api/simulation/status` | 없음 | Server C 시뮬레이션 상태 조회 프록시 |
+
+#### Part B: 프론트엔드 (4파일)
+
+| 파일 | 변경 |
+|------|------|
+| `lib/api.ts` | `SimulationControlResponse` 인터페이스, `startSimulation()`, `stopSimulation()`, `getSimulationStatusFromBackend()` 함수 추가 |
+| `app/control/page.tsx` | 시뮬레이션 전체 제어 패널 UI, 상태 폴링(10초), 명령 이력 연동 |
+| `messages/ko.json` | `control` 섹션에 9개 키 추가 (simulationControl, startAll, stopAll 등) |
+| `messages/en.json` | `control` 섹션에 9개 키 추가 (영어 대응) |
+
+### 25.4 주요 기술 결정
+
+- **Server A 백엔드 프록시 경유**: 시나리오 페이지(`/scenarios`)는 `fetchEmulator()`로 Server C 직접 호출하나, 시뮬레이션 제어는 JWT 인증 + 감사 로그가 필요하므로 Server A 백엔드를 경유하도록 설계
+- **감사 로그**: `audit_service.log_action()`으로 simulation_start/simulation_stop 기록, `target_equipment="ALL"`
+- **Server C 오프라인 대응**: `httpx.ConnectError` 시 에러 상태 반환 (HTTPException 미사용, 사용자에게 연결 불가 메시지 표시)
+- **시뮬레이션 상태 폴링**: 10초 간격으로 `/api/simulation/status` 호출, 연결 실패 시 "disconnected" 표시
+- **UI**: 파란색 그라데이션 카드, Activity 아이콘, Badge(success/secondary/danger), PlayCircle/StopCircle 버튼
+
+### 25.5 검증 결과 (8개 테스트 전체 통과)
+
+| # | 테스트 | 결과 |
+|:-:|--------|:----:|
+| 1 | `GET /api/simulation/status` | ✅ status=running, devices=84, points=317 |
+| 2 | `POST /api/simulation/stop` (JWT) | ✅ status=stopped |
+| 3 | 정지 후 상태 확인 | ✅ status=stopped, mqtt=False |
+| 4 | `POST /api/simulation/start` (JWT) | ✅ status=started |
+| 5 | 시작 후 상태 확인 | ✅ status=running, devices=84, points=317, mqtt=True |
+| 6 | 미인증 정지 시도 | ✅ 401 "인증 토큰이 필요합니다" |
+| 7 | `GET /api/devices/status` | ✅ total=84, active=11 |
+| 8 | 프론트엔드 페이지 로드 | ✅ HTTP 200 |
 
 ---
 

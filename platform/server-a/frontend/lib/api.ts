@@ -1141,6 +1141,27 @@ export async function getSimulationStatus(): Promise<Record<string, unknown>> {
   return fetchEmulator("/simulation/status");
 }
 
+export interface SimulationControlResponse {
+  status: string;
+  message: string;
+}
+
+export async function startSimulation(): Promise<SimulationControlResponse> {
+  return fetchJSON<SimulationControlResponse>("/api/simulation/start", {
+    method: "POST",
+  });
+}
+
+export async function stopSimulation(): Promise<SimulationControlResponse> {
+  return fetchJSON<SimulationControlResponse>("/api/simulation/stop", {
+    method: "POST",
+  });
+}
+
+export async function getSimulationStatusFromBackend(): Promise<Record<string, unknown>> {
+  return fetchJSON<Record<string, unknown>>("/api/simulation/status");
+}
+
 export async function getCurrentWeather(): Promise<Record<string, unknown>> {
   return fetchEmulator("/weather/current");
 }

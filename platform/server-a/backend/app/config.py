@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     # Server B (BAS Adapter)
     SERVER_B_URL: str = "http://localhost:8001"
 
+    # Server C (에뮬레이터)
+    SERVER_C_URL: str = "http://localhost:8002"
+
     # Server D (Data Historian)
     SERVER_D_URL: str = "http://localhost:8003"
 
@@ -69,6 +72,7 @@ MQTT_BROKER = _settings.MQTT_BROKER
 MQTT_PORT = _settings.MQTT_PORT
 
 SERVER_B_URL = _settings.SERVER_B_URL
+SERVER_C_URL = _settings.SERVER_C_URL
 SERVER_D_URL = _settings.SERVER_D_URL
 
 INFLUXDB_URL = _settings.INFLUXDB_URL
