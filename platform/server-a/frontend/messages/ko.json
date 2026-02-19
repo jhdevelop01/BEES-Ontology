@@ -97,6 +97,7 @@
     "typeDamper": "댐퍼",
     "typeCoolingCoil": "냉각코일",
     "typeHeatingCoil": "가열코일",
+    "typeCCPanel": "냉각천장",
     "sensorZoneTemp": "존 공기온도",
     "sensorZoneHumidity": "존 공기습도",
     "sensorSupplyTemp": "급기온도",

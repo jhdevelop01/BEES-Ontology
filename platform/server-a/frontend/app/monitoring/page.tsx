@@ -37,13 +37,14 @@ import {
 // ── 장비 유형 필터 탭 ──
 const TYPE_FILTERS = [
   { key: "all", label: "typeAll" },
-  { key: "AHU", label: "AHU" },
+  { key: "AHU", label: "typeAHU" },
   { key: "Fan", label: "typeFan" },
   { key: "Pump", label: "typePump" },
   { key: "Chiller", label: "typeChiller" },
   { key: "Boiler", label: "typeBoiler" },
   { key: "Cooling_Tower", label: "typeCoolingTower" },
-  { key: "FCU", label: "FCU" },
+  { key: "Fan_Coil_Unit", label: "typeFCU" },
+  { key: "Chilled_Ceiling_Panel", label: "typeCCPanel" },
   { key: "Elevator", label: "typeElevator" },
 ] as const;
 

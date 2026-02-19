@@ -97,6 +97,7 @@
     "typeDamper": "Damper",
     "typeCoolingCoil": "Cooling Coil",
     "typeHeatingCoil": "Heating Coil",
+    "typeCCPanel": "CC Panel",
     "sensorZoneTemp": "Zone Air Temp",
     "sensorZoneHumidity": "Zone Air Humidity",
     "sensorSupplyTemp": "Supply Air Temp",

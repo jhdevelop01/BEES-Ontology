@@ -173,10 +173,12 @@ async def get_equipment_list(
                 WHERE n.uri STARTS WITH 'https://example.org/gec-b#'
                   AND any(label IN labels(n) WHERE label IN [
                     'AHU', 'Chiller', 'Boiler', 'Pump', 'Fan', 'Cooling_Tower',
-                    'FCU', 'Elevator', 'VFD', 'Heat_Exchanger', 'Valve',
+                    'Fan_Coil_Unit', 'Elevator', 'VFD', 'Heat_Exchanger', 'Valve',
                     'CRAC', 'Condenser', 'Compressor', 'Damper',
                     'Air_Handler_Unit', 'Cooling_Coil', 'Heating_Coil',
-                    'Supply_Fan', 'Return_Fan', 'Exhaust_Fan'
+                    'Supply_Fan', 'Return_Fan', 'Exhaust_Fan',
+                    'Chilled_Water_Pump', 'Condenser_Water_Pump', 'Hot_Water_Pump',
+                    'Chilled_Ceiling_Panel'
                   ])
                 OPTIONAL MATCH (n)-[:hasLocation]->(loc)
                 WHERE loc.uri STARTS WITH 'https://example.org/gec-b#'
@@ -336,10 +338,12 @@ def _classify_node_type(labels: list[str]) -> str:
     # Equipment 하위 클래스 (구체적인 것 우선)
     equipment_types = [
         "AHU", "Chiller", "Boiler", "Pump", "Fan", "Cooling_Tower",
-        "Heat_Exchanger", "VAV", "FCU", "PAC", "MAU", "HEX",
+        "Heat_Exchanger", "VAV", "Fan_Coil_Unit", "PAC", "MAU", "HEX",
         "Damper", "Valve", "VFD", "Actuator", "Filter",
         "Diffuser", "Meter", "Panel", "Transformer",
         "Controller", "Server", "Header", "Pipe",
+        "Chilled_Water_Pump", "Condenser_Water_Pump", "Hot_Water_Pump",
+        "Chilled_Ceiling_Panel",
     ]
     for et in equipment_types:
         if et in labels_set or any(et in lbl for lbl in meaningful):
