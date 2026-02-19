@@ -56,7 +56,6 @@ export function localizeType(locale: string, type: string): string {
     Cooling_Tower: "냉각탑", Fan_Coil_Unit: "팬코일유닛",
     Elevator: "승강기", VFD: "인버터",
     Heat_Exchanger: "열교환기", Valve: "밸브", Damper: "댐퍼",
-    Cooling_Coil: "냉각코일", Heating_Coil: "가열코일",
     Chilled_Water_Pump: "냉수펌프", Condenser_Water_Pump: "냉각수펌프",
     Hot_Water_Pump: "온수펌프", Chilled_Ceiling_Panel: "냉각천장패널",
     CRAC: "항온항습기", Condenser: "응축기", Compressor: "압축기",

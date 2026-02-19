@@ -151,8 +151,6 @@ export default function MonitoringPage() {
       Heat_Exchanger: t("typeHeatExchanger"),
       Valve: t("typeValve"),
       Damper: t("typeDamper"),
-      Cooling_Coil: t("typeCoolingCoil"),
-      Heating_Coil: t("typeHeatingCoil"),
     };
     return map[type] || type;
   };

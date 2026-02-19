@@ -190,7 +190,7 @@ async def get_equipment_list(
                     'AHU', 'Chiller', 'Boiler', 'Pump', 'Fan', 'Cooling_Tower',
                     'Fan_Coil_Unit', 'Elevator', 'VFD', 'Heat_Exchanger', 'Valve',
                     'CRAC', 'Condenser', 'Compressor', 'Damper',
-                    'Air_Handler_Unit', 'Cooling_Coil', 'Heating_Coil',
+                    'Air_Handler_Unit',
                     'Supply_Fan', 'Return_Fan', 'Exhaust_Fan',
                     'Chilled_Water_Pump', 'Condenser_Water_Pump', 'Hot_Water_Pump',
                     'Chilled_Ceiling_Panel'
