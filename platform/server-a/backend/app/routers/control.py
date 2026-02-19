@@ -129,20 +129,9 @@ async def get_all_device_status() -> dict[str, Any]:
     device_cache = mqtt_service.get_device_cache()
 
     if not device_cache:
-        # 기본 장비 상태 (시뮬레이션 데이터)
         return {
-            "devices": [
-                {
-                    "device_id": "AHU_5F",
-                    "name": "AHU 5층",
-                    "is_active": False,
-                    "mode": "standby",
-                    "type": "AHU",
-                    "location": "5F",
-                    "ts": None,
-                },
-            ],
-            "total": 1,
+            "devices": [],
+            "total": 0,
             "active": 0,
         }
 

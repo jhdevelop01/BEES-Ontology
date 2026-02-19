@@ -39,18 +39,8 @@ export default function ControlPage() {
         const data = await getDeviceStatus();
         setDeviceList(data.devices);
       } catch {
-        // API 미연결 시 기본 장비 표시
-        setDeviceList([
-          {
-            device_id: "AHU_5F",
-            name: "AHU 5층",
-            is_active: false,
-            mode: "standby",
-            type: "AHU",
-            location: "5F",
-            ts: null,
-          },
-        ]);
+        // API 미연결 시 빈 목록
+        setDeviceList([]);
       }
     };
     fetchDevices();

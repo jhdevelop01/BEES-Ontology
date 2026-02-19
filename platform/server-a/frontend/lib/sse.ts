@@ -79,7 +79,51 @@ export function useSSE(maxHistory: number = 60) {
       }, 5000);
     };
 
-    // 포인트 데이터 이벤트
+    // 배치 이벤트 (401개 개별 이벤트 → 1개 batch로 수신)
+    es.addEventListener("batch", (event: MessageEvent) => {
+      try {
+        const batch = JSON.parse(event.data) as {
+          points?: SSEPointEvent[];
+          devices?: SSEDeviceEvent[];
+          alarms?: SSEAlarmEvent[];
+        };
+
+        // 포인트 — 한 번의 setState로 전체 업데이트
+        if (batch.points?.length) {
+          setPoints((prev) => {
+            const next = { ...prev };
+            for (const p of batch.points!) next[p.point_id] = p;
+            return next;
+          });
+          setPointHistory((prev) => {
+            const next = { ...prev };
+            for (const p of batch.points!) {
+              const arr = next[p.point_id] || [];
+              next[p.point_id] = [...arr, p].slice(-maxHistory);
+            }
+            return next;
+          });
+        }
+
+        // 디바이스 — 한 번의 setState
+        if (batch.devices?.length) {
+          setDevices((prev) => {
+            const next = { ...prev };
+            for (const d of batch.devices!) next[d.device_id] = d;
+            return next;
+          });
+        }
+
+        // 알람
+        if (batch.alarms?.length) {
+          setAlarms((prev) => [...prev, ...batch.alarms!].slice(-100));
+        }
+      } catch (err) {
+        console.warn("[BEES SSE] batch 파싱 실패:", err);
+      }
+    });
+
+    // 개별 포인트 이벤트 (하위 호환)
     es.addEventListener("point", (event: MessageEvent) => {
       try {
         const data: SSEPointEvent = JSON.parse(event.data);
@@ -97,7 +141,7 @@ export function useSSE(maxHistory: number = 60) {
       }
     });
 
-    // 디바이스 상태 이벤트
+    // 개별 디바이스 이벤트 (하위 호환)
     es.addEventListener("device", (event: MessageEvent) => {
       try {
         const data: SSEDeviceEvent = JSON.parse(event.data);
@@ -110,7 +154,7 @@ export function useSSE(maxHistory: number = 60) {
       }
     });
 
-    // 알람 이벤트
+    // 개별 알람 이벤트 (하위 호환)
     es.addEventListener("alarm", (event: MessageEvent) => {
       try {
         const data: SSEAlarmEvent = JSON.parse(event.data);

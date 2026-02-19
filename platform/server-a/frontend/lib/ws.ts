@@ -62,7 +62,39 @@ export function useWebSocket(maxHistory: number = 60) {
         const msg = JSON.parse(event.data);
         const { type, data } = msg;
 
-        if (type === "point") {
+        if (type === "batch") {
+          // 배치 이벤트 처리
+          const batch = data as {
+            points?: SSEPointEvent[];
+            devices?: SSEDeviceEvent[];
+            alarms?: SSEAlarmEvent[];
+          };
+          if (batch.points?.length) {
+            setPoints((prev) => {
+              const next = { ...prev };
+              for (const p of batch.points!) next[p.point_id] = p;
+              return next;
+            });
+            setPointHistory((prev) => {
+              const next = { ...prev };
+              for (const p of batch.points!) {
+                const arr = next[p.point_id] || [];
+                next[p.point_id] = [...arr, p].slice(-maxHistory);
+              }
+              return next;
+            });
+          }
+          if (batch.devices?.length) {
+            setDevices((prev) => {
+              const next = { ...prev };
+              for (const d of batch.devices!) next[d.device_id] = d;
+              return next;
+            });
+          }
+          if (batch.alarms?.length) {
+            setAlarms((prev) => [...prev, ...batch.alarms!].slice(-100));
+          }
+        } else if (type === "point") {
           const pt = data as SSEPointEvent;
           setPoints((prev) => ({ ...prev, [pt.point_id]: pt }));
           setPointHistory((prev) => {

@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.18 (Neo4j 스타일 드래그 물리 구현)
+> **최종 업데이트:** 2026.02.19 (SSE 이벤트 스톰 수정 + 모니터링/제어 페이지 복구)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1651,6 +1651,241 @@ ORDER BY degree DESC
 |------|------|
 | `frontend/app/ontology/page.tsx` | 드래그 물리: BFS 직접 가중치 → Neo4j 스타일 엣지 스프링 모델 |
 | `backend/app/services/neo4j_service.py` | `ORDER BY degree DESC` 복원 (고립 노드 211→0) |
+
+## 21. 제어 페이지 "가동" 버그 5건 수정 (2026.02.19)
+
+### 21.1 개요
+
+제어 페이지(`/control`)에서 "가동" 버튼 클릭 시 에뮬레이터(Server C)까지 명령이 전달되지 않는 문제를 3라운드에 걸쳐 5건의 버그를 발견·수정. Agent Teams(tmux split-pane 병렬 분석)로 Frontend → Server A → Server B → Server C 전체 체인을 추적.
+
+### 21.2 발견된 버그 5건
+
+| # | 증상 | 근본 원인 | 에러 코드 |
+|---|------|-----------|:---------:|
+| 1 | Server B가 userId null 거부 | Server A `control.py:62`에서 `cmd.userId`(None) 전달, JWT의 `current_user.user_id` 미사용 | 422 |
+| 2 | Server C가 장비를 찾지 못함 | MQTT 캐시 device_id에 이미 `bldg:` 포함, 프론트에서 `bldg:${deviceId}`로 이중 접두사 (`bldg:bldg:AHU_UFAD_1`) | 404 |
+| 3 | 장비 상세 API 직렬화 오류 | `properties(n)` Cypher가 `neo4j.time.Date` 반환 → Pydantic 직렬화 불가 | 500 |
+| 4 | "가동" 버튼 무한 스피너 | `fetchJSON`에 타임아웃 없음 + 401 시 `window.location.href` 동기 실행으로 catch/finally 미도달 | - |
+| 5 | 로그인 실패 | DB admin 이메일(`admin@samsung-gec.com`)과 프론트엔드 안내(`admin@bees.dev`) 불일치 | 401 |
+
+### 21.3 에러 흐름 (수정 전)
+
+```
+Frontend: POST /api/control { deviceId: "bldg:bldg:AHU_UFAD_1", command: "ON" }
+    ↓ (미로그인 시)
+Server A: 401 Unauthorized → fetchJSON에서 window.location.href 동기 실행 → finally 미도달 → 무한 스피너
+    ↓ (로그인 후)
+Server A control.py:62: "userId": cmd.userId → None
+    ↓
+Server B: userId: int = Field(...) → 422 Validation Error
+    ↓ (userId 수정 후)
+Server B → Server C: POST /devices/bldg:bldg:AHU_UFAD_1/command → 404 Not Found
+    ↓ (bldg: 수정 후)
+정상 동작: Server C is_active=True, mode=auto
+```
+
+### 21.4 수정 내역 (3라운드)
+
+**Round 1 — 422 userId null**
+| 파일 | 변경 |
+|------|------|
+| `server-a/backend/app/routers/control.py:62` | `cmd.userId` → `current_user.user_id` (JWT에서 추출) |
+| `server-b/app/main.py:79` | `userId: int = Field(...)` → `int \| None = Field(None, ...)` |
+| `server-b/app/main.py:256` | `_save_audit_log(user_id: int)` → `int \| None` |
+| `server-b/app/command_queue.py:32` | `user_id: int` → `int = 0` |
+
+**Round 2 — 404 double bldg: + 500 neo4j.time.Date**
+| 파일 | 변경 |
+|------|------|
+| `frontend/app/control/page.tsx:85` | `bldg:${deviceId}` → `deviceId.startsWith("bldg:") ? deviceId : \`bldg:${deviceId}\`` |
+| `backend/app/services/neo4j_service.py` | `_convert_neo4j_value()` 헬퍼 추가 (Date/DateTime → ISO 문자열) |
+| `backend/app/routers/equipment.py:190` | properties에 `_convert_neo4j_value()` 적용 |
+
+**Round 3 — 무한 스피너 + 인증**
+| 파일 | 변경 |
+|------|------|
+| `frontend/lib/api.ts` | `fetchJSON`에 15초 `AbortController` 타임아웃 추가 |
+| `frontend/lib/api.ts` | 401 처리: throw 먼저 → `setTimeout(100ms)` 비동기 리다이렉트 |
+| `frontend/app/control/page.tsx` | `handleCommand`에 15초 safety timer (강제 로딩 해제) |
+| PostgreSQL DB | admin 이메일 `admin@samsung-gec.com` → `admin@bees.dev` |
+
+### 21.5 수정 파일 요약 (7개)
+
+| 파일 | 변경 요약 |
+|------|-----------|
+| `server-a/backend/app/routers/control.py` | userId: JWT user_id 사용 |
+| `server-a/backend/app/routers/equipment.py` | neo4j.time.Date converter import + 적용 |
+| `server-a/backend/app/services/neo4j_service.py` | `_convert_neo4j_value()` 헬퍼 + properties 적용 |
+| `server-a/frontend/app/control/page.tsx` | bldg: 가드 + 15초 safety timer |
+| `server-a/frontend/lib/api.ts` | 15초 타임아웃 + async 401 리다이렉트 |
+| `server-b/app/main.py` | userId Optional + audit_log 타입 동기화 |
+| `server-b/app/command_queue.py` | user_id 기본값 0 |
+
+### 21.6 E2E 테스트 결과
+
+```bash
+# 로그인
+POST /api/auth/login {admin@bees.dev, admin123} → 200 OK, JWT 발급
+
+# ON 명령
+POST /api/control {bldg:AHU_UFAD_3, ON} → success=true, "성공적으로 전달"
+Server C: is_active=True, mode=auto
+
+# OFF 명령
+POST /api/control {bldg:AHU_UFAD_3, OFF} → success=true, "성공적으로 전달"
+Server C: is_active=False, mode=auto
+```
+
+### 21.7 디버깅 인사이트
+
+- **MQTT 캐시 device_id에는 `bldg:` 접두사가 이미 포함** — 프론트엔드에서 추가하면 이중 접두사 발생
+- **`fetchJSON`에서 401 처리 시 `window.location.href` 동기 실행은 위험** — throw가 전파되기 전에 페이지 이동하면 catch/finally 미실행 → 비동기(setTimeout) 리다이렉트가 안전
+- **`properties(n)` Cypher 결과에 neo4j.time.Date 등 네이티브 타입이 포함** — `hasattr(val, "iso_format")`으로 범용 변환 필요
+- **DB 시드 데이터와 실제 사용 데이터가 불일치할 수 있음** — init.sql과 런타임 생성 계정의 이메일/해시 일치 여부 확인 필수
+
+### 21.8 커밋
+
+- `bae5925` — fix: 제어 페이지 "가동" 버그 5건 수정 — 422/404/500/무한스피너/인증
+
+---
+
+## 22. SSE 이벤트 스톰 수정 + 모니터링/제어 페이지 복구 (2026.02.19)
+
+### 22.1 문제 현상
+
+제어 페이지 "가동" 버그 수정(섹션 21) 후 다음 3가지 문제 발생:
+
+1. **모니터링 페이지**: "장비 목록 로딩 중..." → "등록된 장비가 없습니다"
+2. **제어 페이지 복귀 시**: 84개 장비 → 1개(AHU_5F 하드코딩 폴백)
+3. **양쪽 모두 "연결 끊김"**: SSE 연결 불안정
+
+### 22.2 근본 원인 분석
+
+**SSE 이벤트 스톰**: Server A의 `event_generator()`가 5초마다 **317개 포인트 + 84개 디바이스 = 401개 개별 SSE 이벤트**를 burst 전송.
+
+```
+문제 흐름:
+401개 SSE 이벤트 → 401개 React setState → 브라우저 렌더링 블로킹
+→ getEquipmentList() fetch 지연/타임아웃 → "등록된 장비가 없습니다"
+→ EventSource onerror 발생 → "연결 끊김"
+→ getDeviceStatus() 실패 → catch 블록 AHU_5F 하드코딩 폴백
+```
+
+**검증**: `curl -N http://localhost:8010/api/stream/points`로 확인 — 5초마다 401개 개별 `event: point` / `event: device` 이벤트 burst 확인.
+
+### 22.3 수정 내용 (5개 파일)
+
+#### (1) Server A — SSE 배치 이벤트 (`mqtt_service.py:event_generator()`)
+
+401개 개별 이벤트 → **1개 "batch" 이벤트**로 통합:
+
+```python
+# Before: 개별 이벤트 yield (401회)
+for event in new_events:
+    yield {"event": event["type"], "data": json.dumps(event["data"])}
+
+# After: 배치로 묶어 전송 (1회)
+points_batch = [e["data"] for e in new_events if e["type"] == "point"]
+devices_batch = [e["data"] for e in new_events if e["type"] == "device"]
+alarms_batch = [e["data"] for e in new_events if e["type"] == "alarm"]
+yield {"event": "batch", "data": json.dumps({
+    "points": points_batch, "devices": devices_batch, "alarms": alarms_batch,
+})}
+```
+
+#### (2) Frontend — SSE 훅 배치 처리 (`sse.ts`)
+
+`"batch"` 이벤트 리스너 추가. 포인트/디바이스/알람 각각 한 번의 `setState`로 업데이트:
+
+```typescript
+es.addEventListener("batch", (event) => {
+  const batch = JSON.parse(event.data);
+  if (batch.points?.length) setPoints(prev => { ... }); // 1회 setState
+  if (batch.devices?.length) setDevices(prev => { ... }); // 1회 setState
+  if (batch.alarms?.length) setAlarms(prev => { ... }); // 1회 setState
+});
+```
+
+기존 개별 이벤트 리스너(`point`, `device`, `alarm`)도 하위 호환으로 유지.
+
+#### (3) Frontend — WebSocket 훅 배치 처리 (`ws.ts`)
+
+`ws.onmessage`에 `type === "batch"` 분기 추가. SSE와 동일한 배치 처리 로직.
+
+#### (4) Backend — AHU_5F 하드코딩 폴백 제거 (`control.py`)
+
+```python
+# Before: MQTT 캐시 비어있으면 하드코딩 AHU_5F 반환
+if not device_cache:
+    return {"devices": [{"device_id": "AHU_5F", ...}], "total": 1, "active": 0}
+
+# After: 빈 배열 반환
+if not device_cache:
+    return {"devices": [], "total": 0, "active": 0}
+```
+
+#### (5) Frontend — AHU_5F 폴백 제거 (`control/page.tsx`)
+
+```typescript
+// Before: API 실패 시 하드코딩 AHU_5F 반환
+} catch {
+  setDeviceList([{ device_id: "AHU_5F", name: "AHU 5층", ... }]);
+}
+
+// After: 빈 배열
+} catch {
+  setDeviceList([]);
+}
+```
+
+### 22.4 수정 파일 요약
+
+| 파일 | 변경 요약 |
+|------|-----------|
+| `server-a/backend/app/services/mqtt_service.py` | `event_generator()` 배치 전송 (401개 → 1개 batch 이벤트) |
+| `server-a/frontend/lib/sse.ts` | `"batch"` 이벤트 리스너 추가, 포인트/디바이스/알람 배치 setState |
+| `server-a/frontend/lib/ws.ts` | `type === "batch"` 분기 추가, 동일 배치 처리 |
+| `server-a/backend/app/routers/control.py` | AHU_5F 하드코딩 폴백 제거 → 빈 배열 |
+| `server-a/frontend/app/control/page.tsx` | catch 블록 AHU_5F 폴백 제거 → 빈 배열 |
+
+### 22.5 기대 데이터 흐름
+
+```
+[제어 /control] "가동" → [Server A] → [Server B] → [Server C] 장비 ON
+                                                        ↓ MQTT (5초 interval)
+[모니터링 /monitoring] ← [SSE batch] ← [Server A] ← MQTT ← 센서 데이터 발행
+        ↓ 장비 클릭                                      ↓
+[장비 상세 /monitoring/[id]] ← REST API ← [Server D] ← InfluxDB 저장
+        (실시간 게이지 + 트렌드 차트)
+```
+
+### 22.6 검증 결과
+
+```bash
+# SSE 배치 이벤트 확인
+curl -N http://localhost:8010/api/stream/points
+# → event: batch
+#   data: {"points": [317개], "devices": [84개], "alarms": []}
+# (기존: 401개 개별 이벤트 → 수정 후: 1개 batch 이벤트)
+
+# 데이터 스냅샷
+curl http://localhost:8010/api/stream/snapshot
+# → point_count: 317, device_count: 84
+```
+
+### 22.7 디버깅 인사이트
+
+- **SSE 이벤트 수가 많으면 React가 렌더링 블로킹** — 401개 개별 setState는 브라우저를 사실상 멈춤
+- **서버에서 배치로 묶는 것이 클라이언트 배치보다 효과적** — 네트워크 오버헤드도 감소
+- **AHU_5F 같은 하드코딩 폴백은 디버깅을 어렵게 만듦** — 실패가 성공처럼 보임
+
+### 22.8 Agent Teams 활용
+
+4명의 에이전트 팀(`monitoring-control-fix`)으로 병렬 분석:
+- `monitoring-analyzer`: 모니터링 페이지 코드 분석
+- `control-analyzer`: 제어 페이지 코드 분석
+- `sse-dataflow-analyzer`: SSE/MQTT/WebSocket 데이터 흐름 분석 (근본 원인 발견)
+- `backend-api-tester`: curl E2E API 테스트
 
 ---
 

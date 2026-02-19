@@ -254,10 +254,19 @@ async def event_generator():
             new_events = queue_list[-min(new_count, len(queue_list)):]
             last_counter = current_counter
 
-            for event in new_events:
+            # 배치로 묶어 전송 (401개 개별 이벤트 → 1개 batch 이벤트)
+            points_batch = [e["data"] for e in new_events if e["type"] == "point"]
+            devices_batch = [e["data"] for e in new_events if e["type"] == "device"]
+            alarms_batch = [e["data"] for e in new_events if e["type"] == "alarm"]
+
+            if points_batch or devices_batch or alarms_batch:
                 yield {
-                    "event": event["type"],
-                    "data": json.dumps(event["data"]),
+                    "event": "batch",
+                    "data": json.dumps({
+                        "points": points_batch,
+                        "devices": devices_batch,
+                        "alarms": alarms_batch,
+                    }),
                 }
         else:
             # 새 이벤트 없음 — heartbeat
