@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (시뮬레이션 가동/정지 장비 상태 동기화 버그 수정)
+> **최종 업데이트:** 2026.02.19 (시뮬레이션 전체 가동/정지 기능 + 장비 상태 동기화 버그 수정)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -2120,16 +2120,43 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 
 **핵심**: `stop()` 시 MQTT 연결 해제 **전에** 비활성 상태를 MQTT로 발행하여 Server A 캐시가 즉시 업데이트됨.
 
-### 26.5 검증 결과
+### 26.5 최종 E2E 검증 결과
 
-| 테스트 | 결과 |
-|--------|:----:|
-| 시작 → Server C 84대 활성 | ✅ |
-| 시작 → Server A 캐시 84/84 | ✅ |
-| 정지 → Server C 84대 비활성 | ✅ |
-| 정지 → Server A 캐시 0/84 | ✅ |
-| E2E (JWT 인증 + Server A 프록시) 정지 → 0/84 | ✅ |
-| E2E (JWT 인증 + Server A 프록시) 시작 → 84/84 | ✅ |
+**전체 데이터 경로 검증** (Server C → MQTT → Server A 캐시 → SSE → 프론트엔드):
+
+| # | 테스트 | 결과 |
+|:-:|--------|:----:|
+| 1 | Server C 직접 정지 → 84대 비활성 | ✅ |
+| 2 | Server C 직접 시작 → 84대 활성 | ✅ |
+| 3 | Server A 프록시 정지 (JWT) → 0/84 | ✅ |
+| 4 | Server A 프록시 시작 (JWT) → 84/84 | ✅ |
+| 5 | SSE 스냅샷 devices 84/84 active | ✅ |
+| 6 | 모니터링 API (`/api/equipment`) — 84개 active, 26개 null (Valve/Damper/VFD) | ✅ |
+| 7 | 프론트엔드 제어 페이지 HTTP 200 | ✅ |
+| 8 | 프론트엔드 모니터링 페이지 HTTP 200 | ✅ |
+
+**장비 110개 vs 84개 차이**: Neo4j에는 Valve(22)/Damper(3)/VFD(1) 포함 110개 장비가 있으나, Server C 에뮬레이터는 센서 데이터를 생성하는 84개만 시뮬레이션 대상으로 등록. 나머지 26개는 상위 장비의 포인트로 제어되는 액추에이터/부품이므로 `is_active=null` 정상.
+
+### 26.6 커밋 이력
+
+| 커밋 | 설명 |
+|------|------|
+| `d5ee06d` | feat: 시뮬레이션 전체 가동/정지 제어 기능 추가 (섹션 25) |
+| `122579e` | fix: 즉시 UI 반영 + 버튼 disabled 로직 개선 (섹션 26.3) |
+| `24954ca` | fix: Server C engine start/stop 시 전체 장비 활성/비활성 상태 동기화 (섹션 26.4) |
+
+### 26.7 수정 파일 전체 목록
+
+| 서버 | 파일 | 변경 내용 |
+|------|------|-----------|
+| Server A 백엔드 | `app/config.py` | `SERVER_C_URL` 설정 추가 |
+| Server A 백엔드 | `app/routers/control.py` | 시뮬레이션 프록시 3개 엔드포인트 + MQTT 캐시 전환 호출 |
+| Server A 백엔드 | `app/services/mqtt_service.py` | `set_all_devices_active/inactive()`, `clear_device_cache()` 추가 |
+| Server A 프론트 | `lib/api.ts` | 시뮬레이션 제어 API 함수 3개 추가 |
+| Server A 프론트 | `app/control/page.tsx` | 전체 제어 패널 UI, activeCount 기반 버튼 로직, 즉시 UI 업데이트 |
+| Server A 프론트 | `messages/ko.json` | control 섹션 9개 키 추가 |
+| Server A 프론트 | `messages/en.json` | control 섹션 9개 키 추가 |
+| Server C | `app/engine.py` | `start()`에서 전체 활성화, `stop()`에서 전체 비활성화 + MQTT 발행 |
 
 ---
 
