@@ -175,17 +175,23 @@ async def simulation_start(
             resp.raise_for_status()
             result = resp.json()
 
+        # 시뮬레이션 시작 성공 → MQTT 디바이스 캐시 전체 active 전환
+        status = result.get("status", "started")
+        if status in ("started", "already_running"):
+            updated = mqtt_service.set_all_devices_active()
+            logger.info("시뮬레이션 시작 — 디바이스 캐시 active 전환: %d건", updated)
+
         await audit_service.log_action(
             user_id=current_user.user_id,
             action="simulation_start",
             target_equipment="ALL",
             old_value=None,
-            new_value=json.dumps({"result": result.get("status", "started")}),
+            new_value=json.dumps({"result": status}),
             source="dashboard",
             ip_address=client_ip,
         )
         return SimulationResponse(
-            status=result.get("status", "started"),
+            status=status,
             message=result.get("message", "시뮬레이션이 시작되었습니다."),
         )
     except httpx.ConnectError:
@@ -210,17 +216,23 @@ async def simulation_stop(
             resp.raise_for_status()
             result = resp.json()
 
+        # 시뮬레이션 정지 성공 → MQTT 디바이스 캐시 전체 inactive 전환
+        status = result.get("status", "stopped")
+        if status in ("stopped", "already_stopped"):
+            updated = mqtt_service.set_all_devices_inactive()
+            logger.info("시뮬레이션 정지 — 디바이스 캐시 inactive 전환: %d건", updated)
+
         await audit_service.log_action(
             user_id=current_user.user_id,
             action="simulation_stop",
             target_equipment="ALL",
             old_value=None,
-            new_value=json.dumps({"result": result.get("status", "stopped")}),
+            new_value=json.dumps({"result": status}),
             source="dashboard",
             ip_address=client_ip,
         )
         return SimulationResponse(
-            status=result.get("status", "stopped"),
+            status=status,
             message=result.get("message", "시뮬레이션이 정지되었습니다."),
         )
     except httpx.ConnectError:

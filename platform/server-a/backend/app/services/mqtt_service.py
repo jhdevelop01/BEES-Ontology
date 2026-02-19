@@ -190,6 +190,68 @@ def get_latest_device(device_id: str) -> dict[str, Any] | None:
     return _device_cache.get(device_id)
 
 
+def set_all_devices_inactive() -> int:
+    """
+    모든 디바이스 캐시를 inactive로 전환.
+    시뮬레이션 정지 시 호출하여 stale 데이터를 방지한다.
+    Returns: 업데이트된 디바이스 수
+    """
+    global _event_counter
+    now = time.time()
+    updated = 0
+    for device_id, data in _device_cache.items():
+        if data.get("is_active", False):
+            data["is_active"] = False
+            data["ts"] = now
+            updated += 1
+            # SSE/WS 이벤트 큐에도 반영
+            event = {"type": "device", "data": {**data}}
+            _event_queue.append(event)
+            _schedule_ws_broadcast(event)
+    if updated:
+        with _counter_lock:
+            _event_counter += updated
+        logger.info("디바이스 캐시 전체 inactive 전환: %d건", updated)
+    return updated
+
+
+def set_all_devices_active() -> int:
+    """
+    모든 디바이스 캐시를 active로 전환.
+    시뮬레이션 시작 시 호출하여 즉시 UI에 반영한다.
+    Returns: 업데이트된 디바이스 수
+    """
+    global _event_counter
+    now = time.time()
+    updated = 0
+    for device_id, data in _device_cache.items():
+        if not data.get("is_active", False):
+            data["is_active"] = True
+            data["ts"] = now
+            updated += 1
+            # SSE/WS 이벤트 큐에도 반영
+            event = {"type": "device", "data": {**data}}
+            _event_queue.append(event)
+            _schedule_ws_broadcast(event)
+    if updated:
+        with _counter_lock:
+            _event_counter += updated
+        logger.info("디바이스 캐시 전체 active 전환: %d건", updated)
+    return updated
+
+
+def clear_device_cache() -> int:
+    """
+    디바이스 캐시 전체 초기화.
+    Returns: 삭제된 디바이스 수
+    """
+    count = len(_device_cache)
+    _device_cache.clear()
+    if count:
+        logger.info("디바이스 캐시 초기화: %d건 삭제", count)
+    return count
+
+
 def get_alarm_count() -> int:
     """현재 캐시에 있는 알람 수 반환"""
     return len(_alarm_cache)

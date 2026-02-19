@@ -100,6 +100,7 @@ export default function ControlPage() {
         variant: "success",
       });
       setSimStatus("running");
+      setDeviceList(prev => prev.map(d => ({ ...d, is_active: true, mode: "auto" })));
       // 명령 이력 추가
       setCommandHistory((prev) => [{
         id: Math.random().toString(36).substring(7),
@@ -131,6 +132,7 @@ export default function ControlPage() {
         variant: "success",
       });
       setSimStatus("stopped");
+      setDeviceList(prev => prev.map(d => ({ ...d, is_active: false, mode: "standby" })));
       // 명령 이력 추가
       setCommandHistory((prev) => [{
         id: Math.random().toString(36).substring(7),
@@ -203,6 +205,9 @@ export default function ControlPage() {
   };
 
   const isRunning = simStatus === "running";
+  const activeCount = deviceList.filter(d => d.is_active).length;
+  const allActive = deviceList.length > 0 && activeCount === deviceList.length;
+  const noneActive = activeCount === 0;
 
   return (
     <div className="min-h-screen">
@@ -218,7 +223,7 @@ export default function ControlPage() {
           <CardContent className="py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Activity className={`h-5 w-5 ${isRunning ? "text-green-500" : "text-gray-400"}`} />
+                <Activity className={`h-5 w-5 ${activeCount > 0 ? "text-green-500" : "text-gray-400"}`} />
                 <div>
                   <h3 className="font-semibold text-gray-900">{t("simulationControl")}</h3>
                   <p className="text-sm text-gray-500">
@@ -226,10 +231,10 @@ export default function ControlPage() {
                   </p>
                 </div>
                 <Badge
-                  variant={isRunning ? "success" : simStatus === "stopped" ? "secondary" : "danger"}
+                  variant={activeCount > 0 ? "success" : simStatus === "disconnected" ? "danger" : "secondary"}
                   className="ml-2"
                 >
-                  {isRunning ? t("simRunning") : simStatus === "stopped" ? t("simStopped") : t("simDisconnected")}
+                  {activeCount > 0 ? t("simRunning") : simStatus === "disconnected" ? t("simDisconnected") : t("simStopped")}
                 </Badge>
               </div>
 
@@ -237,11 +242,11 @@ export default function ControlPage() {
                 <Button
                   variant="success"
                   size="lg"
-                  disabled={simLoading || isRunning}
+                  disabled={simLoading || allActive}
                   onClick={handleStartAll}
                   className="min-w-[140px]"
                 >
-                  {simLoading && !isRunning ? (
+                  {simLoading && !allActive ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <PlayCircle className="h-4 w-4 mr-2" />
@@ -251,11 +256,11 @@ export default function ControlPage() {
                 <Button
                   variant="destructive"
                   size="lg"
-                  disabled={simLoading || !isRunning}
+                  disabled={simLoading || noneActive}
                   onClick={handleStopAll}
                   className="min-w-[140px]"
                 >
-                  {simLoading && isRunning ? (
+                  {simLoading && !noneActive ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <StopCircle className="h-4 w-4 mr-2" />
