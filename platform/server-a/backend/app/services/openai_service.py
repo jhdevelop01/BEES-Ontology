@@ -70,11 +70,15 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - 옥상: RF(기계실)
 - URI 형식: `B_B4F`, `B_B1F`, `B_1F`, `B_5F`, `B_RF` 등
 
-## 주요 시스템
-- HVAC: AHU(공조기), Chiller(냉동기), Boiler(보일러), Cooling_Tower(냉각탑)
-- 순환 루프: CHW(냉수), CW(냉각수), HW(온수)
-- 전력: Power_Distribution(전력 분배), Emergency_Power(비상 전력)
-- 위생: Domestic_Water(급수), Sewage(오수), Fire_Protection(소방)
+## 주요 시스템 (Neo4j 시스템 노드)
+- HVAC_System: Chiller_Plant, CC_System, RH_System, UFAD_System, FCU, AHU 등 포함
+- Chiller_Plant: Chiller_1~4 + CHW_Pump + Cooling_Tower (냉수/냉방 루프)
+- CC_System(Chilled_Ceiling): 층별 CC_Panel, Distribution_Header, Three_Way_Valve
+- RH_System(Radiant_Heating): 층별 RH_Panel, Distribution_Header (난방/온수)
+- Electrical_System: 변압기, UPS, 비상발전기, 배전반
+- Lighting_System, Fire_Safety_System, Water_System, BAS 등
+- 에너지 흐름: Chiller → CHW_Pump → AHU/CC_Panel (feeds 관계로 연결)
+- **CHW/CW/HW는 별도 시스템 노드가 아님** — get_system_info에서 '냉수','CHW','냉방' 등으로 검색 가능
 
 ## 응답 규칙
 1. 한국어로 응답
@@ -143,13 +147,13 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_system_info",
-            "description": "특정 시스템의 구성 정보를 조회합니다. (HVAC, 전력, 위생 등)",
+            "description": "특정 시스템의 구성 정보와 하위 장비 목록을 조회합니다. 냉방/냉수/CHW, 난방/온수/HW, HVAC, 전력, 소방, 조명, 급수, BAS 등 키워드로 검색 가능합니다. 에너지 흐름을 알고 싶으면 get_energy_flow를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "system_name": {
                         "type": "string",
-                        "description": "시스템 이름. 예: 'HVAC', 'CHW', 'CW', 'HW', 'Power', 'Fire'",
+                        "description": "시스템 이름 또는 키워드. 예: '냉방', 'CHW', '냉수', 'HVAC', '난방', 'HW', '전력', '소방', '조명', '환기', 'BAS'",
                     }
                 },
                 "required": ["system_name"],
@@ -376,32 +380,86 @@ async def _tool_get_equipment_sensors(equipment_name: str) -> dict[str, Any]:
 
 
 async def _tool_get_system_info(system_name: str) -> dict[str, Any]:
-    """시스템 구성 정보 조회"""
-    cypher = """
-        MATCH (sys)
-        WHERE any(label IN labels(sys) WHERE label CONTAINS 'System')
-          AND (sys.uri CONTAINS $name OR any(label IN labels(sys) WHERE label CONTAINS $name))
-        OPTIONAL MATCH (sys)-[:hasPart]->(part)
-        RETURN sys.uri AS system_uri, labels(sys) AS system_labels,
-               collect(DISTINCT {uri: part.uri, labels: labels(part)}) AS parts
-        LIMIT 20
-    """
-    results = await neo4j_service.run_cypher(cypher, {"name": system_name})
+    """시스템 구성 정보 조회 (이름 매핑 + 다단계 검색)"""
+
+    # 사용자 질의어 → 실제 Neo4j URI/라벨 매핑
+    SYSTEM_ALIASES: dict[str, list[str]] = {
+        "CHW": ["HVAC_System", "Chiller_Plant", "CC_System"],
+        "냉수": ["HVAC_System", "Chiller_Plant", "CC_System"],
+        "냉방": ["HVAC_System", "Chiller_Plant", "CC_System"],
+        "냉동": ["Chiller_Plant", "HVAC_System"],
+        "CW": ["Cooling_Tower", "HVAC_System"],
+        "냉각수": ["Cooling_Tower", "HVAC_System"],
+        "HW": ["RH_System", "Boiler_Plant", "HVAC_System"],
+        "온수": ["RH_System", "Boiler_Plant"],
+        "난방": ["RH_System", "Boiler_Plant"],
+        "HVAC": ["HVAC_System"],
+        "공조": ["HVAC_System", "UFAD_System"],
+        "전력": ["Electrical_System"],
+        "Power": ["Electrical_System"],
+        "소방": ["Fire_Safety_System"],
+        "Fire": ["Fire_Safety_System"],
+        "조명": ["Lighting_System", "DALI_System"],
+        "급수": ["Domestic_Water_System", "Water_System"],
+        "배수": ["Drainage_System", "Wastewater_Treatment"],
+        "환기": ["Parking_Ventilation_System", "Exhaust_Ventilation_System", "NP_System"],
+        "BAS": ["BAS"],
+        "자동화": ["BAS"],
+    }
+
+    # 별칭 매핑으로 검색 키워드 확장
+    search_names = SYSTEM_ALIASES.get(system_name, [])
+    if not search_names:
+        # 정확한 별칭이 없으면 원본 이름으로 검색
+        for alias, targets in SYSTEM_ALIASES.items():
+            if alias.lower() in system_name.lower() or system_name.lower() in alias.lower():
+                search_names = targets
+                break
+
+    if search_names:
+        # 별칭 매핑된 시스템 URI로 직접 검색
+        cypher = """
+            MATCH (sys)
+            WHERE any(name IN $names WHERE sys.uri ENDS WITH ('#' + name))
+            OPTIONAL MATCH (sys)-[:hasPart]->(part)
+            RETURN sys.uri AS system_uri, labels(sys) AS system_labels,
+                   collect(DISTINCT {uri: part.uri, labels: labels(part)}) AS parts
+        """
+        results = await neo4j_service.run_cypher(cypher, {"names": search_names})
+    else:
+        # 폴백: 기존 방식 (System 라벨 + 이름 매칭) + Plant 노드도 포함
+        cypher = """
+            MATCH (sys)
+            WHERE (any(label IN labels(sys) WHERE label CONTAINS 'System' OR label CONTAINS 'Plant')
+              AND (sys.uri CONTAINS $name OR any(label IN labels(sys) WHERE label CONTAINS $name)))
+            OPTIONAL MATCH (sys)-[:hasPart]->(part)
+            RETURN sys.uri AS system_uri, labels(sys) AS system_labels,
+                   collect(DISTINCT {uri: part.uri, labels: labels(part)}) AS parts
+            LIMIT 20
+        """
+        results = await neo4j_service.run_cypher(cypher, {"name": system_name})
+
     systems = []
     for r in results:
         if "error" in r:
             return {"error": r["error"]}
         sys_uri = r.get("system_uri", "")
+        if not sys_uri:
+            continue
         parts = r.get("parts", [])
-        # null 파트 제거
         parts = [p for p in parts if p.get("uri")]
+        sys_labels = [l for l in r.get("system_labels", []) if l != "Resource"]
         systems.append({
             "name": neo4j_service._extract_name(sys_uri),
             "uri": sys_uri,
-            "labels": r.get("system_labels", []),
+            "labels": sys_labels,
+            "parts_count": len(parts),
             "parts": [
-                {"name": neo4j_service._extract_name(p["uri"]), "labels": p.get("labels", [])}
-                for p in parts
+                {
+                    "name": neo4j_service._extract_name(p["uri"]),
+                    "labels": [l for l in p.get("labels", []) if l != "Resource"],
+                }
+                for p in parts[:20]  # 최대 20개 파트만 반환
             ],
         })
     return {"system": system_name, "systems": systems, "count": len(systems)}

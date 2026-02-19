@@ -3162,6 +3162,26 @@ Agent Teams(3명 병렬)로 작업.
 - 지하2층 장비: **7건** (Main_Distribution_Panel, UPS_System, Emergency_Generator 등)
 - React 크래시: 해소, sources 정상 렌더링
 
+### 39.5 시스템 조회 0건 문제 추가 수정
+
+**문제**: "냉방 시스템의 에너지 흐름을 설명해줘" → `get_system_info("CHW")` → 0건
+- Neo4j에 `CHW_System` 노드 없음 — 냉수 루프는 `HVAC_System` → `Chiller_Plant` 하위
+- `get_system_info` 쿼리: `label CONTAINS 'System' AND uri CONTAINS 'CHW'` → 매치 실패
+
+**수정 (`openai_service.py`)**:
+1. **이름 매핑 딕셔너리 추가** (`SYSTEM_ALIASES`): 22개 키워드 → 실제 Neo4j URI 매핑
+   - 냉방/냉수/CHW → `HVAC_System`, `Chiller_Plant`, `CC_System`
+   - 난방/온수/HW → `RH_System`, `Boiler_Plant`
+   - 전력/Power → `Electrical_System` 등
+2. **검색 로직 개선**: 별칭 매핑 우선 → 폴백으로 Plant 노드도 포함
+3. **시스템 프롬프트 업데이트**: Neo4j 실제 시스템 구조 반영
+4. **도구 설명 개선**: GPT가 시스템 구성 vs 에너지 흐름 구분하여 올바른 도구 선택
+
+**검증**:
+- "냉방 시스템 에너지 흐름" → `get_system_info` 4건 + `get_energy_flow` 병행 → 상세 응답
+- "전력 시스템 구성" → 2건 (Electrical_System + Solar_PV_System)
+- "난방 시스템 구성" → 2건 (Boiler_Plant + RH_System)
+
 ---
 
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*
