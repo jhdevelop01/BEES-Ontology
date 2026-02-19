@@ -33,7 +33,7 @@ function LanguageSwitcher() {
         <Globe className="h-3.5 w-3.5" />
         <span>{currentLocale === "ko" ? t("ko") : t("en")}</span>
       </button>
-      <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[100px] hidden group-hover:block z-50">
+      <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-50"><div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[100px]">
         <button
           className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${currentLocale === "ko" ? "font-semibold text-blue-600" : "text-gray-600"}`}
           onClick={() => switchLocale("ko")}
@@ -46,7 +46,7 @@ function LanguageSwitcher() {
         >
           {t("en")}
         </button>
-      </div>
+      </div></div>
     </div>
   );
 }

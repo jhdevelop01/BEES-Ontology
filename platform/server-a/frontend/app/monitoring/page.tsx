@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ import {
   Search,
   Loader2,
 } from "lucide-react";
+import { getDisplayName, formatLocation } from "@/lib/utils";
 
 /**
  * 모니터링 페이지
@@ -123,6 +124,7 @@ const SENSORS = [
 export default function MonitoringPage() {
   const { points, pointHistory, devices, connected } = useSSE(60);
   const t = useTranslations("monitoring");
+  const locale = useLocale();
 
   const [equipment, setEquipment] = useState<EquipmentListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -351,12 +353,13 @@ export default function MonitoringPage() {
                         </div>
                       </div>
                       <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
-                        {eq.name.replace(/_/g, " ")}
+                        {getDisplayName(locale, eq.label, eq.name)}
                       </p>
+                      <p className="text-[10px] text-gray-400 font-mono truncate">{eq.name}</p>
                       {eq.location && (
                         <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
-                          {eq.location.replace(/_/g, " ")}
+                          {formatLocation(locale, eq.location)}
                         </p>
                       )}
                     </CardContent>

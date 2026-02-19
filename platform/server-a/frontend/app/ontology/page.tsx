@@ -30,7 +30,8 @@ import {
   Terminal,
   ArrowLeft,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { getDisplayName, humanizeName } from "@/lib/utils";
 
 /* ── 스타일 상수 ── */
 
@@ -127,6 +128,7 @@ function resolveNodeType(labels: string[]): string {
 
 export default function OntologyPage() {
   const t = useTranslations("ontology");
+  const locale = useLocale();
 
   /* ── 상태 ── */
   const containerRef = useRef<HTMLDivElement>(null);
@@ -232,10 +234,13 @@ export default function OntologyPage() {
       for (const node of graphData!.nodes) {
         const nodeType = resolveNodeType(node.data.labels);
         const isSecondary = node.data.secondary === true;
+        const displayLabel = getDisplayName(locale, node.data.rdfsLabel, node.data.label);
         elements.push({
           group: "nodes",
           data: {
             ...node.data,
+            label: displayLabel,
+            codeName: node.data.label,
             nodeType,
             color: NODE_COLORS[nodeType] || NODE_COLORS.Other,
             shape: NODE_SHAPES[nodeType] || "ellipse",
@@ -542,13 +547,16 @@ export default function OntologyPage() {
 
             const connNodeType = resolveNodeType(conn.target_labels);
             const connName = targetId.split("#").pop() || targetId.split("/").pop() || targetId;
+            const connRdfsLabel = (conn as any).target_rdfs_label || "";
 
             // 새 노드 추가
             newElements.push({
               group: "nodes",
               data: {
                 id: targetId,
-                label: connName,
+                label: getDisplayName(locale, connRdfsLabel, connName),
+                rdfsLabel: connRdfsLabel,
+                codeName: connName,
                 uri: targetId,
                 labels: conn.target_labels,
                 nodeType: connNodeType,
@@ -825,7 +833,8 @@ export default function OntologyPage() {
                     className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 border-b border-gray-50 last:border-0"
                     onClick={() => handleSearchSelect(r)}
                   >
-                    <p className="font-medium text-gray-900">{r.name}</p>
+                    <p className="font-medium text-gray-900">{getDisplayName(locale, r.label, r.name)}</p>
+                    <p className="text-[10px] text-gray-400 font-mono">{r.name}</p>
                     <div className="flex gap-1.5 mt-1">
                       {r.labels.slice(0, 3).map((l) => (
                         <Badge key={l} variant="secondary" className="text-[10px] px-1.5 py-0">
@@ -1117,7 +1126,7 @@ export default function OntologyPage() {
                     {/* 이름 */}
                     <div>
                       <h3 className="text-base font-semibold text-gray-900">
-                        {selectedNode.name}
+                        {getDisplayName(locale, selectedNode.rdfsLabel, selectedNode.name)}
                       </h3>
                       <p className="text-xs text-gray-400 font-mono mt-1 break-all">
                         {selectedNode.uri}

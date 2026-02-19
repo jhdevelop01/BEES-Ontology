@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (TTL↔Neo4j 장비 동기화 + 모니터링 필터 수정)
+> **최종 업데이트:** 2026.02.19 (다국어 장비명 표시 + Neo4j 동기화 완성 + 언어 스위처 버그 수정)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1955,6 +1955,79 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 
 - `eba8fd5` — fix: SSE 이벤트 스톰 수정 — 401개 개별 이벤트를 1개 batch로 통합
 - `62b1e3c` — fix: TTL↔Neo4j 장비 동기화 — 누락 27개 장비 API 노출 (83→110)
+
+---
+
+## 24. 다국어 장비명 표시 + Neo4j 동기화 완성 (2026.02.19)
+
+### 24.1 배경
+
+모니터링/제어/온톨로지 페이지에서 장비/센서 이름이 URI 코드명(예: `AHU_UFAD_1`)으로만 표시됨. Neo4j에는 `n.label` 속성으로 rdfs:label(한국어 이름)이 저장되어 있으나 어떤 쿼리도 이를 조회하지 않았음. 또한 CC_Pump_1의 hasLocation 관계가 Neo4j에 미반영(TTL 644 vs Neo4j 643).
+
+### 24.2 Agent Teams 병렬 작업
+
+4개 리서치 에이전트(neo4j-checker, monitoring-researcher, control-researcher, label-researcher)를 병렬 실행하여 분석 후, 2개 구현 에이전트(백엔드, 프론트엔드)로 병렬 구현.
+
+### 24.3 수정 내용
+
+#### Part A: Neo4j 동기화
+- CC_Pump_1 hasLocation → B_B1F 관계 Cypher로 직접 추가
+- 검증: hasLocation 643 → **644** (TTL과 일치)
+
+#### Part B: 백엔드 (2파일)
+
+| 파일 | 변경 |
+|------|------|
+| `neo4j_service.py` | `_extract_rdfs_label()` 헬퍼 추가 (배열/문자열 양쪽 처리) |
+| `neo4j_service.py` | `get_equipment_list()` — RETURN에 `n.label AS rdfs_label`, 응답에 `"label"` 필드 |
+| `neo4j_service.py` | `search_instances()` — 파라미터명 `$q/$lim` 변경, n.label 리스트 타입 검색, 한국어 검색 지원 |
+| `neo4j_service.py` | `get_graph_data()` — 메인/이웃 노드에 `rdfsLabel` 추가 |
+| `neo4j_service.py` | `get_node_detail()` — 노드 자신 + outgoing/incoming 연결에 `rdfsLabel`/`target_rdfs_label` 추가 |
+| `control.py` | `get_all_device_status()` — MQTT 캐시에 Neo4j 장비 정보(label/type/location) 병합, `bldg:` 접두사 처리 |
+
+#### Part C: 프론트엔드 (6파일)
+
+| 파일 | 변경 |
+|------|------|
+| `lib/utils.ts` | `humanizeName()`, `koreanizeLabel()` (18개 약어→한국어), `getDisplayName()`, `localizeType()` (23개 타입), `formatLocation()` |
+| `lib/api.ts` | 7개 인터페이스에 `label`/`rdfsLabel`/`target_rdfs_label` optional 필드 추가 |
+| `control/page.tsx` | `useLocale` + 장비명 한국어/영어 전환, 타입/위치 한국어화, 코드명 병기 |
+| `monitoring/page.tsx` | 장비 그리드 이름 한국어 + 코드명 병기, 위치 한국어화 |
+| `monitoring/[equipmentId]/page.tsx` | 장비 상세 헤더/위치 한국어화 + 코드명 병기 |
+| `ontology/page.tsx` | 그래프 노드 라벨, 검색 결과, 노드 상세 패널, 더블클릭 확장 노드 — locale 기반 이름 표시 |
+
+#### Part D: 언어 스위처 드롭다운 버그 수정
+
+| 파일 | 변경 |
+|------|------|
+| `components/layout/header.tsx` | 드롭다운 `mt-1` margin → `pt-1` padding 래퍼로 변경 (hover 영역 끊김 해결) |
+
+### 24.4 주요 기술 결정
+
+- **n.label은 Neo4j에서 배열로 저장** → `_extract_rdfs_label()` 헬퍼로 `[0]` 추출
+- **Cypher 파라미터명**: `$query`→`$q`, `$limit`→`$lim` (Python 키워드 충돌 방지)
+- **한국어 검색**: `CASE WHEN n.label IS :: LIST<STRING> THEN n.label ELSE [] END` 패턴
+- **약어 한국어화**: `koreanizeLabel()` — AHU→공조기, UFAD→바닥급기, DOAS→외기조화기 등 18개 매핑
+- **locale 전환**: `useLocale()` from next-intl, 한국어=koreanizeLabel(rdfs:label), 영어=humanizeName(codeName)
+- **MQTT device_id `bldg:` 접두사**: `lookup_key = did.replace("bldg:", "")` 로 Neo4j eq_map 조회
+
+### 24.5 검증 결과
+
+| API 엔드포인트 | label 포함 | 상태 |
+|---------------|:----------:|:----:|
+| `/api/equipment` | `label="UFAD 전용 AHU #1"` | ✅ |
+| `/api/devices/status` | `label="UFAD 전용 AHU #1"` | ✅ |
+| `/api/ontology/search?q=칠러` | `label="칠러#4 운전 상태"` (20건) | ✅ |
+| `/api/ontology/graph` | `rdfsLabel="가압식 바닥공조 시스템"` | ✅ |
+| `/api/ontology/node/bldg:Chiller_1` | `rdfsLabel="칠러 #1"`, connections에 `target_rdfs_label` | ✅ |
+| Neo4j hasLocation count | 644 (TTL 일치) | ✅ |
+
+### 24.6 이전 설비 분석 요청 확인
+
+사용자의 이전 질문 "설비 개수가 각층마다 있어야 하는 것 아닌가" 분석 결과:
+- **Phase 6~7에서 이미 반영 완료** (3-Tier 층별 모델, 지하/저층/옥상 전면 보완)
+- AHU: 5F~15F 각 층 ✅, 냉각천장: 각 층 2개씩 ✅
+- FCU: 2F/3F만 존재, 5F~15F 부재 → UFAD+냉각천장 복합 시스템이므로 설명 가능, 실측 데이터 확보 시 정밀화 (next.md 후순위)
 
 ---
 

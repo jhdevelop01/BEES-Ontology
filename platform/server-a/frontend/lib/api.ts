@@ -141,6 +141,7 @@ export interface DashboardSummary {
 export interface DeviceStatus {
   device_id: string;
   name?: string;
+  label?: string;
   is_active: boolean;
   mode: string;
   type?: string;
@@ -223,6 +224,7 @@ export interface SearchResult {
   uri: string;
   labels: string[];
   name: string;
+  label?: string;
 }
 
 export interface SearchResponse {
@@ -292,6 +294,7 @@ export interface GraphNode {
     labels: string[];
     uri: string;
     secondary?: boolean;
+    rdfsLabel?: string;
   };
 }
 
@@ -359,6 +362,7 @@ export interface NodeConnection {
   direction: "incoming" | "outgoing";
   target_uri: string;
   target_labels: string[];
+  target_rdfs_label?: string;
 }
 
 export interface NodeDetail {
@@ -368,6 +372,7 @@ export interface NodeDetail {
   type: string;
   properties: Record<string, unknown>;
   connections: NodeConnection[];
+  rdfsLabel?: string;
 }
 
 export async function getNodeDetail(nodeId: string): Promise<NodeDetail> {
@@ -420,6 +425,7 @@ export async function getChatStatus(): Promise<ChatStatusResponse> {
 export interface EquipmentListItem {
   id: string;
   name: string;
+  label?: string;
   brick_class: string[];
   location: string | null;
   type: string;
@@ -457,6 +463,7 @@ export interface EquipmentConnection {
 export interface EquipmentDetail {
   id: string;
   name: string;
+  label?: string;
   brick_class: string[];
   location: string | null;
   is_active: boolean | null;

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { useSSE } from "@/lib/sse";
 import { sendControlCommand, getDeviceStatus, type DeviceStatus } from "@/lib/api";
 import { Power, PowerOff, Loader2, Send } from "lucide-react";
+import { getDisplayName, localizeType, formatLocation } from "@/lib/utils";
 
 /**
  * 제어 페이지
@@ -19,6 +20,7 @@ export default function ControlPage() {
   const { devices, connected } = useSSE();
   const { addToast } = useToast();
   const t = useTranslations("control");
+  const locale = useLocale();
   const [deviceList, setDeviceList] = useState<DeviceStatus[]>([]);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [commandHistory, setCommandHistory] = useState<
@@ -148,11 +150,14 @@ export default function ControlPage() {
                 <CardHeader className="flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-lg">
-                      {device.name || device.device_id}
+                      {getDisplayName(locale, device.label, device.device_id)}
                     </CardTitle>
+                    <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                      {device.device_id}
+                    </p>
                     <p className="text-sm text-gray-500 mt-1">
-                      {device.type && `${device.type} `}
-                      {device.location && `| ${device.location}`}
+                      {device.type && `${localizeType(locale, device.type)} `}
+                      {device.location && `| ${formatLocation(locale, device.location)}`}
                     </p>
                   </div>
                   <Badge

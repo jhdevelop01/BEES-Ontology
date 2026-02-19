@@ -2088,6 +2088,7 @@ bldg:CC_Pump_1 a brick:Chilled_Water_Pump ;
     brick:feeds bldg:CC_Distribution_Header_7F ;
     brick:feeds bldg:CC_Distribution_Header_8F ;
     brick:feeds bldg:CC_Distribution_Header_9F ;
+    brick:hasLocation bldg:B_B1F ;
     brick:isPartOf bldg:CC_System ;
     brick:isPartOf bldg:Chiller_Plant .
 

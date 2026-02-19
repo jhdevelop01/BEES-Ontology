@@ -16,6 +16,7 @@ from app.dependencies import CurrentUser, require_role
 from app.models import DeviceStatusResponse
 from app.services import mqtt_service
 from app.services import audit_service
+from app.services import neo4j_service
 
 logger = logging.getLogger(__name__)
 
@@ -122,24 +123,31 @@ async def send_control_command(
 
 @router.get("/devices/status", response_model=DeviceStatusResponse)
 async def get_all_device_status() -> dict[str, Any]:
-    """
-    전체 장비 ON/OFF 상태 (MQTT 캐시에서 조회).
-    캐시가 비어있으면 기본 AHU_5F 상태 반환.
-    """
+    """전체 장비 ON/OFF 상태 (MQTT + Neo4j 정보 병합)."""
     device_cache = mqtt_service.get_device_cache()
-
     if not device_cache:
-        return {
-            "devices": [],
-            "total": 0,
-            "active": 0,
-        }
+        return {"devices": [], "total": 0, "active": 0}
 
-    devices = list(device_cache.values())
+    # Neo4j 장비 정보로 이름/타입/위치/라벨 보강
+    try:
+        equipment = await neo4j_service.get_equipment_list()
+        eq_map = {eq["name"]: eq for eq in equipment}
+    except Exception:
+        eq_map = {}
+
+    devices = []
+    for d in device_cache.values():
+        did = d["device_id"]
+        # MQTT device_id는 "bldg:AHU_5F" 형태, eq_map 키는 "AHU_5F"
+        lookup_key = did.replace("bldg:", "") if did.startswith("bldg:") else did
+        eq = eq_map.get(lookup_key, {})
+        devices.append({
+            **d,
+            "name": did,
+            "label": eq.get("label", ""),
+            "type": eq.get("type", ""),
+            "location": eq.get("location", ""),
+        })
+
     active = sum(1 for d in devices if d.get("is_active", False))
-
-    return {
-        "devices": devices,
-        "total": len(devices),
-        "active": active,
-    }
+    return {"devices": devices, "total": len(devices), "active": active}

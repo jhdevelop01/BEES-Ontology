@@ -30,6 +30,15 @@ def _convert_neo4j_value(val: Any) -> Any:
     return val
 
 
+def _extract_rdfs_label(value) -> str:
+    """n10s가 저장한 rdfs:label 값 추출 (배열 또는 문자열 처리)"""
+    if isinstance(value, list):
+        return value[0] if value else ""
+    if isinstance(value, str):
+        return value
+    return ""
+
+
 async def connect() -> None:
     """Neo4j 드라이버 초기화"""
     global _driver
@@ -109,11 +118,16 @@ async def search_instances(query: str, limit: int = 20) -> list[dict[str, Any]]:
         async with _driver.session() as session:
             result = await session.run("""
                 MATCH (n)
-                WHERE n.uri CONTAINS $query
-                   OR any(label IN labels(n) WHERE label CONTAINS $query)
-                RETURN n.uri AS uri, labels(n) AS labels
-                LIMIT $limit
-            """, query=query, limit=limit)
+                WHERE n.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND (
+                    n.uri CONTAINS $q
+                    OR any(label IN labels(n) WHERE label CONTAINS $q)
+                    OR any(l IN CASE WHEN n.label IS NOT NULL AND n.label IS :: LIST<STRING>
+                           THEN n.label ELSE [] END WHERE l CONTAINS $q)
+                  )
+                RETURN n.uri AS uri, labels(n) AS labels, n.label AS rdfs_label
+                LIMIT $lim
+            """, q=query, lim=limit)
 
             records = [record.data() async for record in result]
 
@@ -124,6 +138,7 @@ async def search_instances(query: str, limit: int = 20) -> list[dict[str, Any]]:
                 {
                     "uri": r["uri"],
                     "labels": r["labels"],
+                    "label": _extract_rdfs_label(r.get("rdfs_label")),
                     "name": r["uri"].split("/")[-1] if r["uri"] else "",
                 }
                 for r in records
@@ -183,7 +198,7 @@ async def get_equipment_list(
                 OPTIONAL MATCH (n)-[:hasLocation]->(loc)
                 WHERE loc.uri STARTS WITH 'https://example.org/gec-b#'
                 RETURN n.uri AS uri, labels(n) AS labels,
-                       loc.uri AS location_uri
+                       loc.uri AS location_uri, n.label AS rdfs_label
                 ORDER BY n.uri
             """)
             records = [record.data() async for record in result]
@@ -209,6 +224,7 @@ async def get_equipment_list(
                 equipment_list.append({
                     "id": brick_id,
                     "name": name,
+                    "label": _extract_rdfs_label(rec.get("rdfs_label")),
                     "brick_class": labels,
                     "location": location,
                     "type": next(
@@ -622,7 +638,7 @@ async def get_graph_data(
                 {full_where}
                 WITH n, size([(n)-[]-() | 1]) AS degree
                 ORDER BY degree DESC
-                RETURN n.uri AS uri, labels(n) AS labels
+                RETURN n.uri AS uri, labels(n) AS labels, n.label AS rdfs_label
                 LIMIT $limit
             """
             result = await session.run(node_query, parameters=params)
@@ -645,6 +661,7 @@ async def get_graph_data(
                     "data": {
                         "id": brick_id,
                         "label": _extract_name(uri),
+                        "rdfsLabel": _extract_rdfs_label(r.get("rdfs_label")),
                         "type": _classify_node_type(lbls),
                         "labels": lbls,
                         "uri": uri,
@@ -663,7 +680,7 @@ async def get_graph_data(
                           ['DatatypeProperty','ObjectProperty','Class','Relationship','Property'])
                       AND NOT m.uri IN $uris
                       AND type(r) IN $rel_types
-                    RETURN DISTINCT m.uri AS uri, labels(m) AS labels
+                    RETURN DISTINCT m.uri AS uri, labels(m) AS labels, m.label AS rdfs_label
                 """
                 result = await session.run(
                     neighbor_query,
@@ -680,6 +697,7 @@ async def get_graph_data(
                             "data": {
                                 "id": brick_id,
                                 "label": _extract_name(uri),
+                                "rdfsLabel": _extract_rdfs_label(r.get("rdfs_label")),
                                 "type": _classify_node_type(lbls),
                                 "labels": lbls,
                                 "uri": uri,
@@ -776,14 +794,14 @@ async def get_node_detail(node_id: str) -> dict[str, Any]:
             # 연결 관계 조회 (나가는 방향)
             out_result = await session.run("""
                 MATCH (n {uri: $uri})-[r]->(m)
-                RETURN type(r) AS rel_type, m.uri AS target_uri, labels(m) AS target_labels
+                RETURN type(r) AS rel_type, m.uri AS target_uri, labels(m) AS target_labels, m.label AS target_rdfs_label
             """, uri=uri)
             out_records = [record.data() async for record in out_result]
 
             # 연결 관계 조회 (들어오는 방향)
             in_result = await session.run("""
                 MATCH (m)-[r]->(n {uri: $uri})
-                RETURN type(r) AS rel_type, m.uri AS source_uri, labels(m) AS source_labels
+                RETURN type(r) AS rel_type, m.uri AS source_uri, labels(m) AS source_labels, m.label AS source_rdfs_label
             """, uri=uri)
             in_records = [record.data() async for record in in_result]
 
@@ -795,6 +813,7 @@ async def get_node_detail(node_id: str) -> dict[str, Any]:
                     "rel": r.get("rel_type", ""),
                     "target_uri": _uri_to_brick_id(target_uri),
                     "target_labels": r.get("target_labels", []),
+                    "target_rdfs_label": _extract_rdfs_label(r.get("target_rdfs_label")),
                 })
 
             for r in in_records:
@@ -804,12 +823,14 @@ async def get_node_detail(node_id: str) -> dict[str, Any]:
                     "rel": r.get("rel_type", ""),
                     "target_uri": _uri_to_brick_id(source_uri),
                     "target_labels": r.get("source_labels", []),
+                    "target_rdfs_label": _extract_rdfs_label(r.get("source_rdfs_label")),
                 })
 
             return {
                 "uri": uri,
                 "brick_id": _uri_to_brick_id(uri),
                 "name": _extract_name(uri),
+                "rdfsLabel": _extract_rdfs_label(props.get("label")),
                 "labels": lbls,
                 "type": _classify_node_type(lbls),
                 "properties": _convert_neo4j_value({k: v for k, v in props.items() if k != "uri"}),

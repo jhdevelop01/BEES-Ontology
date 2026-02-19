@@ -28,7 +28,8 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { getDisplayName, formatLocation } from "@/lib/utils";
 
 /**
  * 장비 상세 모니터링 페이지
@@ -92,6 +93,7 @@ export default function EquipmentDetailPage() {
   const t = useTranslations("monitoring");
   const tc = useTranslations("common");
   const tn = useTranslations("nav");
+  const locale = useLocale();
 
   const { points, pointHistory, devices, connected } = useSSE(60);
 
@@ -241,7 +243,7 @@ export default function EquipmentDetailPage() {
   return (
     <div className="min-h-screen">
       <Header
-        title={`${t("equipmentDetailTitle")} — ${detail.name}`}
+        title={`${t("equipmentDetailTitle")} — ${getDisplayName(locale, detail.label, detail.name)}`}
         description={detail.brick_class.join(", ")}
         connected={connected}
       />
@@ -258,7 +260,7 @@ export default function EquipmentDetailPage() {
           </button>
           <div className="flex-1">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold">{detail.name}</h2>
+              <h2 className="text-xl font-bold">{getDisplayName(locale, detail.label, detail.name)}</h2>
               <Badge variant={isActive ? "success" : "secondary"}>
                 {isActive ? t("running") : isActive === false ? t("stopped") : tc("unknown")}
               </Badge>
@@ -266,6 +268,7 @@ export default function EquipmentDetailPage() {
                 <Badge variant="outline">{deviceState.mode}</Badge>
               )}
             </div>
+            <p className="text-xs text-gray-400 font-mono">{detail.name}</p>
             <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
               <span className="flex items-center gap-1">
                 <Activity className="h-3.5 w-3.5" />
@@ -274,7 +277,7 @@ export default function EquipmentDetailPage() {
               {detail.location && (
                 <span className="flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5" />
-                  {detail.location}
+                  {formatLocation(locale, detail.location)}
                 </span>
               )}
             </div>
