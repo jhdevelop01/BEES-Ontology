@@ -204,6 +204,9 @@ export function useFloorData() {
         }
       }
 
+      // SAT 폴백용 (RAT가 없는 층에서 SAT를 온도 지표로 사용)
+      const satValues: number[] = [];
+
       for (const eq of floorEquips) {
         const prefix = equipPrefixMap.get(eq.id);
         if (!prefix) continue;
@@ -215,10 +218,23 @@ export function useFloorData() {
           if (isNaN(num)) continue;
 
           if (pointId.endsWith("_RAT")) ratValues.push(num);
+          else if (pointId.endsWith("_SAT")) satValues.push(num);
           else if (pointId.endsWith("_RAH")) rahValues.push(num);
           else if (pointId.endsWith("_CO2")) co2Values.push(num);
         }
       }
+
+      // RAT가 없으면 SAT를 온도 지표로 폴백 사용
+      if (ratValues.length === 0 && satValues.length > 0) {
+        ratValues.push(...satValues);
+      }
+
+      // Zone 가상 포인트: Zone_Temp_{floorSuffix}, Zone_Humidity_{floorSuffix}
+      const floorSuffixZone = floor.key.replace(/^B_/, "");
+      const zoneTempPt = mergedPoints[`bldg:Zone_Temp_${floorSuffixZone}`];
+      if (zoneTempPt?.value != null) ratValues.push(Number(zoneTempPt.value));
+      const zoneHumPt = mergedPoints[`bldg:Zone_Humidity_${floorSuffixZone}`];
+      if (zoneHumPt?.value != null) rahValues.push(Number(zoneHumPt.value));
 
       const avg = (arr: number[]) =>
         arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;

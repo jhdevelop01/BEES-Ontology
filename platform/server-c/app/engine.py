@@ -206,6 +206,10 @@ class EmulatorEngine:
                     )
 
         self._neo4j_loaded = True
+
+        # ── 가상 Zone 센서 포인트 추가 (B4F~3F, 1F: 공조 온도 센서 미정의 층) ──
+        self._inject_virtual_zone_points()
+
         result = {
             "mode": "neo4j_full",
             "device_count": len(self._devices),
@@ -221,6 +225,59 @@ class EmulatorEngine:
             f"열역학 모델 {len(self._thermal_models)}개"
         )
         return result
+
+    def _inject_virtual_zone_points(self) -> None:
+        """공조 온도 센서가 없는 층(B4F~3F, 1F)에 가상 Zone 온도/습도 포인트 추가."""
+        # AHU_UFAD가 없는 층 목록 및 용도별 기본 온도
+        _VIRTUAL_FLOORS: list[tuple[str, float]] = [
+            ("B4F", 18.0),   # 주차장 — 외기에 가까움
+            ("B3F", 18.5),   # 주차장
+            ("B2F", 20.0),   # 주차장/기계실
+            ("B1F", 22.0),   # 기계실/MDF
+            ("1F", 22.0),    # 로비
+            ("2F", 23.0),    # 포디움 사무실
+            ("3F", 23.0),    # 포디움 사무실
+        ]
+        count = 0
+        for floor_code, base_temp in _VIRTUAL_FLOORS:
+            # Zone_Temp_{floor}
+            temp_id = f"bldg:Zone_Temp_{floor_code}"
+            if temp_id not in self._profiles:
+                temp_profile = DataProfile(
+                    point_id=temp_id,
+                    brick_class="brick:Zone_Air_Temperature_Sensor",
+                    base_value=base_temp,
+                    noise_range=1.5,
+                    unit="degC",
+                    min_value=10.0,
+                    max_value=35.0,
+                    daily_amplitude=2.0,
+                    equipment_dependency=f"bldg:Floor_{floor_code}",
+                    off_base_value=None,
+                )
+                self._register_profile(temp_profile)
+                count += 1
+
+            # Zone_Humidity_{floor}
+            hum_id = f"bldg:Zone_Humidity_{floor_code}"
+            if hum_id not in self._profiles:
+                hum_profile = DataProfile(
+                    point_id=hum_id,
+                    brick_class="brick:Zone_Air_Humidity_Sensor",
+                    base_value=50.0,
+                    noise_range=5.0,
+                    unit="%RH",
+                    min_value=20.0,
+                    max_value=80.0,
+                    daily_amplitude=3.0,
+                    equipment_dependency=f"bldg:Floor_{floor_code}",
+                    off_base_value=None,
+                )
+                self._register_profile(hum_profile)
+                count += 1
+
+        if count > 0:
+            logger.info(f"가상 Zone 센서 포인트 {count}개 추가 (B4F~3F, 1F)")
 
     def _register_device(self, device_profile: DeviceProfile) -> None:
         """장비를 레지스트리에 등록."""
