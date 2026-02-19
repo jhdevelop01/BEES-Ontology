@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.20 (토폴로지 전체 확장 284대 시뮬레이션, 분류 체계 정비)
+> **최종 업데이트:** 2026.02.20 (온톨로지 Neo4j Bloom 스타일, 토폴로지 건물 단면도 3× 스케일업)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -2848,6 +2848,201 @@ TeamCreate로 `topology-redesign` 팀 구성, 2명 병렬 작업:
 | `/topology` 접속 | 200 OK |
 | page.tsx 축소율 | 896줄 → 329줄 (63% 축소) |
 | 신규 컴포넌트 | 9개, 총 1,249줄 |
+
+## 34. 토폴로지 재설계 — 온톨로지 기반 건물 단면도 (2026.02.20)
+
+### 34.1 배경
+
+섹션 33의 하드코딩 프로세스 체인(4개 시스템: CHW/HW/CW/ELEC) 방식을 **폐기**하고,
+**실제 온톨로지 계층 구조** 기반으로 건물 단면도(Cross-Section) 시각화를 전면 재설계.
+
+**핵심 변경**: 하드코딩 → 온톨로지 데이터 드리븐. 18개 층을 RF(상단)→B4F(하단) 순서로 쌓고,
+각 층에 실제 장비/존을 React Flow로 표현. 층간 feeds 연결을 애니메이션 엣지로 시각화.
+
+### 34.2 데이터 아키텍처 발견
+
+- **장비는 BAS 시스템 하위**에 위치 (층 하위가 아님)
+- 층 노드에는 **존(Zone)과 실(Room)** 만 포함
+- 장비→층 매핑은 **3단계 추론**: (1) 이름 패턴 (2) 기본 할당 (3) feeds 연결 분석
+- 260개 feeds 연결 중 58개가 주요 장비 간 직접 연결
+
+### 34.3 3단계 장비→층 추론
+
+| 단계 | 방법 | 예시 |
+|------|------|------|
+| 1. 이름 패턴 | `CC_Panel_9F_Int` → B_9F | 정규식 `[_-](\d{1,2})F` |
+| 2. 기본 할당 | `Chiller_1` → B_B1F (기계실) | 장비 유형별 고정 매핑 |
+| 3. feeds 추론 | `AHU_UFAD_2` → B_6F | feeds 대상 존의 층을 투표 |
+
+결과: 97개 주요 장비, 18개 층에 배치. __COMMON__ 잔여 1개만.
+
+### 34.4 신규 파일 (`components/topology/`)
+
+| 파일 | 역할 |
+|------|------|
+| `cs-utils.ts` | 층 정렬, 장비→층 추론, 카테고리 분류, 시스템 컬러, 주요 장비 필터 |
+| `cs-nodes.tsx` | 커스텀 노드 3종 (FloorBandNode, CompactEquipCard, ZoneChipNode) |
+| `cs-edges.ts` | 엣지 빌더 (층내 thin + 층간 bold, 시스템 컬러, 애니메이션) |
+| `cs-layout.ts` | 레이아웃 엔진 (2200×dynamic 층 밴드 + 180×72 장비카드 + 90×32 존칩) |
+| `cs-canvas.tsx` | React Flow 캔버스 + SSE 실시간 + MiniMap + 범례 |
+
+### 34.5 React Flow 노드 3종
+
+**1. FloorBandNode** (2200 × 동적 높이)
+- 좌측 3px 컬러바: 옥상=emerald, 사무=cyan, 포디움=amber, 지하=purple
+- 헤더: 층 이름 + 장비·존·실·센서 통계 + 가동률 미니바
+
+**2. CompactEquipCard** (180 × 72px, parentNode로 층 밴드 내 배치)
+- 3행: 이름+RUN/STOP | 카테고리배지+운전률바+% | 센서 수
+- 좌측 2px 시스템 컬러 악센트, 클릭→모니터링 상세
+
+**3. ZoneChipNode** (90 × 32px pill)
+- 층 우측에 배치, 존 축약명 표시
+
+### 34.6 엣지 설계
+
+| 타입 | strokeWidth | animation | 글로우 |
+|------|:-----------:|-----------|--------|
+| 층내 (intra-floor) | 2 | 0.8s dash | 약한 |
+| 층간 (cross-floor) | 3 | 2.5s dash | 강한, 라벨(냉수/온수/냉각수/전력) |
+
+### 34.7 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `app/topology/page.tsx` | FlowCanvas → CsCanvas 교체 |
+| `app/globals.css` | cs-canvas, cross-floor-edge, equip-card-active CSS 추가 |
+
+### 34.8 층별 장비 배치 결과
+
+| 층 | 장비 수 | 주요 장비 |
+|:--:|:------:|----------|
+| RF | 7 | 냉각탑×3, 배기팬×2, 태양광×2 |
+| 5F~15F | 각 3 | CC_Panel×2 + AHU_UFAD×1 |
+| 3F | 2 | FCU×2 |
+| 2F | 2 | FCU + AHU_UFAD_11 |
+| 1F | 15 | 엘리베이터×11, 에어커튼, PAC |
+| B1F | 34 | 칠러×4, 보일러×3, 펌프×14, 변압기, UPS, DOAS×3 |
+| B2F~B4F | 각 2 | 배기팬 + 급기팬 |
+
+### 34.9 검증
+
+| 항목 | 결과 |
+|------|------|
+| `npx next build` | 21페이지 0 errors |
+| Docker 재배포 | `bees-frontend` 정상 가동 |
+| `/topology` HTTP | 200 OK (43KB) |
+| 주요 장비 | 97개 (중복 제거) |
+| 층 배치 | 18개 층 + __COMMON__ 1개 |
+| feeds 엣지 | 260개 connections, 주요 장비 간 58개 |
+
+## 35. 온톨로지 그래프 Neo4j Bloom 스타일 리디자인 (2026.02.20)
+
+### 35.1 배경
+
+온톨로지 페이지의 Cytoscape.js 그래프를 **Neo4j Bloom** 스타일로 전면 리디자인.
+기존 평면 노드 → 다크 fill + 네온 ring border + underlay glow halo 스타일로 변경.
+
+### 35.2 노드 시각 스타일
+
+| 타입 | fill (dark) | ring (neon) | shape |
+|------|-------------|-------------|-------|
+| Building | #0c1a3d | #60a5fa | round-rectangle |
+| Floor | #150f2e | #a78bfa | round-rectangle |
+| Zone | #0d2520 | #34d399 | hexagon |
+| System | #1f1508 | #fbbf24 | diamond |
+| Equipment | #081e28 | #22d3ee | ellipse |
+| Sensor | #071a12 | #4ade80 | tag |
+
+- 노드 크기 42px (Building 52px, Sensor 26px)
+- `border-width: 3.5`, `underlay-opacity: 0.15`, `underlay-padding: 8` (glow halo)
+- Per-type `radial-gradient` inner glow
+- 엣지 7종 시스템별 컬러 + 스타일 (feeds=빨강 dashed, hasPart=파랑 solid, isPointOf=초록 dotted 등)
+- 통계 오버레이 (NODE / EDGE / TYPE 카운트)
+- cose-bilkent 레이아웃: idealEdgeLength 250, nodeRepulsion 18000, gravity 0.08
+
+### 35.3 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `app/ontology/page.tsx` | NODE_3D, NODE_SHAPES, EDGE_STYLES, 스타일 전면 교체, 통계 바 추가 |
+| `app/globals.css` | `.ontology-graph` ambient 배경 (radial-gradient 3중 겹침) |
+| `lib/api.ts` | fetchJSON 타임아웃 15s→45s |
+
+---
+
+## 36. 대시보드 장비 가동률 버그 수정 (2026.02.20)
+
+### 36.1 문제
+
+대시보드 KPI "장비 가동률"이 **284/175 = 162%** 표시.
+- `activeDevices`: MQTT 전체 devices (컴포넌트 포함 284개) 중 is_active 카운트
+- `totalDevices`: equipmentList (category≠component 필터) 기준 175개
+
+### 36.2 수정
+
+`app/page.tsx`의 `activeDevices` 계산을 `equipmentList` 기준으로 변경:
+
+```typescript
+const activeDevices = useMemo(() => {
+  if (equipmentList.length === 0) return summary?.kpi.active_devices || 0;
+  let count = 0;
+  for (const eq of equipmentList) {
+    const dev = devices[`bldg:${eq.id}`] || devices[eq.id];
+    if (dev?.is_active) count++;
+  }
+  return count;
+}, [devices, equipmentList, summary]);
+```
+
+---
+
+## 37. 토폴로지 장비 카드 아이콘 + 3× 스케일업 (2026.02.20)
+
+### 37.1 장비 타입별 아이콘
+
+lucide-react 아이콘 19개 매핑 규칙으로 장비명/라벨 기반 자동 매핑:
+
+| 장비 | 아이콘 | 장비 | 아이콘 |
+|------|--------|------|--------|
+| Chiller | Snowflake | Transformer | Zap |
+| Boiler | Flame | UPS | BatteryCharging |
+| AHU/DOAS | Wind | Solar/PV | Sun |
+| FCU/Fan | Fan | Elevator | ArrowUpDown |
+| Cooling Tower | Droplets | CC_Panel | Cpu |
+| Pump | Gauge | Heat Exchanger | ArrowLeftRight |
+| VAV/Damper | SlidersHorizontal | 기타 | Box |
+
+카드 좌측에 56×56 아이콘 박스 (시스템 컬러 배경 + Active 시 glow).
+
+### 37.2 가로 배치 제한
+
+`MAX_EQUIP_PER_ROW = 5` — 카테고리별 한 줄 최대 5개, 초과 시 다음 줄 자동 배치.
+
+### 37.3 3× 스케일업 (원본 대비)
+
+fitView가 18개 층 전체를 화면에 우겨넣어 줌아웃되는 문제 해결.
+fitView 제거 → **고정 줌 0.7**로 시작, 마우스 스크롤/드래그로 건물 탐색.
+
+| 항목 | 원본 | 최종 | 배율 |
+|------|------|------|:----:|
+| 장비 카드 | 180×72 | 380×140 | 2.1× |
+| 아이콘 박스 | — | 56×56 | 신규 |
+| 카드 이름 폰트 | 11px | 18px | 1.6× |
+| 층 이름 폰트 | 18px | 36px | 2.0× |
+| 존 칩 | 90×32 | 180×64 | 2.0× |
+| 층 밴드 너비 | 1300 | 2800 | 2.2× |
+| 층 헤더 영역 | 110 | 260 | 2.4× |
+| 프로그레스 바 높이 | 5px | 8px | 1.6× |
+| 기본 줌 | fitView 0.3~ | 고정 0.7 | 2.3× |
+
+### 37.4 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `cs-nodes.tsx` | lucide-react 아이콘 매핑, 카드/존칩/층 헤더 크기 3× |
+| `cs-layout.ts` | 모든 치수 3×, MAX_EQUIP_PER_ROW=5 |
+| `cs-canvas.tsx` | fitView 제거 → setViewport(zoom: 0.7) |
 
 ---
 

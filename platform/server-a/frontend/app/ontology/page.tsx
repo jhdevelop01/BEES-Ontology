@@ -33,35 +33,40 @@ import {
 import { useTranslations, useLocale } from "next-intl";
 import { getDisplayName, humanizeName } from "@/lib/utils";
 
-/* ── 스타일 상수 ── */
+/* ── 스타일 상수 (Neo4j Bloom style) ── */
 
-const NODE_COLORS: Record<string, string> = {
-  Building: "#3b82f6",
-  Floor: "#8b5cf6",
-  Zone: "#10b981",
-  System: "#f59e0b",
-  Equipment: "#ef4444",
-  Sensor: "#06b6d4",
-  Other: "#6b7280",
+const NODE_3D: Record<string, { fill: string; inner: string; ring: string }> = {
+  Building:  { fill: "#0c1a3d", inner: "#1a3568", ring: "#60a5fa" },
+  Floor:     { fill: "#150f2e", inner: "#2d1f5c", ring: "#a78bfa" },
+  Zone:      { fill: "#0d2520", inner: "#16493c", ring: "#34d399" },
+  System:    { fill: "#1f1508", inner: "#3d2d12", ring: "#fbbf24" },
+  Equipment: { fill: "#081e28", inner: "#0f3a50", ring: "#22d3ee" },
+  Sensor:    { fill: "#071a12", inner: "#103525", ring: "#4ade80" },
+  Other:     { fill: "#111827", inner: "#1e293b", ring: "#94a3b8" },
 };
+
+/** Flat lookup — ring color (for legend / badge) */
+const NODE_COLORS: Record<string, string> = Object.fromEntries(
+  Object.entries(NODE_3D).map(([k, v]) => [k, v.ring]),
+);
 
 const NODE_SHAPES: Record<string, string> = {
   Building: "round-rectangle",
-  Floor: "rectangle",
-  Zone: "ellipse",
+  Floor: "round-rectangle",
+  Zone: "hexagon",
   System: "diamond",
-  Equipment: "hexagon",
-  Sensor: "triangle",
+  Equipment: "ellipse",
+  Sensor: "tag",
 };
 
 const EDGE_STYLES: Record<string, { color: string; style: string }> = {
-  feeds: { color: "#ef4444", style: "solid" },
-  isFedBy: { color: "#f97316", style: "solid" },
-  isPartOf: { color: "#8b5cf6", style: "dashed" },
-  hasPart: { color: "#a78bfa", style: "dashed" },
-  hasLocation: { color: "#10b981", style: "dotted" },
-  isPointOf: { color: "#06b6d4", style: "dotted" },
-  hasPoint: { color: "#0891b2", style: "dotted" },
+  feeds:       { color: "#f87171", style: "dashed" },
+  isFedBy:     { color: "#fb923c", style: "solid" },
+  isPartOf:    { color: "#818cf8", style: "solid" },
+  hasPart:     { color: "#60a5fa", style: "solid" },
+  hasLocation: { color: "#e2e8f0", style: "solid" },
+  isPointOf:   { color: "#34d399", style: "dotted" },
+  hasPoint:    { color: "#22d3ee", style: "dotted" },
 };
 
 const TYPE_FILTERS = [
@@ -235,6 +240,7 @@ export default function OntologyPage() {
         const nodeType = resolveNodeType(node.data.labels);
         const isSecondary = node.data.secondary === true;
         const displayLabel = getDisplayName(locale, node.data.rdfsLabel, node.data.label);
+        const c = NODE_3D[nodeType] || NODE_3D.Other;
         elements.push({
           group: "nodes",
           data: {
@@ -242,7 +248,9 @@ export default function OntologyPage() {
             label: displayLabel,
             codeName: node.data.label,
             nodeType,
-            color: NODE_COLORS[nodeType] || NODE_COLORS.Other,
+            color: c.ring,
+            fillColor: c.fill,
+            ringColor: c.ring,
             shape: NODE_SHAPES[nodeType] || "ellipse",
             secondary: isSecondary,
           },
@@ -264,119 +272,184 @@ export default function OntologyPage() {
 
       setLoadingStage("layout");
 
+      /* Per-type inner-glow gradient selectors */
+      const typeInnerGlow = Object.entries(NODE_3D).map(([type, c]) => ({
+        selector: `node[nodeType="${type}"]`,
+        style: {
+          "background-fill": "radial-gradient",
+          "background-gradient-stop-colors": `${c.inner} ${c.fill}`,
+          "background-gradient-stop-positions": "0% 100%",
+        } as any,
+      }));
+
       const cy = cytoscape({
         container: containerRef.current!,
         elements,
         style: [
+          /* ── Base node: dark fill + neon ring + glow halo ── */
           {
             selector: "node",
             style: {
               label: "data(label)",
-              "background-color": "data(color)",
               shape: "data(shape)",
-              width: 30,
-              height: 30,
+              width: 42,
+              height: 42,
+              "background-color": "data(fillColor)",
+              "background-opacity": 1,
+              "border-width": 3.5,
+              "border-color": "data(ringColor)",
+              "border-opacity": 1,
+              /* Glow halo */
+              "underlay-color": "data(ringColor)",
+              "underlay-opacity": 0.15,
+              "underlay-padding": 8,
+              /* Text */
               "font-size": "10px",
               "text-valign": "bottom",
               "text-halign": "center",
-              "text-margin-y": 5,
-              color: "#94a3b8",
-              "text-max-width": "80px",
+              "text-margin-y": 8,
+              color: "#cbd5e1",
+              "text-outline-color": "#020617",
+              "text-outline-width": 2.5,
+              "text-max-width": "90px",
               "text-wrap": "ellipsis",
-              "border-width": 2,
-              "border-color": "data(color)",
-              "border-opacity": 0.3,
-              "background-opacity": 0.85,
+              "overlay-padding": 4,
+              "overlay-opacity": 0,
             } as any,
           },
+          /* Inner glow per type */
+          ...typeInnerGlow,
+          /* Building — large */
+          {
+            selector: 'node[nodeType="Building"]',
+            style: { width: 52, height: 52, "border-width": 4, "font-size": "11px" } as any,
+          },
+          /* Sensor — small */
+          {
+            selector: 'node[nodeType="Sensor"]',
+            style: {
+              width: 26, height: 26, "border-width": 2.5,
+              "font-size": "8px", "underlay-padding": 5,
+            } as any,
+          },
+          /* ── Selected: bright pulse ── */
           {
             selector: "node:selected",
             style: {
-              "border-width": 4,
-              "border-color": "#1d4ed8",
+              "border-width": 4.5,
               "border-opacity": 1,
-              width: 40,
-              height: 40,
-            },
+              width: 52,
+              height: 52,
+              "underlay-opacity": 0.3,
+              "underlay-padding": 14,
+              "overlay-color": "data(ringColor)",
+              "overlay-opacity": 0.1,
+              "overlay-padding": 16,
+            } as any,
           },
+          /* ── Edges: visible + glow ── */
           {
             selector: "edge",
             style: {
-              width: 1.5,
+              width: 2,
               "line-color": "data(lineColor)",
               "line-style": "data(lineStyle)",
               "target-arrow-color": "data(lineColor)",
               "target-arrow-shape": "triangle",
               "curve-style": "bezier",
-              "arrow-scale": 0.8,
-              opacity: 0.6,
+              "arrow-scale": 0.7,
+              opacity: 0.75,
+              "underlay-color": "data(lineColor)",
+              "underlay-opacity": 0.06,
+              "underlay-padding": 2,
             } as any,
           },
           {
             selector: "edge:selected",
             style: {
-              width: 3,
+              width: 3.5,
               opacity: 1,
               label: "data(label)",
-              "font-size": "9px",
+              "font-size": "10px",
+              color: "#e2e8f0",
+              "text-outline-color": "#020617",
+              "text-outline-width": 2,
               "text-background-color": "#0f172a",
               "text-background-opacity": 0.9,
-              "text-background-padding": "2px",
-            },
+              "text-background-padding": "4px",
+              "underlay-opacity": 0.12,
+              "underlay-padding": 4,
+            } as any,
           },
-          // 이웃(secondary) 노드 — 작고 흐리게
+          /* ── Secondary nodes — smaller ── */
           {
             selector: "node[?secondary]",
             style: {
-              width: 18,
-              height: 18,
-              "background-opacity": 0.4,
-              "border-opacity": 0.15,
+              width: 24,
+              height: 24,
+              "background-opacity": 0.7,
+              "border-width": 2.5,
+              "border-opacity": 0.6,
+              "underlay-opacity": 0.06,
+              "underlay-padding": 4,
               "font-size": "8px",
-              "text-opacity": 0.45,
+              "text-opacity": 0.5,
             } as any,
           },
-          // 하이라이트 스타일
+          /* ── Highlight: intense glow ── */
           {
             selector: "node.highlighted",
             style: {
               "border-width": 4,
-              "border-color": "#1d4ed8",
               "border-opacity": 1,
               "background-opacity": 1,
+              "underlay-opacity": 0.3,
+              "underlay-padding": 12,
+              width: 50,
+              height: 50,
               "z-index": 10,
-            },
+              "font-size": "11px",
+              color: "#f1f5f9",
+            } as any,
           },
           {
             selector: "edge.highlighted",
             style: {
-              width: 3,
+              width: 3.5,
               opacity: 1,
+              "underlay-opacity": 0.12,
+              "underlay-padding": 4,
               "z-index": 10,
             } as any,
           },
+          /* ── Dimmed ── */
           {
             selector: "node.dimmed",
             style: {
-              "background-opacity": 0.15,
-              "border-opacity": 0.1,
-              "text-opacity": 0.15,
+              "background-opacity": 0.08,
+              "border-opacity": 0.08,
+              "underlay-opacity": 0,
+              "text-opacity": 0.06,
             } as any,
           },
           {
             selector: "edge.dimmed",
             style: {
-              opacity: 0.08,
+              opacity: 0.04,
+              "underlay-opacity": 0,
             } as any,
           },
-          // 확장된 새 노드 표시 (pulse 효과)
+          /* ── Newly-added: amber dashed glow ── */
           {
             selector: "node.newly-added",
             style: {
-              "border-width": 3,
-              "border-color": "#f59e0b",
+              "border-width": 4,
+              "border-color": "#fbbf24",
               "border-style": "dashed",
-            },
+              "underlay-color": "#f59e0b",
+              "underlay-opacity": 0.2,
+              "underlay-padding": 10,
+            } as any,
           },
         ],
         layout: {
@@ -385,9 +458,9 @@ export default function OntologyPage() {
           nodeDimensionsIncludeLabels: true,
           ...(layoutName === "cose-bilkent"
             ? {
-                idealEdgeLength: elements.length > 2000 ? 60 : elements.length > 600 ? 80 : 120,
-                nodeRepulsion: elements.length > 2000 ? 3000 : elements.length > 600 ? 4500 : 6000,
-                gravity: elements.length > 2000 ? 0.6 : elements.length > 600 ? 0.4 : 0.25,
+                idealEdgeLength: elements.length > 2000 ? 120 : elements.length > 600 ? 180 : 250,
+                nodeRepulsion: elements.length > 2000 ? 8000 : elements.length > 600 ? 12000 : 18000,
+                gravity: elements.length > 2000 ? 0.25 : elements.length > 600 ? 0.15 : 0.08,
                 numIter: elements.length > 2000 ? 500 : elements.length > 600 ? 800 : 2500,
                 tile: true,
               }
@@ -608,9 +681,9 @@ export default function OntologyPage() {
               animationDuration: 500,
               fit: false,
               nodeDimensionsIncludeLabels: true,
-              idealEdgeLength: 120,
-              nodeRepulsion: 6000,
-              gravity: 0.25,
+              idealEdgeLength: 250,
+              nodeRepulsion: 18000,
+              gravity: 0.08,
               numIter: 1000,
             };
             cy.layout(layoutOpts).run();
@@ -701,9 +774,9 @@ export default function OntologyPage() {
       nodeDimensionsIncludeLabels: true,
       ...(layoutName === "cose-bilkent"
         ? {
-            idealEdgeLength: cy.nodes().length > 1000 ? 60 : cy.nodes().length > 300 ? 80 : 120,
-            nodeRepulsion: cy.nodes().length > 1000 ? 3000 : cy.nodes().length > 300 ? 4500 : 6000,
-            gravity: cy.nodes().length > 1000 ? 0.6 : cy.nodes().length > 300 ? 0.4 : 0.25,
+            idealEdgeLength: cy.nodes().length > 1000 ? 120 : cy.nodes().length > 300 ? 180 : 250,
+            nodeRepulsion: cy.nodes().length > 1000 ? 8000 : cy.nodes().length > 300 ? 12000 : 18000,
+            gravity: cy.nodes().length > 1000 ? 0.25 : cy.nodes().length > 300 ? 0.15 : 0.08,
             numIter: cy.nodes().length > 1000 ? 500 : cy.nodes().length > 300 ? 800 : 2500,
             tile: true,
           }
@@ -1053,7 +1126,35 @@ export default function OntologyPage() {
                   </div>
                 </div>
               )}
-              <div ref={containerRef} className="w-full h-full" />
+              <div ref={containerRef} className="w-full h-full ontology-graph" />
+
+              {/* 통계 바 (Neo4j Bloom 스타일) */}
+              {graphData && !loading && (
+                <div className="absolute top-0 left-0 right-0 flex items-center h-10 px-4 bg-slate-950/70 backdrop-blur-sm border-b border-white/[0.06] z-[5]">
+                  <div className="flex items-center gap-8 text-xs font-mono">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">&#9672;</span>
+                      <span className="text-white font-semibold">{graphData.stats.node_count}</span>
+                      <span className="text-slate-500 uppercase text-[10px] tracking-wider">Nodes</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">&rarr;</span>
+                      <span className="text-white font-semibold">{graphData.stats.edge_count}</span>
+                      <span className="text-slate-500 uppercase text-[10px] tracking-wider">Rels</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">&#9674;</span>
+                      <span className="text-white font-semibold">{Object.keys(NODE_3D).length}</span>
+                      <span className="text-slate-500 uppercase text-[10px] tracking-wider">Types</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-500">&harr;</span>
+                      <span className="text-white font-semibold">{Object.keys(EDGE_STYLES).length}</span>
+                      <span className="text-slate-500 uppercase text-[10px] tracking-wider">Rel Types</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* 이웃 확장 로딩 */}
               {expanding && (
@@ -1063,37 +1164,42 @@ export default function OntologyPage() {
                 </div>
               )}
 
-              {/* 범례 — 모바일에서 숨김 */}
-              <div className="hidden md:block absolute bottom-4 left-4 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg p-3 shadow-sm">
-                <p className="text-xs font-semibold text-slate-300 mb-2">
+              {/* 범례 */}
+              <div className="hidden md:block absolute bottom-4 left-4 bg-slate-950/80 backdrop-blur-xl border border-white/[0.08] rounded-xl p-3.5 shadow-2xl">
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                   {t("nodeType")}
                 </p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-                  {Object.entries(NODE_COLORS).map(([type, color]) => (
-                    <div key={type} className="flex items-center gap-1.5">
+                <div className="grid grid-cols-2 gap-x-5 gap-y-2">
+                  {Object.entries(NODE_3D).map(([type, c]) => (
+                    <div key={type} className="flex items-center gap-2">
                       <div
-                        className="w-3 h-3 rounded-sm"
-                        style={{ backgroundColor: color }}
+                        className="w-4 h-4 rounded-full flex-shrink-0"
+                        style={{
+                          background: `radial-gradient(circle at 40% 35%, ${c.inner}, ${c.fill})`,
+                          border: `2.5px solid ${c.ring}`,
+                          boxShadow: `0 0 8px ${c.ring}70, 0 0 3px ${c.ring}40`,
+                        }}
                       />
-                      <span className="text-[10px] text-slate-300">{type}</span>
+                      <span className="text-[11px] text-slate-300">{type}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs font-semibold text-slate-300 mt-2 mb-1">
+                <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider mt-3 mb-1.5">
                   {t("relationship")}
                 </p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+                <div className="grid grid-cols-2 gap-x-5 gap-y-2">
                   {Object.entries(EDGE_STYLES).map(([rel, style]) => (
-                    <div key={rel} className="flex items-center gap-1.5">
-                      <div className="w-5 h-0 border-t-2" style={{
+                    <div key={rel} className="flex items-center gap-2">
+                      <div className="w-6 h-0 border-t-2 flex-shrink-0" style={{
                         borderColor: style.color,
                         borderStyle: style.style === "dotted" ? "dotted" : style.style === "dashed" ? "dashed" : "solid",
+                        filter: `drop-shadow(0 0 4px ${style.color}90)`,
                       }} />
-                      <span className="text-[10px] text-slate-300">{rel}</span>
+                      <span className="text-[11px] text-slate-300">{rel}</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 pt-2 border-t border-white/5">
+                <div className="mt-2.5 pt-2 border-t border-white/[0.06]">
                   <p className="text-[9px] text-slate-500">
                     {t("clickHint")}
                   </p>

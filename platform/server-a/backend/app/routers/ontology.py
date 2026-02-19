@@ -88,3 +88,16 @@ async def get_topology_tree() -> dict[str, Any]:
         "tree": tree,
         "source": "neo4j",
     }
+
+
+@router.get("/topology/connections")
+async def get_topology_connections() -> dict[str, Any]:
+    """
+    건물 내 장비 간 연결 관계(feeds) 조회.
+    토폴로지 플로우 다이어그램 엣지용.
+    """
+    connections = await neo4j_service.get_topology_connections()
+    return {
+        "connections": connections,
+        "count": len(connections),
+    }

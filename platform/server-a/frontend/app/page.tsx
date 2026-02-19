@@ -85,13 +85,18 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // KPI 계산
-  const activeDevices = useMemo(() => {
-    const mqttActive = Object.values(devices).filter((d) => d.is_active).length;
-    return mqttActive || summary?.kpi.active_devices || 0;
-  }, [devices, summary]);
-
+  // KPI 계산 — equipmentList 기준으로 active 카운트 (component 제외된 목록)
   const totalDevices = equipmentList.length || summary?.kpi.total_devices || 201;
+
+  const activeDevices = useMemo(() => {
+    if (equipmentList.length === 0) return summary?.kpi.active_devices || 0;
+    let count = 0;
+    for (const eq of equipmentList) {
+      const dev = devices[`bldg:${eq.id}`] || devices[eq.id];
+      if (dev?.is_active) count++;
+    }
+    return count;
+  }, [devices, equipmentList, summary]);
   const simStatus = summary?.kpi.simulation_status || (connected ? "running" : "stopped");
 
   return (

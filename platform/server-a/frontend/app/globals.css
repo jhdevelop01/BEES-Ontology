@@ -98,6 +98,15 @@ body {
   text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
 }
 
+/* ── Ontology Graph — Neo4j Bloom Ambient ── */
+.ontology-graph {
+  background:
+    radial-gradient(ellipse at 30% 30%, rgba(30, 64, 175, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 65%, rgba(109, 40, 217, 0.06) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 50%, rgba(8, 145, 178, 0.03) 0%, transparent 60%),
+    #020617;
+}
+
 /* 토폴로지 플로우 커넥터 유틸리티 */
 .flow-line-h {
   width: 24px;
@@ -130,6 +139,22 @@ body {
   margin: 0 auto;
 }
 
+/* 건물 개요 — 시스템 배관 접속점 펄스 */
+@keyframes junction-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+}
+
+.building-junction-dot {
+  animation: junction-pulse 3s ease-in-out infinite;
+}
+
 .flow-arrow-right {
   width: 0;
   height: 0;
@@ -138,3 +163,122 @@ body {
   border-left: 7px solid rgba(34, 211, 238, 0.4);
   flex-shrink: 0;
 }
+
+/* React Flow — 다크 테마 + 역동적 흐름 애니메이션 */
+.topology-flow-canvas .react-flow__node {
+  cursor: default;
+}
+
+.topology-flow-canvas .react-flow__node.react-flow__node-equipmentCard {
+  cursor: pointer;
+}
+
+/* Edge glow + fast flow animation */
+.topology-flow-canvas .react-flow__edge.animated path {
+  stroke-dasharray: 8 4;
+  animation: flow-dash 0.8s linear infinite;
+}
+
+@keyframes flow-dash {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+/* System-specific edge glow */
+.topology-flow-canvas .flow-edge-chw path {
+  filter: drop-shadow(0 0 6px rgb(34, 211, 238));
+}
+
+.topology-flow-canvas .flow-edge-hw path {
+  filter: drop-shadow(0 0 6px rgb(251, 113, 133));
+}
+
+.topology-flow-canvas .flow-edge-cw path {
+  filter: drop-shadow(0 0 6px rgb(129, 140, 248));
+}
+
+.topology-flow-canvas .flow-edge-elec path {
+  filter: drop-shadow(0 0 6px rgb(251, 191, 36));
+}
+
+.topology-flow-canvas .flow-edge-default path {
+  filter: drop-shadow(0 0 4px rgb(148, 163, 184));
+}
+
+/* Edge label styling */
+.topology-flow-canvas .react-flow__edge-text {
+  pointer-events: none;
+}
+
+.topology-flow-canvas .react-flow__minimap {
+  border-radius: 8px;
+}
+
+.topology-flow-canvas .react-flow__attribution {
+  display: none;
+}
+
+/* Pulse glow on edges for active flow feel */
+.topology-flow-canvas .react-flow__edge.animated {
+  animation: edge-glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes edge-glow-pulse {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+ * Cross-Section Canvas — Building Cross-Section View
+ * ═══════════════════════════════════════════════════ */
+
+.cs-canvas .react-flow__node { cursor: default; }
+.cs-canvas .react-flow__node.react-flow__node-compactEquipCard { cursor: pointer; }
+
+/* Cross-floor edge animation (slower, grander) */
+.cs-canvas .cross-floor-edge.animated path {
+  stroke-dasharray: 16 8;
+  animation: cross-flow-dash 2.5s linear infinite;
+}
+
+@keyframes cross-flow-dash {
+  to { stroke-dashoffset: -24; }
+}
+
+/* Intra-floor edge (faster) */
+.cs-canvas .intra-floor-edge.animated path {
+  stroke-dasharray: 8 4;
+  animation: flow-dash 0.8s linear infinite;
+}
+
+/* Active equipment pulsing glow */
+@keyframes equip-active-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(52,211,153,0.2); }
+  50% { box-shadow: 0 0 16px rgba(52,211,153,0.4); }
+}
+
+.equip-card-active {
+  animation: equip-active-pulse 3s ease-in-out infinite;
+}
+
+/* System-specific edge glow (cross-section) */
+.cs-canvas .flow-edge-chw path { filter: drop-shadow(0 0 6px rgb(34, 211, 238)); }
+.cs-canvas .flow-edge-hw path { filter: drop-shadow(0 0 6px rgb(251, 113, 133)); }
+.cs-canvas .flow-edge-cw path { filter: drop-shadow(0 0 6px rgb(129, 140, 248)); }
+.cs-canvas .flow-edge-elec path { filter: drop-shadow(0 0 6px rgb(251, 191, 36)); }
+.cs-canvas .flow-edge-air path { filter: drop-shadow(0 0 4px rgb(148, 163, 184)); }
+
+/* Cross-floor edge extra glow */
+.cs-canvas .cross-floor-edge path {
+  filter: drop-shadow(0 0 10px var(--edge-glow, rgba(34,211,238,0.5)));
+}
+
+/* Edge label + minimap + attribution */
+.cs-canvas .react-flow__edge-text { pointer-events: none; }
+.cs-canvas .react-flow__minimap { border-radius: 8px; }
+.cs-canvas .react-flow__attribution { display: none; }

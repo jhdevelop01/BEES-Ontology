@@ -125,6 +125,32 @@ async def get_topology_tree() -> list[dict[str, Any]]:
         return _get_fallback_topology()
 
 
+async def get_topology_connections() -> list[dict[str, str]]:
+    """
+    건물 내 장비 간 feeds/isFedBy 연결 관계 조회.
+    토폴로지 플로우 다이어그램의 엣지 데이터로 사용.
+    """
+    if not _driver:
+        return []
+
+    try:
+        async with _driver.session() as session:
+            result = await session.run("""
+                MATCH (a)-[r:feeds]->(b)
+                WHERE a.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND b.uri STARTS WITH 'https://example.org/gec-b#'
+                RETURN
+                    replace(a.uri, 'https://example.org/gec-b#', '') AS source,
+                    type(r) AS rel_type,
+                    replace(b.uri, 'https://example.org/gec-b#', '') AS target
+            """)
+            records = [record.data() async for record in result]
+            return records
+    except Exception as e:
+        logger.warning("토폴로지 연결 조회 실패: %s", e)
+        return []
+
+
 async def search_instances(query: str, limit: int = 20) -> list[dict[str, Any]]:
     """
     Brick 인스턴스 검색.

@@ -31,7 +31,7 @@ async function fetchJSON<T = unknown>(
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 15000);
+  const timeoutId = setTimeout(() => controller.abort(), 45000);
 
   let res: Response;
   try {
@@ -43,7 +43,7 @@ async function fetchJSON<T = unknown>(
   } catch (err: unknown) {
     clearTimeout(timeoutId);
     if (err instanceof DOMException && err.name === "AbortError") {
-      throw new Error("요청 시간 초과 (15초)");
+      throw new Error("요청 시간 초과 (45초)");
     }
     throw err;
   } finally {
@@ -226,6 +226,21 @@ export interface TopologyResponse {
 
 export async function getTopologyTree(): Promise<TopologyResponse> {
   return fetchJSON<TopologyResponse>("/api/topology/tree");
+}
+
+export interface TopologyConnection {
+  source: string;
+  rel_type: string;
+  target: string;
+}
+
+export interface TopologyConnectionsResponse {
+  connections: TopologyConnection[];
+  count: number;
+}
+
+export async function getTopologyConnections(): Promise<TopologyConnectionsResponse> {
+  return fetchJSON<TopologyConnectionsResponse>("/api/topology/connections");
 }
 
 // ─── 온톨로지 검색 ───
