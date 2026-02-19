@@ -3046,4 +3046,81 @@ fitView 제거 → **고정 줌 0.7**로 시작, 마우스 스크롤/드래그�
 
 ---
 
+## 38. Phase 5.1 — 3D 리얼리티 UI 리디자인 (2026.02.20)
+
+토폴로지 페이지의 3D sci-fi 스타일을 대시보드, 모니터링, 제어 페이지에 확장 적용.
+Agent Teams(3명 병렬)로 작업.
+
+### 38.1 토폴로지 레이아웃 조정
+
+| 항목 | 변경 전 | 변경 후 | 사유 |
+|------|---------|---------|------|
+| `MAX_EQUIP_PER_ROW` | 5 | 4 | 카드 가독성 향상 |
+| `FLOOR_BAND_W` | 2800 | 2200 | 카드↔존칩 간격 균형 (716px→116px) |
+| 뷰포트 Y 오프셋 | 20 | 60 | SYSTEMS 범례와 콘텐츠 겹침 해소 |
+| SYSTEMS 범례 | text-[9px], w-2 도트 | text-xs, w-2.5 도트 | 가시성 향상 |
+
+### 38.2 토폴로지 3D 원형 아이콘
+
+장비 카드 아이콘을 평면 사각형에서 3D sci-fi 원형 컨테이너로 리디자인:
+
+- **외부 회전 링**: `conic-gradient` 시스템 색상, 활성 시 `spin 6s linear infinite`
+- **다크 스페이서**: `rgba(8,12,24,0.95)` gap ring
+- **미들 링 보더**: `1.5px solid ${color}35`
+- **내부 3D 원**: `radial-gradient(circle at 35% 30%)` 좌상단 하이라이트 + `inset 0 -4px 8px` 하단 그림자
+- **글로시 아크**: `linear-gradient(160deg)` 상단 반사광
+- **인디케이터 도트**: 활성 시 링 위 글로우 포인트 2개
+- **아이콘 글로우**: 이중 `drop-shadow` (8px + 3px)
+
+### 38.3 대시보드 3D 리디자인 (5개 파일)
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `widget-kpi.tsx` | KPI 4종 카드 glassmorphism + `Icon3D` 컴포넌트 (회전 링 + radial 원) |
+| `widget-system-status.tsx` | `SystemIcon3D` (40px 컴팩트 3D 아이콘), 시스템별 색상 보더 + 미니 프로그레스 바 |
+| `widget-alarms.tsx` | glassmorphism 래퍼, rose 보더 + severity 네온 도트 글로우 |
+| `widget-energy-trend.tsx` | glassmorphism 래퍼, amber 보더 + Zap 아이콘 drop-shadow |
+| `dashboard-grid.tsx` | 층별 현황 glassmorphism + cyan 보더 |
+
+### 38.4 모니터링 3D 리디자인 (1개 파일)
+
+`monitoring/page.tsx`:
+- 장비 그리드 카드: glassmorphism + 시스템 색상 좌측 보더 + hover:scale
+- 3D 원형 아이콘: 토폴로지 동일 패턴 (20종 장비 아이콘 매핑)
+- 상태 인디케이터: emerald 글로우 도트 + `animate-pulse`
+- 검색/필터: glassmorphism 컨테이너 + 네온 보더 액센트
+- 활성 필터 버튼: `shadow-[0_0_12px_rgba(34,211,238,0.3)]`
+
+### 38.5 제어 페이지 3D 리디자인 (2개 파일)
+
+`control/page.tsx`:
+- 시뮬레이션 패널: glassmorphism + cyan 그래디언트 보더 + 3D Activity 아이콘
+- 장비 제어 카드: glassmorphism + 3D 원형 아이콘 (토폴로지 동일)
+- ON/OFF 토글: emerald/red glassmorphism + `box-shadow 0 0 15px` 글로우 + inset highlight
+- 상태 도트: `ctrl-neon-pulse` 2s infinite 애니메이션
+- 명령 이력: glassmorphism + 3D Send 아이콘
+
+`globals.css`:
+- `ctrl-sim-panel`, `ctrl-card-3d`, `ctrl-status-dot` 등 제어 전용 CSS 애니메이션
+
+### 38.6 변경 파일 요약
+
+| 파일 | 변경량 |
+|------|--------|
+| `cs-layout.ts` | MAX_EQUIP_PER_ROW 5→4, FLOOR_BAND_W 2800→2200 |
+| `cs-canvas.tsx` | SYSTEMS 범례 확대, 뷰포트 Y 60 |
+| `cs-nodes.tsx` | 3D 원형 아이콘 (80×80 컨테이너) |
+| `widget-kpi.tsx` | Icon3D + glassmorphism KPI 카드 |
+| `widget-system-status.tsx` | SystemIcon3D + 시스템 카드 |
+| `widget-alarms.tsx` | glassmorphism + 네온 severity |
+| `widget-energy-trend.tsx` | glassmorphism + amber 글로우 |
+| `dashboard-grid.tsx` | glassmorphism 층별 현황 |
+| `monitoring/page.tsx` | 3D 아이콘 + glassmorphism 그리드 |
+| `control/page.tsx` | 3D 제어 카드 + ON/OFF 글로우 토글 |
+| `globals.css` | 제어 페이지 CSS 애니메이션 |
+
+총 11개 파일, +1,580줄 / -517줄
+
+---
+
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*

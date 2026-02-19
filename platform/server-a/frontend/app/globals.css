@@ -282,3 +282,68 @@ body {
 .cs-canvas .react-flow__edge-text { pointer-events: none; }
 .cs-canvas .react-flow__minimap { border-radius: 8px; }
 .cs-canvas .react-flow__attribution { display: none; }
+
+/* ═══════════════════════════════════════════════════
+ * Control Page — 3D Sci-Fi Effects
+ * ═══════════════════════════════════════════════════ */
+
+@keyframes ctrl-neon-pulse {
+  0%, 100% { box-shadow: 0 0 6px var(--dot-color); opacity: 0.7; }
+  50% { box-shadow: 0 0 14px var(--dot-color), 0 0 28px var(--dot-color); opacity: 1; }
+}
+
+@keyframes ctrl-icon-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ctrl-btn-glow {
+  0%, 100% { box-shadow: 0 0 12px var(--btn-glow); }
+  50% { box-shadow: 0 0 22px var(--btn-glow), 0 0 44px var(--btn-glow); }
+}
+
+.ctrl-card-3d {
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.ctrl-card-3d:hover {
+  transform: scale(1.02);
+  border-color: rgba(255,255,255,0.12);
+}
+
+.ctrl-status-dot {
+  animation: ctrl-neon-pulse 2s ease-in-out infinite;
+}
+
+.ctrl-sim-panel {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(34,211,238,0.15);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ctrl-sim-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(34,211,238,0.05) 0%, transparent 40%, rgba(99,102,241,0.04) 100%);
+  pointer-events: none;
+}
+
+.ctrl-history-entry {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.ctrl-history-entry:hover {
+  background: rgba(255,255,255,0.05);
+}

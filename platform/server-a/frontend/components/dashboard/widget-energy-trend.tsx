@@ -2,7 +2,6 @@
 
 import React, { useMemo } from "react";
 import { useTranslations } from "next-intl";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Zap } from "lucide-react";
 import {
   ComposedChart,
@@ -80,35 +79,48 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
     return result;
   }, [profileData]);
 
-  const totalKwh = chartData.length > 0
-    ? chartData[chartData.length - 1].cumulativeKwh
-    : 0;
+  const totalKwh =
+    chartData.length > 0 ? chartData[chartData.length - 1].cumulativeKwh : 0;
 
-  const currentKw = chartData.length > 0
-    ? chartData[chartData.length - 1].currentKw
-    : 0;
+  const currentKw =
+    chartData.length > 0 ? chartData[chartData.length - 1].currentKw : 0;
 
   const hasData = chartData.length > 0 && totalKwh > 0;
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader className="flex-shrink-0 pb-2">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Zap className="h-4 w-4 text-amber-500" />
+    <div
+      className="h-full flex flex-col rounded-xl"
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        backdropFilter: "blur(24px)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderLeft: "4px solid #fbbf24",
+        boxShadow: hasData ? "0 0 24px rgba(251,191,36,0.10)" : "none",
+      }}
+    >
+      <div className="flex-shrink-0 p-4 pb-2">
+        <h3 className="text-base font-semibold text-white flex items-center gap-2">
+          <Zap
+            className="h-4 w-4"
+            style={{
+              color: "#fbbf24",
+              filter: "drop-shadow(0 0 4px rgba(251,191,36,0.6))",
+            }}
+          />
           {t("energyCumulative")}
-        </CardTitle>
+        </h3>
         {hasData && (
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-4 text-sm mt-1">
             <span className="font-semibold text-amber-400">
               {t("energyTotalKwh", { value: totalKwh.toLocaleString() })}
             </span>
-            <span className="text-muted-foreground">
+            <span className="text-slate-400">
               {t("energyCurrentKw", { value: currentKw.toLocaleString() })}
             </span>
           </div>
         )}
-      </CardHeader>
-      <CardContent className="flex-1 min-h-0">
+      </div>
+      <div className="flex-1 min-h-0 px-4 pb-4">
         {hasData ? (
           <ResponsiveContainer width="100%" height={200}>
             <ComposedChart
@@ -116,22 +128,31 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
               margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
             >
               <defs>
-                <linearGradient id="kwhGradient" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient
+                  id="kwhGradient"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2="1"
+                >
                   <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.4} />
                   <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="rgba(255,255,255,0.05)"
+              />
               <XAxis
                 dataKey="time"
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: "#94a3b8" }}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
                 yAxisId="kwh"
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: "#94a3b8" }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => v.toLocaleString()}
@@ -140,7 +161,7 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
               <YAxis
                 yAxisId="kw"
                 orientation="right"
-                tick={{ fontSize: 11, fill: '#94a3b8' }}
+                tick={{ fontSize: 11, fill: "#94a3b8" }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => v.toLocaleString()}
@@ -150,17 +171,23 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
               <Tooltip
                 formatter={(value: number, name: string) => {
                   if (name === "cumulativeKwh") {
-                    return [`${value.toLocaleString()} kWh`, t("energyTooltipCumul")];
+                    return [
+                      `${value.toLocaleString()} kWh`,
+                      t("energyTooltipCumul"),
+                    ];
                   }
-                  return [`${value.toLocaleString()} kW`, t("energyTooltipPower")];
+                  return [
+                    `${value.toLocaleString()} kW`,
+                    t("energyTooltipPower"),
+                  ];
                 }}
-                labelStyle={{ fontWeight: 600, color: '#e2e8f0' }}
+                labelStyle={{ fontWeight: 600, color: "#e2e8f0" }}
                 contentStyle={{
                   fontSize: 12,
                   borderRadius: 8,
-                  background: 'rgba(15,23,42,0.9)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  color: '#e2e8f0',
+                  background: "rgba(15,23,42,0.9)",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#e2e8f0",
                 }}
               />
               <Legend
@@ -170,7 +197,7 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
                   return value;
                 }}
                 iconSize={10}
-                wrapperStyle={{ fontSize: 11, color: '#94a3b8' }}
+                wrapperStyle={{ fontSize: 11, color: "#94a3b8" }}
               />
               <Area
                 yAxisId="kwh"
@@ -199,7 +226,7 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
             {t("energyNoData")}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

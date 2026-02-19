@@ -239,30 +239,92 @@ const CompactEquipCard = memo(function CompactEquipCard({
       />
 
       <div className="h-full flex items-stretch">
-        {/* Icon area — left column */}
+        {/* Icon area — 3D circular sci-fi style */}
         <div
           className="flex items-center justify-center flex-shrink-0"
-          style={{ width: 76 }}
+          style={{ width: 100 }}
         >
-          <div
-            className="flex items-center justify-center rounded-xl"
-            style={{
-              width: 56,
-              height: 56,
-              background: `${data.systemColor}15`,
-              boxShadow: data.isActive
-                ? `0 0 20px ${data.systemColor}40, inset 0 0 12px ${data.systemColor}10`
-                : "none",
-            }}
-          >
+          <div className="relative flex items-center justify-center" style={{ width: 80, height: 80 }}>
+            {/* Outer rotating glow ring */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: `conic-gradient(from 0deg, transparent 0%, ${data.systemColor}50 15%, transparent 30%, ${data.systemColor}30 50%, transparent 65%, ${data.systemColor}40 80%, transparent 100%)`,
+                animation: data.isActive ? "spin 6s linear infinite" : "none",
+                opacity: data.isActive ? 1 : 0.3,
+              }}
+            />
+            {/* Ring gap / dark spacer */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                inset: 3,
+                background: "rgba(8,12,24,0.95)",
+              }}
+            />
+            {/* Middle ring border */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                inset: 5,
+                border: `1.5px solid ${data.systemColor}35`,
+                background: "transparent",
+              }}
+            />
+            {/* Inner 3D circle with depth */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                inset: 10,
+                background: `radial-gradient(circle at 35% 30%, ${data.systemColor}18, rgba(8,12,24,0.95) 70%)`,
+                border: `1px solid ${data.systemColor}20`,
+                boxShadow: data.isActive
+                  ? `0 0 24px ${data.systemColor}35, inset 0 1px 1px ${data.systemColor}15, inset 0 -4px 8px rgba(0,0,0,0.4)`
+                  : `inset 0 1px 1px ${data.systemColor}08, inset 0 -4px 8px rgba(0,0,0,0.3)`,
+              }}
+            />
+            {/* Top highlight arc (3D glossy) */}
+            <div
+              className="absolute rounded-full"
+              style={{
+                inset: 12,
+                background: `linear-gradient(160deg, ${data.systemColor}12 0%, transparent 45%)`,
+                pointerEvents: "none",
+              }}
+            />
+            {/* Corner indicator dots */}
+            {data.isActive && (
+              <>
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    width: 4, height: 4, top: 6, right: 12,
+                    background: data.systemColor,
+                    boxShadow: `0 0 6px ${data.systemColor}`,
+                  }}
+                />
+                <div
+                  className="absolute rounded-full"
+                  style={{
+                    width: 3, height: 3, bottom: 8, left: 14,
+                    background: data.systemColor,
+                    boxShadow: `0 0 4px ${data.systemColor}`,
+                    opacity: 0.6,
+                  }}
+                />
+              </>
+            )}
+            {/* Icon */}
             <Icon
               size={30}
-              strokeWidth={1.6}
+              strokeWidth={1.5}
               style={{
                 color: data.systemColor,
                 filter: data.isActive
-                  ? `drop-shadow(0 0 6px ${data.systemColor}80)`
-                  : "none",
+                  ? `drop-shadow(0 0 8px ${data.systemColor}90) drop-shadow(0 0 3px ${data.systemColor}60)`
+                  : `drop-shadow(0 0 3px ${data.systemColor}40)`,
+                position: "relative",
+                zIndex: 1,
               }}
             />
           </div>

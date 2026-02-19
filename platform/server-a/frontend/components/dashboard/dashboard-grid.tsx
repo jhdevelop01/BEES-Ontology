@@ -9,7 +9,6 @@ import {
   type Layout,
 } from "react-grid-layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, Unlock, RotateCcw, LayoutGrid, List, Building2, Loader2 } from "lucide-react";
 import { WidgetKPI } from "./widget-kpi";
 import { WidgetAlarms } from "./widget-alarms";
@@ -209,13 +208,27 @@ export function DashboardGrid(props: DashboardGridProps) {
       </ResponsiveGridLayout>}
 
       {/* ---- 층별 현황 섹션 ---- */}
-      <Card className="mt-4">
-        <CardHeader className="pb-2">
+      <div
+        className="mt-4 rounded-xl"
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          backdropFilter: "blur(24px)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderLeft: "4px solid #06b6d4",
+        }}
+      >
+        <div className="p-4 pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-slate-400" />
+            <h3 className="text-base font-semibold text-white flex items-center gap-2">
+              <Building2
+                className="h-4 w-4"
+                style={{
+                  color: "#06b6d4",
+                  filter: "drop-shadow(0 0 4px rgba(6,182,212,0.5))",
+                }}
+              />
               {t("floorOverview")}
-            </CardTitle>
+            </h3>
             <div className="flex gap-1.5">
               {viewButtons.map(({ key, icon: Icon, labelKey }) => (
                 <Button
@@ -231,8 +244,8 @@ export function DashboardGrid(props: DashboardGridProps) {
               ))}
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-4 pt-2">
           {floorLoading && floorData.length === 0 ? (
             <div className="flex items-center justify-center h-40 text-slate-500">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
@@ -248,8 +261,8 @@ export function DashboardGrid(props: DashboardGridProps) {
               )}
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* ---- 층 상세 패널 ---- */}
       <FloorDetailPanel

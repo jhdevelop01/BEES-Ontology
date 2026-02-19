@@ -35,7 +35,7 @@ import { buildCrossSectionEdges } from "./cs-edges";
 
 /* ── Dimensions ── */
 
-const FLOOR_BAND_W = 2800;
+const FLOOR_BAND_W = 2200;
 const FLOOR_HEADER_W = 260;
 const FLOOR_MIN_H = 220;
 const FLOOR_PAD = 32;
@@ -48,7 +48,7 @@ const ZONE_CHIP_W = 180;
 const ZONE_CHIP_H = 64;
 const ZONE_GAP = 14;
 const CAT_LABEL_H = 36;
-const MAX_EQUIP_PER_ROW = 5;
+const MAX_EQUIP_PER_ROW = 4;
 
 /* ── Category layout order ── */
 

@@ -92,7 +92,7 @@ function CsCanvasInner({
 
         /* Center horizontally, start at top with comfortable zoom */
         setTimeout(() => {
-          rfInstance.current?.setViewport({ x: 20, y: 20, zoom: 0.7 });
+          rfInstance.current?.setViewport({ x: 20, y: 60, zoom: 0.7 });
         }, 250);
       } catch (err) {
         setError(
@@ -208,7 +208,7 @@ function CsCanvasInner({
         onEdgesChange={onEdgesChange}
         onInit={onInit}
         nodeTypes={csNodeTypes}
-        defaultViewport={{ x: 20, y: 20, zoom: 0.7 }}
+        defaultViewport={{ x: 20, y: 60, zoom: 0.7 }}
         minZoom={0.05}
         maxZoom={1.2}
         proOptions={{ hideAttribution: true }}
@@ -257,20 +257,20 @@ function CsCanvasInner({
       </ReactFlow>
 
       {/* ── System Legend ── */}
-      <div className="absolute top-3 left-3 flex items-center gap-3 px-3 py-2 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-lg z-10">
-        <span className="text-[9px] text-slate-500 uppercase tracking-wider">
+      <div className="absolute top-3 left-3 flex items-center gap-4 px-4 py-2.5 bg-slate-950/80 backdrop-blur-xl border border-white/10 rounded-lg z-10">
+        <span className="text-xs text-slate-500 uppercase tracking-wider font-semibold">
           Systems
         </span>
         {SYSTEM_LEGEND.map((s) => (
-          <div key={s.key} className="flex items-center gap-1.5">
+          <div key={s.key} className="flex items-center gap-2">
             <span
-              className="w-2 h-2 rounded-full"
+              className="w-2.5 h-2.5 rounded-full"
               style={{
                 backgroundColor: s.color,
-                boxShadow: `0 0 4px ${s.color}40`,
+                boxShadow: `0 0 6px ${s.color}50`,
               }}
             />
-            <span className="text-[9px] text-slate-400 font-mono">
+            <span className="text-xs text-slate-400 font-mono">
               {s.label}
             </span>
           </div>
