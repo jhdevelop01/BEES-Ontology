@@ -635,11 +635,18 @@ class EmulatorEngine:
         # MQTT 연결
         self._setup_mqtt()
 
+        # 전체 장비 활성화 (시뮬레이션 시작 = 모든 장비 가동)
+        activated = 0
+        for device in self._devices.values():
+            device.is_active = True
+            device.mode = "auto"
+            activated += 1
+        logger.info(f"시뮬레이션 시작 — 전체 장비 활성화: {activated}대")
+
         # AsyncIO 태스크 시작
         self._task = asyncio.create_task(self._simulation_loop())
 
-        logger.info("시뮬레이션 시작")
-        return {"status": "started", "message": "시뮬레이션이 시작되었습니다."}
+        return {"status": "started", "message": f"시뮬레이션이 시작되었습니다. ({activated}대 장비 가동)"}
 
     async def stop(self) -> dict:
         """시뮬레이션 중지."""
@@ -657,14 +664,31 @@ class EmulatorEngine:
                 pass
             self._task = None
 
+        # 전체 장비 비활성화 (시뮬레이션 정지 = 모든 장비 정지)
+        deactivated = 0
+        now = datetime.now(timezone.utc)
+        for device_id, device in self._devices.items():
+            device.is_active = False
+            device.mode = "standby"
+            deactivated += 1
+            # 최종 비활성 상태를 MQTT로 발행 (Server A에 즉시 반영)
+            if self._mqtt_connected and self._mqtt_client:
+                state_payload = {
+                    "is_active": False,
+                    "mode": "standby",
+                    "ts": now.isoformat(),
+                }
+                topic = f"bees/devices/{device_id}/state"
+                self._publish_mqtt(topic, state_payload)
+        logger.info(f"시뮬레이션 정지 — 전체 장비 비활성화: {deactivated}대")
+
         # MQTT 연결 해제
         if self._mqtt_client:
             self._mqtt_client.loop_stop()
             self._mqtt_client.disconnect()
             self._mqtt_connected = False
 
-        logger.info("시뮬레이션 중지")
-        return {"status": "stopped", "message": "시뮬레이션이 중지되었습니다."}
+        return {"status": "stopped", "message": f"시뮬레이션이 중지되었습니다. ({deactivated}대 장비 정지)"}
 
     def get_status(self) -> dict:
         """시뮬레이션 상태 조회."""

@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (시뮬레이션 전체 가동/정지 제어 기능 추가)
+> **최종 업데이트:** 2026.02.19 (시뮬레이션 가동/정지 장비 상태 동기화 버그 수정)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -2084,6 +2084,52 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 | 6 | 미인증 정지 시도 | ✅ 401 "인증 토큰이 필요합니다" |
 | 7 | `GET /api/devices/status` | ✅ total=84, active=11 |
 | 8 | 프론트엔드 페이지 로드 | ✅ HTTP 200 |
+
+## 26. 시뮬레이션 가동/정지 → 실제 장비 상태 동기화 버그 수정 (2026.02.19)
+
+### 26.1 문제
+
+"전체 가동" 클릭 후에도 제어 페이지에서 일부 장비 카드가 OFF 상태로 남음. 모니터링 페이지에도 전혀 반영 안 됨.
+
+### 26.2 근본 원인 분석
+
+3개 리서치 에이전트를 병렬 투입하여 Server C 엔진, 제어→모니터링 데이터 흐름, MQTT 실시간 상태를 조사.
+
+**근본 원인**: Server C `engine.start()`가 시뮬레이션 루프만 시작하고, 장비 `is_active` 상태를 변경하지 않았음.
+
+- `DeviceState` 초기값: `is_active=False` (모든 장비)
+- `start()`: `_running=True` + MQTT 연결 + `_simulation_loop()` 태스크만 생성 → **장비 활성화 없음**
+- MQTT 발행 루프: `device.is_active` 실제값(대부분 False) 그대로 전송
+- Server A `set_all_devices_active()` 즉시 호출 → **5초 후 Server C MQTT 메시지로 덮어쓰기** (is_active=false)
+- 결과: 프론트엔드 일시적으로 ON 표시 → 5초 후 다시 OFF
+
+### 26.3 1차 수정 — 버튼 로직 개선 (커밋 122579e)
+
+| 영역 | 파일 | 변경 |
+|------|------|------|
+| 백엔드 | `mqtt_service.py` | `set_all_devices_active()`, `set_all_devices_inactive()`, `clear_device_cache()` 추가 |
+| 백엔드 | `control.py` | 시뮬레이션 시작/정지 시 MQTT 캐시 전체 상태 전환 호출 |
+| 프론트 | `control/page.tsx` | `activeCount`/`allActive`/`noneActive` 기반 버튼 disabled 로직, 즉시 UI 업데이트 |
+
+### 26.4 2차 수정 — Server C 엔진 근본 수정
+
+| 파일 | 변경 |
+|------|------|
+| `server-c/app/engine.py` `start()` | MQTT 연결 후 전체 장비 `is_active=True`, `mode="auto"` 설정 → 시뮬레이션 루프 시작 |
+| `server-c/app/engine.py` `stop()` | 태스크 취소 후 전체 장비 `is_active=False`, `mode="standby"` 설정 + **최종 상태 MQTT 발행** → 연결 해제 |
+
+**핵심**: `stop()` 시 MQTT 연결 해제 **전에** 비활성 상태를 MQTT로 발행하여 Server A 캐시가 즉시 업데이트됨.
+
+### 26.5 검증 결과
+
+| 테스트 | 결과 |
+|--------|:----:|
+| 시작 → Server C 84대 활성 | ✅ |
+| 시작 → Server A 캐시 84/84 | ✅ |
+| 정지 → Server C 84대 비활성 | ✅ |
+| 정지 → Server A 캐시 0/84 | ✅ |
+| E2E (JWT 인증 + Server A 프록시) 정지 → 0/84 | ✅ |
+| E2E (JWT 인증 + Server A 프록시) 시작 → 84/84 | ✅ |
 
 ---
 
