@@ -221,6 +221,9 @@ async def get_equipment_list(
                     if not location or floor.lower() not in location.lower():
                         continue
 
+                from app.services.equipment_classification import classify_equipment
+                classification = classify_equipment(labels)
+
                 equipment_list.append({
                     "id": brick_id,
                     "name": name,
@@ -231,6 +234,9 @@ async def get_equipment_list(
                         (l for l in labels if l not in ("Equipment", "Resource")),
                         "Equipment",
                     ),
+                    "category": classification["category"],
+                    "subcategory": classification["subcategory"],
+                    "controllable": classification["controllable"],
                 })
             return equipment_list
     except Exception as e:

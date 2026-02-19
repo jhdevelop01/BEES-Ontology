@@ -35,18 +35,50 @@ import { getDisplayName, formatLocation } from "@/lib/utils";
  * 2) AHU_5F 센서 실시간 차트 (접기/펼치기)
  */
 
-// ── 장비 유형 필터 탭 ──
-const TYPE_FILTERS = [
-  { key: "all", label: "typeAll" },
-  { key: "AHU", label: "typeAHU" },
-  { key: "Fan", label: "typeFan" },
-  { key: "Pump", label: "typePump" },
-  { key: "Chiller", label: "typeChiller" },
-  { key: "Boiler", label: "typeBoiler" },
-  { key: "Cooling_Tower", label: "typeCoolingTower" },
-  { key: "Fan_Coil_Unit", label: "typeFCU" },
-  { key: "Chilled_Ceiling_Panel", label: "typeCCPanel" },
-  { key: "Elevator", label: "typeElevator" },
+// ── 대분류 카테고리 ──
+const CATEGORY_GROUPS = [
+  { key: "all", label: "categoryAll", classes: [] },
+  {
+    key: "hvac",
+    label: "categoryHVAC",
+    classes: [
+      "AHU", "Air_Handler_Unit", "Chiller", "Boiler", "Pump",
+      "Chilled_Water_Pump", "Condenser_Water_Pump", "Hot_Water_Pump",
+      "Fan", "Supply_Fan", "Return_Fan", "Exhaust_Fan",
+      "Cooling_Tower", "Fan_Coil_Unit", "Chilled_Ceiling_Panel",
+      "Heat_Exchanger",
+    ],
+  },
+  {
+    key: "elec_transport",
+    label: "categoryElecTransport",
+    classes: ["Elevator"],
+  },
+  {
+    key: "parts",
+    label: "categoryParts",
+    classes: ["Valve", "Damper", "VFD"],
+  },
+] as const;
+
+// ── HVAC 서브필터 ──
+const HVAC_SUB_FILTERS = [
+  { key: "all", label: "subHVACAll", classes: [] },
+  {
+    key: "cooling",
+    label: "subCooling",
+    classes: ["Chiller", "Cooling_Tower", "Chilled_Water_Pump", "Condenser_Water_Pump", "Chilled_Ceiling_Panel"],
+  },
+  {
+    key: "heating",
+    label: "subHeating",
+    classes: ["Boiler", "Hot_Water_Pump"],
+  },
+  {
+    key: "airside",
+    label: "subAirside",
+    classes: ["AHU", "Air_Handler_Unit", "Supply_Fan", "Return_Fan", "Exhaust_Fan", "Fan", "Fan_Coil_Unit", "Pump"],
+  },
 ] as const;
 
 // ── 장비 유형별 아이콘 색상 ──
@@ -128,7 +160,8 @@ export default function MonitoringPage() {
 
   const [equipment, setEquipment] = useState<EquipmentListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [hvacSubFilter, setHvacSubFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSensorCharts, setShowSensorCharts] = useState(false);
 
@@ -171,17 +204,52 @@ export default function MonitoringPage() {
     load();
   }, []);
 
-  // 필터링된 장비 목록
+  // API category → 내부 키 매핑
+  const API_CATEGORY_MAP: Record<string, string> = {
+    hvac: "hvac",
+    electrical_transport: "elec_transport",
+    component: "parts",
+  };
+
+  // API subcategory → 내부 서브필터 키 매핑
+  const API_SUB_MAP: Record<string, string> = {
+    cooling: "cooling",
+    heating: "heating",
+    air_handling: "airside",
+  };
+
+  // brick_class 배열이 특정 클래스 목록에 매칭되는지 확인 (폴백용)
+  const matchesClasses = (eq: EquipmentListItem, classes: readonly string[]) =>
+    eq.brick_class.some((c) =>
+      classes.some((cls) => c.toLowerCase().includes(cls.toLowerCase()))
+    );
+
+  // 장비가 대분류 카테고리에 속하는지 (API 필드 우선, brick_class 폴백)
+  const matchesCategory = (eq: EquipmentListItem, catKey: string): boolean => {
+    if (eq.category) return API_CATEGORY_MAP[eq.category] === catKey;
+    const group = CATEGORY_GROUPS.find((g) => g.key === catKey);
+    return group ? matchesClasses(eq, group.classes) : false;
+  };
+
+  // 장비가 HVAC 서브카테고리에 속하는지 (API 필드 우선, brick_class 폴백)
+  const matchesSubcategory = (eq: EquipmentListItem, subKey: string): boolean => {
+    if (eq.subcategory) return API_SUB_MAP[eq.subcategory] === subKey;
+    const sub = HVAC_SUB_FILTERS.find((s) => s.key === subKey);
+    return sub ? matchesClasses(eq, sub.classes) : false;
+  };
+
+  // 필터링된 장비 목록 (2단계 분류)
   const filteredEquipment = useMemo(() => {
     let list = equipment;
 
-    // 유형 필터
-    if (typeFilter !== "all") {
-      list = list.filter((eq) =>
-        eq.brick_class.some((c) =>
-          c.toLowerCase().includes(typeFilter.toLowerCase())
-        )
-      );
+    // 1단계: 대분류 필터
+    if (categoryFilter !== "all") {
+      list = list.filter((eq) => matchesCategory(eq, categoryFilter));
+    }
+
+    // 2단계: HVAC 서브필터
+    if (categoryFilter === "hvac" && hvacSubFilter !== "all") {
+      list = list.filter((eq) => matchesSubcategory(eq, hvacSubFilter));
     }
 
     // 검색 필터
@@ -196,7 +264,7 @@ export default function MonitoringPage() {
     }
 
     return list;
-  }, [equipment, typeFilter, searchQuery]);
+  }, [equipment, categoryFilter, hvacSubFilter, searchQuery]);
 
   // 장비별 실시간 상태 매칭 (SSE devices 데이터)
   const getDeviceActive = (eq: EquipmentListItem): boolean | null => {
@@ -205,20 +273,27 @@ export default function MonitoringPage() {
     return eq.is_active;
   };
 
-  // 유형별 카운트
-  const typeCounts = useMemo(() => {
+  // 대분류 카운트
+  const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = { all: equipment.length };
-    for (const eq of equipment) {
-      for (const filter of TYPE_FILTERS) {
-        if (filter.key === "all") continue;
-        if (
-          eq.brick_class.some((c) =>
-            c.toLowerCase().includes(filter.key.toLowerCase())
-          )
-        ) {
-          counts[filter.key] = (counts[filter.key] || 0) + 1;
-        }
-      }
+    for (const group of CATEGORY_GROUPS) {
+      if (group.key === "all") continue;
+      counts[group.key] = equipment.filter((eq) =>
+        matchesCategory(eq, group.key)
+      ).length;
+    }
+    return counts;
+  }, [equipment]);
+
+  // HVAC 서브필터 카운트
+  const hvacSubCounts = useMemo(() => {
+    const hvacList = equipment.filter((eq) => matchesCategory(eq, "hvac"));
+    const counts: Record<string, number> = { all: hvacList.length };
+    for (const sub of HVAC_SUB_FILTERS) {
+      if (sub.key === "all") continue;
+      counts[sub.key] = hvacList.filter((eq) =>
+        matchesSubcategory(eq, sub.key)
+      ).length;
     }
     return counts;
   }, [equipment]);
@@ -264,22 +339,25 @@ export default function MonitoringPage() {
           </div>
         </div>
 
-        {/* 유형 필터 탭 */}
+        {/* 대분류 탭 */}
         <div className="flex flex-wrap gap-1.5">
-          {TYPE_FILTERS.map((filter) => {
-            const count = typeCounts[filter.key] || 0;
-            const isActive = typeFilter === filter.key;
+          {CATEGORY_GROUPS.map((group) => {
+            const count = categoryCounts[group.key] || 0;
+            const isActive = categoryFilter === group.key;
             return (
               <button
-                key={filter.key}
-                onClick={() => setTypeFilter(filter.key)}
+                key={group.key}
+                onClick={() => {
+                  setCategoryFilter(group.key);
+                  if (group.key !== "hvac") setHvacSubFilter("all");
+                }}
                 className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
                   isActive
                     ? "bg-blue-600 text-white"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {t(filter.label)}
+                {t(group.label)}
                 {count > 0 && (
                   <span
                     className={`ml-1 ${
@@ -294,6 +372,45 @@ export default function MonitoringPage() {
           })}
         </div>
 
+        {/* HVAC 서브필터 (HVAC 선택 시에만 표시) */}
+        {categoryFilter === "hvac" && (
+          <div className="flex flex-wrap gap-1.5 pl-3 border-l-2 border-blue-200">
+            {HVAC_SUB_FILTERS.map((sub) => {
+              const count = hvacSubCounts[sub.key] || 0;
+              const isActive = hvacSubFilter === sub.key;
+              return (
+                <button
+                  key={sub.key}
+                  onClick={() => setHvacSubFilter(sub.key)}
+                  className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
+                    isActive
+                      ? "bg-sky-500 text-white"
+                      : "bg-sky-50 text-sky-600 hover:bg-sky-100"
+                  }`}
+                >
+                  {t(sub.label)}
+                  {count > 0 && (
+                    <span
+                      className={`ml-1 ${
+                        isActive ? "text-sky-200" : "text-sky-400"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* 부품 탭 안내 배너 */}
+        {categoryFilter === "parts" && (
+          <div className="bg-amber-50 text-amber-700 text-xs px-4 py-2 rounded-lg">
+            {t("partsNote")}
+          </div>
+        )}
+
         {/* 장비 카드 그리드 */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -304,7 +421,7 @@ export default function MonitoringPage() {
           <div className="text-center py-16">
             <Cpu className="h-10 w-10 text-gray-200 mx-auto mb-3" />
             <p className="text-sm text-gray-400">
-              {searchQuery || typeFilter !== "all"
+              {searchQuery || categoryFilter !== "all"
                 ? t("noEquipmentFiltered")
                 : t("noEquipment")}
             </p>

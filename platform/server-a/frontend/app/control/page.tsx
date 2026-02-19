@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,8 +16,16 @@ import {
   getSimulationStatusFromBackend,
   type DeviceStatus,
 } from "@/lib/api";
-import { Power, PowerOff, Loader2, Send, PlayCircle, StopCircle, Activity } from "lucide-react";
+import { Power, PowerOff, Loader2, Send, PlayCircle, StopCircle, Activity, ChevronDown, ChevronRight, Eye } from "lucide-react";
 import { getDisplayName, localizeType, formatLocation } from "@/lib/utils";
+
+const NON_CONTROLLABLE_TYPES = new Set(["elevator", "chilled_ceiling_panel"]);
+
+function isControllable(device: DeviceStatus): boolean {
+  if (device.controllable !== undefined) return device.controllable;
+  if (!device.type) return true;
+  return !NON_CONTROLLABLE_TYPES.has(device.type.toLowerCase());
+}
 
 /**
  * 제어 페이지
@@ -32,6 +40,7 @@ export default function ControlPage() {
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [simStatus, setSimStatus] = useState<string>("unknown");
   const [simLoading, setSimLoading] = useState(false);
+  const [showMonitorOnly, setShowMonitorOnly] = useState(false);
   const [commandHistory, setCommandHistory] = useState<
     Array<{
       id: string;
@@ -42,6 +51,9 @@ export default function ControlPage() {
       timestamp: Date;
     }>
   >([]);
+
+  const controllableDevices = useMemo(() => deviceList.filter(isControllable), [deviceList]);
+  const monitorOnlyDevices = useMemo(() => deviceList.filter(d => !isControllable(d)), [deviceList]);
 
   // 시뮬레이션 상태 폴링
   const fetchSimStatus = useCallback(async () => {
@@ -213,7 +225,7 @@ export default function ControlPage() {
     <div className="min-h-screen">
       <Header
         title={t("title")}
-        description={t("description")}
+        description={`${t("description")} — ${t("controllableCount", { count: controllableDevices.length, total: deviceList.length })}`}
         connected={connected}
       />
 
@@ -272,9 +284,9 @@ export default function ControlPage() {
           </CardContent>
         </Card>
 
-        {/* 장비 제어 카드 */}
+        {/* 제어 가능 장비 카드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {deviceList.map((device) => {
+          {controllableDevices.map((device) => {
             const isLoading = loading[device.device_id];
             const isActive = device.is_active;
 
@@ -374,6 +386,101 @@ export default function ControlPage() {
             );
           })}
         </div>
+
+        {/* 모니터링 전용 장비 */}
+        {monitorOnlyDevices.length > 0 && (
+          <div className="space-y-4">
+            <button
+              onClick={() => setShowMonitorOnly(prev => !prev)}
+              className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {showMonitorOnly ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+              <Eye className="h-4 w-4" />
+              <span>{t("monitorOnlyLabel")} ({monitorOnlyDevices.length})</span>
+              <Badge variant="secondary" className="text-xs">
+                {t("monitorOnlyDevices")}
+              </Badge>
+            </button>
+
+            {showMonitorOnly && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {monitorOnlyDevices.map((device) => {
+                  const isActive = device.is_active;
+
+                  return (
+                    <Card key={device.device_id} className="relative overflow-hidden opacity-70">
+                      <div
+                        className={`absolute top-0 left-0 right-0 h-1 ${
+                          isActive ? "bg-green-500" : "bg-gray-300"
+                        }`}
+                      />
+
+                      <CardHeader className="flex flex-row items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">
+                            {getDisplayName(locale, device.label, device.device_id)}
+                          </CardTitle>
+                          <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                            {device.device_id}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {device.type && `${localizeType(locale, device.type)} `}
+                            {device.location && `| ${formatLocation(locale, device.location)}`}
+                          </p>
+                        </div>
+                        <Badge
+                          variant={isActive ? "success" : "secondary"}
+                          className="text-sm px-3 py-1"
+                        >
+                          {isActive ? (
+                            <>
+                              <Power className="h-3 w-3 mr-1" />
+                              ON
+                            </>
+                          ) : (
+                            <>
+                              <PowerOff className="h-3 w-3 mr-1" />
+                              OFF
+                            </>
+                          )}
+                        </Badge>
+                      </CardHeader>
+
+                      <CardContent>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="text-gray-500">{t("operationMode")}</span>
+                            <span className="ml-2 font-medium">
+                              {device.mode === "auto"
+                                ? t("modeAuto")
+                                : device.mode === "standby"
+                                ? t("modeStandby")
+                                : device.mode}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-500">{t("lastUpdate")}</span>
+                            <span className="ml-2 font-medium text-xs">
+                              {device.ts
+                                ? new Date(device.ts * 1000).toLocaleTimeString(
+                                    "ko-KR"
+                                  )
+                                : "-"}
+                            </span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 명령 이력 */}
         <Card>

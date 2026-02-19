@@ -8,7 +8,7 @@ import logging
 from typing import Any
 
 import httpx
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from app.config import SERVER_B_URL, SERVER_C_URL
@@ -17,6 +17,7 @@ from app.models import DeviceStatusResponse
 from app.services import mqtt_service
 from app.services import audit_service
 from app.services import neo4j_service
+from app.services.equipment_classification import classify_equipment
 
 logger = logging.getLogger(__name__)
 
@@ -122,7 +123,9 @@ async def send_control_command(
 
 
 @router.get("/devices/status", response_model=DeviceStatusResponse)
-async def get_all_device_status() -> dict[str, Any]:
+async def get_all_device_status(
+    controllable_only: bool = Query(False, description="제어 가능 장비만 필터"),
+) -> dict[str, Any]:
     """전체 장비 ON/OFF 상태 (MQTT + Neo4j 정보 병합)."""
     device_cache = mqtt_service.get_device_cache()
     if not device_cache:
@@ -141,12 +144,22 @@ async def get_all_device_status() -> dict[str, Any]:
         # MQTT device_id는 "bldg:AHU_5F" 형태, eq_map 키는 "AHU_5F"
         lookup_key = did.replace("bldg:", "") if did.startswith("bldg:") else did
         eq = eq_map.get(lookup_key, {})
+
+        is_controllable = eq.get("controllable", False)
+
+        # controllable_only 필터 적용
+        if controllable_only and not is_controllable:
+            continue
+
         devices.append({
             **d,
             "name": did,
             "label": eq.get("label", ""),
             "type": eq.get("type", ""),
             "location": eq.get("location", ""),
+            "category": eq.get("category"),
+            "subcategory": eq.get("subcategory"),
+            "controllable": is_controllable,
         })
 
     active = sum(1 for d in devices if d.get("is_active", False))

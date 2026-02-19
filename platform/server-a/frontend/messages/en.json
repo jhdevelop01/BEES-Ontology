@@ -132,7 +132,16 @@
     "thStatus": "Status",
     "acked": "Acked",
     "unacked": "Unacked",
-    "noAlarmHistory": "No alarm history"
+    "noAlarmHistory": "No alarm history",
+    "categoryAll": "All",
+    "categoryHVAC": "HVAC",
+    "categoryElecTransport": "Electrical/Transport",
+    "categoryParts": "Components",
+    "subHVACAll": "All HVAC",
+    "subCooling": "Cooling",
+    "subHeating": "Heating",
+    "subAirside": "Air-side",
+    "partsNote": "Valves, dampers, VFDs, etc. These are sub-components of parent equipment."
   },
   "control": {
     "title": "Control",
@@ -158,7 +167,11 @@
     "commandError": "Command error",
     "unknownError": "Unknown error",
     "noCommands": "No commands sent yet.",
-    "noCommandsHint": "Press the Start/Stop button above to send a command."
+    "noCommandsHint": "Press the Start/Stop button above to send a command.",
+    "controllableDevices": "Controllable ({count})",
+    "monitorOnlyDevices": "Monitor-only ({count})",
+    "monitorOnlyLabel": "Monitor Only",
+    "controllableCount": "Controllable {count}/{total}"
   },
   "ontology": {
     "title": "Ontology",
@@ -224,7 +237,9 @@
     "thTime": "Time",
     "thName": "Name",
     "thType": "Type",
-    "topologyError": "Failed to load topology"
+    "topologyError": "Failed to load topology",
+    "childComponents": "Components ({count})",
+    "componentTag": "Component"
   },
   "history": {
     "title": "Time Series History",

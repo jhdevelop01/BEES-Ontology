@@ -61,6 +61,15 @@ function toMonitoringId(nodeId: string): string {
   return "bldg:" + nodeId;
 }
 
+/* ── 부품(Component) 판별 ── */
+
+const COMPONENT_LABELS = new Set(["valve", "damper", "vfd", "actuator", "condenser", "compressor"]);
+
+function isComponentNode(node: TopologyNode): boolean {
+  if (!node.labels) return false;
+  return node.labels.some(l => COMPONENT_LABELS.has(l.toLowerCase()));
+}
+
 /* ── 트리 아이템 컴포넌트 ── */
 
 interface TreeItemProps {
@@ -87,16 +96,25 @@ function TreeItem({
   const isSelected = selectedId === node.id;
   const Icon = getTypeIcon(node.type);
 
+  const t = useTranslations("topology");
   // 장비 활성 상태 확인 (name 또는 id 기반)
   const isActive =
     deviceStatusMap[node.name] || deviceStatusMap[node.id] || false;
+  const isComponent = isComponentNode(node);
   const isEquipment =
-    node.type.toLowerCase().includes("equipment") ||
+    !isComponent &&
+    (node.type.toLowerCase().includes("equipment") ||
     node.type.toLowerCase().includes("ahu") ||
     node.type.toLowerCase().includes("pump") ||
     node.type.toLowerCase().includes("chiller") ||
     node.type.toLowerCase().includes("fan") ||
-    node.type.toLowerCase().includes("vav");
+    node.type.toLowerCase().includes("vav") ||
+    (node.labels && node.labels.some(l => {
+      const ll = l.toLowerCase();
+      return ll.includes("equipment") || ll.includes("ahu") || ll.includes("pump") ||
+        ll.includes("chiller") || ll.includes("fan") || ll.includes("vav") ||
+        ll.includes("fcu") || ll.includes("boiler");
+    })));
 
   return (
     <div>
@@ -133,7 +151,14 @@ function TreeItem({
         />
 
         {/* 이름 */}
-        <span className="truncate flex-1 text-left">{node.name}</span>
+        <span className={`truncate flex-1 text-left ${isComponent ? "text-gray-400" : ""}`}>{node.name}</span>
+
+        {/* 부품 태그 */}
+        {isComponent && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 flex-shrink-0">
+            {t("componentTag")}
+          </span>
+        )}
 
         {/* 장비 활성 표시 */}
         {isEquipment && isActive && (
@@ -257,6 +282,7 @@ export default function TopologyPage() {
   const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [showComponents, setShowComponents] = useState(false);
 
   /* ── 디바이스 상태 맵 생성 ── */
   const deviceStatusMap: Record<string, boolean> = {};
@@ -310,27 +336,41 @@ export default function TopologyPage() {
     });
   }, []);
 
-  /* ── 선택된 노드의 자식 장비 수집 ── */
-  const getChildEquipment = (node: TopologyNode): TopologyNode[] => {
-    const results: TopologyNode[] = [];
+  /* ── 선택된 노드의 자식 장비 수집 (주요 장비 + 부품 분리) ── */
+  const getChildEquipment = (node: TopologyNode): {
+    mainEquipment: TopologyNode[];
+    components: TopologyNode[];
+  } => {
+    const mainEquipment: TopologyNode[] = [];
+    const components: TopologyNode[] = [];
     const collect = (n: TopologyNode) => {
-      const t = n.type.toLowerCase();
-      if (
-        t.includes("equipment") ||
-        t.includes("ahu") ||
-        t.includes("pump") ||
-        t.includes("chiller") ||
-        t.includes("fan") ||
-        t.includes("vav") ||
-        t.includes("fcu") ||
-        t.includes("boiler")
-      ) {
-        results.push(n);
+      if (isComponentNode(n)) {
+        components.push(n);
+      } else {
+        const tp = n.type.toLowerCase();
+        if (
+          tp.includes("equipment") ||
+          tp.includes("ahu") ||
+          tp.includes("pump") ||
+          tp.includes("chiller") ||
+          tp.includes("fan") ||
+          tp.includes("vav") ||
+          tp.includes("fcu") ||
+          tp.includes("boiler") ||
+          (n.labels && n.labels.some(l => {
+            const ll = l.toLowerCase();
+            return ll.includes("equipment") || ll.includes("ahu") || ll.includes("pump") ||
+              ll.includes("chiller") || ll.includes("fan") || ll.includes("vav") ||
+              ll.includes("fcu") || ll.includes("boiler");
+          }))
+        ) {
+          mainEquipment.push(n);
+        }
       }
       n.children?.forEach(collect);
     };
     node.children?.forEach(collect);
-    return results;
+    return { mainEquipment, components };
   };
 
   /* ── 선택된 노드의 자식 센서 수집 ── */
@@ -380,17 +420,25 @@ export default function TopologyPage() {
 
   /* ── 선택된 노드가 장비인지 ── */
   const isEquipmentNode = (node: TopologyNode): boolean => {
-    const t = node.type.toLowerCase();
-    return (
-      t.includes("equipment") ||
-      t.includes("ahu") ||
-      t.includes("pump") ||
-      t.includes("chiller") ||
-      t.includes("fan") ||
-      t.includes("vav") ||
-      t.includes("fcu") ||
-      t.includes("boiler")
-    );
+    if (isComponentNode(node)) return false;
+    const tp = node.type.toLowerCase();
+    if (
+      tp.includes("equipment") ||
+      tp.includes("ahu") ||
+      tp.includes("pump") ||
+      tp.includes("chiller") ||
+      tp.includes("fan") ||
+      tp.includes("vav") ||
+      tp.includes("fcu") ||
+      tp.includes("boiler")
+    ) return true;
+    if (node.labels && node.labels.some(l => {
+      const ll = l.toLowerCase();
+      return ll.includes("equipment") || ll.includes("ahu") || ll.includes("pump") ||
+        ll.includes("chiller") || ll.includes("fan") || ll.includes("vav") ||
+        ll.includes("fcu") || ll.includes("boiler");
+    })) return true;
+    return false;
   };
 
   /* ── 렌더 ── */
@@ -630,135 +678,198 @@ export default function TopologyPage() {
               {/* 층/존 선택: 하위 장비 목록 */}
               {!isEquipmentNode(selectedNode) &&
                 selectedNode.children &&
-                selectedNode.children.length > 0 && (
-                  <>
-                    {/* 뷰 모드 토글 */}
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-semibold text-gray-700">
-                        {t("childEquipment", { count: getChildEquipment(selectedNode).length })}
-                      </h3>
-                      <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-0.5">
-                        <Button
-                          variant={viewMode === "grid" ? "secondary" : "ghost"}
-                          size="sm"
-                          className="h-7 px-2"
-                          onClick={() => setViewMode("grid")}
-                        >
-                          <LayoutGrid className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button
-                          variant={viewMode === "list" ? "secondary" : "ghost"}
-                          size="sm"
-                          className="h-7 px-2"
-                          onClick={() => setViewMode("list")}
-                        >
-                          <List className="h-3.5 w-3.5" />
-                        </Button>
+                selectedNode.children.length > 0 &&
+                (() => {
+                  const { mainEquipment, components } = getChildEquipment(selectedNode);
+                  return (
+                    <>
+                      {/* 뷰 모드 토글 */}
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-semibold text-gray-700">
+                          {t("childEquipment", { count: mainEquipment.length })}
+                        </h3>
+                        <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-0.5">
+                          <Button
+                            variant={viewMode === "grid" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => setViewMode("grid")}
+                          >
+                            <LayoutGrid className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant={viewMode === "list" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="h-7 px-2"
+                            onClick={() => setViewMode("list")}
+                          >
+                            <List className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                    </div>
 
-                    {viewMode === "grid" ? (
-                      /* 그리드 뷰 */
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {getChildEquipment(selectedNode).map((eq) => {
-                          const isActive =
-                            deviceStatusMap[eq.name] ||
-                            deviceStatusMap[eq.id] ||
-                            false;
-                          return (
-                            <div
-                              key={eq.id}
-                              className="cursor-pointer"
-                              onClick={() => {
-                                setSelectedNode(eq);
-                                setExpandedIds((prev) => {
-                                  const next = new Set(prev);
-                                  next.add(eq.id);
-                                  return next;
-                                });
-                              }}
-                            >
-                              <EquipmentCard
-                                node={eq}
-                                isActive={isActive}
-                                sensorValues={getSensorValuesForEquipment(eq)}
-                                lastUpdate={getLastUpdateForEquipment(eq)}
-                              />
+                      {viewMode === "grid" ? (
+                        /* 그리드 뷰 */
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                          {mainEquipment.map((eq) => {
+                            const isActive =
+                              deviceStatusMap[eq.name] ||
+                              deviceStatusMap[eq.id] ||
+                              false;
+                            return (
+                              <div
+                                key={eq.id}
+                                className="cursor-pointer"
+                                onClick={() => {
+                                  setSelectedNode(eq);
+                                  setExpandedIds((prev) => {
+                                    const next = new Set(prev);
+                                    next.add(eq.id);
+                                    return next;
+                                  });
+                                }}
+                              >
+                                <EquipmentCard
+                                  node={eq}
+                                  isActive={isActive}
+                                  sensorValues={getSensorValuesForEquipment(eq)}
+                                  lastUpdate={getLastUpdateForEquipment(eq)}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        /* 리스트 뷰 */
+                        <Card>
+                          <CardContent className="p-0">
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-sm">
+                                <thead>
+                                  <tr className="border-b border-gray-200">
+                                    <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
+                                      {t("thName")}
+                                    </th>
+                                    <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
+                                      {t("thType")}
+                                    </th>
+                                    <th className="text-center py-2.5 px-4 text-gray-500 font-medium">
+                                      {t("thStatus")}
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {mainEquipment.map((eq) => {
+                                    const isActive =
+                                      deviceStatusMap[eq.name] ||
+                                      deviceStatusMap[eq.id] ||
+                                      false;
+                                    return (
+                                      <tr
+                                        key={eq.id}
+                                        className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
+                                        onClick={() => {
+                                          setSelectedNode(eq);
+                                          setExpandedIds((prev) => {
+                                            const next = new Set(prev);
+                                            next.add(eq.id);
+                                            return next;
+                                          });
+                                        }}
+                                      >
+                                        <td className="py-2.5 px-4 font-medium text-gray-900">
+                                          {eq.name}
+                                        </td>
+                                        <td className="py-2.5 px-4">
+                                          <Badge variant="outline">
+                                            {t(getTypeLabel(eq.type))}
+                                          </Badge>
+                                        </td>
+                                        <td className="py-2.5 px-4 text-center">
+                                          <Badge
+                                            variant={
+                                              isActive ? "success" : "secondary"
+                                            }
+                                          >
+                                            {isActive ? "ON" : "OFF"}
+                                          </Badge>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
                             </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      /* 리스트 뷰 */
-                      <Card>
-                        <CardContent className="p-0">
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="border-b border-gray-200">
-                                  <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
-                                    {t("thName")}
-                                  </th>
-                                  <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
-                                    {t("thType")}
-                                  </th>
-                                  <th className="text-center py-2.5 px-4 text-gray-500 font-medium">
-                                    {t("thStatus")}
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {getChildEquipment(selectedNode).map((eq) => {
-                                  const isActive =
-                                    deviceStatusMap[eq.name] ||
-                                    deviceStatusMap[eq.id] ||
-                                    false;
-                                  return (
-                                    <tr
-                                      key={eq.id}
-                                      className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
-                                      onClick={() => {
-                                        setSelectedNode(eq);
-                                        setExpandedIds((prev) => {
-                                          const next = new Set(prev);
-                                          next.add(eq.id);
-                                          return next;
-                                        });
-                                      }}
-                                    >
-                                      <td className="py-2.5 px-4 font-medium text-gray-900">
-                                        {eq.name}
-                                      </td>
-                                      <td className="py-2.5 px-4">
-                                        <Badge variant="outline">
-                                          {t(getTypeLabel(eq.type))}
-                                        </Badge>
-                                      </td>
-                                      <td className="py-2.5 px-4 text-center">
-                                        <Badge
-                                          variant={
-                                            isActive ? "success" : "secondary"
-                                          }
-                                        >
+                            {mainEquipment.length === 0 && (
+                              <div className="py-8 text-center text-sm text-gray-400">
+                                {t("noChildEquipment")}
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* 부품 접힘 섹션 */}
+                      {components.length > 0 && (
+                        <div className="mt-4">
+                          <button
+                            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                            onClick={() => setShowComponents(!showComponents)}
+                          >
+                            {showComponents ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
+                            {t("childComponents", { count: components.length })}
+                          </button>
+                          {showComponents && (
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                              {components.map((comp) => {
+                                const isActive =
+                                  deviceStatusMap[comp.name] ||
+                                  deviceStatusMap[comp.id] ||
+                                  false;
+                                return (
+                                  <Card
+                                    key={comp.id}
+                                    className="border-dashed opacity-70 cursor-pointer hover:opacity-100 transition-opacity"
+                                    onClick={() => {
+                                      setSelectedNode(comp);
+                                      setExpandedIds((prev) => {
+                                        const next = new Set(prev);
+                                        next.add(comp.id);
+                                        return next;
+                                      });
+                                    }}
+                                  >
+                                    <CardContent className="pt-3 pb-2 px-3">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <Cpu className="h-4 w-4 text-gray-300" />
+                                        <Badge variant={isActive ? "success" : "secondary"} className="text-[10px]">
                                           {isActive ? "ON" : "OFF"}
                                         </Badge>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                          {getChildEquipment(selectedNode).length === 0 && (
-                            <div className="py-8 text-center text-sm text-gray-400">
-                              {t("noChildEquipment")}
+                                      </div>
+                                      <p className="text-sm text-gray-500 truncate">{comp.name}</p>
+                                      <div className="flex items-center gap-1 mt-1">
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">
+                                          {t("componentTag")}
+                                        </span>
+                                        {comp.labels?.map((l) => (
+                                          <span key={l} className="text-[10px] text-gray-300">{l}</span>
+                                        ))}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                );
+                              })}
                             </div>
                           )}
-                        </CardContent>
-                      </Card>
-                    )}
-                  </>
-                )}
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
 
               {/* 자식 없는 비장비 노드 */}
               {!isEquipmentNode(selectedNode) &&

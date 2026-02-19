@@ -147,6 +147,9 @@ export interface DeviceStatus {
   type?: string;
   location?: string;
   ts: number | null;
+  category?: string;
+  subcategory?: string;
+  controllable?: boolean;
 }
 
 export interface PointData {
@@ -194,8 +197,15 @@ export interface DeviceStatusResponse {
   active: number;
 }
 
-export async function getDeviceStatus(): Promise<DeviceStatusResponse> {
-  return fetchJSON<DeviceStatusResponse>("/api/devices/status");
+export async function getDeviceStatus(params?: {
+  controllable_only?: boolean;
+}): Promise<DeviceStatusResponse> {
+  const sp = new URLSearchParams();
+  if (params?.controllable_only) sp.set("controllable_only", "true");
+  const qs = sp.toString();
+  return fetchJSON<DeviceStatusResponse>(
+    `/api/devices/status${qs ? `?${qs}` : ""}`
+  );
 }
 
 // ─── 토폴로지 ───
@@ -430,6 +440,9 @@ export interface EquipmentListItem {
   location: string | null;
   type: string;
   is_active: boolean | null;
+  category: "hvac" | "electrical_transport" | "component" | null;
+  subcategory: "cooling" | "heating" | "air_handling" | null;
+  controllable: boolean;
 }
 
 export interface EquipmentListResponse {
