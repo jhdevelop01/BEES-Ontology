@@ -2160,4 +2160,80 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 
 ---
 
+## 27. 장비 카테고리 분류 개선 (2026-02-19)
+
+### 27.1 배경
+모니터링(~110개), 제어(84개), 토폴로지(트리) 페이지별 장비 표시 수가 달라 사용자 혼란 발생.
+원인 분석 결과 데이터 소스 차이(Neo4j 라벨 vs MQTT 캐시 vs hasPart 트리)에 의한 정상 동작이었으나,
+각 페이지 목적에 맞는 장비 분류 체계가 없어 개선이 필요했음.
+
+### 27.2 버그 수정 (선행)
+- **Cooling_Coil / Heating_Coil 유령 라벨**: TTL에 0개 인스턴스인데 코드 3곳에 잔존 → 제거
+  - `neo4j_service.py` WHERE 절, `monitoring/page.tsx` 타입 라벨맵, `lib/utils.ts` 한국어 타입맵
+  - 커밋: `4420103`
+
+### 27.3 분류 모듈 설계
+
+**`equipment_classification.py`** (신규) — 단일 소스 분류 모듈:
+- Brick Schema 클래스 기반 2단계 분류: 대분류(hvac / electrical_transport / component) + 서브분류(cooling / heating / air_handling)
+- `CONTROLLABLE_TYPES`: Server B의 `CONTROLLABLE_EQUIPMENT`과 동기화 (11종)
+- `classify_equipment(brick_labels)` → `{category, subcategory, controllable}`
+
+| 대분류 | 서브분류 | 장비 타입 |
+|--------|---------|-----------|
+| hvac | cooling | Chiller, Cooling_Tower, CHW_Pump, CW_Pump, CC_Panel |
+| hvac | heating | Boiler, HW_Pump |
+| hvac | air_handling | AHU, Supply/Return/Exhaust_Fan, FCU, Pump |
+| electrical_transport | — | Elevator |
+| component | — | Valve, Damper, VFD, Heat_Exchanger, CRAC, Condenser, Compressor |
+
+### 27.4 백엔드 변경
+- **neo4j_service.py**: `get_equipment_list()` 응답에 `category`, `subcategory`, `controllable` 필드 추가
+- **control.py**: `GET /api/devices/status`에 `controllable_only` 쿼리 파라미터 추가, 응답에 분류 필드 포함
+
+### 27.5 모니터링 페이지 — 2단계 필터
+- 기존 TYPE_FILTERS 10개 평면 탭 → **2단계 분류 체계**
+- 1단계 대분류: 전체 / HVAC / 전기·수송 / 부품 (탭 + 카운트 배지)
+- 2단계 HVAC 서브필터: 전체 / 냉방 / 난방 / 공조 (HVAC 선택 시에만 표시)
+- 부품 탭: 안내 배너 표시 ("부품은 상위 장비에 종속되어 독립 제어 불가")
+- API `category`/`subcategory` 필드 우선 활용, 없으면 `brick_class` 폴백
+
+### 27.6 제어 페이지 — 제어 가능 장비 분리
+- `controllableDevices` / `monitorOnlyDevices` useMemo로 분리
+- 상단: 제어 가능 장비만 기존 카드 그대로 표시
+- 하단: 모니터링 전용 접힘 섹션 (opacity-70, ON/OFF 버튼 없음, "모니터링 전용" 배지)
+- 헤더: "제어 가능 X대" 카운트 표시
+
+### 27.7 토폴로지 페이지 — 부품 노드 분리
+- `isComponentNode()` 함수: Valve/Damper/VFD/Actuator/Condenser/Compressor 판별
+- `getChildEquipment()` → `{mainEquipment, components}` 분리 반환
+- 트리: 부품 노드 연한 색상 + "부품" 태그
+- 상세 패널: 주요 장비 그리드 + 접힘 가능 부품 섹션 (border-dashed, opacity-70)
+
+### 27.8 i18n
+- `ko.json` / `en.json`: monitoring 9키, control 4키, topology 2키 추가 (총 15키)
+
+### 27.9 커밋 이력
+
+| 커밋 | 설명 |
+|------|------|
+| `4420103` | fix: Cooling_Coil/Heating_Coil 유령 라벨 제거 (섹션 27.2) |
+| `9fbb8c7` | feat: 장비 카테고리 분류 개선 — 모니터링·제어·토폴로지 3개 페이지 (섹션 27.3~27.8) |
+
+### 27.10 수정 파일 전체 목록
+
+| 서버 | 파일 | 변경 내용 |
+|------|------|-----------|
+| Server A 백엔드 | `app/services/equipment_classification.py` | **신규** — 장비 분류 모듈 |
+| Server A 백엔드 | `app/services/neo4j_service.py` | category/subcategory/controllable 필드 추가 |
+| Server A 백엔드 | `app/routers/control.py` | controllable_only 파라미터, 분류 필드 응답 |
+| Server A 프론트 | `app/monitoring/page.tsx` | 2단계 필터 UI (대분류 + HVAC 서브필터) |
+| Server A 프론트 | `app/control/page.tsx` | 제어 가능 / 모니터링 전용 분리 |
+| Server A 프론트 | `app/topology/page.tsx` | 부품 노드 분리 + 접힘 섹션 |
+| Server A 프론트 | `lib/api.ts` | 타입 정의 + API 함수 확장 |
+| Server A 프론트 | `messages/ko.json` | 분류 관련 15개 키 추가 |
+| Server A 프론트 | `messages/en.json` | 분류 관련 15개 키 추가 |
+
+---
+
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*
