@@ -35,7 +35,7 @@ import { getDisplayName, formatLocation } from "@/lib/utils";
  * 2) AHU_5F 센서 실시간 차트 (접기/펼치기)
  */
 
-// ── 대분류 카테고리 ──
+// ── 대분류 카테고리 (부품 제외 — 부품은 하단 요약 배너로 표시) ──
 const CATEGORY_GROUPS = [
   { key: "all", label: "categoryAll", classes: [] },
   {
@@ -54,12 +54,10 @@ const CATEGORY_GROUPS = [
     label: "categoryElecTransport",
     classes: ["Elevator"],
   },
-  {
-    key: "parts",
-    label: "categoryParts",
-    classes: ["Valve", "Damper", "VFD"],
-  },
 ] as const;
+
+// ── 부품 타입 (모니터링 카드에서 제외, 요약 배너로 표시) ──
+const COMPONENT_TYPES = ["Valve", "Damper", "VFD", "Heat_Exchanger", "CRAC", "Condenser", "Compressor"];
 
 // ── HVAC 서브필터 ──
 const HVAC_SUB_FILTERS = [
@@ -164,6 +162,7 @@ export default function MonitoringPage() {
   const [hvacSubFilter, setHvacSubFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [showSensorCharts, setShowSensorCharts] = useState(false);
+  const [showComponentSummary, setShowComponentSummary] = useState(false);
 
   // i18n 기반 장비 유형 라벨
   const getTypeLabelI18n = (type: string) => {
@@ -238,9 +237,35 @@ export default function MonitoringPage() {
     return sub ? matchesClasses(eq, sub.classes) : false;
   };
 
-  // 필터링된 장비 목록 (2단계 분류)
+  // 부품 목록 (카드 그리드에서 제외, 하단 요약 배너용)
+  const componentEquipment = useMemo(() => {
+    return equipment.filter((eq) =>
+      eq.category === "component" ||
+      eq.brick_class.some((c) => COMPONENT_TYPES.includes(c))
+    );
+  }, [equipment]);
+
+  // 부품 타입별 그룹 요약
+  const componentSummary = useMemo(() => {
+    const groups: Record<string, { count: number; items: EquipmentListItem[] }> = {};
+    for (const eq of componentEquipment) {
+      const type = eq.type;
+      if (!groups[type]) groups[type] = { count: 0, items: [] };
+      groups[type].count++;
+      groups[type].items.push(eq);
+    }
+    return groups;
+  }, [componentEquipment]);
+
+  // 모니터링 대상 장비 (부품 제외)
+  const monitorableEquipment = useMemo(() => {
+    const compIds = new Set(componentEquipment.map((eq) => eq.id));
+    return equipment.filter((eq) => !compIds.has(eq.id));
+  }, [equipment, componentEquipment]);
+
+  // 필터링된 장비 목록 (2단계 분류, 부품 제외)
   const filteredEquipment = useMemo(() => {
-    let list = equipment;
+    let list = monitorableEquipment;
 
     // 1단계: 대분류 필터
     if (categoryFilter !== "all") {
@@ -264,7 +289,7 @@ export default function MonitoringPage() {
     }
 
     return list;
-  }, [equipment, categoryFilter, hvacSubFilter, searchQuery]);
+  }, [monitorableEquipment, categoryFilter, hvacSubFilter, searchQuery]);
 
   // 장비별 실시간 상태 매칭 (SSE devices 데이터)
   const getDeviceActive = (eq: EquipmentListItem): boolean | null => {
@@ -273,21 +298,21 @@ export default function MonitoringPage() {
     return eq.is_active;
   };
 
-  // 대분류 카운트
+  // 대분류 카운트 (부품 제외)
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: equipment.length };
+    const counts: Record<string, number> = { all: monitorableEquipment.length };
     for (const group of CATEGORY_GROUPS) {
       if (group.key === "all") continue;
-      counts[group.key] = equipment.filter((eq) =>
+      counts[group.key] = monitorableEquipment.filter((eq) =>
         matchesCategory(eq, group.key)
       ).length;
     }
     return counts;
-  }, [equipment]);
+  }, [monitorableEquipment]);
 
   // HVAC 서브필터 카운트
   const hvacSubCounts = useMemo(() => {
-    const hvacList = equipment.filter((eq) => matchesCategory(eq, "hvac"));
+    const hvacList = monitorableEquipment.filter((eq) => matchesCategory(eq, "hvac"));
     const counts: Record<string, number> = { all: hvacList.length };
     for (const sub of HVAC_SUB_FILTERS) {
       if (sub.key === "all") continue;
@@ -319,7 +344,7 @@ export default function MonitoringPage() {
     <div className="min-h-screen">
       <Header
         title={t("title")}
-        description={t("description", { count: equipment.length })}
+        description={t("description", { count: monitorableEquipment.length })}
         connected={connected}
       />
 
@@ -404,13 +429,6 @@ export default function MonitoringPage() {
           </div>
         )}
 
-        {/* 부품 탭 안내 배너 */}
-        {categoryFilter === "parts" && (
-          <div className="bg-amber-50 text-amber-700 text-xs px-4 py-2 rounded-lg">
-            {t("partsNote")}
-          </div>
-        )}
-
         {/* 장비 카드 그리드 */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -482,6 +500,70 @@ export default function MonitoringPage() {
                 </Link>
               );
             })}
+          </div>
+        )}
+
+        {/* 부품 현황 요약 배너 */}
+        {componentEquipment.length > 0 && (
+          <div className="border border-gray-200 rounded-lg">
+            <button
+              onClick={() => setShowComponentSummary(!showComponentSummary)}
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50 rounded-lg"
+            >
+              <span className="flex items-center gap-2">
+                {showComponentSummary ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+                {t("componentSummaryTitle")}
+                <span className="text-gray-400 text-xs">
+                  {t("componentSummaryCount", {
+                    valve: componentSummary["Valve"]?.count || 0,
+                    damper: componentSummary["Damper"]?.count || 0,
+                    vfd: componentSummary["VFD"]?.count || 0,
+                  })}
+                </span>
+              </span>
+              <Badge variant="outline" className="text-[10px]">
+                {t("componentSummaryBadge", { count: componentEquipment.length })}
+              </Badge>
+            </button>
+
+            {showComponentSummary && (
+              <div className="px-4 pb-3 pt-1">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="text-gray-400 border-b">
+                      <th className="text-left py-1.5 font-medium">{t("componentType")}</th>
+                      <th className="text-center py-1.5 font-medium">{t("componentCount")}</th>
+                      <th className="text-left py-1.5 font-medium">{t("componentParent")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(componentSummary).map(([type, group]) => (
+                      <tr key={type} className="border-b border-gray-50">
+                        <td className="py-1.5">
+                          <Badge className={`text-[10px] ${getTypeColor(type)}`}>
+                            {getTypeLabelI18n(type)}
+                          </Badge>
+                        </td>
+                        <td className="text-center text-gray-600">{group.count}</td>
+                        <td className="text-gray-400">
+                          {group.items[0]?.location
+                            ? formatLocation(locale, group.items[0].location)
+                            : "—"}
+                          {group.count > 1 && group.items[0]?.location && " 외"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <p className="text-[10px] text-gray-400 mt-2">
+                  {t("componentNote")}
+                </p>
+              </div>
+            )}
           </div>
         )}
 

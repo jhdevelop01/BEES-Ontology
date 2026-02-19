@@ -34,6 +34,8 @@ CONTROLLABLE_EQUIPMENT: dict[str, list[str]] = {
     "Condenser_Water_Pump": ["ON", "OFF"],
     "Hot_Water_Pump": ["ON", "OFF"],
     "Pump": ["ON", "OFF"],
+    "Chilled_Ceiling_Panel": ["ON", "OFF"],
+    "Elevator": ["ON", "OFF"],
 }
 
 # 일반적인 상위 라벨 (필터링 대상)

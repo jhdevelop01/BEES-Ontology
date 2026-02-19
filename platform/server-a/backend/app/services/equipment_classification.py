@@ -43,12 +43,13 @@ _CATEGORY_MAP: dict[str, tuple[str, Optional[str]]] = {
     "Compressor": ("component", None),
 }
 
-# Server B CONTROLLABLE_EQUIPMENT과 동기화 (server-b/app/neo4j_loader.py:25-37)
+# Server B CONTROLLABLE_EQUIPMENT과 동기화 (server-b/app/neo4j_loader.py:25-39)
 CONTROLLABLE_TYPES: set[str] = {
     "AHU", "Chiller", "Boiler", "Cooling_Tower",
     "Fan_Coil_Unit", "Exhaust_Fan", "Supply_Fan",
     "Chilled_Water_Pump", "Condenser_Water_Pump",
     "Hot_Water_Pump", "Pump",
+    "Chilled_Ceiling_Panel", "Elevator",
 }
 
 

@@ -136,12 +136,17 @@
     "categoryAll": "All",
     "categoryHVAC": "HVAC",
     "categoryElecTransport": "Electrical/Transport",
-    "categoryParts": "Components",
     "subHVACAll": "All HVAC",
     "subCooling": "Cooling",
     "subHeating": "Heating",
     "subAirside": "Air-side",
-    "partsNote": "Valves, dampers, VFDs, etc. These are sub-components of parent equipment."
+    "componentSummaryTitle": "Components",
+    "componentSummaryCount": "Valves {valve} · Dampers {damper} · VFDs {vfd}",
+    "componentSummaryBadge": "{count}",
+    "componentType": "Type",
+    "componentCount": "Count",
+    "componentParent": "Location",
+    "componentNote": "Components are sub-parts of parent equipment, not included in real-time simulation. See Topology for detailed structure."
   },
   "control": {
     "title": "Control",
@@ -167,11 +172,7 @@
     "commandError": "Command error",
     "unknownError": "Unknown error",
     "noCommands": "No commands sent yet.",
-    "noCommandsHint": "Press the Start/Stop button above to send a command.",
-    "controllableDevices": "Controllable ({count})",
-    "monitorOnlyDevices": "Monitor-only ({count})",
-    "monitorOnlyLabel": "Monitor Only",
-    "controllableCount": "Controllable {count}/{total}"
+    "noCommandsHint": "Press the Start/Stop button above to send a command."
   },
   "ontology": {
     "title": "Ontology",
