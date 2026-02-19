@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (SSE 이벤트 스톰 수정 + 모니터링/제어 페이지 복구)
+> **최종 업데이트:** 2026.02.19 (TTL↔Neo4j 장비 동기화 + 모니터링 필터 수정)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -1886,6 +1886,75 @@ curl http://localhost:8010/api/stream/snapshot
 - `control-analyzer`: 제어 페이지 코드 분석
 - `sse-dataflow-analyzer`: SSE/MQTT/WebSocket 데이터 흐름 분석 (근본 원인 발견)
 - `backend-api-tester`: curl E2E API 테스트
+
+---
+
+## 23. 모니터링 FCU 필터 버그 + TTL↔Neo4j 장비 동기화 (2026.02.19)
+
+### 23.1 문제 현상
+
+1. **모니터링 페이지 FCU 필터**: "검색 조건에 맞는 장비가 없습니다" (0개)
+2. **필터 탭 라벨**: `monitoring.AHU`, `monitoring.FCU`처럼 i18n 키가 번역되지 않고 그대로 노출
+3. **TTL↔API 장비 불일치**: TTL에 110+ 장비 정의, API는 83개만 반환
+
+### 23.2 근본 원인
+
+#### (1) Neo4j 라벨 불일치 (`'FCU'` vs `'Fan_Coil_Unit'`)
+
+온톨로지 TTL에서 FCU는 `brick:Fan_Coil_Unit` 클래스로 정의:
+```turtle
+bldg:FCU_2F a brick:Fan_Coil_Unit ;
+```
+n10s가 Neo4j에 import하면 라벨이 `Fan_Coil_Unit`. 하지만 Cypher 쿼리 화이트리스트에는 `'FCU'`로 등록 → 매칭 실패.
+
+#### (2) Pump 서브클래스 누락
+
+TTL의 펌프 장비는 Brick 서브클래스를 사용:
+- `brick:Chilled_Water_Pump` (CC_Pump_1, CHW_Pump_1, CHW_Pump_Group)
+- `brick:Condenser_Water_Pump` (CW_Pump_1, CW_Pump_Group)
+- `brick:Hot_Water_Pump` (HW_Pump_1, HW_Pump_Group)
+
+화이트리스트에 `'Pump'`만 있어서 서브클래스 7개 누락.
+
+#### (3) BEES 커스텀 장비 누락
+
+`bees:Chilled_Ceiling_Panel` (CC_Panel_5F~15F_Int/West) 20개가 화이트리스트에 없음.
+
+#### (4) i18n 라벨 미매핑
+
+```typescript
+{ key: "AHU", label: "AHU" },  // ← "typeAHU"여야 함
+{ key: "FCU", label: "FCU" },  // ← "typeFCU"여야 함
+```
+
+### 23.3 수정 내용
+
+| 파일 | 변경 |
+|------|------|
+| `neo4j_service.py:174-182` | 쿼리 화이트리스트에 `Fan_Coil_Unit`, `Chilled_Water_Pump`, `Condenser_Water_Pump`, `Hot_Water_Pump`, `Chilled_Ceiling_Panel` 추가 |
+| `neo4j_service.py:337-346` | `equipment_types` 리스트 동기화 |
+| `monitoring/page.tsx:38-48` | `AHU`→`typeAHU`, `FCU`→`Fan_Coil_Unit`+`typeFCU`, CC Panel 필터 탭 추가 |
+| `messages/ko.json` | `"typeCCPanel": "냉각천장"` 추가 |
+| `messages/en.json` | `"typeCCPanel": "CC Panel"` 추가 |
+
+### 23.4 결과
+
+| 항목 | 이전 | 이후 |
+|------|:----:|:----:|
+| API 장비 수 | 83 | **110** |
+| Pump 계열 | 2 | **9** (+7 Water Pump) |
+| CC Panel | 0 | **20** |
+| FCU | 0 | **4** |
+| 모니터링 필터 탭 | 7개 (i18n 깨짐) | **9개** (+ CC Panel, i18n 정상) |
+
+### 23.5 TTL-First 원칙 확인
+
+**TTL이 이미 모든 장비를 포함**하고 있었음. 문제는 백엔드 Cypher 쿼리의 화이트리스트가 불완전했을 뿐. TTL → n10s → Neo4j 경로는 정상이며, API 쿼리만 수정으로 해결.
+
+### 23.6 커밋
+
+- `eba8fd5` — fix: SSE 이벤트 스톰 수정 — 401개 개별 이벤트를 1개 batch로 통합
+- `62b1e3c` — fix: TTL↔Neo4j 장비 동기화 — 누락 27개 장비 API 노출 (83→110)
 
 ---
 
