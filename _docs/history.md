@@ -3182,6 +3182,25 @@ Agent Teams(3명 병렬)로 작업.
 - "전력 시스템 구성" → 2건 (Electrical_System + Solar_PV_System)
 - "난방 시스템 구성" → 2건 (Boiler_Plant + RH_System)
 
+### 39.6 에너지 흐름 0건 문제 추가 수정
+
+**문제**: GPT가 `get_energy_flow("냉방 시스템")`으로 호출 → URI에 한국어 없으므로 0건 → 추측(hallucination)으로 응답
+- "전력 시스템에서 에너지를 받아" — 온톨로지에 해당 관계 없음 (GPT 추측)
+
+**수정 (`openai_service.py`)**:
+1. `get_energy_flow`에 `EQUIP_ALIASES` 14개 한/영 매핑 추가
+   - 냉방 → Chiller_1, Chiller_2, CHW_Pump
+   - 난방 → Boiler_1, HW_Pump_1 등
+2. 여러 장비에 대해 반복 조회 → 중복 제거 후 합산
+3. feeds_to에 source 필드 추가 (어느 장비가 공급하는지 명확히)
+4. 도구 설명 개선 — 한국어 사용 가능 안내
+
+**검증**: "냉방 시스템 에너지 흐름" → **61건** (feeds 50 + fed_by 4 + 7 overlap removed)
+- Chiller_1~4 → CHW_Pump_1, AHU_UFAD_1~10, CC_Panel_*F, DOAS_1~3, Cooling_Tower
+- CHW_Pump_1 → CC_Distribution_Header_*F
+- CHW_Pump_Group → AHU_UFAD_*
+- GPT가 실데이터 기반 정확한 에너지 흐름 응답
+
 ---
 
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*

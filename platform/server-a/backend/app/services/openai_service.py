@@ -181,13 +181,13 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_energy_flow",
-            "description": "에너지 흐름(feeds/isFedBy 관계)을 추적합니다. 특정 장비가 어디에 에너지를 공급하거나 공급받는지 조회합니다.",
+            "description": "에너지 흐름(feeds/isFedBy 관계)을 추적합니다. 특정 장비가 어디에 에너지를 공급하거나 공급받는지 조회합니다. 한국어(냉방, 냉수, 난방 등)와 영문(Chiller_1, CHW 등) 모두 사용 가능합니다.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "equipment_name": {
                         "type": "string",
-                        "description": "장비 이름. 예: 'AHU_5F', 'Chiller_1'",
+                        "description": "장비 이름 또는 시스템 키워드. 예: 'Chiller_1', '냉방', '냉수', 'CHW', '난방', 'Boiler_1', 'AHU_UFAD_1'",
                     },
                     "direction": {
                         "type": "string",
@@ -481,46 +481,83 @@ async def _tool_count_by_type(brick_type: str) -> dict[str, Any]:
 
 
 async def _tool_get_energy_flow(equipment_name: str, direction: str = "both") -> dict[str, Any]:
-    """에너지 흐름 추적"""
+    """에너지 흐름 추적 (한국어/별칭 → 영문 장비명 매핑 포함)"""
+
+    # 한국어/시스템명 → 실제 장비 URI 키워드 매핑
+    EQUIP_ALIASES: dict[str, list[str]] = {
+        "냉방": ["Chiller_1", "Chiller_2", "CHW_Pump"],
+        "냉수": ["Chiller_1", "CHW_Pump_1"],
+        "냉동기": ["Chiller_1", "Chiller_2"],
+        "칠러": ["Chiller_1", "Chiller_2"],
+        "CHW": ["Chiller_1", "CHW_Pump_1"],
+        "냉각탑": ["Cooling_Tower_1", "Cooling_Tower_2"],
+        "난방": ["Boiler_1", "HW_Pump_1"],
+        "보일러": ["Boiler_1", "Boiler_2"],
+        "온수": ["Boiler_1", "HW_Pump_1"],
+        "HW": ["Boiler_1", "HW_Pump_1"],
+        "냉방 시스템": ["Chiller_1", "Chiller_2", "CHW_Pump_1", "CHW_Pump_Group"],
+        "난방 시스템": ["Boiler_1", "Boiler_2", "HW_Pump_1"],
+        "HVAC": ["Chiller_1", "Boiler_1", "AHU_UFAD_1"],
+        "공조": ["AHU_UFAD_1", "DOAS_1"],
+    }
+
+    # 별칭 매핑
+    search_names = [equipment_name]
+    for alias, names in EQUIP_ALIASES.items():
+        if alias in equipment_name or equipment_name in alias:
+            search_names = names
+            break
+
     results_data: dict[str, Any] = {"equipment": equipment_name, "direction": direction}
+    all_feeds_to: list[dict] = []
+    all_fed_by: list[dict] = []
+    seen_feeds: set[str] = set()
+    seen_fedby: set[str] = set()
 
-    if direction in ("feeds", "both"):
-        cypher = """
-            MATCH (equip)-[:feeds]->(target)
-            WHERE equip.uri CONTAINS $name
-            RETURN equip.uri AS source, target.uri AS target_uri, labels(target) AS target_labels
-            LIMIT 50
-        """
-        results = await neo4j_service.run_cypher(cypher, {"name": equipment_name})
-        feeds_to = []
-        for r in results:
-            if "error" not in r:
-                target_uri = r.get("target_uri", "")
-                feeds_to.append({
-                    "name": neo4j_service._extract_name(target_uri),
-                    "uri": target_uri,
-                    "labels": r.get("target_labels", []),
-                })
-        results_data["feeds_to"] = feeds_to
+    for name in search_names:
+        if direction in ("feeds", "both"):
+            cypher = """
+                MATCH (equip)-[:feeds]->(target)
+                WHERE equip.uri CONTAINS $name
+                RETURN equip.uri AS source, target.uri AS target_uri, labels(target) AS target_labels
+                LIMIT 50
+            """
+            results = await neo4j_service.run_cypher(cypher, {"name": name})
+            for r in results:
+                if "error" not in r:
+                    target_uri = r.get("target_uri", "")
+                    key = f"{r.get('source', '')}>{target_uri}"
+                    if key not in seen_feeds:
+                        seen_feeds.add(key)
+                        all_feeds_to.append({
+                            "source": neo4j_service._extract_name(r.get("source", "")),
+                            "name": neo4j_service._extract_name(target_uri),
+                            "labels": [l for l in r.get("target_labels", []) if l != "Resource"],
+                        })
 
-    if direction in ("isFedBy", "both"):
-        cypher = """
-            MATCH (equip)-[:isFedBy]->(source)
-            WHERE equip.uri CONTAINS $name
-            RETURN equip.uri AS target, source.uri AS source_uri, labels(source) AS source_labels
-            LIMIT 50
-        """
-        results = await neo4j_service.run_cypher(cypher, {"name": equipment_name})
-        fed_by = []
-        for r in results:
-            if "error" not in r:
-                source_uri = r.get("source_uri", "")
-                fed_by.append({
-                    "name": neo4j_service._extract_name(source_uri),
-                    "uri": source_uri,
-                    "labels": r.get("source_labels", []),
-                })
-        results_data["fed_by"] = fed_by
+        if direction in ("isFedBy", "both"):
+            cypher = """
+                MATCH (equip)-[:isFedBy]->(source)
+                WHERE equip.uri CONTAINS $name
+                RETURN equip.uri AS target, source.uri AS source_uri, labels(source) AS source_labels
+                LIMIT 50
+            """
+            results = await neo4j_service.run_cypher(cypher, {"name": name})
+            for r in results:
+                if "error" not in r:
+                    source_uri = r.get("source_uri", "")
+                    key = f"{source_uri}>{r.get('target', '')}"
+                    if key not in seen_fedby:
+                        seen_fedby.add(key)
+                        all_fed_by.append({
+                            "target": neo4j_service._extract_name(r.get("target", "")),
+                            "name": neo4j_service._extract_name(source_uri),
+                            "labels": [l for l in r.get("source_labels", []) if l != "Resource"],
+                        })
+
+    results_data["feeds_to"] = all_feeds_to[:50]
+    results_data["fed_by"] = all_fed_by[:50]
+    results_data["count"] = len(all_feeds_to) + len(all_fed_by)
 
     return results_data
 
