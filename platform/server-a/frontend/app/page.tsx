@@ -91,7 +91,7 @@ export default function DashboardPage() {
     return mqttActive || summary?.kpi.active_devices || 0;
   }, [devices, summary]);
 
-  const totalDevices = equipmentList.length || summary?.kpi.total_devices || 84;
+  const totalDevices = equipmentList.length || summary?.kpi.total_devices || 201;
   const simStatus = summary?.kpi.simulation_status || (connected ? "running" : "stopped");
 
   return (

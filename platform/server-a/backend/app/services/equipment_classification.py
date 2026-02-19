@@ -88,11 +88,44 @@ CONTROLLABLE_TYPES: set[str] = {
 }
 
 
+# ── 이름 기반 카테고리 매핑 (generic Equipment 노드용) ──
+_NAME_CATEGORY_MAP: dict[str, tuple[str, Optional[str]]] = {
+    # 소방/방재
+    "Fire_Detection": ("safety", "fire"),
+    "Sprinkler": ("safety", "fire"),
+    "Smoke_Control": ("safety", "fire"),
+    "Emergency_Broadcast": ("safety", "fire"),
+    "Fire_Hydrant": ("safety", "fire"),
+    # 보안/출입
+    "Access_Control": ("safety", "security"),
+    "CCTV": ("safety", "security"),
+    "Parking_Management": ("safety", "security"),
+    "Intercom": ("safety", "security"),
+    # 비상통신
+    "Emergency_Communication": ("safety", "emergency"),
+    "Emergency_Phone": ("safety", "emergency"),
+    # 전기/태양광/피뢰
+    "PV_Inverter": ("electrical", "renewable"),
+    "Solar_Panel": ("electrical", "renewable"),
+    "Lightning": ("electrical", "protection"),
+    "Ground_Electrode": ("electrical", "protection"),
+    # 수자원
+    "Rainwater": ("water", None),
+    "Wastewater": ("water", None),
+    "Grease_Trap": ("water", None),
+    "Pressure_Tank": ("water", None),
+    # BMS
+    "BMS": ("automation", "bms"),
+}
+
+
 def classify_equipment(
     brick_labels: list[str],
+    equipment_name: str = "",
 ) -> dict[str, Optional[str | bool]]:
     """
     Brick 라벨 목록에서 카테고리 분류를 반환한다.
+    generic Equipment 노드는 이름 기반으로 추가 분류.
 
     Returns:
         {"category": "hvac", "subcategory": "cooling", "controllable": True}
@@ -105,6 +138,15 @@ def classify_equipment(
                 "subcategory": sub,
                 "controllable": label in CONTROLLABLE_TYPES,
             }
+    # generic Equipment → 이름 기반 분류
+    if equipment_name:
+        for prefix, (cat, sub) in _NAME_CATEGORY_MAP.items():
+            if prefix in equipment_name:
+                return {
+                    "category": cat,
+                    "subcategory": sub,
+                    "controllable": False,
+                }
     return {
         "category": None,
         "subcategory": None,

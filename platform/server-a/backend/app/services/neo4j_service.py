@@ -152,26 +152,32 @@ async def search_instances(query: str, limit: int = 20) -> list[dict[str, Any]]:
 async def get_equipment_count() -> int:
     """전체 장비 수 조회"""
     if not _driver:
-        return 42  # fallback
+        return 201  # fallback
 
     try:
         async with _driver.session() as session:
             result = await session.run("""
                 MATCH (n)
-                WHERE any(label IN labels(n) WHERE
-                    label = 'Equipment' OR
-                    label CONTAINS 'AHU' OR
-                    label CONTAINS 'Chiller' OR
-                    label CONTAINS 'Boiler' OR
-                    label CONTAINS 'Pump' OR
-                    label CONTAINS 'Fan'
-                )
+                WHERE n.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND any(label IN labels(n) WHERE label IN [
+                    'Equipment', 'AHU', 'Chiller', 'Boiler', 'Pump', 'Fan',
+                    'Cooling_Tower', 'Fan_Coil_Unit', 'Elevator', 'VFD',
+                    'Valve', 'Damper', 'Transformer', 'UPS', 'Switchgear',
+                    'Emergency_Generator', 'Water_Pump', 'HVAC_Equipment',
+                    'Controller', 'Lighting_Equipment', 'Building_Electrical_Meter',
+                    'HVAC_System', 'Electrical_System', 'Lighting_System',
+                    'Water_System', 'Chiller_Plant', 'UFAD_System',
+                    'Chilled_Ceiling_System', 'Radiant_Heating_System',
+                    'Night_Purge_System', 'Double_Skin_Facade_System',
+                    'DALI_Lighting_System', 'Light_Shelf_System',
+                    'Rainwater_Harvesting_System', 'Wastewater_Treatment_System'
+                  ])
                 RETURN count(n) AS cnt
             """)
             record = await result.single()
-            return record["cnt"] if record else 42
+            return record["cnt"] if record else 201
     except Exception:
-        return 42
+        return 201
 
 
 async def get_equipment_list(
@@ -193,7 +199,19 @@ async def get_equipment_list(
                     'Air_Handler_Unit',
                     'Supply_Fan', 'Return_Fan', 'Exhaust_Fan',
                     'Chilled_Water_Pump', 'Condenser_Water_Pump', 'Hot_Water_Pump',
-                    'Chilled_Ceiling_Panel'
+                    'Chilled_Ceiling_Panel',
+                    'Transformer', 'UPS', 'Switchgear', 'Emergency_Generator',
+                    'Electrical_Equipment', 'Building_Electrical_Meter',
+                    'Water_Pump', 'HVAC_Equipment', 'Controller',
+                    'Lighting_Equipment',
+                    'HVAC_System', 'Electrical_System', 'Lighting_System',
+                    'Water_System', 'Equipment_System',
+                    'Chilled_Ceiling_System', 'Chiller_Plant',
+                    'DALI_Lighting_System', 'Double_Skin_Facade_System',
+                    'Light_Shelf_System', 'Night_Purge_System',
+                    'Radiant_Heating_System', 'Rainwater_Harvesting_System',
+                    'UFAD_System', 'Wastewater_Treatment_System',
+                    'Equipment'
                   ])
                 OPTIONAL MATCH (n)-[:hasLocation]->(loc)
                 WHERE loc.uri STARTS WITH 'https://example.org/gec-b#'
@@ -222,7 +240,7 @@ async def get_equipment_list(
                         continue
 
                 from app.services.equipment_classification import classify_equipment
-                classification = classify_equipment(labels)
+                classification = classify_equipment(labels, equipment_name=name)
 
                 equipment_list.append({
                     "id": brick_id,

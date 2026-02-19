@@ -39,13 +39,46 @@ const CATEGORY_GROUPS = [
       "Chilled_Water_Pump", "Condenser_Water_Pump", "Hot_Water_Pump",
       "Fan", "Supply_Fan", "Return_Fan", "Exhaust_Fan",
       "Cooling_Tower", "Fan_Coil_Unit", "Chilled_Ceiling_Panel",
-      "Heat_Exchanger",
+      "Heat_Exchanger", "HVAC_Equipment",
+      "HVAC_System", "Chiller_Plant", "UFAD_System",
+      "Chilled_Ceiling_System", "Radiant_Heating_System",
+      "Night_Purge_System", "Double_Skin_Facade_System",
     ],
   },
   {
-    key: "elec_transport",
-    label: "categoryElecTransport",
-    classes: ["Elevator"],
+    key: "electrical",
+    label: "categoryElectrical",
+    classes: [
+      "Elevator", "Transformer", "UPS", "Switchgear",
+      "Emergency_Generator", "Electrical_Equipment",
+      "Building_Electrical_Meter", "Electrical_System",
+    ],
+  },
+  {
+    key: "water",
+    label: "categoryWater",
+    classes: [
+      "Water_Pump", "Water_System",
+      "Rainwater_Harvesting_System", "Wastewater_Treatment_System",
+    ],
+  },
+  {
+    key: "automation",
+    label: "categoryAutomation",
+    classes: [
+      "Controller", "Lighting_Equipment",
+      "Lighting_System", "DALI_Lighting_System", "Light_Shelf_System",
+    ],
+  },
+  {
+    key: "safety",
+    label: "categorySafety",
+    classes: [],
+  },
+  {
+    key: "system",
+    label: "categorySystem",
+    classes: ["Equipment_System", "Equipment"],
   },
 ] as const;
 
@@ -58,17 +91,28 @@ const HVAC_SUB_FILTERS = [
   {
     key: "cooling",
     label: "subCooling",
-    classes: ["Chiller", "Cooling_Tower", "Chilled_Water_Pump", "Condenser_Water_Pump", "Chilled_Ceiling_Panel"],
+    classes: [
+      "Chiller", "Cooling_Tower", "Chilled_Water_Pump", "Condenser_Water_Pump",
+      "Chilled_Ceiling_Panel", "Chiller_Plant", "Chilled_Ceiling_System",
+    ],
   },
   {
     key: "heating",
     label: "subHeating",
-    classes: ["Boiler", "Hot_Water_Pump"],
+    classes: ["Boiler", "Hot_Water_Pump", "Radiant_Heating_System"],
   },
   {
     key: "airside",
     label: "subAirside",
-    classes: ["AHU", "Air_Handler_Unit", "Supply_Fan", "Return_Fan", "Exhaust_Fan", "Fan", "Fan_Coil_Unit", "Pump"],
+    classes: [
+      "AHU", "Air_Handler_Unit", "Supply_Fan", "Return_Fan", "Exhaust_Fan",
+      "Fan", "Fan_Coil_Unit", "Pump", "UFAD_System", "Night_Purge_System",
+    ],
+  },
+  {
+    key: "special",
+    label: "subSpecial",
+    classes: ["HVAC_Equipment", "HVAC_System", "Double_Skin_Facade_System"],
   },
 ] as const;
 
@@ -87,6 +131,13 @@ function getTypeColor(type: string): string {
   if (t.includes("heat_exchanger")) return "bg-amber-100 text-amber-700";
   if (t.includes("valve")) return "bg-emerald-100 text-emerald-700";
   if (t.includes("damper")) return "bg-lime-100 text-lime-700";
+  if (t.includes("transformer") || t.includes("switchgear")) return "bg-yellow-100 text-yellow-700";
+  if (t.includes("ups") || t.includes("generator")) return "bg-amber-100 text-amber-700";
+  if (t.includes("water_pump")) return "bg-blue-100 text-blue-700";
+  if (t.includes("controller")) return "bg-slate-100 text-slate-700";
+  if (t.includes("lighting")) return "bg-yellow-100 text-yellow-600";
+  if (t.includes("meter")) return "bg-pink-100 text-pink-700";
+  if (t.includes("system") || t.includes("plant")) return "bg-stone-100 text-stone-700";
   return "bg-gray-100 text-gray-600";
 }
 
@@ -144,7 +195,13 @@ export default function MonitoringPage() {
   // API category → 내부 키 매핑
   const API_CATEGORY_MAP: Record<string, string> = {
     hvac: "hvac",
-    electrical_transport: "elec_transport",
+    electrical_transport: "electrical",
+    electrical: "electrical",
+    water: "water",
+    automation: "automation",
+    lighting: "automation",
+    safety: "safety",
+    system: "system",
     component: "parts",
   };
 
@@ -153,6 +210,7 @@ export default function MonitoringPage() {
     cooling: "cooling",
     heating: "heating",
     air_handling: "airside",
+    special: "special",
   };
 
   // brick_class 배열이 특정 클래스 목록에 매칭되는지 확인 (폴백용)

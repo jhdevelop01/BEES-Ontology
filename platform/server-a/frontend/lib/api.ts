@@ -440,8 +440,8 @@ export interface EquipmentListItem {
   location: string | null;
   type: string;
   is_active: boolean | null;
-  category: "hvac" | "electrical_transport" | "component" | null;
-  subcategory: "cooling" | "heating" | "air_handling" | null;
+  category: "hvac" | "electrical_transport" | "electrical" | "water" | "automation" | "lighting" | "system" | "safety" | "component" | null;
+  subcategory: "cooling" | "heating" | "air_handling" | "special" | "power_distribution" | "power_protection" | "emergency_power" | "metering" | "pumping" | "controller" | null;
   controllable: boolean;
 }
 

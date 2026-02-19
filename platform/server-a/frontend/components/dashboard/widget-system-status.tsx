@@ -4,7 +4,7 @@ import React, { useMemo } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Snowflake, Flame, Wind, Zap } from "lucide-react";
+import { Snowflake, Flame, Wind, Zap, Droplets, Cpu } from "lucide-react";
 import type { EquipmentListItem } from "@/lib/api";
 
 interface WidgetSystemStatusProps {
@@ -12,20 +12,24 @@ interface WidgetSystemStatusProps {
   equipmentList: EquipmentListItem[];
 }
 
-type SystemKey = "cooling" | "heating" | "air_handling" | "electrical_transport";
+type SystemKey = "cooling" | "heating" | "air_handling" | "electrical" | "water" | "automation";
 
 const SYSTEM_ICONS: Record<SystemKey, React.ReactNode> = {
   cooling: <Snowflake className="h-5 w-5 text-blue-500" />,
   heating: <Flame className="h-5 w-5 text-red-500" />,
   air_handling: <Wind className="h-5 w-5 text-teal-500" />,
-  electrical_transport: <Zap className="h-5 w-5 text-yellow-500" />,
+  electrical: <Zap className="h-5 w-5 text-yellow-500" />,
+  water: <Droplets className="h-5 w-5 text-cyan-500" />,
+  automation: <Cpu className="h-5 w-5 text-purple-500" />,
 };
 
 const I18N_KEYS: Record<SystemKey, string> = {
   cooling: "systemCooling",
   heating: "systemHeating",
   air_handling: "systemAirHandling",
-  electrical_transport: "systemElecTransport",
+  electrical: "systemElectrical",
+  water: "systemWater",
+  automation: "systemAutomation",
 };
 
 export function WidgetSystemStatus({
@@ -41,7 +45,9 @@ export function WidgetSystemStatus({
       cooling: [],
       heating: [],
       air_handling: [],
-      electrical_transport: [],
+      electrical: [],
+      water: [],
+      automation: [],
     };
 
     for (const eq of filtered) {
@@ -49,10 +55,14 @@ export function WidgetSystemStatus({
         groups.cooling.push(eq);
       } else if (eq.subcategory === "heating") {
         groups.heating.push(eq);
-      } else if (eq.subcategory === "air_handling") {
+      } else if (eq.subcategory === "air_handling" || eq.subcategory === "special") {
         groups.air_handling.push(eq);
-      } else if (eq.category === "electrical_transport") {
-        groups.electrical_transport.push(eq);
+      } else if (eq.category === "electrical_transport" || eq.category === "electrical") {
+        groups.electrical.push(eq);
+      } else if (eq.category === "water") {
+        groups.water.push(eq);
+      } else if (eq.category === "automation" || eq.category === "lighting") {
+        groups.automation.push(eq);
       }
     }
 
@@ -73,8 +83,9 @@ export function WidgetSystemStatus({
       <CardHeader className="flex-shrink-0 pb-2">
         <CardTitle className="text-base">{t("systemStatus")}</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 grid grid-cols-2 gap-3">
+      <CardContent className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-3">
         {systemStats.map(({ key, total, active }) => {
+          if (total === 0) return null;
           const allGood = total > 0 && active === total;
           const allOff = active === 0;
           const bgColor = allGood
