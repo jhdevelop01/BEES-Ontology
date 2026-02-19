@@ -4,20 +4,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { Header } from "@/components/layout/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { LiveChart, type ChartDataPoint } from "@/components/charts/live-chart";
 import { useSSE } from "@/lib/sse";
 import {
   getEquipmentList,
   type EquipmentListItem,
 } from "@/lib/api";
 import {
-  Thermometer,
-  Wind,
-  Gauge,
-  Filter,
   Power,
   PowerOff,
   Cpu,
@@ -31,8 +25,7 @@ import { getDisplayName, formatLocation } from "@/lib/utils";
 
 /**
  * 모니터링 페이지
- * 1) 전체 장비 목록 (유형별 필터, 검색, 클릭 시 상세 이동)
- * 2) AHU_5F 센서 실시간 차트 (접기/펼치기)
+ * 전체 장비 목록 (유형별 2단계 필터, 검색, 클릭 시 상세 이동)
  */
 
 // ── 대분류 카테고리 (부품 제외 — 부품은 하단 요약 배너로 표시) ──
@@ -97,62 +90,8 @@ function getTypeColor(type: string): string {
   return "bg-gray-100 text-gray-600";
 }
 
-// ── AHU_5F 센서 정의 (기존 유지) ──
-const SENSORS = [
-  {
-    id: "bldg:Zone_Air_Temp_5F_Interior",
-    name: "sensorZoneTemp",
-    description: "Zone Air Temperature",
-    unit: "°C",
-    color: "#ef4444",
-    icon: Thermometer,
-    yMin: 15,
-    yMax: 35,
-  },
-  {
-    id: "bldg:Zone_Air_Humidity_5F_Interior",
-    name: "sensorZoneHumidity",
-    description: "Zone Air Humidity",
-    unit: "%RH",
-    color: "#3b82f6",
-    icon: Wind,
-    yMin: 20,
-    yMax: 80,
-  },
-  {
-    id: "bldg:Supply_Air_Temp_AHU_5F",
-    name: "sensorSupplyTemp",
-    description: "Supply Air Temperature",
-    unit: "°C",
-    color: "#f59e0b",
-    icon: Thermometer,
-    yMin: 10,
-    yMax: 30,
-  },
-  {
-    id: "bldg:Filter_DP_AHU_5F",
-    name: "sensorFilterDP",
-    description: "Filter Differential Pressure",
-    unit: "Pa",
-    color: "#8b5cf6",
-    icon: Filter,
-    yMin: 100,
-    yMax: 500,
-  },
-  {
-    id: "bldg:Power_AHU_5F",
-    name: "sensorPower",
-    description: "Electrical Power",
-    unit: "kW",
-    color: "#10b981",
-    icon: Gauge,
-    yMin: 0,
-    yMax: 50,
-  },
-];
-
 export default function MonitoringPage() {
-  const { points, pointHistory, devices, connected } = useSSE(60);
+  const { devices, connected } = useSSE(60);
   const t = useTranslations("monitoring");
   const locale = useLocale();
 
@@ -161,7 +100,6 @@ export default function MonitoringPage() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [hvacSubFilter, setHvacSubFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSensorCharts, setShowSensorCharts] = useState(false);
   const [showComponentSummary, setShowComponentSummary] = useState(false);
 
   // i18n 기반 장비 유형 라벨
@@ -322,23 +260,6 @@ export default function MonitoringPage() {
     }
     return counts;
   }, [equipment]);
-
-  // AHU_5F 차트 데이터
-  const chartDataMap = useMemo(() => {
-    const map: Record<string, ChartDataPoint[]> = {};
-    for (const sensor of SENSORS) {
-      const history = pointHistory[sensor.id] || [];
-      map[sensor.id] = history.map((p) => ({
-        time: new Date(p.ts * 1000).toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-        value: typeof p.value === "number" ? p.value : 0,
-      }));
-    }
-    return map;
-  }, [pointHistory]);
 
   return (
     <div className="min-h-screen">
@@ -567,132 +488,6 @@ export default function MonitoringPage() {
           </div>
         )}
 
-        {/* AHU_5F 실시간 센서 차트 (접기/펼치기) */}
-        <div className="border-t border-gray-200 pt-4">
-          <button
-            onClick={() => setShowSensorCharts(!showSensorCharts)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900"
-          >
-            {showSensorCharts ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
-            {t("sensorChartTitle")}
-            <Badge variant="outline" className="text-[10px]">
-              {t("sensorCount", { count: SENSORS.length })}
-            </Badge>
-          </button>
-
-          {showSensorCharts && (
-            <div className="mt-4 space-y-6">
-              {/* 센서 현재값 카드 */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
-                {SENSORS.map((sensor) => {
-                  const current = points[sensor.id];
-                  const value =
-                    current && typeof current.value === "number"
-                      ? current.value
-                      : null;
-                  const Icon = sensor.icon;
-
-                  return (
-                    <Card key={sensor.id}>
-                      <CardContent className="pt-4 pb-3 px-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <Icon
-                            className="h-5 w-5"
-                            style={{ color: sensor.color }}
-                          />
-                          <Badge
-                            variant={
-                              current?.quality === "good"
-                                ? "success"
-                                : current
-                                ? "warning"
-                                : "secondary"
-                            }
-                          >
-                            {current?.quality || "N/A"}
-                          </Badge>
-                        </div>
-                        <div className="mt-1">
-                          <p className="text-xs text-gray-500 font-medium">
-                            {t(sensor.name)}
-                          </p>
-                          <p className="text-2xl font-bold mt-0.5">
-                            {value !== null ? value.toFixed(1) : "--"}
-                            <span className="text-sm font-normal text-gray-400 ml-1">
-                              {sensor.unit}
-                            </span>
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-
-              {/* 각 센서별 라인 차트 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {SENSORS.map((sensor) => {
-                  const chartData = chartDataMap[sensor.id];
-
-                  return (
-                    <Card key={sensor.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center justify-between">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: sensor.color }}
-                            />
-                            {t(sensor.name)}
-                            <span className="text-xs text-gray-400 font-normal">
-                              ({sensor.description})
-                            </span>
-                          </CardTitle>
-                          {points[sensor.id] && (
-                            <span
-                              className="text-lg font-bold"
-                              style={{ color: sensor.color }}
-                            >
-                              {typeof points[sensor.id].value === "number"
-                                ? points[sensor.id].value!.toFixed(1)
-                                : "--"}
-                              <span className="text-xs font-normal text-gray-400 ml-1">
-                                {sensor.unit}
-                              </span>
-                            </span>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        {chartData.length > 0 ? (
-                          <LiveChart
-                            data={chartData}
-                            unit={sensor.unit}
-                            color={sensor.color}
-                            height={200}
-                            yMin={sensor.yMin}
-                            yMax={sensor.yMax}
-                          />
-                        ) : (
-                          <div className="flex items-center justify-center h-[200px] text-gray-400 text-sm">
-                            <div className="text-center">
-                              <Gauge className="h-6 w-6 mx-auto mb-2 opacity-30" />
-                              <p>{t("waitingData")}</p>
-                            </div>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
