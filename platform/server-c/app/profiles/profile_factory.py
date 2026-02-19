@@ -221,6 +221,36 @@ EQUIPMENT_POWER_OVERRIDE: dict[str, dict] = {
     "Building_Electrical_Meter": {"base_value": 50.0, "off_base_value": 5.0,
                                   "noise_range": 8.0, "max_value": 200.0,
                                   "daily_amplitude": 15.0},
+    # ── 신규 추가: 전기 인프라 ──
+    "Transformer": {"base_value": 1000.0, "off_base_value": 5.0, "noise_range": 30.0,
+                    "max_value": 2000.0, "daily_amplitude": 50.0},
+    "UPS": {"base_value": 50.0, "off_base_value": 5.0, "noise_range": 3.0,
+            "max_value": 100.0, "daily_amplitude": 5.0},
+    "Switchgear": {"base_value": 3000.0, "off_base_value": 10.0, "noise_range": 100.0,
+                   "max_value": 5000.0, "daily_amplitude": 200.0},
+    "Emergency_Generator": {"base_value": 0.5, "off_base_value": 0.0, "noise_range": 0.0,
+                            "max_value": 960.0, "daily_amplitude": 0.0},
+    "Electrical_Equipment": {"base_value": 50.0, "off_base_value": 1.0, "noise_range": 3.0,
+                             "max_value": 100.0, "daily_amplitude": 5.0},
+    # ── 신규 추가: HVAC Components ──
+    "Valve": {"base_value": 0.02, "off_base_value": 0.0, "noise_range": 0.005,
+              "max_value": 0.1, "daily_amplitude": 0.01},
+    "Damper": {"base_value": 0.05, "off_base_value": 0.0, "noise_range": 0.01,
+               "max_value": 0.2, "daily_amplitude": 0.01},
+    "VFD": {"base_value": 3.0, "off_base_value": 0.1, "noise_range": 0.3,
+            "max_value": 10.0, "daily_amplitude": 0.5},
+    # ── 신규 추가: 수자원 ──
+    "Water_Pump": {"base_value": 3.0, "off_base_value": 0.05, "noise_range": 0.3,
+                   "max_value": 7.5, "daily_amplitude": 0.5},
+    # ── 신규 추가: 컨트롤러/서버 ──
+    "Controller": {"base_value": 0.5, "off_base_value": 0.3, "noise_range": 0.05,
+                   "max_value": 1.0, "daily_amplitude": 0.0},
+    # ── 신규 추가: 조명 ──
+    "Lighting_Equipment": {"base_value": 2.0, "off_base_value": 0.1, "noise_range": 0.2,
+                           "max_value": 5.0, "daily_amplitude": 0.5},
+    # ── 신규 추가: 특수 HVAC ──
+    "HVAC_Equipment": {"base_value": 5.0, "off_base_value": 0.2, "noise_range": 0.5,
+                       "max_value": 10.0, "daily_amplitude": 1.0},
 }
 
 

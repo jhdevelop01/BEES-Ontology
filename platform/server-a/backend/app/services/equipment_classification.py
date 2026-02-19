@@ -41,6 +41,38 @@ _CATEGORY_MAP: dict[str, tuple[str, Optional[str]]] = {
     "CRAC": ("component", None),
     "Condenser": ("component", None),
     "Compressor": ("component", None),
+    # ── 전기 인프라 ──
+    "Transformer": ("electrical", "power_distribution"),
+    "UPS": ("electrical", "power_protection"),
+    "Switchgear": ("electrical", "power_distribution"),
+    "Emergency_Generator": ("electrical", "emergency_power"),
+    "Electrical_Equipment": ("electrical", "power_distribution"),
+    "Building_Electrical_Meter": ("electrical", "metering"),
+    # ── 수자원 ──
+    "Water_Pump": ("water", "pumping"),
+    # ── 특수 HVAC ──
+    "HVAC_Equipment": ("hvac", "special"),
+    # ── 자동화/제어 ──
+    "Controller": ("automation", "controller"),
+    # ── 조명 ──
+    "Lighting_Equipment": ("lighting", None),
+    # ── 시스템 (논리적) ──
+    "HVAC_System": ("hvac", None),
+    "Electrical_System": ("electrical", None),
+    "Lighting_System": ("lighting", None),
+    "Water_System": ("water", None),
+    "Equipment_System": ("system", None),
+    # ── 서브시스템 (토폴로지 트리 노드) ──
+    "Chilled_Ceiling_System": ("hvac", "cooling"),
+    "Chiller_Plant": ("hvac", "cooling"),
+    "DALI_Lighting_System": ("lighting", None),
+    "Double_Skin_Facade_System": ("hvac", "special"),
+    "Light_Shelf_System": ("lighting", None),
+    "Night_Purge_System": ("hvac", "air_handling"),
+    "Radiant_Heating_System": ("hvac", "heating"),
+    "Rainwater_Harvesting_System": ("water", None),
+    "UFAD_System": ("hvac", "air_handling"),
+    "Wastewater_Treatment_System": ("water", None),
 }
 
 # Server B CONTROLLABLE_EQUIPMENT과 동기화 (server-b/app/neo4j_loader.py:25-39)
@@ -50,6 +82,9 @@ CONTROLLABLE_TYPES: set[str] = {
     "Chilled_Water_Pump", "Condenser_Water_Pump",
     "Hot_Water_Pump", "Pump",
     "Chilled_Ceiling_Panel", "Elevator",
+    "Valve", "Damper", "VFD", "Water_Pump",
+    "Transformer", "UPS", "Emergency_Generator", "Switchgear",
+    "HVAC_Equipment", "Controller", "Lighting_Equipment",
 }
 
 

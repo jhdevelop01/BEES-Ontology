@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (층별 현황 Room/장비 상세 표시 + 대시보드 통합)
+> **최종 업데이트:** 2026.02.19 (시뮬레이션 확장 84→201대, 온톨로지 v2.2.0)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -2483,6 +2483,79 @@ Room → Zone 직접 연결이 없는 경우, 같은 층 Interior Zone 센서를
 | Room (API 반환) | 층당 3~18개 (총 ~169개) |
 | RAT 센서 | 14개 (5F~15F + RF) |
 | 프론트엔드 페이지 | 20 (대시보드에 통합) |
+
+---
+
+## 30. 시뮬레이션 확장 — 84→201대 전체 장비 시뮬레이션 (2026.02.19)
+
+### 30.1 배경
+
+토폴로지 페이지에서 309개 장비 중 84개만 ON, 225개가 OFF로 표시되는 문제 해결.
+원인: Server C 에뮬레이터가 14개 장비 타입만 시뮬레이션하고, 대부분(224/225)의 비시뮬레이션 장비는 온톨로지에 포인트(센서)가 없었음.
+
+### 30.2 작업 요약
+
+| 단계 | 작업 | 결과 |
+|:----:|------|------|
+| 1 | 온톨로지 TTL 포인트 추가 | 78개 장비에 122개 신규 포인트 + Chiller_Plant_Status |
+| 2 | Server C 시뮬레이션 확장 | SIMULATABLE 14→39 타입, POWER_OVERRIDE +12 타입 |
+| 3 | Server A 장비 분류 확장 | _CATEGORY_MAP +25 매핑, CONTROLLABLE_TYPES +11 |
+| 4 | Server B 제어 확장 | CONTROLLABLE_EQUIPMENT +12 타입 |
+| 5 | Neo4j 동기화 | n10s reimport, 11,300 트리플 |
+| 6 | Docker 재빌드 | server-c, server-a-backend, server-b 이미지 재빌드 |
+
+### 30.3 온톨로지 변경
+
+- **신규 포인트 123개** (On_Off_Status 78 + Electrical_Power_Sensor 28 + Alarm 11 + Water_Level_Sensor 3 + Energy_Sensor 2 + Frequency_Command 1)
+- **TTL 섹션 16 "시뮬레이션 확장 포인트" 추가** (~860줄)
+- 양방향 hasPoint↔isPointOf 관계 완비
+- 모든 신규 포인트에 `bees:hasConfidence "estimated"` 태깅
+
+### 30.4 Server C 확장 (에뮬레이터)
+
+**`server-c/app/neo4j_loader.py`**:
+- SIMULATABLE_EQUIPMENT_LABELS: 14→39 타입
+- 추가: Valve, Damper, VFD, Transformer, UPS, Switchgear, Emergency_Generator, Electrical_Equipment, Water_Pump, HVAC_Equipment, Controller, Lighting_Equipment, HVAC_System, Electrical_System, Lighting_System, Water_System, Equipment_System, Chilled_Ceiling_System, Chiller_Plant, DALI_Lighting_System, Double_Skin_Facade_System, Light_Shelf_System, Night_Purge_System, Radiant_Heating_System, Rainwater_Harvesting_System, UFAD_System, Wastewater_Treatment_System, Equipment
+
+**`server-c/app/profiles/profile_factory.py`**:
+- EQUIPMENT_POWER_OVERRIDE: +12 타입 (Transformer 1000kW, Switchgear 3000kW, UPS 50kW, Valve 0.02kW 등 현실적 소비전력)
+
+### 30.5 Server A/B 확장
+
+**`server-a/backend/app/services/equipment_classification.py`**:
+- _CATEGORY_MAP: +25 매핑 (electrical, water, automation, lighting, system, 10개 서브시스템)
+- CONTROLLABLE_TYPES: +11 (Valve, Damper, VFD, Water_Pump, Transformer, UPS, Emergency_Generator, Switchgear, HVAC_Equipment, Controller, Lighting_Equipment)
+
+**`server-b/app/neo4j_loader.py`**:
+- CONTROLLABLE_EQUIPMENT: +12 타입 (모두 ON/OFF 명령)
+
+### 30.6 최종 결과
+
+| 항목 | 이전 | 이후 |
+|------|:----:|:----:|
+| TTL 트리플 | 9,789 | **11,080** |
+| TTL 줄 수 | ~11,600 | **~13,875** |
+| 인스턴스 | 1,272 | **1,516** |
+| 시뮬레이션 장비 | 84 | **201** |
+| 시뮬레이션 포인트 | 164 | **584** |
+| SIMULATABLE 타입 | 14 | **39** |
+| isPointOf 관계 | 692 | **918** |
+
+### 30.7 비시뮬레이션 3개 노드 (의도적 제외)
+
+- `Daylight_Sensor_Group` (Luminance_Sensor) — 센서 Point, 장비 아님
+- `Occupancy_Sensor_Lighting_Group` (Occupancy_Sensor) — 센서 Point, 장비 아님
+- `Water_Meter_Main` (Water_Flow_Sensor) — 센서 Point, 장비 아님
+
+### 30.8 수정/신규 파일 목록
+
+| 파일 | 유형 | 변경 |
+|------|------|------|
+| `ontology/GEC_B_Ontology.ttl` | 수정 | +860줄, 123개 포인트 추가, v2.2.0 |
+| `server-c/app/neo4j_loader.py` | 수정 | SIMULATABLE 14→39 타입 |
+| `server-c/app/profiles/profile_factory.py` | 수정 | POWER_OVERRIDE +12 타입 |
+| `server-a/backend/app/services/equipment_classification.py` | 수정 | _CATEGORY_MAP +25, CONTROLLABLE +11 |
+| `server-b/app/neo4j_loader.py` | 수정 | CONTROLLABLE_EQUIPMENT +12 타입 |
 
 ---
 

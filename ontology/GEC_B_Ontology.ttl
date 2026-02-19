@@ -11393,8 +11393,870 @@ bldg:GHG_Scope2_2024 a bees:GHG_Scope2_Emission ;
     bees:value 7300.0 ;
     brick:isPointOf bldg:GEC_Tower_B .
 
+
+# ── 16. 시뮬레이션 확장 포인트 (78개 장비, 122개 포인트) ───────────────
+
+# =============================================================================
+# 비시뮬레이션 장비 포인트 추가 — 전체 309개 장비 시뮬레이션 대상화
+# 생성일: 2026-02-19, 78개 포인트 미보유 장비에 최소 On_Off_Status 추가
+# =============================================================================
+
+# --- 소방/방재 설비 ---
+bldg:Fire_Detection_System_Status a brick:On_Off_Status ;
+    rdfs:label "자동화재탐지설비 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Detection_System .
+
+bldg:Fire_Detection_System_Alarm a brick:Alarm ;
+    rdfs:label "자동화재탐지설비 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Detection_System .
+
+bldg:Sprinkler_System_Status a brick:On_Off_Status ;
+    rdfs:label "스프링클러 소화설비 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Sprinkler_System .
+
+bldg:Sprinkler_System_Alarm a brick:Alarm ;
+    rdfs:label "스프링클러 소화설비 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Sprinkler_System .
+
+bldg:Smoke_Control_System_Status a brick:On_Off_Status ;
+    rdfs:label "제연설비 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Smoke_Control_System .
+
+bldg:Smoke_Control_System_Alarm a brick:Alarm ;
+    rdfs:label "제연설비 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Smoke_Control_System .
+
+bldg:Indoor_Fire_Hydrant_Status a brick:On_Off_Status ;
+    rdfs:label "옥내소화전 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Indoor_Fire_Hydrant .
+
+bldg:Indoor_Fire_Hydrant_Alarm a brick:Alarm ;
+    rdfs:label "옥내소화전 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Indoor_Fire_Hydrant .
+
+bldg:Outdoor_Fire_Hydrant_Status a brick:On_Off_Status ;
+    rdfs:label "옥외소화전 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Outdoor_Fire_Hydrant .
+
+bldg:Outdoor_Fire_Hydrant_Alarm a brick:Alarm ;
+    rdfs:label "옥외소화전 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Outdoor_Fire_Hydrant .
+
+bldg:Emergency_Broadcast_Status a brick:On_Off_Status ;
+    rdfs:label "비상방송설비 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Broadcast .
+
+bldg:Emergency_Communication_System_Status a brick:On_Off_Status ;
+    rdfs:label "비상통화 시스템 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Communication_System .
+
+bldg:Emergency_Phone_Elevator_Status a brick:On_Off_Status ;
+    rdfs:label "승강기 비상전화 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Phone_Elevator .
+
+
+# --- 보안 설비 ---
+bldg:Access_Control_1F_Status a brick:On_Off_Status ;
+    rdfs:label "1층 출입통제 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Access_Control_1F .
+
+bldg:Access_Control_System_Status a brick:On_Off_Status ;
+    rdfs:label "출입통제 시스템 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Access_Control_System .
+
+bldg:CCTV_System_Status a brick:On_Off_Status ;
+    rdfs:label "CCTV 영상감시 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CCTV_System .
+
+bldg:Parking_Management_System_Status a brick:On_Off_Status ;
+    rdfs:label "주차 관제 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Parking_Management_System .
+
+bldg:Intercom_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "B1F 비상인터폰 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B1F .
+
+bldg:Intercom_B2F_Status a brick:On_Off_Status ;
+    rdfs:label "B2F 비상인터폰 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B2F .
+
+bldg:Intercom_B3F_Status a brick:On_Off_Status ;
+    rdfs:label "B3F 비상인터폰 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B3F .
+
+bldg:Intercom_B4F_Status a brick:On_Off_Status ;
+    rdfs:label "B4F 비상인터폰 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B4F .
+
+
+# --- 신재생에너지 ---
+bldg:PV_Inverter_1_Status a brick:On_Off_Status ;
+    rdfs:label "PV 인버터 #1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:PV_Inverter_1 .
+
+bldg:PV_Inverter_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "PV 인버터 #1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:PV_Inverter_1 .
+
+bldg:Solar_Panel_RF_Status a brick:On_Off_Status ;
+    rdfs:label "옥상 태양광 패널 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Solar_Panel_RF .
+
+bldg:Solar_Panel_RF_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "옥상 태양광 패널 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Solar_Panel_RF .
+
+
+# --- 수자원 관리 ---
+bldg:Pressure_Tank_Status a brick:On_Off_Status ;
+    rdfs:label "급수 압력탱크 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Pressure_Tank .
+
+bldg:Pressure_Tank_Level a brick:Water_Level_Sensor ;
+    rdfs:label "급수 압력탱크 수위" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Pressure_Tank .
+
+bldg:Rainwater_Storage_Tank_Status a brick:On_Off_Status ;
+    rdfs:label "우수 저류조 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Rainwater_Storage_Tank .
+
+bldg:Rainwater_Storage_Tank_Level a brick:Water_Level_Sensor ;
+    rdfs:label "우수 저류조 수위" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Rainwater_Storage_Tank .
+
+bldg:Wastewater_Treatment_Tank_Status a brick:On_Off_Status ;
+    rdfs:label "중수처리 탱크 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Wastewater_Treatment_Tank .
+
+bldg:Wastewater_Treatment_Tank_Level a brick:Water_Level_Sensor ;
+    rdfs:label "중수처리 탱크 수위" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Wastewater_Treatment_Tank .
+
+bldg:Grease_Trap_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "그리스트랩 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Grease_Trap_B1F .
+
+
+# --- 피뢰/접지 설비 ---
+bldg:Lightning_Protection_System_Status a brick:On_Off_Status ;
+    rdfs:label "피뢰설비 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Lightning_Protection_System .
+
+bldg:Lightning_Rod_RF_Status a brick:On_Off_Status ;
+    rdfs:label "옥상 피뢰침 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Lightning_Rod_RF .
+
+bldg:Ground_Electrode_Status a brick:On_Off_Status ;
+    rdfs:label "접지극 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Ground_Electrode .
+
+
+# --- BMS 장비 ---
+bldg:BMS_Workstation_Status a brick:On_Off_Status ;
+    rdfs:label "BMS 워크스테이션 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BMS_Workstation .
+
+bldg:BMS_Workstation_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "BMS 워크스테이션 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BMS_Workstation .
+
+
+# --- 엘리베이터 ---
+bldg:Elevator_Passenger_1_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_1 .
+
+bldg:Elevator_Passenger_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_1 .
+
+bldg:Elevator_Passenger_2_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #2 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_2 .
+
+bldg:Elevator_Passenger_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #2 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_2 .
+
+bldg:Elevator_Passenger_3_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #3 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_3 .
+
+bldg:Elevator_Passenger_3_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #3 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_3 .
+
+bldg:Elevator_Passenger_4_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #4 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_4 .
+
+bldg:Elevator_Passenger_4_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #4 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_4 .
+
+bldg:Elevator_Passenger_5_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #5 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_5 .
+
+bldg:Elevator_Passenger_5_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #5 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_5 .
+
+bldg:Elevator_Passenger_6_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #6 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_6 .
+
+bldg:Elevator_Passenger_6_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #6 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_6 .
+
+bldg:Elevator_Passenger_7_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #7 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_7 .
+
+bldg:Elevator_Passenger_7_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #7 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_7 .
+
+bldg:Elevator_Passenger_8_Status a brick:On_Off_Status ;
+    rdfs:label "승객용 엘리베이터 #8 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_8 .
+
+bldg:Elevator_Passenger_8_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "승객용 엘리베이터 #8 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Passenger_8 .
+
+bldg:Elevator_Emergency_1_Status a brick:On_Off_Status ;
+    rdfs:label "비상용 엘리베이터 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Emergency_1 .
+
+bldg:Elevator_Emergency_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "비상용 엘리베이터 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Emergency_1 .
+
+bldg:Elevator_Freight_1_Status a brick:On_Off_Status ;
+    rdfs:label "화물용 엘리베이터 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Freight_1 .
+
+bldg:Elevator_Freight_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "화물용 엘리베이터 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Elevator_Freight_1 .
+
+
+# --- BAS 컨트롤러 ---
+bldg:BMS_Server_Status a brick:On_Off_Status ;
+    rdfs:label "BMS 중앙 서버 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BMS_Server .
+
+bldg:DDC_Controller_Group_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 컨트롤러 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Controller_Group .
+
+bldg:DDC_AHU_Controller_Group_Status a brick:On_Off_Status ;
+    rdfs:label "DDC AHU 컨트롤러 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_AHU_Controller_Group .
+
+bldg:DDC_Plant_Controller_Group_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 플랜트 컨트롤러 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Plant_Controller_Group .
+
+bldg:DDC_Zone_Controller_Group_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 존 컨트롤러 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Zone_Controller_Group .
+
+bldg:DDC_Controller_Typical_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 컨트롤러 기준층 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Controller_Typical .
+
+
+# --- 조명 설비 ---
+bldg:DALI_Controller_Typical_Status a brick:On_Off_Status ;
+    rdfs:label "DALI 조명 컨트롤러 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DALI_Controller_Typical .
+
+bldg:DALI_Controller_Typical_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "DALI 조명 컨트롤러 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DALI_Controller_Typical .
+
+bldg:Emergency_Lighting_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "B1F 비상조명 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B1F .
+
+bldg:Emergency_Lighting_B2F_Status a brick:On_Off_Status ;
+    rdfs:label "B2F 비상조명 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B2F .
+
+bldg:Emergency_Lighting_B3F_Status a brick:On_Off_Status ;
+    rdfs:label "B3F 비상조명 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B3F .
+
+bldg:Emergency_Lighting_B4F_Status a brick:On_Off_Status ;
+    rdfs:label "B4F 비상조명 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B4F .
+
+bldg:Emergency_Lighting_Controller_Status a brick:On_Off_Status ;
+    rdfs:label "비상조명 컨트롤러 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_Controller .
+
+
+# --- 배기팬 ---
+bldg:Exhaust_Fan_RF_1_Status a brick:On_Off_Status ;
+    rdfs:label "옥상 배기팬 #1 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_RF_1 .
+
+bldg:Exhaust_Fan_RF_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "옥상 배기팬 #1 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_RF_1 .
+
+bldg:Exhaust_Fan_RF_2_Status a brick:On_Off_Status ;
+    rdfs:label "옥상 배기팬 #2 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_RF_2 .
+
+bldg:Exhaust_Fan_RF_2_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "옥상 배기팬 #2 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Fan_RF_2 .
+
+bldg:Kitchen_Exhaust_Fan_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "B1F 주방 배기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Kitchen_Exhaust_Fan_B1F .
+
+bldg:Kitchen_Exhaust_Fan_B1F_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "B1F 주방 배기팬 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Kitchen_Exhaust_Fan_B1F .
+
+bldg:Toilet_Exhaust_Fan_Status a brick:On_Off_Status ;
+    rdfs:label "화장실 배기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Toilet_Exhaust_Fan .
+
+bldg:Toilet_Exhaust_Fan_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "화장실 배기팬 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Toilet_Exhaust_Fan .
+
+
+# --- 급기팬 ---
+bldg:Supply_Fan_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "B1F 급기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B1F .
+
+bldg:Supply_Fan_B1F_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "B1F 급기팬 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B1F .
+
+bldg:Supply_Fan_B2F_Status a brick:On_Off_Status ;
+    rdfs:label "B2F 급기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B2F .
+
+bldg:Supply_Fan_B2F_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "B2F 급기팬 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B2F .
+
+bldg:Supply_Fan_B3F_Status a brick:On_Off_Status ;
+    rdfs:label "B3F 급기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B3F .
+
+bldg:Supply_Fan_B3F_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "B3F 급기팬 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B3F .
+
+bldg:Supply_Fan_B4F_Status a brick:On_Off_Status ;
+    rdfs:label "B4F 급기팬 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B4F .
+
+bldg:Supply_Fan_B4F_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "B4F 급기팬 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Supply_Fan_B4F .
+
+
+# --- 전력 계량 ---
+bldg:Building_Power_Meter_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "건물 전체 전력 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Building_Power_Meter .
+
+bldg:Building_Power_Meter_Energy a brick:Energy_Sensor ;
+    rdfs:label "건물 전체 누적 에너지" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Building_Power_Meter .
+
+bldg:Floor_Power_Meter_Group_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "층별 전력 그룹 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Power_Meter_Group .
+
+bldg:Floor_Power_Meter_Group_Energy a brick:Energy_Sensor ;
+    rdfs:label "층별 전력 그룹 누적 에너지" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Power_Meter_Group .
+
+
+# --- 밸브/댐퍼 그룹 ---
+bldg:Control_Valve_CHW_Group_Status a brick:On_Off_Status ;
+    rdfs:label "냉수 제어밸브 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Control_Valve_CHW_Group .
+
+bldg:Control_Valve_HW_Group_Status a brick:On_Off_Status ;
+    rdfs:label "온수 제어밸브 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Control_Valve_HW_Group .
+
+bldg:Fire_Damper_Group_Status a brick:On_Off_Status ;
+    rdfs:label "방화댐퍼 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Damper_Group .
+
+bldg:Fire_Damper_Group_Alarm a brick:Alarm ;
+    rdfs:label "방화댐퍼 그룹 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Damper_Group .
+
+bldg:OA_Damper_Group_Status a brick:On_Off_Status ;
+    rdfs:label "외기댐퍼 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:OA_Damper_Group .
+
+
+# --- 시스템 노드 ---
+bldg:HVAC_System_Status a brick:On_Off_Status ;
+    rdfs:label "HVAC 시스템 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:HVAC_System .
+
+bldg:Exhaust_Ventilation_System_Status a brick:On_Off_Status ;
+    rdfs:label "배기환기 시스템 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Ventilation_System .
+
+bldg:Lighting_System_Status a brick:On_Off_Status ;
+    rdfs:label "조명 시스템 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Lighting_System .
+
+bldg:Vertical_Transport_System_Status a brick:On_Off_Status ;
+    rdfs:label "수직이동 시스템 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Vertical_Transport_System .
+
+
+# --- 플랜트/그룹 ---
+bldg:Boiler_Plant_Status a brick:On_Off_Status ;
+    rdfs:label "보일러 플랜트 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Boiler_Plant .
+
+bldg:FCU_Group_Status a brick:On_Off_Status ;
+    rdfs:label "팬코일유닛 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:FCU_Group .
+
+bldg:CHW_Pump_Group_Status a brick:On_Off_Status ;
+    rdfs:label "냉수펌프 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CHW_Pump_Group .
+
+bldg:CW_Pump_Group_Status a brick:On_Off_Status ;
+    rdfs:label "냉각수펌프 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CW_Pump_Group .
+
+bldg:HW_Pump_Group_Status a brick:On_Off_Status ;
+    rdfs:label "온수펌프 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:HW_Pump_Group .
+
+
+# --- 전기 인프라 ---
+bldg:Transformer_Group_Status a brick:On_Off_Status ;
+    rdfs:label "변압기 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Transformer_Group .
+
+bldg:Transformer_Group_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "변압기 그룹 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Transformer_Group .
+
+bldg:Transformer_Group_Alarm a brick:Alarm ;
+    rdfs:label "변압기 그룹 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Transformer_Group .
+
+bldg:UPS_System_Status a brick:On_Off_Status ;
+    rdfs:label "UPS 무정전전원 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:UPS_System .
+
+bldg:UPS_System_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "UPS 무정전전원 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:UPS_System .
+
+bldg:UPS_System_Alarm a brick:Alarm ;
+    rdfs:label "UPS 무정전전원 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:UPS_System .
+
+bldg:Main_Distribution_Panel_Status a brick:On_Off_Status ;
+    rdfs:label "주 배전반 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Main_Distribution_Panel .
+
+bldg:Main_Distribution_Panel_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "주 배전반 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Main_Distribution_Panel .
+
+bldg:Main_Distribution_Panel_Alarm a brick:Alarm ;
+    rdfs:label "주 배전반 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Main_Distribution_Panel .
+
+bldg:Emergency_Generator_Status a brick:On_Off_Status ;
+    rdfs:label "비상발전기 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Generator .
+
+bldg:Emergency_Generator_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "비상발전기 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Generator .
+
+bldg:Emergency_Generator_Alarm a brick:Alarm ;
+    rdfs:label "비상발전기 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Generator .
+
+
+# --- VFD/분전반/DSF ---
+bldg:VFD_Group_Status a brick:On_Off_Status ;
+    rdfs:label "VFD 인버터 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:VFD_Group .
+
+bldg:VFD_Group_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "VFD 인버터 그룹 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:VFD_Group .
+
+bldg:VFD_Group_Freq a brick:Frequency_Command ;
+    rdfs:label "VFD 인버터 그룹 주파수 명령" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:VFD_Group .
+
+bldg:Floor_Distribution_Panel_Group_Status a brick:On_Off_Status ;
+    rdfs:label "층별 분전반 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Distribution_Panel_Group .
+
+bldg:Floor_Distribution_Panel_Group_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "층별 분전반 그룹 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Distribution_Panel_Group .
+
+bldg:DSF_Inner_Window_West_Status a brick:On_Off_Status ;
+    rdfs:label "DSF 내측창 (서향) 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DSF_Inner_Window_West .
+
+
+# --- 보충: Chiller_Plant 포인트 ---
+bldg:Chiller_Plant_Status a brick:On_Off_Status ;
+    rdfs:label "냉동기 플랜트 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Chiller_Plant .
+
+# --- hasPoint 양방향 연결 (역방향) ---
+bldg:Access_Control_1F brick:hasPoint bldg:Access_Control_1F_Status .
+
+bldg:Access_Control_System brick:hasPoint bldg:Access_Control_System_Status .
+
+bldg:BMS_Server brick:hasPoint bldg:BMS_Server_Status .
+
+bldg:BMS_Workstation brick:hasPoint bldg:BMS_Workstation_Status ,
+    bldg:BMS_Workstation_Power .
+
+bldg:Boiler_Plant brick:hasPoint bldg:Boiler_Plant_Status .
+
+bldg:Chiller_Plant brick:hasPoint bldg:Chiller_Plant_Status .
+
+bldg:Building_Power_Meter brick:hasPoint bldg:Building_Power_Meter_Power ,
+    bldg:Building_Power_Meter_Energy .
+
+bldg:CCTV_System brick:hasPoint bldg:CCTV_System_Status .
+
+bldg:CHW_Pump_Group brick:hasPoint bldg:CHW_Pump_Group_Status .
+
+bldg:CW_Pump_Group brick:hasPoint bldg:CW_Pump_Group_Status .
+
+bldg:Control_Valve_CHW_Group brick:hasPoint bldg:Control_Valve_CHW_Group_Status .
+
+bldg:Control_Valve_HW_Group brick:hasPoint bldg:Control_Valve_HW_Group_Status .
+
+bldg:DALI_Controller_Typical brick:hasPoint bldg:DALI_Controller_Typical_Status ,
+    bldg:DALI_Controller_Typical_Power .
+
+bldg:DDC_AHU_Controller_Group brick:hasPoint bldg:DDC_AHU_Controller_Group_Status .
+
+bldg:DDC_Controller_Group brick:hasPoint bldg:DDC_Controller_Group_Status .
+
+bldg:DDC_Controller_Typical brick:hasPoint bldg:DDC_Controller_Typical_Status .
+
+bldg:DDC_Plant_Controller_Group brick:hasPoint bldg:DDC_Plant_Controller_Group_Status .
+
+bldg:DDC_Zone_Controller_Group brick:hasPoint bldg:DDC_Zone_Controller_Group_Status .
+
+bldg:DSF_Inner_Window_West brick:hasPoint bldg:DSF_Inner_Window_West_Status .
+
+bldg:Elevator_Emergency_1 brick:hasPoint bldg:Elevator_Emergency_1_Status ,
+    bldg:Elevator_Emergency_1_Power .
+
+bldg:Elevator_Freight_1 brick:hasPoint bldg:Elevator_Freight_1_Status ,
+    bldg:Elevator_Freight_1_Power .
+
+bldg:Elevator_Passenger_1 brick:hasPoint bldg:Elevator_Passenger_1_Status ,
+    bldg:Elevator_Passenger_1_Power .
+
+bldg:Elevator_Passenger_2 brick:hasPoint bldg:Elevator_Passenger_2_Status ,
+    bldg:Elevator_Passenger_2_Power .
+
+bldg:Elevator_Passenger_3 brick:hasPoint bldg:Elevator_Passenger_3_Status ,
+    bldg:Elevator_Passenger_3_Power .
+
+bldg:Elevator_Passenger_4 brick:hasPoint bldg:Elevator_Passenger_4_Status ,
+    bldg:Elevator_Passenger_4_Power .
+
+bldg:Elevator_Passenger_5 brick:hasPoint bldg:Elevator_Passenger_5_Status ,
+    bldg:Elevator_Passenger_5_Power .
+
+bldg:Elevator_Passenger_6 brick:hasPoint bldg:Elevator_Passenger_6_Status ,
+    bldg:Elevator_Passenger_6_Power .
+
+bldg:Elevator_Passenger_7 brick:hasPoint bldg:Elevator_Passenger_7_Status ,
+    bldg:Elevator_Passenger_7_Power .
+
+bldg:Elevator_Passenger_8 brick:hasPoint bldg:Elevator_Passenger_8_Status ,
+    bldg:Elevator_Passenger_8_Power .
+
+bldg:Emergency_Broadcast brick:hasPoint bldg:Emergency_Broadcast_Status .
+
+bldg:Emergency_Communication_System brick:hasPoint bldg:Emergency_Communication_System_Status .
+
+bldg:Emergency_Generator brick:hasPoint bldg:Emergency_Generator_Status ,
+    bldg:Emergency_Generator_Power ,
+    bldg:Emergency_Generator_Alarm .
+
+bldg:Emergency_Lighting_B1F brick:hasPoint bldg:Emergency_Lighting_B1F_Status .
+
+bldg:Emergency_Lighting_B2F brick:hasPoint bldg:Emergency_Lighting_B2F_Status .
+
+bldg:Emergency_Lighting_B3F brick:hasPoint bldg:Emergency_Lighting_B3F_Status .
+
+bldg:Emergency_Lighting_B4F brick:hasPoint bldg:Emergency_Lighting_B4F_Status .
+
+bldg:Emergency_Lighting_Controller brick:hasPoint bldg:Emergency_Lighting_Controller_Status .
+
+bldg:Emergency_Phone_Elevator brick:hasPoint bldg:Emergency_Phone_Elevator_Status .
+
+bldg:Exhaust_Fan_RF_1 brick:hasPoint bldg:Exhaust_Fan_RF_1_Status ,
+    bldg:Exhaust_Fan_RF_1_Power .
+
+bldg:Exhaust_Fan_RF_2 brick:hasPoint bldg:Exhaust_Fan_RF_2_Status ,
+    bldg:Exhaust_Fan_RF_2_Power .
+
+bldg:Exhaust_Ventilation_System brick:hasPoint bldg:Exhaust_Ventilation_System_Status .
+
+bldg:FCU_Group brick:hasPoint bldg:FCU_Group_Status .
+
+bldg:Fire_Damper_Group brick:hasPoint bldg:Fire_Damper_Group_Status ,
+    bldg:Fire_Damper_Group_Alarm .
+
+bldg:Fire_Detection_System brick:hasPoint bldg:Fire_Detection_System_Status ,
+    bldg:Fire_Detection_System_Alarm .
+
+bldg:Floor_Distribution_Panel_Group brick:hasPoint bldg:Floor_Distribution_Panel_Group_Status ,
+    bldg:Floor_Distribution_Panel_Group_Power .
+
+bldg:Floor_Power_Meter_Group brick:hasPoint bldg:Floor_Power_Meter_Group_Power ,
+    bldg:Floor_Power_Meter_Group_Energy .
+
+bldg:Grease_Trap_B1F brick:hasPoint bldg:Grease_Trap_B1F_Status .
+
+bldg:Ground_Electrode brick:hasPoint bldg:Ground_Electrode_Status .
+
+bldg:HVAC_System brick:hasPoint bldg:HVAC_System_Status .
+
+bldg:HW_Pump_Group brick:hasPoint bldg:HW_Pump_Group_Status .
+
+bldg:Indoor_Fire_Hydrant brick:hasPoint bldg:Indoor_Fire_Hydrant_Status ,
+    bldg:Indoor_Fire_Hydrant_Alarm .
+
+bldg:Intercom_B1F brick:hasPoint bldg:Intercom_B1F_Status .
+
+bldg:Intercom_B2F brick:hasPoint bldg:Intercom_B2F_Status .
+
+bldg:Intercom_B3F brick:hasPoint bldg:Intercom_B3F_Status .
+
+bldg:Intercom_B4F brick:hasPoint bldg:Intercom_B4F_Status .
+
+bldg:Kitchen_Exhaust_Fan_B1F brick:hasPoint bldg:Kitchen_Exhaust_Fan_B1F_Status ,
+    bldg:Kitchen_Exhaust_Fan_B1F_Power .
+
+bldg:Lighting_System brick:hasPoint bldg:Lighting_System_Status .
+
+bldg:Lightning_Protection_System brick:hasPoint bldg:Lightning_Protection_System_Status .
+
+bldg:Lightning_Rod_RF brick:hasPoint bldg:Lightning_Rod_RF_Status .
+
+bldg:Main_Distribution_Panel brick:hasPoint bldg:Main_Distribution_Panel_Status ,
+    bldg:Main_Distribution_Panel_Power ,
+    bldg:Main_Distribution_Panel_Alarm .
+
+bldg:OA_Damper_Group brick:hasPoint bldg:OA_Damper_Group_Status .
+
+bldg:Outdoor_Fire_Hydrant brick:hasPoint bldg:Outdoor_Fire_Hydrant_Status ,
+    bldg:Outdoor_Fire_Hydrant_Alarm .
+
+bldg:PV_Inverter_1 brick:hasPoint bldg:PV_Inverter_1_Status ,
+    bldg:PV_Inverter_1_Power .
+
+bldg:Parking_Management_System brick:hasPoint bldg:Parking_Management_System_Status .
+
+bldg:Pressure_Tank brick:hasPoint bldg:Pressure_Tank_Status ,
+    bldg:Pressure_Tank_Level .
+
+bldg:Rainwater_Storage_Tank brick:hasPoint bldg:Rainwater_Storage_Tank_Status ,
+    bldg:Rainwater_Storage_Tank_Level .
+
+bldg:Smoke_Control_System brick:hasPoint bldg:Smoke_Control_System_Status ,
+    bldg:Smoke_Control_System_Alarm .
+
+bldg:Solar_Panel_RF brick:hasPoint bldg:Solar_Panel_RF_Status ,
+    bldg:Solar_Panel_RF_Power .
+
+bldg:Sprinkler_System brick:hasPoint bldg:Sprinkler_System_Status ,
+    bldg:Sprinkler_System_Alarm .
+
+bldg:Supply_Fan_B1F brick:hasPoint bldg:Supply_Fan_B1F_Status ,
+    bldg:Supply_Fan_B1F_Power .
+
+bldg:Supply_Fan_B2F brick:hasPoint bldg:Supply_Fan_B2F_Status ,
+    bldg:Supply_Fan_B2F_Power .
+
+bldg:Supply_Fan_B3F brick:hasPoint bldg:Supply_Fan_B3F_Status ,
+    bldg:Supply_Fan_B3F_Power .
+
+bldg:Supply_Fan_B4F brick:hasPoint bldg:Supply_Fan_B4F_Status ,
+    bldg:Supply_Fan_B4F_Power .
+
+bldg:Toilet_Exhaust_Fan brick:hasPoint bldg:Toilet_Exhaust_Fan_Status ,
+    bldg:Toilet_Exhaust_Fan_Power .
+
+bldg:Transformer_Group brick:hasPoint bldg:Transformer_Group_Status ,
+    bldg:Transformer_Group_Power ,
+    bldg:Transformer_Group_Alarm .
+
+bldg:UPS_System brick:hasPoint bldg:UPS_System_Status ,
+    bldg:UPS_System_Power ,
+    bldg:UPS_System_Alarm .
+
+bldg:VFD_Group brick:hasPoint bldg:VFD_Group_Status ,
+    bldg:VFD_Group_Power ,
+    bldg:VFD_Group_Freq .
+
+bldg:Vertical_Transport_System brick:hasPoint bldg:Vertical_Transport_System_Status .
+
+bldg:Wastewater_Treatment_Tank brick:hasPoint bldg:Wastewater_Treatment_Tank_Status ,
+    bldg:Wastewater_Treatment_Tank_Level .
+
+
 # ==============================================================================
-# END OF ONTOLOGY v2.1.0
+# END OF ONTOLOGY v2.2.0  (시뮬레이션 확장: +122 포인트, 78 장비)
 # ==============================================================================
 
 # ── 15e. hasPart 대칭 보완 (자동 생성) ────────────────────────────────────
@@ -12194,3 +13056,820 @@ bldg:Chiller_1 brick:feeds bldg:AHU_UFAD_1 ,
     bldg:DOAS_1 ,
     bldg:DOAS_2 ,
     bldg:DOAS_3 .
+
+
+# ═══════════════════════════════════════════════════════════════
+# Phase 9.6: 비시뮬레이션 장비 포인트 확장 (v2.2.0)
+# 225개 비시뮬레이션 장비에 센서/상태/알람 포인트 추가
+# 총 ~115개 신규 포인트 인스턴스
+# ═══════════════════════════════════════════════════════════════
+
+# -----------------------------------------------------------------------------
+# A. HVAC Components — Valve On_Off_Status 추가
+# CC_Three_Way_Valve (10개) + RH_Three_Way_Valve (10개)
+# 기존: Valve_Command 1개씩 보유 → On_Off_Status 1개 추가
+# -----------------------------------------------------------------------------
+
+bldg:CC_Valve_Status_5F a brick:On_Off_Status ;
+    rdfs:label "5층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_5F .
+
+bldg:CC_Valve_Status_6F a brick:On_Off_Status ;
+    rdfs:label "6층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_6F .
+
+bldg:CC_Valve_Status_7F a brick:On_Off_Status ;
+    rdfs:label "7층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_7F .
+
+bldg:CC_Valve_Status_8F a brick:On_Off_Status ;
+    rdfs:label "8층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_8F .
+
+bldg:CC_Valve_Status_9F a brick:On_Off_Status ;
+    rdfs:label "9층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_9F .
+
+bldg:CC_Valve_Status_10F a brick:On_Off_Status ;
+    rdfs:label "10층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_10F .
+
+bldg:CC_Valve_Status_11F a brick:On_Off_Status ;
+    rdfs:label "11층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_11F .
+
+bldg:CC_Valve_Status_12F a brick:On_Off_Status ;
+    rdfs:label "12층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_12F .
+
+bldg:CC_Valve_Status_14F a brick:On_Off_Status ;
+    rdfs:label "14층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_14F .
+
+bldg:CC_Valve_Status_15F a brick:On_Off_Status ;
+    rdfs:label "15층 CC 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Three_Way_Valve_15F .
+
+bldg:RH_Valve_Status_5F a brick:On_Off_Status ;
+    rdfs:label "5층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_5F .
+
+bldg:RH_Valve_Status_6F a brick:On_Off_Status ;
+    rdfs:label "6층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_6F .
+
+bldg:RH_Valve_Status_7F a brick:On_Off_Status ;
+    rdfs:label "7층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_7F .
+
+bldg:RH_Valve_Status_8F a brick:On_Off_Status ;
+    rdfs:label "8층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_8F .
+
+bldg:RH_Valve_Status_9F a brick:On_Off_Status ;
+    rdfs:label "9층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_9F .
+
+bldg:RH_Valve_Status_10F a brick:On_Off_Status ;
+    rdfs:label "10층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_10F .
+
+bldg:RH_Valve_Status_11F a brick:On_Off_Status ;
+    rdfs:label "11층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_11F .
+
+bldg:RH_Valve_Status_12F a brick:On_Off_Status ;
+    rdfs:label "12층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_12F .
+
+bldg:RH_Valve_Status_14F a brick:On_Off_Status ;
+    rdfs:label "14층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_14F .
+
+bldg:RH_Valve_Status_15F a brick:On_Off_Status ;
+    rdfs:label "15층 RH 3방밸브 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Three_Way_Valve_15F .
+
+# -----------------------------------------------------------------------------
+# A. HVAC Components — Damper/VFD 포인트 추가
+# Night_Purge_Damper: On_Off_Status (기존 NP_Damper_CMD 보유)
+# Fire_Damper_Group, OA_Damper_Group: On_Off_Status
+# VFD_Group: On_Off_Status, Electrical_Power_Sensor, Frequency_Command
+# -----------------------------------------------------------------------------
+
+bldg:Night_Purge_Damper_Status a brick:On_Off_Status ;
+    rdfs:label "나이트퍼지 댐퍼 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Night_Purge_Damper .
+
+bldg:Fire_Damper_Group_Status a brick:On_Off_Status ;
+    rdfs:label "방화댐퍼 그룹 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Damper_Group .
+
+bldg:OA_Damper_Group_Status a brick:On_Off_Status ;
+    rdfs:label "외기댐퍼 그룹 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:OA_Damper_Group .
+
+bldg:VFD_Group_Status a brick:On_Off_Status ;
+    rdfs:label "VFD 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:VFD_Group .
+
+bldg:VFD_Group_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "VFD 그룹 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:VFD_Group .
+
+bldg:VFD_Group_Freq_CMD a brick:Frequency_Command ;
+    rdfs:label "VFD 그룹 주파수 명령" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "Hz" ;
+    brick:isPointOf bldg:VFD_Group .
+
+# -----------------------------------------------------------------------------
+# B. Electrical Infrastructure — 전력 인프라 포인트
+# Transformer_Group, UPS_System, Main_Distribution_Panel, Emergency_Generator:
+#   Electrical_Power_Sensor + On_Off_Status + Alarm (3개씩)
+# Floor_Distribution_Panel_Group, PV_Inverter_1:
+#   Electrical_Power_Sensor + On_Off_Status (2개씩)
+# -----------------------------------------------------------------------------
+
+bldg:Transformer_Group_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "변압기 그룹 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Transformer_Group .
+
+bldg:Transformer_Group_Status a brick:On_Off_Status ;
+    rdfs:label "변압기 그룹 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Transformer_Group .
+
+bldg:Transformer_Group_Alarm a brick:Alarm ;
+    rdfs:label "변압기 그룹 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Transformer_Group .
+
+bldg:UPS_System_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "UPS 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:UPS_System .
+
+bldg:UPS_System_Status a brick:On_Off_Status ;
+    rdfs:label "UPS 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:UPS_System .
+
+bldg:UPS_System_Alarm a brick:Alarm ;
+    rdfs:label "UPS 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:UPS_System .
+
+bldg:MDP_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "주배전반 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Main_Distribution_Panel .
+
+bldg:MDP_Status a brick:On_Off_Status ;
+    rdfs:label "주배전반 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Main_Distribution_Panel .
+
+bldg:MDP_Alarm a brick:Alarm ;
+    rdfs:label "주배전반 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Main_Distribution_Panel .
+
+bldg:Emergency_Generator_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "비상발전기 출력전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Emergency_Generator .
+
+bldg:Emergency_Generator_Status a brick:On_Off_Status ;
+    rdfs:label "비상발전기 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Generator .
+
+bldg:Emergency_Generator_Alarm a brick:Alarm ;
+    rdfs:label "비상발전기 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Generator .
+
+bldg:FDP_Group_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "층별 분전반 그룹 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Floor_Distribution_Panel_Group .
+
+bldg:FDP_Group_Status a brick:On_Off_Status ;
+    rdfs:label "층별 분전반 그룹 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Distribution_Panel_Group .
+
+bldg:PV_Inverter_1_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "태양광 인버터 출력전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:PV_Inverter_1 .
+
+bldg:PV_Inverter_1_Status a brick:On_Off_Status ;
+    rdfs:label "태양광 인버터 운전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:PV_Inverter_1 .
+
+# -----------------------------------------------------------------------------
+# C. Renewable/Special — 태양광, 이중외피 포인트
+# Solar_Panel_RF: Electrical_Power_Sensor
+# DSF_West_Unit: On_Off_Status (기존 DSF_Vent_CMD 보유)
+# DSF_Inner_Window_West: On_Off_Status
+# -----------------------------------------------------------------------------
+
+bldg:Solar_Panel_RF_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "옥상 태양광 패널 발전량" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:Solar_Panel_RF .
+
+bldg:DSF_West_Status a brick:On_Off_Status ;
+    rdfs:label "서측 이중외피 유닛 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DSF_West_Unit .
+
+bldg:DSF_Inner_Window_West_Status a brick:On_Off_Status ;
+    rdfs:label "서측 이중외피 내창 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DSF_Inner_Window_West .
+
+# -----------------------------------------------------------------------------
+# D. Water Management — 수처리 시설 포인트
+# Pressure_Tank: Water_Level_Sensor + On_Off_Status
+# Rainwater_Tank: On_Off_Status (이미 Level_Sensor 보유)
+# Rainwater_Storage_Tank: Water_Level_Sensor + On_Off_Status
+# Grease_Trap_B1F: On_Off_Status
+# Wastewater_Treatment_Tank: Water_Level_Sensor + On_Off_Status
+# -----------------------------------------------------------------------------
+
+bldg:Pressure_Tank_Level a brick:Water_Level_Sensor ;
+    rdfs:label "가압탱크 수위" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Pressure_Tank .
+
+bldg:Pressure_Tank_Status a brick:On_Off_Status ;
+    rdfs:label "가압탱크 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Pressure_Tank .
+
+bldg:Rainwater_Tank_Status a brick:On_Off_Status ;
+    rdfs:label "우수저류조 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Rainwater_Tank .
+
+bldg:Rainwater_Storage_Tank_Level a brick:Water_Level_Sensor ;
+    rdfs:label "빗물저장탱크 수위" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Rainwater_Storage_Tank .
+
+bldg:Rainwater_Storage_Tank_Status a brick:On_Off_Status ;
+    rdfs:label "빗물저장탱크 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Rainwater_Storage_Tank .
+
+bldg:Grease_Trap_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "지하1층 그리스트랩 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Grease_Trap_B1F .
+
+bldg:Wastewater_Tank_Level a brick:Water_Level_Sensor ;
+    rdfs:label "오수처리탱크 수위" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Wastewater_Treatment_Tank .
+
+bldg:Wastewater_Tank_Status a brick:On_Off_Status ;
+    rdfs:label "오수처리탱크 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Wastewater_Treatment_Tank .
+
+# -----------------------------------------------------------------------------
+# E. Safety/Security — 소방/보안 시설 포인트 (16개 장비)
+# Fire_Detection, Sprinkler, Smoke_Control: On_Off_Status + Alarm
+# Emergency_Broadcast, Emergency_Communication, Emergency_Phone: On_Off_Status
+# Fire Hydrants: On_Off_Status + Alarm
+# Access_Control, CCTV, Parking: On_Off_Status
+# Intercom_B1F~B4F: On_Off_Status
+# -----------------------------------------------------------------------------
+
+bldg:Fire_Detection_Status a brick:On_Off_Status ;
+    rdfs:label "화재감지 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Detection_System .
+
+bldg:Fire_Detection_Alarm a brick:Alarm ;
+    rdfs:label "화재감지 시스템 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Detection_System .
+
+bldg:Sprinkler_Status a brick:On_Off_Status ;
+    rdfs:label "스프링클러 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Sprinkler_System .
+
+bldg:Sprinkler_Alarm a brick:Alarm ;
+    rdfs:label "스프링클러 시스템 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Sprinkler_System .
+
+bldg:Smoke_Control_Status a brick:On_Off_Status ;
+    rdfs:label "제연 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Smoke_Control_System .
+
+bldg:Smoke_Control_Alarm a brick:Alarm ;
+    rdfs:label "제연 시스템 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Smoke_Control_System .
+
+bldg:Emergency_Broadcast_Status a brick:On_Off_Status ;
+    rdfs:label "비상방송 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Broadcast .
+
+bldg:Emergency_Comm_Status a brick:On_Off_Status ;
+    rdfs:label "비상통신 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Communication_System .
+
+bldg:Emergency_Phone_Elevator_Status a brick:On_Off_Status ;
+    rdfs:label "엘리베이터 비상전화 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Phone_Elevator .
+
+bldg:Indoor_Fire_Hydrant_Status a brick:On_Off_Status ;
+    rdfs:label "옥내소화전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Indoor_Fire_Hydrant .
+
+bldg:Indoor_Fire_Hydrant_Alarm a brick:Alarm ;
+    rdfs:label "옥내소화전 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Indoor_Fire_Hydrant .
+
+bldg:Outdoor_Fire_Hydrant_Status a brick:On_Off_Status ;
+    rdfs:label "옥외소화전 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Outdoor_Fire_Hydrant .
+
+bldg:Outdoor_Fire_Hydrant_Alarm a brick:Alarm ;
+    rdfs:label "옥외소화전 알람" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Outdoor_Fire_Hydrant .
+
+bldg:Access_Control_System_Status a brick:On_Off_Status ;
+    rdfs:label "출입통제 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Access_Control_System .
+
+bldg:Access_Control_1F_Status a brick:On_Off_Status ;
+    rdfs:label "1층 출입통제 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Access_Control_1F .
+
+bldg:CCTV_System_Status a brick:On_Off_Status ;
+    rdfs:label "CCTV 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CCTV_System .
+
+bldg:Parking_Mgmt_Status a brick:On_Off_Status ;
+    rdfs:label "주차관리 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Parking_Management_System .
+
+bldg:Intercom_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "지하1층 인터콤 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B1F .
+
+bldg:Intercom_B2F_Status a brick:On_Off_Status ;
+    rdfs:label "지하2층 인터콤 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B2F .
+
+bldg:Intercom_B3F_Status a brick:On_Off_Status ;
+    rdfs:label "지하3층 인터콤 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B3F .
+
+bldg:Intercom_B4F_Status a brick:On_Off_Status ;
+    rdfs:label "지하4층 인터콤 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Intercom_B4F .
+
+# -----------------------------------------------------------------------------
+# F. Systems/Controllers — 시스템 및 컨트롤러 On_Off_Status
+# 17개 시스템 + 6개 컨트롤러 + 3개 BAS 네트워크 + BMS 2개(Status+Power)
+# -----------------------------------------------------------------------------
+
+bldg:CC_System_Status a brick:On_Off_Status ;
+    rdfs:label "칠드실링 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_System .
+
+bldg:DALI_System_Status a brick:On_Off_Status ;
+    rdfs:label "DALI 조명 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DALI_System .
+
+bldg:DSF_System_Status a brick:On_Off_Status ;
+    rdfs:label "이중외피 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DSF_System .
+
+bldg:Exhaust_Vent_System_Status a brick:On_Off_Status ;
+    rdfs:label "배기환기 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Exhaust_Ventilation_System .
+
+bldg:Fire_Safety_System_Status a brick:On_Off_Status ;
+    rdfs:label "소방안전 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Fire_Safety_System .
+
+bldg:HVAC_System_Status a brick:On_Off_Status ;
+    rdfs:label "공조 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:HVAC_System .
+
+bldg:LS_System_Status a brick:On_Off_Status ;
+    rdfs:label "라이트셀프 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:LS_System .
+
+bldg:Lighting_System_Status a brick:On_Off_Status ;
+    rdfs:label "조명 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Lighting_System .
+
+bldg:NP_System_Status a brick:On_Off_Status ;
+    rdfs:label "나이트퍼지 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:NP_System .
+
+bldg:Parking_Vent_System_Status a brick:On_Off_Status ;
+    rdfs:label "주차장환기 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Parking_Ventilation_System .
+
+bldg:RH_System_Status a brick:On_Off_Status ;
+    rdfs:label "복사난방 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_System .
+
+bldg:Rainwater_System_Status a brick:On_Off_Status ;
+    rdfs:label "우수재활용 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Rainwater_System .
+
+bldg:Security_System_Status a brick:On_Off_Status ;
+    rdfs:label "보안 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Security_System .
+
+bldg:Solar_PV_System_Status a brick:On_Off_Status ;
+    rdfs:label "태양광 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Solar_PV_System .
+
+bldg:UFAD_System_Status a brick:On_Off_Status ;
+    rdfs:label "바닥급기 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:UFAD_System .
+
+bldg:Wastewater_System_Status a brick:On_Off_Status ;
+    rdfs:label "오수처리 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Wastewater_Treatment .
+
+bldg:Vertical_Transport_Status a brick:On_Off_Status ;
+    rdfs:label "수직이동 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Vertical_Transport_System .
+
+bldg:DDC_Controller_Group_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 컨트롤러 그룹 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Controller_Group .
+
+bldg:DDC_AHU_Controller_Status a brick:On_Off_Status ;
+    rdfs:label "DDC AHU 컨트롤러 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_AHU_Controller_Group .
+
+bldg:DDC_Controller_Typical_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 표준 컨트롤러 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Controller_Typical .
+
+bldg:DDC_Plant_Controller_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 플랜트 컨트롤러 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Plant_Controller_Group .
+
+bldg:DDC_Zone_Controller_Status a brick:On_Off_Status ;
+    rdfs:label "DDC 존 컨트롤러 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DDC_Zone_Controller_Group .
+
+bldg:Pressure_Controller_UFAD_Status a brick:On_Off_Status ;
+    rdfs:label "UFAD 정압 컨트롤러 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Pressure_Controller_UFAD .
+
+bldg:BAS_Network_Auto_Status a brick:On_Off_Status ;
+    rdfs:label "BAS 자동화 네트워크 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BAS_Network_Automation .
+
+bldg:BAS_Network_Field_Status a brick:On_Off_Status ;
+    rdfs:label "BAS 필드 네트워크 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BAS_Network_Field .
+
+bldg:BAS_Network_Super_Status a brick:On_Off_Status ;
+    rdfs:label "BAS 감시 네트워크 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BAS_Network_Supervisory .
+
+bldg:BMS_Workstation_Status a brick:On_Off_Status ;
+    rdfs:label "BMS 워크스테이션 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BMS_Workstation .
+
+bldg:BMS_Workstation_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "BMS 워크스테이션 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:BMS_Workstation .
+
+bldg:BMS_Server_Status a brick:On_Off_Status ;
+    rdfs:label "BMS 서버 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:BMS_Server .
+
+bldg:BMS_Server_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "BMS 서버 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:BMS_Server .
+
+# -----------------------------------------------------------------------------
+# G. Lighting — 조명 관련 포인트
+# DALI_Controller_Typical: On_Off_Status + Electrical_Power_Sensor
+# Emergency_Lighting_B1F~B4F, Emergency_Lighting_Controller: On_Off_Status
+# Light_Shelf_West: On_Off_Status (기존 LS_Angle_CMD 보유)
+# -----------------------------------------------------------------------------
+
+bldg:DALI_Controller_Status a brick:On_Off_Status ;
+    rdfs:label "DALI 컨트롤러 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:DALI_Controller_Typical .
+
+bldg:DALI_Controller_Power a brick:Electrical_Power_Sensor ;
+    rdfs:label "DALI 컨트롤러 소비전력" ;
+    bees:hasConfidence "estimated" ;
+    bees:unit "kW" ;
+    brick:isPointOf bldg:DALI_Controller_Typical .
+
+bldg:Emergency_Lighting_B1F_Status a brick:On_Off_Status ;
+    rdfs:label "지하1층 비상조명 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B1F .
+
+bldg:Emergency_Lighting_B2F_Status a brick:On_Off_Status ;
+    rdfs:label "지하2층 비상조명 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B2F .
+
+bldg:Emergency_Lighting_B3F_Status a brick:On_Off_Status ;
+    rdfs:label "지하3층 비상조명 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B3F .
+
+bldg:Emergency_Lighting_B4F_Status a brick:On_Off_Status ;
+    rdfs:label "지하4층 비상조명 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_B4F .
+
+bldg:Emergency_Lighting_Ctrl_Status a brick:On_Off_Status ;
+    rdfs:label "비상조명 컨트롤러 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Emergency_Lighting_Controller .
+
+bldg:Light_Shelf_West_Status a brick:On_Off_Status ;
+    rdfs:label "서측 라이트셀프 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Light_Shelf_West .
+
+# -----------------------------------------------------------------------------
+# H. Misc — 피뢰 시설 포인트
+# Lightning_Protection_System, Lightning_Rod_RF, Ground_Electrode: On_Off_Status
+# -----------------------------------------------------------------------------
+
+bldg:Lightning_Protection_Status a brick:On_Off_Status ;
+    rdfs:label "피뢰 시스템 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Lightning_Protection_System .
+
+bldg:Lightning_Rod_RF_Status a brick:On_Off_Status ;
+    rdfs:label "옥상 피뢰침 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Lightning_Rod_RF .
+
+bldg:Ground_Electrode_Status a brick:On_Off_Status ;
+    rdfs:label "접지전극 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Ground_Electrode .
+
+
+# ═══════════════════════════════════════════════════════════════
+# Phase 9.6: hasPoint 역방향 관계 (비시뮬레이션 장비 → 포인트)
+# ═══════════════════════════════════════════════════════════════
+
+# --- A. Valve hasPoint ---
+bldg:CC_Three_Way_Valve_5F brick:hasPoint bldg:CC_Valve_Status_5F .
+bldg:CC_Three_Way_Valve_6F brick:hasPoint bldg:CC_Valve_Status_6F .
+bldg:CC_Three_Way_Valve_7F brick:hasPoint bldg:CC_Valve_Status_7F .
+bldg:CC_Three_Way_Valve_8F brick:hasPoint bldg:CC_Valve_Status_8F .
+bldg:CC_Three_Way_Valve_9F brick:hasPoint bldg:CC_Valve_Status_9F .
+bldg:CC_Three_Way_Valve_10F brick:hasPoint bldg:CC_Valve_Status_10F .
+bldg:CC_Three_Way_Valve_11F brick:hasPoint bldg:CC_Valve_Status_11F .
+bldg:CC_Three_Way_Valve_12F brick:hasPoint bldg:CC_Valve_Status_12F .
+bldg:CC_Three_Way_Valve_14F brick:hasPoint bldg:CC_Valve_Status_14F .
+bldg:CC_Three_Way_Valve_15F brick:hasPoint bldg:CC_Valve_Status_15F .
+
+bldg:RH_Three_Way_Valve_5F brick:hasPoint bldg:RH_Valve_Status_5F .
+bldg:RH_Three_Way_Valve_6F brick:hasPoint bldg:RH_Valve_Status_6F .
+bldg:RH_Three_Way_Valve_7F brick:hasPoint bldg:RH_Valve_Status_7F .
+bldg:RH_Three_Way_Valve_8F brick:hasPoint bldg:RH_Valve_Status_8F .
+bldg:RH_Three_Way_Valve_9F brick:hasPoint bldg:RH_Valve_Status_9F .
+bldg:RH_Three_Way_Valve_10F brick:hasPoint bldg:RH_Valve_Status_10F .
+bldg:RH_Three_Way_Valve_11F brick:hasPoint bldg:RH_Valve_Status_11F .
+bldg:RH_Three_Way_Valve_12F brick:hasPoint bldg:RH_Valve_Status_12F .
+bldg:RH_Three_Way_Valve_14F brick:hasPoint bldg:RH_Valve_Status_14F .
+bldg:RH_Three_Way_Valve_15F brick:hasPoint bldg:RH_Valve_Status_15F .
+
+# --- A. Damper/VFD hasPoint ---
+bldg:Night_Purge_Damper brick:hasPoint bldg:Night_Purge_Damper_Status .
+bldg:Fire_Damper_Group brick:hasPoint bldg:Fire_Damper_Group_Status .
+bldg:OA_Damper_Group brick:hasPoint bldg:OA_Damper_Group_Status .
+bldg:VFD_Group brick:hasPoint bldg:VFD_Group_Status ,
+    bldg:VFD_Group_Power ,
+    bldg:VFD_Group_Freq_CMD .
+
+# --- B. Electrical Infrastructure hasPoint ---
+bldg:Transformer_Group brick:hasPoint bldg:Transformer_Group_Power ,
+    bldg:Transformer_Group_Status ,
+    bldg:Transformer_Group_Alarm .
+
+bldg:UPS_System brick:hasPoint bldg:UPS_System_Power ,
+    bldg:UPS_System_Status ,
+    bldg:UPS_System_Alarm .
+
+bldg:Main_Distribution_Panel brick:hasPoint bldg:MDP_Power ,
+    bldg:MDP_Status ,
+    bldg:MDP_Alarm .
+
+bldg:Emergency_Generator brick:hasPoint bldg:Emergency_Generator_Power ,
+    bldg:Emergency_Generator_Status ,
+    bldg:Emergency_Generator_Alarm .
+
+bldg:Floor_Distribution_Panel_Group brick:hasPoint bldg:FDP_Group_Power ,
+    bldg:FDP_Group_Status .
+
+bldg:PV_Inverter_1 brick:hasPoint bldg:PV_Inverter_1_Power ,
+    bldg:PV_Inverter_1_Status .
+
+# --- C. Renewable/Special hasPoint ---
+bldg:Solar_Panel_RF brick:hasPoint bldg:Solar_Panel_RF_Power .
+bldg:DSF_West_Unit brick:hasPoint bldg:DSF_West_Status .
+bldg:DSF_Inner_Window_West brick:hasPoint bldg:DSF_Inner_Window_West_Status .
+
+# --- D. Water Management hasPoint ---
+bldg:Pressure_Tank brick:hasPoint bldg:Pressure_Tank_Level ,
+    bldg:Pressure_Tank_Status .
+
+bldg:Rainwater_Tank brick:hasPoint bldg:Rainwater_Tank_Status .
+
+bldg:Rainwater_Storage_Tank brick:hasPoint bldg:Rainwater_Storage_Tank_Level ,
+    bldg:Rainwater_Storage_Tank_Status .
+
+bldg:Grease_Trap_B1F brick:hasPoint bldg:Grease_Trap_B1F_Status .
+
+bldg:Wastewater_Treatment_Tank brick:hasPoint bldg:Wastewater_Tank_Level ,
+    bldg:Wastewater_Tank_Status .
+
+# --- E. Safety/Security hasPoint ---
+bldg:Fire_Detection_System brick:hasPoint bldg:Fire_Detection_Status ,
+    bldg:Fire_Detection_Alarm .
+
+bldg:Sprinkler_System brick:hasPoint bldg:Sprinkler_Status ,
+    bldg:Sprinkler_Alarm .
+
+bldg:Smoke_Control_System brick:hasPoint bldg:Smoke_Control_Status ,
+    bldg:Smoke_Control_Alarm .
+
+bldg:Emergency_Broadcast brick:hasPoint bldg:Emergency_Broadcast_Status .
+bldg:Emergency_Communication_System brick:hasPoint bldg:Emergency_Comm_Status .
+bldg:Emergency_Phone_Elevator brick:hasPoint bldg:Emergency_Phone_Elevator_Status .
+
+bldg:Indoor_Fire_Hydrant brick:hasPoint bldg:Indoor_Fire_Hydrant_Status ,
+    bldg:Indoor_Fire_Hydrant_Alarm .
+
+bldg:Outdoor_Fire_Hydrant brick:hasPoint bldg:Outdoor_Fire_Hydrant_Status ,
+    bldg:Outdoor_Fire_Hydrant_Alarm .
+
+bldg:Access_Control_System brick:hasPoint bldg:Access_Control_System_Status .
+bldg:Access_Control_1F brick:hasPoint bldg:Access_Control_1F_Status .
+bldg:CCTV_System brick:hasPoint bldg:CCTV_System_Status .
+bldg:Parking_Management_System brick:hasPoint bldg:Parking_Mgmt_Status .
+
+bldg:Intercom_B1F brick:hasPoint bldg:Intercom_B1F_Status .
+bldg:Intercom_B2F brick:hasPoint bldg:Intercom_B2F_Status .
+bldg:Intercom_B3F brick:hasPoint bldg:Intercom_B3F_Status .
+bldg:Intercom_B4F brick:hasPoint bldg:Intercom_B4F_Status .
+
+# --- F. Systems/Controllers hasPoint ---
+bldg:CC_System brick:hasPoint bldg:CC_System_Status .
+bldg:DALI_System brick:hasPoint bldg:DALI_System_Status .
+bldg:DSF_System brick:hasPoint bldg:DSF_System_Status .
+bldg:Exhaust_Ventilation_System brick:hasPoint bldg:Exhaust_Vent_System_Status .
+bldg:Fire_Safety_System brick:hasPoint bldg:Fire_Safety_System_Status .
+bldg:HVAC_System brick:hasPoint bldg:HVAC_System_Status .
+bldg:LS_System brick:hasPoint bldg:LS_System_Status .
+bldg:Lighting_System brick:hasPoint bldg:Lighting_System_Status .
+bldg:NP_System brick:hasPoint bldg:NP_System_Status .
+bldg:Parking_Ventilation_System brick:hasPoint bldg:Parking_Vent_System_Status .
+bldg:RH_System brick:hasPoint bldg:RH_System_Status .
+bldg:Rainwater_System brick:hasPoint bldg:Rainwater_System_Status .
+bldg:Security_System brick:hasPoint bldg:Security_System_Status .
+bldg:Solar_PV_System brick:hasPoint bldg:Solar_PV_System_Status .
+bldg:UFAD_System brick:hasPoint bldg:UFAD_System_Status .
+bldg:Wastewater_Treatment brick:hasPoint bldg:Wastewater_System_Status .
+bldg:Vertical_Transport_System brick:hasPoint bldg:Vertical_Transport_Status .
+
+bldg:DDC_Controller_Group brick:hasPoint bldg:DDC_Controller_Group_Status .
+bldg:DDC_AHU_Controller_Group brick:hasPoint bldg:DDC_AHU_Controller_Status .
+bldg:DDC_Controller_Typical brick:hasPoint bldg:DDC_Controller_Typical_Status .
+bldg:DDC_Plant_Controller_Group brick:hasPoint bldg:DDC_Plant_Controller_Status .
+bldg:DDC_Zone_Controller_Group brick:hasPoint bldg:DDC_Zone_Controller_Status .
+bldg:Pressure_Controller_UFAD brick:hasPoint bldg:Pressure_Controller_UFAD_Status .
+
+bldg:BAS_Network_Automation brick:hasPoint bldg:BAS_Network_Auto_Status .
+bldg:BAS_Network_Field brick:hasPoint bldg:BAS_Network_Field_Status .
+bldg:BAS_Network_Supervisory brick:hasPoint bldg:BAS_Network_Super_Status .
+
+bldg:BMS_Workstation brick:hasPoint bldg:BMS_Workstation_Status ,
+    bldg:BMS_Workstation_Power .
+
+bldg:BMS_Server brick:hasPoint bldg:BMS_Server_Status ,
+    bldg:BMS_Server_Power .
+
+# --- G. Lighting hasPoint ---
+bldg:DALI_Controller_Typical brick:hasPoint bldg:DALI_Controller_Status ,
+    bldg:DALI_Controller_Power .
+
+bldg:Emergency_Lighting_B1F brick:hasPoint bldg:Emergency_Lighting_B1F_Status .
+bldg:Emergency_Lighting_B2F brick:hasPoint bldg:Emergency_Lighting_B2F_Status .
+bldg:Emergency_Lighting_B3F brick:hasPoint bldg:Emergency_Lighting_B3F_Status .
+bldg:Emergency_Lighting_B4F brick:hasPoint bldg:Emergency_Lighting_B4F_Status .
+bldg:Emergency_Lighting_Controller brick:hasPoint bldg:Emergency_Lighting_Ctrl_Status .
+bldg:Light_Shelf_West brick:hasPoint bldg:Light_Shelf_West_Status .
+
+# --- H. Misc hasPoint ---
+bldg:Lightning_Protection_System brick:hasPoint bldg:Lightning_Protection_Status .
+bldg:Lightning_Rod_RF brick:hasPoint bldg:Lightning_Rod_RF_Status .
+bldg:Ground_Electrode brick:hasPoint bldg:Ground_Electrode_Status .

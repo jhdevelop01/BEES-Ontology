@@ -25,6 +25,7 @@ BLDG_NS = "https://example.org/gec-b#"
 
 # 시뮬레이션 대상 장비 라벨 (Neo4j 노드 라벨)
 SIMULATABLE_EQUIPMENT_LABELS: set[str] = {
+    # ── 기존 14개 유지 ──
     "AHU",
     "Chiller",
     "Boiler",
@@ -39,6 +40,43 @@ SIMULATABLE_EQUIPMENT_LABELS: set[str] = {
     "Elevator",
     "Chilled_Ceiling_Panel",
     "Building_Electrical_Meter",
+    # ── 신규 추가: HVAC Components ──
+    "Valve",
+    "Damper",
+    "VFD",
+    # ── 신규 추가: 전기 인프라 ──
+    "Transformer",
+    "UPS",
+    "Switchgear",
+    "Emergency_Generator",
+    "Electrical_Equipment",
+    # ── 신규 추가: 수자원 ──
+    "Water_Pump",
+    # ── 신규 추가: 특수 HVAC ──
+    "HVAC_Equipment",
+    # ── 신규 추가: 컨트롤러 ──
+    "Controller",
+    # ── 신규 추가: 조명 ──
+    "Lighting_Equipment",
+    # ── 신규 추가: 시스템 (논리적 컨테이너) ──
+    "HVAC_System",
+    "Electrical_System",
+    "Lighting_System",
+    "Water_System",
+    "Equipment_System",
+    # ── 신규 추가: 서브시스템 (토폴로지 트리 노드) ──
+    "Chilled_Ceiling_System",
+    "Chiller_Plant",
+    "DALI_Lighting_System",
+    "Double_Skin_Facade_System",
+    "Light_Shelf_System",
+    "Night_Purge_System",
+    "Radiant_Heating_System",
+    "Rainwater_Harvesting_System",
+    "UFAD_System",
+    "Wastewater_Treatment_System",
+    # ── 신규 추가: Generic (소방/보안/BMS 등 미분류) ──
+    "Equipment",
 }
 
 # 장비가 아닌 일반 노드 라벨 (필터링 대상)
@@ -116,7 +154,12 @@ def _extract_primary_class(labels: list[str]) -> str:
         # 가장 긴 이름이 보통 가장 구체적 (예: 'Chilled_Water_Pump' > 'Pump')
         return max(specific_labels, key=len)
 
-    # 모두 일반 라벨인 경우 마지막 것 반환 (보통 가장 구체적)
+    # 모두 일반 라벨인 경우, SIMULATABLE에 해당하는 것 우선 선택
+    simulatable_labels = [lb for lb in labels if lb in SIMULATABLE_EQUIPMENT_LABELS]
+    if simulatable_labels:
+        return max(simulatable_labels, key=len)
+
+    # 최종 폴백
     return labels[-1] if labels else "Equipment"
 
 

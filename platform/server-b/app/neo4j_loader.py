@@ -36,6 +36,24 @@ CONTROLLABLE_EQUIPMENT: dict[str, list[str]] = {
     "Pump": ["ON", "OFF"],
     "Chilled_Ceiling_Panel": ["ON", "OFF"],
     "Elevator": ["ON", "OFF"],
+    # ── 신규 추가 (HVAC Components) ──
+    "Valve": ["ON", "OFF"],
+    "Damper": ["ON", "OFF"],
+    "VFD": ["ON", "OFF"],
+    # ── 전기 인프라 ──
+    "Transformer": ["ON", "OFF"],
+    "UPS": ["ON", "OFF"],
+    "Emergency_Generator": ["ON", "OFF"],
+    "Switchgear": ["ON", "OFF"],
+    "Electrical_Equipment": ["ON", "OFF"],
+    # ── 수자원 ──
+    "Water_Pump": ["ON", "OFF"],
+    # ── 특수 HVAC ──
+    "HVAC_Equipment": ["ON", "OFF"],
+    # ── 컨트롤러 ──
+    "Controller": ["ON", "OFF"],
+    # ── 조명 ──
+    "Lighting_Equipment": ["ON", "OFF"],
 }
 
 # 일반적인 상위 라벨 (필터링 대상)
