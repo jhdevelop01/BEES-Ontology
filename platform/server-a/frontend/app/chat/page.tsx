@@ -49,6 +49,66 @@ interface DisplayMessage {
   sources?: ChatSourceInfo[];
 }
 
+/* ── 섹션별 파싱 렌더링 컴포넌트 ── */
+
+interface Section {
+  label: string;
+  body: string;
+}
+
+function parseStructuredResponse(text: string): Section[] | null {
+  const sectionRegex = /\[(요약|상세|종합)\]\s*/g;
+  const matches = [...text.matchAll(sectionRegex)];
+  if (matches.length < 2) return null; // 구조화 응답이 아니면 null
+
+  const sections: Section[] = [];
+  for (let i = 0; i < matches.length; i++) {
+    const start = matches[i].index! + matches[i][0].length;
+    const end = i + 1 < matches.length ? matches[i + 1].index! : text.length;
+    const body = text.slice(start, end).trim();
+    if (body) {
+      sections.push({ label: matches[i][1], body });
+    }
+  }
+  return sections.length > 0 ? sections : null;
+}
+
+const SECTION_STYLES: Record<string, { border: string; bg: string; text: string; icon: string }> = {
+  "요약": { border: "border-cyan-500/30", bg: "bg-cyan-500/5", text: "text-cyan-400", icon: "TL;DR" },
+  "상세": { border: "border-slate-500/30", bg: "bg-white/[0.02]", text: "text-slate-400", icon: "Details" },
+  "종합": { border: "border-emerald-500/30", bg: "bg-emerald-500/5", text: "text-emerald-400", icon: "Summary" },
+};
+
+function StructuredMessage({ content }: { content: string }) {
+  const sections = parseStructuredResponse(content);
+
+  if (!sections) {
+    // 구조화 응답이 아닌 경우 일반 텍스트 렌더링
+    return <div className="text-sm whitespace-pre-wrap text-slate-200">{content}</div>;
+  }
+
+  return (
+    <div className="space-y-2.5">
+      {sections.map((sec, i) => {
+        const style = SECTION_STYLES[sec.label] || SECTION_STYLES["상세"];
+        return (
+          <div
+            key={i}
+            className={`rounded-md border ${style.border} ${style.bg} px-3 py-2.5`}
+          >
+            <div className={`text-[10px] font-medium ${style.text} mb-1.5 uppercase tracking-wider`}>
+              {sec.label}
+            </div>
+            <div className="text-sm whitespace-pre-wrap text-slate-200 leading-relaxed">
+              {sec.body}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ── Cypher 코드 블록 컴포넌트 ── */
 
 function CypherBlock({ queries }: { queries: string[] }) {
@@ -268,13 +328,13 @@ export default function ChatPage() {
                   >
                     <CardContent className="p-3">
                       {/* 메시지 본문 */}
-                      <div
-                        className={`text-sm whitespace-pre-wrap ${
-                          msg.role === "user" ? "text-white" : "text-slate-200"
-                        }`}
-                      >
-                        {msg.content}
-                      </div>
+                      {msg.role === "assistant" ? (
+                        <StructuredMessage content={msg.content} />
+                      ) : (
+                        <div className="text-sm whitespace-pre-wrap text-white">
+                          {msg.content}
+                        </div>
+                      )}
 
                       {/* 도구 호출 배지 */}
                       {msg.toolCalls && msg.toolCalls.length > 0 && (

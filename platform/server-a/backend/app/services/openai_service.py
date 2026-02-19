@@ -80,12 +80,28 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - 에너지 흐름: Chiller → CHW_Pump → AHU/CC_Panel (feeds 관계로 연결)
 - **CHW/CW/HW는 별도 시스템 노드가 아님** — get_system_info에서 '냉수','CHW','냉방' 등으로 검색 가능
 
+## 응답 형식 (반드시 준수)
+마크다운 기호를 절대 사용하지 마세요. **, ##, -, *, `, ```, > 등 마크다운 서식 문자를 쓰지 마세요.
+대신 아래 구조로 응답하세요:
+
+[요약]
+질문에 대한 핵심 답변을 2~3문장으로 요약합니다.
+
+[상세]
+조회된 데이터를 기반으로 상세하게 설명합니다.
+항목을 나열할 때는 "1) 2) 3)" 또는 "가. 나. 다." 형식을 사용하세요.
+표가 필요한 경우 각 행을 "항목명: 값" 형태로 나열하세요.
+
+[종합]
+전체 내용을 한 문장으로 정리합니다.
+
 ## 응답 규칙
 1. 한국어로 응답
 2. 기술 용어는 영문 병기 (예: 공조기(AHU))
-3. 결과를 정리하여 보기 좋게 제시
+3. 마크다운 기호(**, ##, -, *, `, ```, >) 절대 사용 금지 — 순수 텍스트만 사용
 4. 모르면 솔직히 모른다고 답변
 5. Cypher 쿼리 결과가 비어 있으면 해당 데이터가 없다고 안내
+6. 짧은 인사나 간단한 질문에는 [요약]/[상세]/[종합] 구조 없이 자연스럽게 답변
 """
 
 
@@ -562,6 +578,26 @@ async def _tool_get_energy_flow(equipment_name: str, direction: str = "both") ->
     return results_data
 
 
+# ─── 마크다운 기호 제거 (후처리 안전장치) ────────────────────
+
+def _strip_markdown(text: str) -> str:
+    """GPT 응답에서 마크다운 서식 문자를 제거"""
+    # 코드 블록 ```...``` 제거 (내용은 유지)
+    text = re.sub(r"```[\w]*\n?", "", text)
+    # 볼드/이탤릭: **text** → text, *text* → text, __text__ → text
+    text = re.sub(r"\*{1,3}([^*]+)\*{1,3}", r"\1", text)
+    text = re.sub(r"_{1,3}([^_]+)_{1,3}", r"\1", text)
+    # 인라인 코드: `text` → text
+    text = re.sub(r"`([^`]+)`", r"\1", text)
+    # 헤딩: ### text → text
+    text = re.sub(r"^#{1,6}\s*", "", text, flags=re.MULTILINE)
+    # 리스트 마커: "- item" → "item", "* item" → "item"
+    text = re.sub(r"^[\s]*[-*]\s+", "", text, flags=re.MULTILINE)
+    # 인용: > text → text
+    text = re.sub(r"^>\s*", "", text, flags=re.MULTILINE)
+    return text.strip()
+
+
 # ─── 도구 디스패처 ───────────────────────────────────────────
 
 async def _execute_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
@@ -657,7 +693,7 @@ async def chat(
         # Function Call이 없으면 최종 응답
         if not assistant_message.tool_calls:
             return {
-                "response": assistant_message.content or "",
+                "response": _strip_markdown(assistant_message.content or ""),
                 "cypher_queries": cypher_queries,
                 "sources": sources,
                 "tool_calls": tool_calls_log,
@@ -711,7 +747,7 @@ async def chat(
             model=OPENAI_MODEL,
             messages=messages,
         )
-        final_content = response.choices[0].message.content or ""
+        final_content = _strip_markdown(response.choices[0].message.content or "")
     except Exception as e:
         logger.error("최종 응답 생성 실패: %s", e)
         final_content = "응답 생성 중 오류가 발생했습니다."
