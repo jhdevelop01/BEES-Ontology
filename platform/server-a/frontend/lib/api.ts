@@ -693,14 +693,19 @@ export interface EnergyRealtime {
   timestamp: number;
 }
 
+export interface EnergyProfileDataItem {
+  point_id: string;
+  ts: number;
+  value: number;
+  unit?: string;
+  quality?: string;
+  system?: string;
+}
+
 export interface EnergyProfileData {
   period: string;
   window: string;
-  data: Array<{
-    ts: number;
-    value: number;
-    system?: string;
-  }>;
+  data: EnergyProfileDataItem[];
   power_point_count: number;
 }
 
@@ -1331,4 +1336,37 @@ export async function getNotificationLog(params?: {
 
 export async function getNotificationLogStats(): Promise<NotificationLogStats> {
   return fetchJSON<NotificationLogStats>("/api/notifications/log/stats");
+}
+
+// ─── Floor Details (Room + Equipment) ──────────────────
+
+export interface FloorRoom {
+  id: string;
+  label: string | null;
+  spaceType: string | null;
+  area_m2: number | null;
+  zone_key: string | null;
+  sensor_ids: { temperature?: string; humidity?: string; co2?: string };
+}
+
+export interface FloorEquipmentDetail {
+  id: string;
+  name: string;
+  label: string | null;
+  type: string;
+  category: string | null;
+  subcategory: string | null;
+  controllable: boolean;
+  location: string | null;
+}
+
+export interface FloorDetails {
+  floor_key: string;
+  rooms: FloorRoom[];
+  equipment: FloorEquipmentDetail[];
+  total_area_m2: number;
+}
+
+export async function getFloorDetails(floorKey: string): Promise<FloorDetails> {
+  return fetchJSON<FloorDetails>(`/api/floors/${encodeURIComponent(floorKey)}/details`);
 }

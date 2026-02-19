@@ -24,6 +24,9 @@ from app.services.energy_service import (
     POWER_POINT_PATTERNS,
     _get_base_kw,
     _classify_system,
+    _extract_equipment_id,
+    _ensure_floor_cache,
+    _equipment_floor_cache,
     FLOOR_AREA_M2,
 )
 
@@ -66,7 +69,10 @@ async def energy_breakdown() -> dict[str, Any]:
         if v > 0
     ]
 
-    # 층별 분석: MQTT 캐시에서 층 정보 추출
+    # 장비→층 매핑 캐시 로드
+    await _ensure_floor_cache()
+
+    # 층별 분석: MQTT 캐시에서 층 정보 추출 (Neo4j 매핑 폴백)
     point_cache = mqtt_service.get_point_cache()
     by_floor: dict[str, float] = {}
     for pid, data in point_cache.items():
@@ -76,7 +82,7 @@ async def energy_breakdown() -> dict[str, Any]:
         value = data.get("value")
         if not isinstance(value, (int, float)) or value <= 0:
             continue
-        floor = _extract_floor(pid)
+        floor = _extract_floor(pid, _equipment_floor_cache)
         if floor:
             base_kw = _get_base_kw(pid)
             kw = (value / 100.0) * base_kw
@@ -154,7 +160,22 @@ async def energy_eui() -> dict[str, Any]:
 
 # ── 내부 헬퍼 ─────────────────────────────────────────────────────────────
 
-def _extract_floor(point_id: str) -> str | None:
-    """포인트 ID에서 층 정보 추출 (예: AHU_5F_SAT → 5F)."""
+def _extract_floor(point_id: str, equip_floor_map: dict[str, str] | None = None) -> str | None:
+    """포인트 ID에서 층 정보 추출 (예: AHU_5F_SAT → 5F).
+
+    1차: 정규식으로 직접 추출
+    2차: Neo4j 장비→층 매핑에서 찾기
+    """
     match = re.search(r'(\d+F|B\d+F|RF)', point_id, re.IGNORECASE)
-    return match.group(1).upper() if match else None
+    if match:
+        return match.group(1).upper()
+
+    if equip_floor_map:
+        local = point_id.replace("bldg:", "")
+        equip_id = _extract_equipment_id(local)
+        floor_key = equip_floor_map.get(equip_id)
+        if floor_key:
+            # B_5F → 5F, B_B1F → B1F
+            return floor_key.replace("B_", "", 1)
+
+    return None

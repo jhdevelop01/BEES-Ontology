@@ -38,6 +38,7 @@ SIMULATABLE_EQUIPMENT_LABELS: set[str] = {
     "Pump",
     "Elevator",
     "Chilled_Ceiling_Panel",
+    "Building_Electrical_Meter",
 }
 
 # 장비가 아닌 일반 노드 라벨 (필터링 대상)

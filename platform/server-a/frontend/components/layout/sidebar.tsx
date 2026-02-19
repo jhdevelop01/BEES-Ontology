@@ -57,8 +57,14 @@ const navItems: NavItem[] = [
 export function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
   const t = useTranslations("nav");
   const tc = useTranslations("common");
+
+  // 클라이언트에서만 로그인 상태 확인 (hydration 불일치 방지)
+  useEffect(() => {
+    setLoggedIn(isLoggedIn());
+  }, [pathname]);
 
   // 경로 변경 시 모바일 메뉴 닫기
   useEffect(() => {
@@ -164,7 +170,7 @@ export function Sidebar() {
 
         {/* 하단: 사용자 + 로그인/로그아웃 */}
         <div className="absolute bottom-0 left-0 right-0 border-t border-gray-200 p-2 lg:p-4 space-y-2">
-          {isLoggedIn() ? (
+          {loggedIn ? (
             <>
               {/* 사용자 정보 */}
               <div className={cn(

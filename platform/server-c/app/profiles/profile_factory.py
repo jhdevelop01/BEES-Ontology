@@ -218,6 +218,9 @@ EQUIPMENT_POWER_OVERRIDE: dict[str, dict] = {
                     "max_value": 8.0, "daily_amplitude": 0.5},
     "Supply_Fan": {"base_value": 7.0, "off_base_value": 0.1, "noise_range": 0.5,
                    "max_value": 12.0, "daily_amplitude": 0.7},
+    "Building_Electrical_Meter": {"base_value": 50.0, "off_base_value": 5.0,
+                                  "noise_range": 8.0, "max_value": 200.0,
+                                  "daily_amplitude": 15.0},
 }
 
 

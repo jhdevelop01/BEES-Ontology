@@ -853,6 +853,191 @@ async def get_node_detail(node_id: str) -> dict[str, Any]:
         return _get_fallback_node_detail(node_id)
 
 
+async def get_floor_rooms(floor_key: str) -> list[dict[str, Any]]:
+    """층별 Room 목록 조회 (Room의 label, spaceType, area, zone, zone 센서 매핑)"""
+    if not _driver:
+        return []
+
+    floor_uri = f"https://example.org/gec-b#{floor_key}"
+    try:
+        async with _driver.session() as session:
+            result = await session.run("""
+                MATCH (room)-[:isPartOf]->(floor)
+                WHERE floor.uri = $floor_uri
+                  AND any(l IN labels(room) WHERE l IN
+                    ['Room', 'Meeting_Room', 'Office_Space', 'Server_Room',
+                     'Mechanical_Room', 'Support_Space'])
+                OPTIONAL MATCH (room)-[:isPartOf]->(zone)
+                WHERE any(l IN labels(zone) WHERE l IN ['HVAC_Zone'])
+                OPTIONAL MATCH (sensor)-[:isPointOf]->(zone)
+                WHERE any(l IN labels(sensor) WHERE l IN
+                    ['Zone_Air_Temperature_Sensor', 'Zone_Air_Humidity_Sensor', 'CO2_Sensor'])
+                RETURN room.uri AS room_uri,
+                       labels(room) AS room_labels,
+                       room.label AS room_label,
+                       room.spaceType AS space_type,
+                       room.usableArea_m2 AS area_m2,
+                       zone.uri AS zone_uri,
+                       collect(DISTINCT {uri: sensor.uri, labels: labels(sensor)}) AS sensors
+                ORDER BY room.uri
+            """, floor_uri=floor_uri)
+
+            records = [record.data() async for record in result]
+
+            rooms: list[dict[str, Any]] = []
+            for rec in records:
+                room_uri = rec.get("room_uri", "")
+                room_id = room_uri.rsplit("#", 1)[-1] if "#" in room_uri else room_uri
+
+                zone_uri = rec.get("zone_uri")
+                zone_key = zone_uri.rsplit("#", 1)[-1] if zone_uri and "#" in zone_uri else None
+
+                # 센서 분류
+                sensor_ids: dict[str, str | None] = {
+                    "temperature": None,
+                    "humidity": None,
+                    "co2": None,
+                }
+                for s in rec.get("sensors", []):
+                    s_uri = s.get("uri")
+                    s_labels = s.get("labels", [])
+                    if not s_uri:
+                        continue
+                    s_id = s_uri.rsplit("#", 1)[-1] if "#" in s_uri else s_uri
+                    if any("Zone_Air_Temperature_Sensor" in l for l in s_labels):
+                        sensor_ids["temperature"] = s_id
+                    elif any("Zone_Air_Humidity_Sensor" in l for l in s_labels):
+                        sensor_ids["humidity"] = s_id
+                    elif any("CO2_Sensor" in l for l in s_labels):
+                        sensor_ids["co2"] = s_id
+
+                area_val = rec.get("area_m2")
+                # n10s MAP 모드: 리스트 반환 처리
+                if isinstance(area_val, list):
+                    area_val = area_val[0] if area_val else None
+                space_type = rec.get("space_type")
+                if isinstance(space_type, list):
+                    space_type = space_type[0] if space_type else None
+                rooms.append({
+                    "id": room_id,
+                    "label": _extract_rdfs_label(rec.get("room_label")),
+                    "spaceType": space_type,
+                    "area_m2": float(area_val) if area_val is not None else None,
+                    "zone_key": zone_key,
+                    "sensor_ids": sensor_ids,
+                })
+
+            # Zone 미연결 Room에 같은 층 Interior Zone 센서 폴백 적용
+            fallback_sensors: dict[str, str | None] | None = None
+            fallback_zone: str | None = None
+            for r in rooms:
+                if r["zone_key"] and any(v for v in r["sensor_ids"].values()):
+                    if "Interior" in (r["zone_key"] or ""):
+                        fallback_sensors = r["sensor_ids"]
+                        fallback_zone = r["zone_key"]
+                        break
+            if fallback_sensors is None:
+                for r in rooms:
+                    if r["zone_key"] and any(v for v in r["sensor_ids"].values()):
+                        fallback_sensors = r["sensor_ids"]
+                        fallback_zone = r["zone_key"]
+                        break
+            if fallback_sensors:
+                for r in rooms:
+                    if not r["zone_key"]:
+                        r["zone_key"] = fallback_zone
+                        r["sensor_ids"] = dict(fallback_sensors)
+
+            return rooms
+
+    except Exception as e:
+        logger.warning("층별 Room 조회 실패: %s — %s", floor_key, e)
+        return []
+
+
+async def get_floor_equipment(floor_key: str) -> list[dict[str, Any]]:
+    """특정 층의 장비 목록 조회"""
+    if not _driver:
+        return []
+
+    try:
+        async with _driver.session() as session:
+            result = await session.run("""
+                MATCH (equip)-[:hasLocation]->(loc)
+                WHERE loc.uri CONTAINS $floor_key
+                  AND equip.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND any(l IN labels(equip) WHERE l IN [
+                    'AHU', 'Chiller', 'Boiler', 'Pump', 'Fan', 'Cooling_Tower',
+                    'Fan_Coil_Unit', 'Elevator', 'VFD', 'Heat_Exchanger', 'Valve',
+                    'Air_Handler_Unit', 'Supply_Fan', 'Return_Fan', 'Exhaust_Fan',
+                    'Chilled_Water_Pump', 'Condenser_Water_Pump', 'Hot_Water_Pump',
+                    'Chilled_Ceiling_Panel', 'Building_Electrical_Meter'
+                  ])
+                RETURN equip.uri AS uri, labels(equip) AS labels,
+                       equip.label AS rdfs_label, loc.uri AS location_uri
+                ORDER BY equip.uri
+            """, floor_key=floor_key)
+
+            records = [record.data() async for record in result]
+
+            from app.services.equipment_classification import classify_equipment
+
+            equipment_list: list[dict[str, Any]] = []
+            for rec in records:
+                uri = rec.get("uri", "")
+                labels = [l for l in rec.get("labels", []) if l != "Resource"]
+                name = uri.rsplit("#", 1)[-1] if "#" in uri else uri
+                loc_uri = rec.get("location_uri")
+                location = loc_uri.rsplit("#", 1)[-1] if loc_uri and "#" in loc_uri else None
+
+                classification = classify_equipment(labels)
+                equip_type = next(
+                    (l for l in labels if l not in ("Equipment", "Resource")),
+                    "Equipment",
+                )
+
+                equipment_list.append({
+                    "id": name,
+                    "name": name,
+                    "label": _extract_rdfs_label(rec.get("rdfs_label")),
+                    "type": equip_type,
+                    "category": classification["category"],
+                    "subcategory": classification["subcategory"],
+                    "controllable": classification["controllable"],
+                    "location": location,
+                })
+            return equipment_list
+
+    except Exception as e:
+        logger.warning("층별 장비 조회 실패: %s — %s", floor_key, e)
+        return []
+
+
+async def get_equipment_floor_mapping() -> dict[str, str]:
+    """장비 ID → 층 키 매핑 반환. 예: {'AHU_UFAD_1': 'B_5F', 'Chiller_1': 'B_B1F'}"""
+    if not _driver:
+        return {}
+
+    query = """
+    MATCH (e)-[:hasLocation]->(loc)
+    WHERE loc.uri STARTS WITH 'https://example.org/gec-b#B_'
+    RETURN e.uri AS equipment_uri, loc.uri AS floor_uri
+    """
+    mapping: dict[str, str] = {}
+    try:
+        async with _driver.session() as session:
+            result = await session.run(query)
+            async for record in result:
+                eq_uri = record["equipment_uri"]
+                fl_uri = record["floor_uri"]
+                eq_id = eq_uri.split("#")[-1] if "#" in eq_uri else eq_uri
+                fl_id = fl_uri.split("#")[-1] if "#" in fl_uri else fl_uri
+                mapping[eq_id] = fl_id
+    except Exception as e:
+        logger.warning("장비→층 매핑 조회 실패: %s", e)
+    return mapping
+
+
 def _get_fallback_graph_data(
     node_type: str | None = None,
     floor: str | None = None,

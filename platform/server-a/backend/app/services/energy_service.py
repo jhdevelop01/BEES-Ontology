@@ -16,6 +16,24 @@ from app.services import mqtt_service, influxdb_service
 
 logger = logging.getLogger("server-a.energy")
 
+# 장비→층 매핑 캐시 (lazy load)
+_equipment_floor_cache: dict[str, str] = {}
+_cache_loaded = False
+
+
+async def _ensure_floor_cache() -> None:
+    """장비→층 매핑 캐시를 Neo4j에서 로드 (1회)."""
+    global _equipment_floor_cache, _cache_loaded
+    if _cache_loaded:
+        return
+    try:
+        from app.services.neo4j_service import get_equipment_floor_mapping
+        _equipment_floor_cache = await get_equipment_floor_mapping()
+        _cache_loaded = True
+        logger.info("장비→층 매핑 로드 완료: %d건", len(_equipment_floor_cache))
+    except Exception as e:
+        logger.warning("장비→층 매핑 로드 실패: %s", e)
+
 # 건물 연면적 (m²) — GEC B동
 FLOOR_AREA_M2 = 60_000.0
 

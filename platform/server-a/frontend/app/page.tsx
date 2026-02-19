@@ -5,88 +5,94 @@ import dynamic from "next/dynamic";
 import { Header } from "@/components/layout/header";
 import { useSSE } from "@/lib/sse";
 import { useTranslations } from "next-intl";
-import { getDashboardSummary, type DashboardSummary } from "@/lib/api";
-import type { ChartDataPoint } from "@/components/charts/live-chart";
+import {
+  getDashboardSummary,
+  getEnergyRealtime,
+  getEnergyComparison,
+  getEnergyProfile,
+  getAlarmStats,
+  getEquipmentList,
+  type DashboardSummary,
+  type EnergyRealtime,
+  type EnergyComparison,
+  type EnergyProfileData,
+  type AlarmStats,
+  type EquipmentListItem,
+} from "@/lib/api";
 
 const DashboardGrid = dynamic(
-  () =>
-    import("@/components/dashboard/dashboard-grid").then(
-      (mod) => mod.DashboardGrid
-    ),
+  () => import("@/components/dashboard/dashboard-grid").then((mod) => mod.DashboardGrid),
   { ssr: false }
 );
 
-/**
- * 대시보드 페이지 (메인)
- * KPI 카드 4개 + AHU_5F 센서 실시간 차트 + 장비 상태 카드
- * react-grid-layout 기반 드래그&리사이즈 위젯 그리드
- */
 export default function DashboardPage() {
   const t = useTranslations("dashboard");
-  const { points, pointHistory, devices, alarms, connected } = useSSE(60);
+  const { points, devices, alarms, connected } = useSSE(60);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [energyRealtime, setEnergyRealtime] = useState<EnergyRealtime | null>(null);
+  const [energyComparison, setEnergyComparison] = useState<EnergyComparison | null>(null);
+  const [energyProfile, setEnergyProfile] = useState<EnergyProfileData | null>(null);
+  const [alarmStats, setAlarmStats] = useState<AlarmStats | null>(null);
+  const [equipmentList, setEquipmentList] = useState<EquipmentListItem[]>([]);
 
-  // 대시보드 요약 데이터 로딩 (5초마다 갱신)
+  // 대시보드 요약 + 에너지 실시간 + 알람 통계 (30초 폴링)
   useEffect(() => {
-    const fetchSummary = async () => {
+    const fetchCore = async () => {
       try {
-        const data = await getDashboardSummary();
-        setSummary(data);
+        const [summ, energy, comparison, stats] = await Promise.allSettled([
+          getDashboardSummary(),
+          getEnergyRealtime(),
+          getEnergyComparison("week"),
+          getAlarmStats(),
+        ]);
+        if (summ.status === "fulfilled") setSummary(summ.value);
+        if (energy.status === "fulfilled") setEnergyRealtime(energy.value);
+        if (comparison.status === "fulfilled") setEnergyComparison(comparison.value);
+        if (stats.status === "fulfilled") setAlarmStats(stats.value);
       } catch (err) {
-        console.error("[BEES] 대시보드 API 호출 실패:", err);
-      } finally {
-        setLoading(false);
+        console.error("[BEES] 대시보드 코어 데이터 실패:", err);
       }
     };
-
-    fetchSummary();
-    const interval = setInterval(fetchSummary, 5000);
+    fetchCore();
+    const interval = setInterval(fetchCore, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  // KPI 값 계산 (MQTT 실시간 데이터 우선, 없으면 API 요약)
+  // 장비 목록 (1회) + 에너지 프로파일 (5분 폴링)
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        const resp = await getEquipmentList();
+        setEquipmentList(resp.items.filter(e => e.category !== "component"));
+      } catch (err) {
+        console.error("[BEES] 장비 목록 실패:", err);
+      }
+    };
+    fetchEquipment();
+  }, []);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const profile = await getEnergyProfile("24h");
+        setEnergyProfile(profile);
+      } catch (err) {
+        console.error("[BEES] 에너지 프로파일 실패:", err);
+      }
+    };
+    fetchProfile();
+    const interval = setInterval(fetchProfile, 300000); // 5분
+    return () => clearInterval(interval);
+  }, []);
+
+  // KPI 계산
   const activeDevices = useMemo(() => {
-    const mqttActive = Object.values(devices).filter(
-      (d) => d.is_active
-    ).length;
+    const mqttActive = Object.values(devices).filter((d) => d.is_active).length;
     return mqttActive || summary?.kpi.active_devices || 0;
   }, [devices, summary]);
 
-  const totalDevices = summary?.kpi.total_devices || 42;
-
-  const avgTemperature = useMemo(() => {
-    const temps = Object.entries(points)
-      .filter(([key]) => key.toLowerCase().includes("temp"))
-      .map(([, v]) => v.value)
-      .filter((v): v is number => typeof v === "number");
-    return temps.length > 0
-      ? Math.round((temps.reduce((a, b) => a + b, 0) / temps.length) * 10) / 10
-      : summary?.kpi.avg_temperature || 24.0;
-  }, [points, summary]);
-
-  const alarmCount = alarms.length || summary?.kpi.alarm_count || 0;
+  const totalDevices = equipmentList.length || summary?.kpi.total_devices || 84;
   const simStatus = summary?.kpi.simulation_status || (connected ? "running" : "stopped");
-
-  // AHU_5F 급기온도 차트 데이터
-  const satChartData = useMemo((): ChartDataPoint[] => {
-    const history = pointHistory["bldg:Supply_Air_Temp_AHU_5F"] || [];
-    return history.map((p) => ({
-      time: new Date(p.ts * 1000).toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
-      value: typeof p.value === "number" ? p.value : 0,
-    }));
-  }, [pointHistory]);
-
-  // 장비 상태 목록
-  const deviceList = useMemo(() => {
-    const mqttDevices = Object.values(devices);
-    if (mqttDevices.length > 0) return mqttDevices;
-    return summary?.devices || [];
-  }, [devices, summary]);
 
   return (
     <div className="min-h-screen">
@@ -95,18 +101,21 @@ export default function DashboardPage() {
         description={t("description")}
         connected={connected}
       />
-
       <div className="p-3 md:p-6">
         <DashboardGrid
           activeDevices={activeDevices}
           totalDevices={totalDevices}
-          avgTemperature={avgTemperature}
-          alarmCount={alarmCount}
+          energyKw={energyRealtime?.total_kw ?? null}
+          energyChangePct={energyComparison?.change_pct ?? null}
+          alarmCritical={alarmStats?.stats?.critical || 0}
+          alarmWarning={alarmStats?.stats?.warning || 0}
+          alarmInfo={alarmStats?.stats?.info || 0}
           simStatus={simStatus}
-          satChartData={satChartData}
-          deviceList={deviceList}
-          alarms={alarms}
+          devices={devices}
+          equipmentList={equipmentList}
           points={points}
+          alarms={alarms}
+          energyProfile={energyProfile}
         />
       </div>
     </div>

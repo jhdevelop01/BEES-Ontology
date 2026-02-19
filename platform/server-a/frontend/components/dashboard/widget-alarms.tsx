@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, CheckCircle } from "lucide-react";
 import type { SSEAlarmEvent } from "@/lib/sse";
 
@@ -16,74 +16,60 @@ export function WidgetAlarms({ alarms }: WidgetAlarmsProps) {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="flex-shrink-0">
-        <CardTitle className="text-base flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-          {t("recentAlarms")}
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-base flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-yellow-500" />
+            {t("recentAlarms")}
+          </CardTitle>
+          <Link href="/alarms" className="text-xs text-blue-500 hover:text-blue-700">
+            {t("viewAllAlarms")}
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-auto">
         {alarms.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                    {t("thSeverity")}
-                  </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                    {t("thEquipment")}
-                  </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
-                    {t("thType")}
-                  </th>
-                  <th className="text-right py-2 px-3 text-gray-500 font-medium">
-                    {t("thValue")}
-                  </th>
-                  <th className="text-right py-2 px-3 text-gray-500 font-medium">
-                    {t("thThreshold")}
-                  </th>
-                  <th className="text-right py-2 px-3 text-gray-500 font-medium">
-                    {t("thTime")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {alarms
-                  .slice(-10)
-                  .reverse()
-                  .map((a, i) => (
-                    <tr
-                      key={`alarm-${i}`}
-                      className="border-b border-gray-50 hover:bg-gray-50"
-                    >
-                      <td className="py-2 px-3">
-                        <Badge
-                          variant={
-                            a.severity === "critical" ? "danger" : "warning"
-                          }
-                        >
-                          {a.severity}
-                        </Badge>
-                      </td>
-                      <td className="py-2 px-3 font-mono text-xs">
-                        {a.equipment || "-"}
-                      </td>
-                      <td className="py-2 px-3">{a.type || "-"}</td>
-                      <td className="py-2 px-3 text-right">
-                        {a.value?.toFixed(1) ?? "-"}
-                      </td>
-                      <td className="py-2 px-3 text-right">
-                        {a.threshold?.toFixed(1) ?? "-"}
-                      </td>
-                      <td className="py-2 px-3 text-right text-xs text-gray-400">
-                        {a.ts
-                          ? new Date(a.ts * 1000).toLocaleTimeString("ko-KR")
-                          : "-"}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+          <div>
+            {alarms
+              .slice(-8)
+              .reverse()
+              .map((a, i) => (
+                <div
+                  key={`alarm-${i}`}
+                  className="flex items-center gap-2 py-1.5 border-b border-gray-50"
+                >
+                  {/* severity 색상 도트 */}
+                  <span
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      a.severity === "critical"
+                        ? "bg-red-500"
+                        : a.severity === "warning"
+                        ? "bg-yellow-500"
+                        : "bg-blue-400"
+                    }`}
+                  />
+                  {/* 장비명 */}
+                  <span className="text-xs font-medium text-gray-700 truncate max-w-[120px]">
+                    {a.equipment?.replace("bldg:", "") || "—"}
+                  </span>
+                  {/* 유형 */}
+                  <span className="text-xs text-gray-400 truncate flex-1">
+                    {a.type || "—"}
+                  </span>
+                  {/* 값 */}
+                  <span className="text-xs font-mono text-gray-500 flex-shrink-0">
+                    {a.value?.toFixed(1) ?? "—"}
+                  </span>
+                  {/* 시각 */}
+                  <span className="text-[10px] text-gray-400 flex-shrink-0">
+                    {a.ts
+                      ? new Date(a.ts * 1000).toLocaleTimeString("ko-KR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "—"}
+                  </span>
+                </div>
+              ))}
           </div>
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400 text-sm">

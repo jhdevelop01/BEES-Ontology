@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (시뮬레이션 전체 가동/정지 기능 + 장비 상태 동기화 버그 수정)
+> **최종 업데이트:** 2026.02.19 (층별 현황 Room/장비 상세 표시 + 대시보드 통합)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -2252,6 +2252,237 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 | 모니터링 | **84대** | 3탭(전체/HVAC/전기수송) + HVAC 서브필터 + 부품 요약 배너(26개) |
 | 제어 | **84대** | 전체 ON/OFF 제어 가능, 모니터링 전용 섹션 없음 |
 | 토폴로지 | 트리 전체 | 부품 노드 시각적 분리(연한색 + "부품" 태그) |
+
+---
+
+## 28. 층별 현황 전용 페이지 `/floors` 신규 구축 (2026-02-19)
+
+### 28.1 배경
+기존 대시보드의 Floor Overview 위젯은 소형이라 정보 밀도가 낮았다.
+시설 관리자가 **"어디가 문제이고, 얼마나 심각하며, 누가 있는가"**를 한 눈에 파악할 수 있는 전용 페이지 필요.
+
+### 28.2 구현 내용
+GEC B동 18개 층(RF, 15F~5F, 3F~1F, B1F~B4F) 전체 현황을 3가지 뷰로 제공.
+
+**3개 뷰 모드:**
+- **히트맵 뷰** (`heatmap-view.tsx`): 건물 단면도 스타일 세로 스택, 온도 기반 색상 매핑(파랑→초록→빨강), 알람 도트 표시
+- **카드 뷰** (`card-view.tsx`): 4열 반응형 그리드, 온도/습도/CO₂/전력/장비/알람 한눈에 표시
+- **리스트 뷰** (`list-view.tsx`): 정렬 가능한 비교 테이블 (온도순·전력순·알람순 등), 조건부 셀 색상
+
+**상세 패널:** 층 클릭 시 우측 슬라이드 패널 (`floor-detail-panel.tsx`)
+- 환경(온도/습도/CO₂), 에너지, 장비 목록(가동 상태), 활성 알람 표시
+
+**데이터 소스:**
+| 데이터 | 소스 | 활용 |
+|--------|------|------|
+| 장비 목록 (84대) | `/api/equipment` | 층별 장비 수, 카테고리 분류 |
+| 에너지 분배 | `/api/energy/breakdown` | 층별 전력 사용량 |
+| 활성 알람 | `/api/alarms/active` | 층별 알람 현황 |
+| 센서 317포인트 | `/api/stream/snapshot` + SSE | 온도(RAT), 습도(RAH), CO₂ |
+| 장비 상태 84대 | `/api/stream/snapshot` + SSE | 가동/정지 |
+
+### 28.3 데이터 로딩 아키텍처
+`fetchJSON()` (api.ts 래퍼)가 Docker 프로덕션 빌드에서 원인 불명으로 실패하는 문제 발견.
+raw `fetch()`는 정상 동작 확인 → **raw fetch 직접 호출 + snapshot API 폴백** 전략 채택.
+
+```
+[마운트] ─→ raw fetch(/api/equipment)      → equipmentList (84대)
+         ─→ raw fetch(/api/energy/breakdown) → energyBreakdown
+         ─→ raw fetch(/api/alarms/active)    → activeAlarms
+         ─→ raw fetch(/api/stream/snapshot)  → snapshotPoints(317) + snapshotDevices(84)
+         ─→ useSSE(60)                       → 실시간 points/devices 오버레이
+
+[병합] mergedPoints = {...snapshotPoints, ...ssePoints}   ← SSE가 snapshot 오버라이드
+       mergedDevices = {...snapshotDevices, ...sseDevices}
+
+[30초 폴링] energy + alarms 갱신
+```
+
+### 28.4 건물 KPI 요약 (페이지 상단)
+- 평균 온도, 총 전력(kW), 활성 알람 수, 위험/주의 층 수
+
+### 28.5 층 상태 판단 로직 (`calculateFloorStatus`)
+| 조건 | 상태 |
+|------|------|
+| critical 알람 존재 또는 온도 >28°C/<18°C | `critical` (위험) |
+| warning 알람 존재 또는 온도 >26°C/<20°C | `warning` (주의) |
+| 그 외 | `normal` (정상) |
+
+### 28.6 신규 파일 (8개)
+
+| 파일 | 설명 |
+|------|------|
+| `components/floors/floor-constants.ts` | 18개 층 정의, FloorData 타입, ssePointPrefix(), calculateFloorStatus(), 색상 유틸 |
+| `components/floors/use-floor-data.ts` | 커스텀 훅 — raw fetch + snapshot + SSE 병합 → FloorData[] |
+| `components/floors/heatmap-view.tsx` | 히트맵 뷰 (건물 단면도) |
+| `components/floors/card-view.tsx` | 카드 뷰 (4열 그리드) |
+| `components/floors/list-view.tsx` | 리스트 뷰 (정렬 테이블) |
+| `components/floors/floor-detail-panel.tsx` | 상세 패널 (우측 슬라이드) |
+| `components/ui/sheet.tsx` | Sheet UI 컴포넌트 (순수 CSS 슬라이드 패널) |
+| `app/floors/page.tsx` | 메인 페이지 — 3뷰 전환 + KPI + 상세 패널 |
+
+### 28.7 수정 파일 (3개)
+
+| 파일 | 변경 |
+|------|------|
+| `components/layout/sidebar.tsx` | `Layers` 아이콘 import + `/floors` 네비게이션 항목 추가 |
+| `messages/ko.json` | `nav.floors` + `floors` 섹션 42개 i18n 키 |
+| `messages/en.json` | 동일 영어 번역 42개 키 |
+
+### 28.8 디버깅 과정 (fetchJSON 실패 해결)
+
+| 단계 | 확인 내용 | 결과 |
+|------|-----------|------|
+| 1 | CORS 설정 (`allow_headers=["*"]`) | 정상 |
+| 2 | JWT 토큰 영향 (invalid token → 200) | 무관 |
+| 3 | `NEXT_PUBLIC_API_URL` 번들 내장값 | `http://localhost:8010` 정상 |
+| 4 | SSE 엔드포인트 CORS 응답 | 정상 |
+| 5 | 디버그 패널 추가 (raw fetch vs hook 비교) | **raw fetch 성공, hook 실패 확인** |
+| 6 | raw fetch로 전환 + snapshot 폴백 | **해결** |
+
+### 28.9 접속 경로
+- `/floors` — 층별 현황 (사이드바 "에너지 분석" 앞에 위치)
+- 프론트엔드 총 **21개 페이지** (기존 20 + floors 1)
+
+---
+
+## 29. 층별 현황 대시보드 통합 + Room/장비 상세 표시 (2026-02-19)
+
+### 29.1 배경
+섹션 28에서 구축한 `/floors` 전용 페이지를 대시보드(`/`)에 통합하고, 각 층 카드에 **Room별 센서 데이터**와 **장비별 상태 표시**를 추가하는 대규모 업그레이드.
+사용자 핵심 요구: "각 층마다 방/스페이스 정보를 넣어라"
+
+### 29.2 대시보드 통합
+- `/floors` 전용 페이지 → 대시보드(`/`) 하단 "층별 현황" 섹션으로 통합
+- `dashboard-grid.tsx`에서 `useFloorData()` 훅 사용, 카드뷰/리스트뷰 전환 + FloorDetailPanel 포함
+- 히트맵 뷰 제거 (정보 밀도 낮음)
+- 사이드바에서 `/floors` 네비게이션 항목 제거
+
+### 29.3 TTL 온톨로지 보강
+
+#### 층별 전력 계측기 추가 (36 트리플)
+18개 Floor × 2포인트 = 36개 인스턴스 (`Floor_Power_Meter_XF`, `Floor_Power_XF_kW`, `Floor_Energy_XF_kWh`)
+```turtle
+bldg:Floor_Power_Meter_5F a brick:Building_Electrical_Meter ;
+    brick:isPartOf bldg:B_5F ;
+    brick:hasPoint bldg:Floor_Power_5F_kW, bldg:Floor_Energy_5F_kWh .
+```
+- Neo4j 재동기화 완료: **10,098 트리플**
+
+### 29.4 Backend API 신규 — `/api/floors/{floor_key}/details`
+
+#### 파일: `routers/floors.py` (신규)
+| 엔드포인트 | 반환 |
+|---|---|
+| `GET /api/floors/{floor_key}/details` | `{floor_key, rooms[], equipment[], total_area_m2}` |
+
+#### neo4j_service.py 추가 함수
+| 함수 | 기능 |
+|---|---|
+| `get_floor_rooms(floor_key)` | Room + Zone 센서 매핑 (Cypher 쿼리) |
+| `get_floor_equipment(floor_key)` | 층별 장비 목록 (category/subcategory/controllable) |
+| `get_equipment_floor_mapping()` | 장비→층 매핑 캐시 (에너지 분석용) |
+
+#### n10s MAP 모드 대응
+n10s가 프로퍼티를 리스트로 반환하는 문제 해결:
+```python
+area_val = rec.get("area_m2")
+if isinstance(area_val, list):
+    area_val = area_val[0] if area_val else None
+```
+
+#### Zone 폴백 로직
+Room → Zone 직접 연결이 없는 경우, 같은 층 Interior Zone 센서를 자동 매핑.
+
+### 29.5 Frontend 업그레이드
+
+#### 타입/상수 (`floor-constants.ts`)
+- `FloorRoomData` 인터페이스 추가 (id, label, spaceType, area_m2, zone_key, temperature, humidity, co2, powerKw, energyKwh)
+- `FloorEquipmentData` 인터페이스 추가 (id, name, label, type, category, subcategory, controllable, location, is_active)
+- `FloorData`에 `rooms[]`, `equipmentDetails[]`, `totalArea_m2`, `energyKwh` 필드 추가
+- `ssePointPrefix()` 확장: 3개 → **15개 장비 타입** (Air_Curtain, PAC, Chiller, Boiler, Pump, Exhaust_Fan, Supply_Fan, Cooling_Tower, MAU, Elevator, CC_Panel 등)
+
+#### 데이터 훅 (`use-floor-data.ts`)
+- 초기 로드 시 18개 층 `getFloorDetails()` 병렬 호출
+- **UFAD AHU 특수 케이스**: `AHU_UFAD_N` → `bldg:RAT_UFAD_N` 직접 조회 (5F 온도 "—" 해결)
+- **SAT 폴백 제거**: Supply Air Temp(~16°C)를 Room 온도로 표시하던 버그 수정
+- Room별 센서값: Zone 센서(ZAT/ZAH/CO2) → SSE points 매핑
+- **Room 센서 상속**: Zone 센서 미시뮬레이션 시, 층 평균(장비 RAT/RAH/CO2)을 Room에 상속
+- Room별 에너지 추정: `(room.area_m2 / floor.total_area_m2) * floor.powerKw`
+
+#### 카드 뷰 (`card-view.tsx`)
+- **Room 수 표시**: 항상 보이는 영역에 `DoorOpen` 아이콘 + Room 개수
+- **컴팩트 Room 리스트**: 접힌 상태에서 최대 3개 Room 이름 + 온도/습도 표시, `+N...` 오버플로우
+- **확장 Room 테이블**: 방이름, 용도, 면적, 온도, 습도, CO2, kW, kWh 전체 컬럼
+- **확장 장비 테이블**: 장비명, 용도, 위치, 가동 상태(녹/빨 도트)
+
+#### 상세 패널 (`floor-detail-panel.tsx`)
+- **공간 현황 섹션 추가** (에너지 ↔ 장비 사이)
+- 각 Room: label, spaceType, 온도/습도/CO2, 면적/전력/에너지 표시
+- **누적 에너지(kWh)** 에너지 섹션에 추가
+
+### 29.6 에너지 분석 개선
+
+#### `energy_service.py`
+- 장비→층 매핑 캐시 (`_equipment_floor_cache`) lazy-load 추가
+- Neo4j에서 `get_equipment_floor_mapping()` 호출하여 캐시
+
+#### `energy.py` (라우터)
+- `_extract_floor()`: 정규식 실패 시 Neo4j 장비→층 매핑 폴백
+- `energy_breakdown()`: by_floor 결과 **2개 → 18개 층** 전체 표시
+
+### 29.7 Server C 에뮬레이터 확장
+- `neo4j_loader.py`: `Building_Electrical_Meter` 시뮬레이션 대상 추가
+- `profile_factory.py`: Floor Power Meter 전력 프로파일 추가
+- SSE 포인트: **317 → 353개** (36개 Floor Power/Energy 추가)
+- 디바이스: **84 → 104개** (20개 Meter 추가)
+
+### 29.8 버그 수정 요약
+
+| 버그 | 원인 | 해결 |
+|------|------|------|
+| 5F 온도 "—" | `RAT_UFAD_1`이 `AHU_1_` 프리픽스 불일치 | UFAD 특수 케이스 추가 |
+| 2F/3F 온도 16°C | SAT(Supply Air Temp) 폴백 사용 | SAT 폴백 제거 |
+| Room API 빈 배열 | n10s MAP 모드 리스트 반환 → `float()` 에러 | `isinstance(list)` 체크 |
+| Room→Zone 미연결 | 일부 Room이 Floor만 isPartOf | Interior Zone 폴백 |
+| `/control` hydration 에러 | `isLoggedIn()` SSR에서 localStorage 접근 | useState + useEffect |
+| by_floor 2개만 표시 | `_extract_floor()` 정규식 제한 | Neo4j 장비→층 매핑 폴백 |
+| Room 센서 전부 null | Zone 센서 Server C 미시뮬레이션 | 층 평균 상속 로직 |
+
+### 29.9 수정/신규 파일 목록
+
+| 파일 | 유형 | 변경 |
+|------|------|------|
+| `ontology/GEC_B_Ontology.ttl` | 수정 | 층별 전력계측기 36트리플 추가 |
+| `backend/app/services/neo4j_service.py` | 수정 | get_floor_rooms, get_floor_equipment, get_equipment_floor_mapping |
+| `backend/app/routers/floors.py` | **신규** | GET /api/floors/{key}/details |
+| `backend/app/main.py` | 수정 | floors 라우터 등록 |
+| `backend/app/services/energy_service.py` | 수정 | 장비→층 캐시 추가 |
+| `backend/app/routers/energy.py` | 수정 | _extract_floor Neo4j 폴백 |
+| `server-c/app/neo4j_loader.py` | 수정 | Building_Electrical_Meter 추가 |
+| `server-c/app/profiles/profile_factory.py` | 수정 | Meter 프로파일 추가 |
+| `frontend/components/floors/floor-constants.ts` | 수정 | FloorRoomData/FloorEquipmentData 타입, ssePointPrefix 15개 |
+| `frontend/components/floors/use-floor-data.ts` | 수정 | Floor Details 로드, UFAD 케이스, Room 상속 |
+| `frontend/components/floors/card-view.tsx` | 수정 | Room 수, 컴팩트 리스트, Room/장비 테이블 |
+| `frontend/components/floors/floor-detail-panel.tsx` | 수정 | 공간 현황 섹션, 누적 에너지 |
+| `frontend/components/dashboard/dashboard-grid.tsx` | 수정 | 층별 현황 통합, 뷰 전환 |
+| `frontend/app/page.tsx` | 수정 | DashboardGrid props |
+| `frontend/components/layout/sidebar.tsx` | 수정 | hydration 수정, floors 항목 제거 |
+| `frontend/lib/api.ts` | 수정 | FloorDetails 타입 + getFloorDetails 함수 |
+| `frontend/messages/ko.json` | 수정 | floors 섹션 i18n 키 추가 |
+| `frontend/messages/en.json` | 수정 | 동일 영어 번역 |
+
+### 29.10 현재 데이터 규모
+
+| 항목 | 값 |
+|------|:---:|
+| TTL 트리플 | 10,098 |
+| SSE 포인트 | 353 |
+| 디바이스 | 104 |
+| 층 | 18 |
+| Room (API 반환) | 층당 3~18개 (총 ~169개) |
+| RAT 센서 | 14개 (5F~15F + RF) |
+| 프론트엔드 페이지 | 20 (대시보드에 통합) |
 
 ---
 

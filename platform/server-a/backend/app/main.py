@@ -20,7 +20,7 @@ from app.models import HealthResponse
 from app.services import neo4j_service, mqtt_service, openai_service, influxdb_service, postgres_service
 from app.routers import (
     alarm, audit, auth, dashboard, control, stream, ontology, history, chat, schedule,
-    equipment, energy, maintenance, reports, users, settings, notification,
+    equipment, energy, floors, maintenance, reports, users, settings, notification,
 )
 
 # 로깅 설정
@@ -140,6 +140,7 @@ tags_metadata = [
     {"name": "AI 채팅", "description": "LLM 자연어 질의"},
     {"name": "장비", "description": "장비 상세 및 모니터링"},
     {"name": "에너지", "description": "에너지 분석 대시보드"},
+    {"name": "층별 상세", "description": "층별 Room 및 장비 상세 정보"},
     {"name": "유지보수", "description": "유지보수 작업 지시 관리"},
     {"name": "보고서", "description": "보고서 생성 및 다운로드"},
     {"name": "사용자", "description": "사용자 CRUD 및 접근 로그"},
@@ -186,6 +187,7 @@ app.include_router(chat.router)
 app.include_router(schedule.router)
 app.include_router(equipment.router)
 app.include_router(energy.router)
+app.include_router(floors.router)
 app.include_router(maintenance.router)
 app.include_router(reports.router)
 app.include_router(users.router)

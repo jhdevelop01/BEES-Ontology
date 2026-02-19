@@ -5259,6 +5259,350 @@ bldg:Floor_Power_Meter_Group a brick:Building_Electrical_Meter ;
     bees:hasConfidence "estimated" ;
     brick:isPointOf bldg:Electrical_System .
 
+# --- 층별 전력 계측기 (18개 층 × 3 인스턴스 = 54개, 2026-02-19 추가) ---
+
+bldg:Floor_Power_Meter_B4F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 지하4층 전력 계측기" ;
+    brick:isPartOf bldg:B_B4F ;
+    brick:hasPoint bldg:Floor_Power_B4F_kW ;
+    brick:hasPoint bldg:Floor_Energy_B4F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_B4F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 지하4층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B4F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_B4F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 지하4층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B4F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_B3F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 지하3층 전력 계측기" ;
+    brick:isPartOf bldg:B_B3F ;
+    brick:hasPoint bldg:Floor_Power_B3F_kW ;
+    brick:hasPoint bldg:Floor_Energy_B3F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_B3F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 지하3층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B3F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_B3F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 지하3층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B3F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_B2F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 지하2층 전력 계측기" ;
+    brick:isPartOf bldg:B_B2F ;
+    brick:hasPoint bldg:Floor_Power_B2F_kW ;
+    brick:hasPoint bldg:Floor_Energy_B2F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_B2F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 지하2층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B2F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_B2F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 지하2층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B2F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_B1F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 지하1층 전력 계측기" ;
+    brick:isPartOf bldg:B_B1F ;
+    brick:hasPoint bldg:Floor_Power_B1F_kW ;
+    brick:hasPoint bldg:Floor_Energy_B1F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_B1F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 지하1층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B1F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_B1F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 지하1층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_B1F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_1F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 1층 전력 계측기" ;
+    brick:isPartOf bldg:B_1F ;
+    brick:hasPoint bldg:Floor_Power_1F_kW ;
+    brick:hasPoint bldg:Floor_Energy_1F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_1F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 1층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_1F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_1F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 1층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_1F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_2F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 2층 전력 계측기" ;
+    brick:isPartOf bldg:B_2F ;
+    brick:hasPoint bldg:Floor_Power_2F_kW ;
+    brick:hasPoint bldg:Floor_Energy_2F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_2F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 2층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_2F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_2F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 2층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_2F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_3F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 3층 전력 계측기" ;
+    brick:isPartOf bldg:B_3F ;
+    brick:hasPoint bldg:Floor_Power_3F_kW ;
+    brick:hasPoint bldg:Floor_Energy_3F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_3F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 3층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_3F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_3F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 3층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_3F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_5F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 5층 전력 계측기" ;
+    brick:isPartOf bldg:B_5F ;
+    brick:hasPoint bldg:Floor_Power_5F_kW ;
+    brick:hasPoint bldg:Floor_Energy_5F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_5F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 5층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_5F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_5F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 5층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_5F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_6F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 6층 전력 계측기" ;
+    brick:isPartOf bldg:B_6F ;
+    brick:hasPoint bldg:Floor_Power_6F_kW ;
+    brick:hasPoint bldg:Floor_Energy_6F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_6F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 6층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_6F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_6F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 6층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_6F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_7F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 7층 전력 계측기" ;
+    brick:isPartOf bldg:B_7F ;
+    brick:hasPoint bldg:Floor_Power_7F_kW ;
+    brick:hasPoint bldg:Floor_Energy_7F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_7F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 7층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_7F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_7F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 7층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_7F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_8F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 8층 전력 계측기" ;
+    brick:isPartOf bldg:B_8F ;
+    brick:hasPoint bldg:Floor_Power_8F_kW ;
+    brick:hasPoint bldg:Floor_Energy_8F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_8F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 8층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_8F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_8F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 8층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_8F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_9F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 9층 전력 계측기" ;
+    brick:isPartOf bldg:B_9F ;
+    brick:hasPoint bldg:Floor_Power_9F_kW ;
+    brick:hasPoint bldg:Floor_Energy_9F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_9F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 9층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_9F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_9F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 9층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_9F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_10F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 10층 전력 계측기" ;
+    brick:isPartOf bldg:B_10F ;
+    brick:hasPoint bldg:Floor_Power_10F_kW ;
+    brick:hasPoint bldg:Floor_Energy_10F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_10F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 10층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_10F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_10F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 10층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_10F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_11F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 11층 전력 계측기" ;
+    brick:isPartOf bldg:B_11F ;
+    brick:hasPoint bldg:Floor_Power_11F_kW ;
+    brick:hasPoint bldg:Floor_Energy_11F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_11F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 11층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_11F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_11F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 11층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_11F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_12F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 12층 전력 계측기" ;
+    brick:isPartOf bldg:B_12F ;
+    brick:hasPoint bldg:Floor_Power_12F_kW ;
+    brick:hasPoint bldg:Floor_Energy_12F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_12F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 12층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_12F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_12F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 12층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_12F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_14F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 14층 전력 계측기" ;
+    brick:isPartOf bldg:B_14F ;
+    brick:hasPoint bldg:Floor_Power_14F_kW ;
+    brick:hasPoint bldg:Floor_Energy_14F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_14F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 14층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_14F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_14F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 14층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_14F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_15F a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 15층 전력 계측기" ;
+    brick:isPartOf bldg:B_15F ;
+    brick:hasPoint bldg:Floor_Power_15F_kW ;
+    brick:hasPoint bldg:Floor_Energy_15F_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_15F_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 15층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_15F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_15F_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 15층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_15F ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_Meter_RF a brick:Building_Electrical_Meter ;
+    rdfs:label "B동 옥상층 전력 계측기" ;
+    brick:isPartOf bldg:B_RF ;
+    brick:hasPoint bldg:Floor_Power_RF_kW ;
+    brick:hasPoint bldg:Floor_Energy_RF_kWh ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Power_RF_kW a brick:Electrical_Power_Sensor ;
+    rdfs:label "B동 옥상층 전력 (kW)" ;
+    rdfs:comment "단위: kW" ;
+    brick:isPointOf bldg:Floor_Power_Meter_RF ;
+    bees:hasConfidence "estimated" .
+
+bldg:Floor_Energy_RF_kWh a brick:Energy_Sensor ;
+    rdfs:label "B동 옥상층 누적 전력량 (kWh)" ;
+    rdfs:comment "단위: kWh" ;
+    brick:isPointOf bldg:Floor_Power_Meter_RF ;
+    bees:hasConfidence "estimated" .
+
 bldg:GEC_Energy_Consumption_2019 a brick:Energy_Sensor ;
     rdfs:label "GEC 연간 에너지 소비량 (2019 실측)" ;
     rdfs:comment "서울시 에너지다소비건물 공개자료. 324개소 중 94위. 사업자명: 삼성엔지니어링(GEC강동사옥)." ;
