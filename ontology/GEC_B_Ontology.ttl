@@ -12051,6 +12051,398 @@ bldg:Chiller_Plant_Status a brick:On_Off_Status ;
     bees:hasConfidence "estimated" ;
     brick:isPointOf bldg:Chiller_Plant .
 
+
+# --- On_Off_Status: Floor_Diffuser / CC_Distribution_Header / RH_Distribution_Header / RH_Panel (78개) ---
+bldg:Floor_Diffuser_5F_East_Status a brick:On_Off_Status ;
+    rdfs:label "5층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_5F_East .
+
+bldg:Floor_Diffuser_5F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "5층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_5F_Int .
+
+bldg:Floor_Diffuser_5F_West_Status a brick:On_Off_Status ;
+    rdfs:label "5층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_5F_West .
+
+bldg:Floor_Diffuser_6F_East_Status a brick:On_Off_Status ;
+    rdfs:label "6층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_6F_East .
+
+bldg:Floor_Diffuser_6F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "6층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_6F_Int .
+
+bldg:Floor_Diffuser_6F_North_Status a brick:On_Off_Status ;
+    rdfs:label "6층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_6F_North .
+
+bldg:Floor_Diffuser_6F_South_Status a brick:On_Off_Status ;
+    rdfs:label "6층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_6F_South .
+
+bldg:Floor_Diffuser_6F_West_Status a brick:On_Off_Status ;
+    rdfs:label "6층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_6F_West .
+
+bldg:Floor_Diffuser_7F_East_Status a brick:On_Off_Status ;
+    rdfs:label "7층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_7F_East .
+
+bldg:Floor_Diffuser_7F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "7층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_7F_Int .
+
+bldg:Floor_Diffuser_7F_North_Status a brick:On_Off_Status ;
+    rdfs:label "7층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_7F_North .
+
+bldg:Floor_Diffuser_7F_South_Status a brick:On_Off_Status ;
+    rdfs:label "7층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_7F_South .
+
+bldg:Floor_Diffuser_7F_West_Status a brick:On_Off_Status ;
+    rdfs:label "7층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_7F_West .
+
+bldg:Floor_Diffuser_8F_East_Status a brick:On_Off_Status ;
+    rdfs:label "8층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_8F_East .
+
+bldg:Floor_Diffuser_8F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "8층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_8F_Int .
+
+bldg:Floor_Diffuser_8F_North_Status a brick:On_Off_Status ;
+    rdfs:label "8층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_8F_North .
+
+bldg:Floor_Diffuser_8F_South_Status a brick:On_Off_Status ;
+    rdfs:label "8층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_8F_South .
+
+bldg:Floor_Diffuser_8F_West_Status a brick:On_Off_Status ;
+    rdfs:label "8층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_8F_West .
+
+bldg:Floor_Diffuser_9F_East_Status a brick:On_Off_Status ;
+    rdfs:label "9층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_9F_East .
+
+bldg:Floor_Diffuser_9F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "9층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_9F_Int .
+
+bldg:Floor_Diffuser_9F_North_Status a brick:On_Off_Status ;
+    rdfs:label "9층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_9F_North .
+
+bldg:Floor_Diffuser_9F_South_Status a brick:On_Off_Status ;
+    rdfs:label "9층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_9F_South .
+
+bldg:Floor_Diffuser_9F_West_Status a brick:On_Off_Status ;
+    rdfs:label "9층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_9F_West .
+
+bldg:Floor_Diffuser_10F_East_Status a brick:On_Off_Status ;
+    rdfs:label "10층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_10F_East .
+
+bldg:Floor_Diffuser_10F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "10층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_10F_Int .
+
+bldg:Floor_Diffuser_10F_North_Status a brick:On_Off_Status ;
+    rdfs:label "10층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_10F_North .
+
+bldg:Floor_Diffuser_10F_South_Status a brick:On_Off_Status ;
+    rdfs:label "10층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_10F_South .
+
+bldg:Floor_Diffuser_10F_West_Status a brick:On_Off_Status ;
+    rdfs:label "10층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_10F_West .
+
+bldg:Floor_Diffuser_11F_East_Status a brick:On_Off_Status ;
+    rdfs:label "11층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_11F_East .
+
+bldg:Floor_Diffuser_11F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "11층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_11F_Int .
+
+bldg:Floor_Diffuser_11F_North_Status a brick:On_Off_Status ;
+    rdfs:label "11층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_11F_North .
+
+bldg:Floor_Diffuser_11F_South_Status a brick:On_Off_Status ;
+    rdfs:label "11층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_11F_South .
+
+bldg:Floor_Diffuser_11F_West_Status a brick:On_Off_Status ;
+    rdfs:label "11층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_11F_West .
+
+bldg:Floor_Diffuser_12F_East_Status a brick:On_Off_Status ;
+    rdfs:label "12층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_12F_East .
+
+bldg:Floor_Diffuser_12F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "12층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_12F_Int .
+
+bldg:Floor_Diffuser_12F_North_Status a brick:On_Off_Status ;
+    rdfs:label "12층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_12F_North .
+
+bldg:Floor_Diffuser_12F_South_Status a brick:On_Off_Status ;
+    rdfs:label "12층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_12F_South .
+
+bldg:Floor_Diffuser_12F_West_Status a brick:On_Off_Status ;
+    rdfs:label "12층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_12F_West .
+
+bldg:Floor_Diffuser_14F_East_Status a brick:On_Off_Status ;
+    rdfs:label "14층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_14F_East .
+
+bldg:Floor_Diffuser_14F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "14층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_14F_Int .
+
+bldg:Floor_Diffuser_14F_North_Status a brick:On_Off_Status ;
+    rdfs:label "14층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_14F_North .
+
+bldg:Floor_Diffuser_14F_South_Status a brick:On_Off_Status ;
+    rdfs:label "14층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_14F_South .
+
+bldg:Floor_Diffuser_14F_West_Status a brick:On_Off_Status ;
+    rdfs:label "14층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_14F_West .
+
+bldg:Floor_Diffuser_15F_East_Status a brick:On_Off_Status ;
+    rdfs:label "15층 동측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_15F_East .
+
+bldg:Floor_Diffuser_15F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "15층 내부 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_15F_Int .
+
+bldg:Floor_Diffuser_15F_North_Status a brick:On_Off_Status ;
+    rdfs:label "15층 북측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_15F_North .
+
+bldg:Floor_Diffuser_15F_South_Status a brick:On_Off_Status ;
+    rdfs:label "15층 남측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_15F_South .
+
+bldg:Floor_Diffuser_15F_West_Status a brick:On_Off_Status ;
+    rdfs:label "15층 서측 바닥디퓨저 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:Floor_Diffuser_15F_West .
+
+bldg:CC_Distribution_Header_5F_Status a brick:On_Off_Status ;
+    rdfs:label "5층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_5F .
+
+bldg:CC_Distribution_Header_6F_Status a brick:On_Off_Status ;
+    rdfs:label "6층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_6F .
+
+bldg:CC_Distribution_Header_7F_Status a brick:On_Off_Status ;
+    rdfs:label "7층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_7F .
+
+bldg:CC_Distribution_Header_8F_Status a brick:On_Off_Status ;
+    rdfs:label "8층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_8F .
+
+bldg:CC_Distribution_Header_9F_Status a brick:On_Off_Status ;
+    rdfs:label "9층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_9F .
+
+bldg:CC_Distribution_Header_10F_Status a brick:On_Off_Status ;
+    rdfs:label "10층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_10F .
+
+bldg:CC_Distribution_Header_11F_Status a brick:On_Off_Status ;
+    rdfs:label "11층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_11F .
+
+bldg:CC_Distribution_Header_12F_Status a brick:On_Off_Status ;
+    rdfs:label "12층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_12F .
+
+bldg:CC_Distribution_Header_14F_Status a brick:On_Off_Status ;
+    rdfs:label "14층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_14F .
+
+bldg:CC_Distribution_Header_15F_Status a brick:On_Off_Status ;
+    rdfs:label "15층 CC 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:CC_Distribution_Header_15F .
+
+bldg:RH_Distribution_Header_5F_Status a brick:On_Off_Status ;
+    rdfs:label "5층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_5F .
+
+bldg:RH_Distribution_Header_6F_Status a brick:On_Off_Status ;
+    rdfs:label "6층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_6F .
+
+bldg:RH_Distribution_Header_7F_Status a brick:On_Off_Status ;
+    rdfs:label "7층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_7F .
+
+bldg:RH_Distribution_Header_8F_Status a brick:On_Off_Status ;
+    rdfs:label "8층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_8F .
+
+bldg:RH_Distribution_Header_9F_Status a brick:On_Off_Status ;
+    rdfs:label "9층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_9F .
+
+bldg:RH_Distribution_Header_10F_Status a brick:On_Off_Status ;
+    rdfs:label "10층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_10F .
+
+bldg:RH_Distribution_Header_11F_Status a brick:On_Off_Status ;
+    rdfs:label "11층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_11F .
+
+bldg:RH_Distribution_Header_12F_Status a brick:On_Off_Status ;
+    rdfs:label "12층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_12F .
+
+bldg:RH_Distribution_Header_14F_Status a brick:On_Off_Status ;
+    rdfs:label "14층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_14F .
+
+bldg:RH_Distribution_Header_15F_Status a brick:On_Off_Status ;
+    rdfs:label "15층 RH 분배헤더 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Distribution_Header_15F .
+
+bldg:RH_Panel_5F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "5층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_5F_Int .
+
+bldg:RH_Panel_6F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "6층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_6F_Int .
+
+bldg:RH_Panel_7F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "7층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_7F_Int .
+
+bldg:RH_Panel_8F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "8층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_8F_Int .
+
+bldg:RH_Panel_9F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "9층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_9F_Int .
+
+bldg:RH_Panel_10F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "10층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_10F_Int .
+
+bldg:RH_Panel_11F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "11층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_11F_Int .
+
+bldg:RH_Panel_12F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "12층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_12F_Int .
+
+bldg:RH_Panel_14F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "14층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_14F_Int .
+
+bldg:RH_Panel_15F_Int_Status a brick:On_Off_Status ;
+    rdfs:label "15층 내부 복사난방패널 상태" ;
+    bees:hasConfidence "estimated" ;
+    brick:isPointOf bldg:RH_Panel_15F_Int .
+
 # --- hasPoint 양방향 연결 (역방향) ---
 bldg:Access_Control_1F brick:hasPoint bldg:Access_Control_1F_Status .
 
@@ -12254,6 +12646,164 @@ bldg:Vertical_Transport_System brick:hasPoint bldg:Vertical_Transport_System_Sta
 bldg:Wastewater_Treatment_Tank brick:hasPoint bldg:Wastewater_Treatment_Tank_Status ,
     bldg:Wastewater_Treatment_Tank_Level .
 
+
+
+# --- hasPoint: Floor_Diffuser / CC_Distribution_Header / RH_Distribution_Header / RH_Panel ---
+bldg:Floor_Diffuser_5F_East brick:hasPoint bldg:Floor_Diffuser_5F_East_Status .
+
+bldg:Floor_Diffuser_5F_Int brick:hasPoint bldg:Floor_Diffuser_5F_Int_Status .
+
+bldg:Floor_Diffuser_5F_West brick:hasPoint bldg:Floor_Diffuser_5F_West_Status .
+
+bldg:Floor_Diffuser_6F_East brick:hasPoint bldg:Floor_Diffuser_6F_East_Status .
+
+bldg:Floor_Diffuser_6F_Int brick:hasPoint bldg:Floor_Diffuser_6F_Int_Status .
+
+bldg:Floor_Diffuser_6F_North brick:hasPoint bldg:Floor_Diffuser_6F_North_Status .
+
+bldg:Floor_Diffuser_6F_South brick:hasPoint bldg:Floor_Diffuser_6F_South_Status .
+
+bldg:Floor_Diffuser_6F_West brick:hasPoint bldg:Floor_Diffuser_6F_West_Status .
+
+bldg:Floor_Diffuser_7F_East brick:hasPoint bldg:Floor_Diffuser_7F_East_Status .
+
+bldg:Floor_Diffuser_7F_Int brick:hasPoint bldg:Floor_Diffuser_7F_Int_Status .
+
+bldg:Floor_Diffuser_7F_North brick:hasPoint bldg:Floor_Diffuser_7F_North_Status .
+
+bldg:Floor_Diffuser_7F_South brick:hasPoint bldg:Floor_Diffuser_7F_South_Status .
+
+bldg:Floor_Diffuser_7F_West brick:hasPoint bldg:Floor_Diffuser_7F_West_Status .
+
+bldg:Floor_Diffuser_8F_East brick:hasPoint bldg:Floor_Diffuser_8F_East_Status .
+
+bldg:Floor_Diffuser_8F_Int brick:hasPoint bldg:Floor_Diffuser_8F_Int_Status .
+
+bldg:Floor_Diffuser_8F_North brick:hasPoint bldg:Floor_Diffuser_8F_North_Status .
+
+bldg:Floor_Diffuser_8F_South brick:hasPoint bldg:Floor_Diffuser_8F_South_Status .
+
+bldg:Floor_Diffuser_8F_West brick:hasPoint bldg:Floor_Diffuser_8F_West_Status .
+
+bldg:Floor_Diffuser_9F_East brick:hasPoint bldg:Floor_Diffuser_9F_East_Status .
+
+bldg:Floor_Diffuser_9F_Int brick:hasPoint bldg:Floor_Diffuser_9F_Int_Status .
+
+bldg:Floor_Diffuser_9F_North brick:hasPoint bldg:Floor_Diffuser_9F_North_Status .
+
+bldg:Floor_Diffuser_9F_South brick:hasPoint bldg:Floor_Diffuser_9F_South_Status .
+
+bldg:Floor_Diffuser_9F_West brick:hasPoint bldg:Floor_Diffuser_9F_West_Status .
+
+bldg:Floor_Diffuser_10F_East brick:hasPoint bldg:Floor_Diffuser_10F_East_Status .
+
+bldg:Floor_Diffuser_10F_Int brick:hasPoint bldg:Floor_Diffuser_10F_Int_Status .
+
+bldg:Floor_Diffuser_10F_North brick:hasPoint bldg:Floor_Diffuser_10F_North_Status .
+
+bldg:Floor_Diffuser_10F_South brick:hasPoint bldg:Floor_Diffuser_10F_South_Status .
+
+bldg:Floor_Diffuser_10F_West brick:hasPoint bldg:Floor_Diffuser_10F_West_Status .
+
+bldg:Floor_Diffuser_11F_East brick:hasPoint bldg:Floor_Diffuser_11F_East_Status .
+
+bldg:Floor_Diffuser_11F_Int brick:hasPoint bldg:Floor_Diffuser_11F_Int_Status .
+
+bldg:Floor_Diffuser_11F_North brick:hasPoint bldg:Floor_Diffuser_11F_North_Status .
+
+bldg:Floor_Diffuser_11F_South brick:hasPoint bldg:Floor_Diffuser_11F_South_Status .
+
+bldg:Floor_Diffuser_11F_West brick:hasPoint bldg:Floor_Diffuser_11F_West_Status .
+
+bldg:Floor_Diffuser_12F_East brick:hasPoint bldg:Floor_Diffuser_12F_East_Status .
+
+bldg:Floor_Diffuser_12F_Int brick:hasPoint bldg:Floor_Diffuser_12F_Int_Status .
+
+bldg:Floor_Diffuser_12F_North brick:hasPoint bldg:Floor_Diffuser_12F_North_Status .
+
+bldg:Floor_Diffuser_12F_South brick:hasPoint bldg:Floor_Diffuser_12F_South_Status .
+
+bldg:Floor_Diffuser_12F_West brick:hasPoint bldg:Floor_Diffuser_12F_West_Status .
+
+bldg:Floor_Diffuser_14F_East brick:hasPoint bldg:Floor_Diffuser_14F_East_Status .
+
+bldg:Floor_Diffuser_14F_Int brick:hasPoint bldg:Floor_Diffuser_14F_Int_Status .
+
+bldg:Floor_Diffuser_14F_North brick:hasPoint bldg:Floor_Diffuser_14F_North_Status .
+
+bldg:Floor_Diffuser_14F_South brick:hasPoint bldg:Floor_Diffuser_14F_South_Status .
+
+bldg:Floor_Diffuser_14F_West brick:hasPoint bldg:Floor_Diffuser_14F_West_Status .
+
+bldg:Floor_Diffuser_15F_East brick:hasPoint bldg:Floor_Diffuser_15F_East_Status .
+
+bldg:Floor_Diffuser_15F_Int brick:hasPoint bldg:Floor_Diffuser_15F_Int_Status .
+
+bldg:Floor_Diffuser_15F_North brick:hasPoint bldg:Floor_Diffuser_15F_North_Status .
+
+bldg:Floor_Diffuser_15F_South brick:hasPoint bldg:Floor_Diffuser_15F_South_Status .
+
+bldg:Floor_Diffuser_15F_West brick:hasPoint bldg:Floor_Diffuser_15F_West_Status .
+
+bldg:CC_Distribution_Header_5F brick:hasPoint bldg:CC_Distribution_Header_5F_Status .
+
+bldg:CC_Distribution_Header_6F brick:hasPoint bldg:CC_Distribution_Header_6F_Status .
+
+bldg:CC_Distribution_Header_7F brick:hasPoint bldg:CC_Distribution_Header_7F_Status .
+
+bldg:CC_Distribution_Header_8F brick:hasPoint bldg:CC_Distribution_Header_8F_Status .
+
+bldg:CC_Distribution_Header_9F brick:hasPoint bldg:CC_Distribution_Header_9F_Status .
+
+bldg:CC_Distribution_Header_10F brick:hasPoint bldg:CC_Distribution_Header_10F_Status .
+
+bldg:CC_Distribution_Header_11F brick:hasPoint bldg:CC_Distribution_Header_11F_Status .
+
+bldg:CC_Distribution_Header_12F brick:hasPoint bldg:CC_Distribution_Header_12F_Status .
+
+bldg:CC_Distribution_Header_14F brick:hasPoint bldg:CC_Distribution_Header_14F_Status .
+
+bldg:CC_Distribution_Header_15F brick:hasPoint bldg:CC_Distribution_Header_15F_Status .
+
+bldg:RH_Distribution_Header_5F brick:hasPoint bldg:RH_Distribution_Header_5F_Status .
+
+bldg:RH_Distribution_Header_6F brick:hasPoint bldg:RH_Distribution_Header_6F_Status .
+
+bldg:RH_Distribution_Header_7F brick:hasPoint bldg:RH_Distribution_Header_7F_Status .
+
+bldg:RH_Distribution_Header_8F brick:hasPoint bldg:RH_Distribution_Header_8F_Status .
+
+bldg:RH_Distribution_Header_9F brick:hasPoint bldg:RH_Distribution_Header_9F_Status .
+
+bldg:RH_Distribution_Header_10F brick:hasPoint bldg:RH_Distribution_Header_10F_Status .
+
+bldg:RH_Distribution_Header_11F brick:hasPoint bldg:RH_Distribution_Header_11F_Status .
+
+bldg:RH_Distribution_Header_12F brick:hasPoint bldg:RH_Distribution_Header_12F_Status .
+
+bldg:RH_Distribution_Header_14F brick:hasPoint bldg:RH_Distribution_Header_14F_Status .
+
+bldg:RH_Distribution_Header_15F brick:hasPoint bldg:RH_Distribution_Header_15F_Status .
+
+bldg:RH_Panel_5F_Int brick:hasPoint bldg:RH_Panel_5F_Int_Status .
+
+bldg:RH_Panel_6F_Int brick:hasPoint bldg:RH_Panel_6F_Int_Status .
+
+bldg:RH_Panel_7F_Int brick:hasPoint bldg:RH_Panel_7F_Int_Status .
+
+bldg:RH_Panel_8F_Int brick:hasPoint bldg:RH_Panel_8F_Int_Status .
+
+bldg:RH_Panel_9F_Int brick:hasPoint bldg:RH_Panel_9F_Int_Status .
+
+bldg:RH_Panel_10F_Int brick:hasPoint bldg:RH_Panel_10F_Int_Status .
+
+bldg:RH_Panel_11F_Int brick:hasPoint bldg:RH_Panel_11F_Int_Status .
+
+bldg:RH_Panel_12F_Int brick:hasPoint bldg:RH_Panel_12F_Int_Status .
+
+bldg:RH_Panel_14F_Int brick:hasPoint bldg:RH_Panel_14F_Int_Status .
+
+bldg:RH_Panel_15F_Int brick:hasPoint bldg:RH_Panel_15F_Int_Status .
 
 # ==============================================================================
 # END OF ONTOLOGY v2.2.0  (시뮬레이션 확장: +122 포인트, 78 장비)

@@ -75,6 +75,15 @@ SIMULATABLE_EQUIPMENT_LABELS: set[str] = {
     "Rainwater_Harvesting_System",
     "UFAD_System",
     "Wastewater_Treatment_System",
+    # ── 신규 추가: 토폴로지 장비 전체 커버 ──
+    "Floor_Diffuser",
+    "Distribution_Header",
+    "Radiant_Heating_Panel",
+    "DSF_Louver",
+    "Building_Automation_System",
+    "Fire_Safety_System",
+    "Security_System",
+    "Solar_PV_System",
     # ── 신규 추가: Generic (소방/보안/BMS 등 미분류) ──
     "Equipment",
 }

@@ -68,30 +68,28 @@ async def disconnect() -> None:
 async def get_topology_tree() -> list[dict[str, Any]]:
     """
     건물 계층 트리 조회.
-    Site → Building → Floor → Zone → Equipment 순서로 트리 JSON 반환.
+    hasPart 관계를 기반으로 가변 깊이 트리 JSON 반환.
+    부모-자식 쌍 방식으로 전체 깊이를 탐색.
     """
     if not _driver:
         return _get_fallback_topology()
 
     try:
         async with _driver.session() as session:
-            # 건물 계층 관계 조회 (isPartOf 역방향 = hasPart)
+            # 모든 hasPart 부모-자식 쌍 조회 (가변 깊이)
             result = await session.run("""
-                MATCH (site)-[:hasPart]->(building)-[:hasPart]->(floor)
-                WHERE site.uri CONTAINS 'Samsung_GEC'
-                  AND building.uri CONTAINS 'GEC_Tower_B'
-                OPTIONAL MATCH (floor)-[:hasPart]->(zone)
-                OPTIONAL MATCH (zone)-[:hasPart]->(equip)
+                MATCH (b {uri: 'https://example.org/gec-b#GEC_Tower_B'})
+                OPTIONAL MATCH (b)-[:hasPart*1..6]->(descendant)
+                WITH collect(DISTINCT descendant) AS descendants, b
+                UNWIND descendants AS d
+                OPTIONAL MATCH (parent)-[:hasPart]->(d)
+                WHERE parent = b OR parent IN descendants
                 RETURN
-                    site.uri AS site,
-                    building.uri AS building,
-                    floor.uri AS floor,
-                    labels(floor) AS floor_labels,
-                    zone.uri AS zone,
-                    labels(zone) AS zone_labels,
-                    equip.uri AS equipment,
-                    labels(equip) AS equip_labels
-                ORDER BY floor.uri, zone.uri, equip.uri
+                    b.uri AS building_uri,
+                    labels(b) AS building_labels,
+                    parent.uri AS parent_uri,
+                    d.uri AS child_uri,
+                    labels(d) AS child_labels
             """)
 
             records = [record.data() async for record in result]
@@ -99,7 +97,28 @@ async def get_topology_tree() -> list[dict[str, Any]]:
             if not records:
                 return _get_fallback_topology()
 
-            return _build_tree_from_records(records)
+            # 트리에 포함되지 않은 고아 장비 노드 추가 조회
+            tree_uris = {r["child_uri"] for r in records if r.get("child_uri")}
+            orphan_result = await session.run("""
+                MATCH (n)
+                WHERE n.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND NOT n.uri IN $tree_uris
+                  AND any(label IN labels(n) WHERE label IN [
+                    'Equipment', 'AHU', 'Chiller', 'Boiler', 'Pump', 'Fan',
+                    'Cooling_Tower', 'Fan_Coil_Unit', 'Elevator', 'VFD',
+                    'Valve', 'Damper', 'Transformer', 'UPS', 'Switchgear',
+                    'Emergency_Generator', 'Water_Pump', 'HVAC_Equipment',
+                    'Controller', 'Lighting_Equipment', 'Building_Electrical_Meter',
+                    'Electrical_Equipment', 'Solar_PV_System'
+                  ])
+                OPTIONAL MATCH (n)-[:hasLocation]->(loc)
+                RETURN n.uri AS child_uri, labels(n) AS child_labels,
+                       loc.uri AS location_uri
+            """, tree_uris=list(tree_uris))
+
+            orphan_records = [r.data() async for r in orphan_result]
+
+            return _build_tree_from_pairs(records, orphan_records)
 
     except Exception as e:
         logger.warning("토폴로지 트리 조회 실패: %s", e)
@@ -262,65 +281,101 @@ async def get_equipment_list(
         return []
 
 
-def _build_tree_from_records(records: list[dict]) -> list[dict]:
-    """Neo4j 레코드를 트리 구조 JSON으로 변환"""
-    tree: dict[str, Any] = {}
+def _build_tree_from_pairs(
+    records: list[dict],
+    orphan_records: list[dict] | None = None,
+) -> list[dict]:
+    """부모-자식 쌍 레코드를 가변 깊이 트리 구조로 변환"""
+    if not records:
+        return []
+
+    building_uri = records[0].get("building_uri", "")
+    building_labels = records[0].get("building_labels", [])
+
+    # 모든 노드 정보 수집
+    nodes: dict[str, dict] = {}
+    nodes[building_uri] = {
+        "id": building_uri,
+        "name": _extract_name(building_uri),
+        "type": _classify_node_type(building_labels),
+        "labels": building_labels,
+        "children": [],
+    }
+
+    # 부모-자식 관계 수집
+    children_map: dict[str, list[str]] = {}  # parent_uri → [child_uri, ...]
 
     for r in records:
-        building_uri = r.get("building", "")
-        floor_uri = r.get("floor", "")
-        zone_uri = r.get("zone", "")
-        equip_uri = r.get("equipment", "")
+        parent_uri = r.get("parent_uri")
+        child_uri = r.get("child_uri")
+        child_labels = r.get("child_labels", [])
 
-        if building_uri and building_uri not in tree:
-            tree[building_uri] = {
-                "id": building_uri,
-                "name": _extract_name(building_uri),
-                "type": "Building",
-                "children": {},
+        if not child_uri:
+            continue
+
+        # 노드 등록
+        if child_uri not in nodes:
+            nodes[child_uri] = {
+                "id": child_uri,
+                "name": _extract_name(child_uri),
+                "type": _classify_node_type(child_labels),
+                "labels": child_labels,
+                "children": [],
             }
 
-        if floor_uri and floor_uri not in tree.get(building_uri, {}).get("children", {}):
-            tree.setdefault(building_uri, {"children": {}})["children"][floor_uri] = {
-                "id": floor_uri,
-                "name": _extract_name(floor_uri),
-                "type": "Floor",
-                "labels": r.get("floor_labels", []),
-                "children": {},
+        # 부모-자식 관계 등록
+        if parent_uri:
+            children_map.setdefault(parent_uri, [])
+            if child_uri not in children_map[parent_uri]:
+                children_map[parent_uri].append(child_uri)
+
+    # 고아 장비 처리: hasLocation 기반으로 적절한 층/존에 배치
+    if orphan_records:
+        for orec in orphan_records:
+            child_uri = orec.get("child_uri")
+            child_labels = orec.get("child_labels", [])
+            location_uri = orec.get("location_uri")
+
+            if not child_uri or child_uri in nodes:
+                continue
+
+            nodes[child_uri] = {
+                "id": child_uri,
+                "name": _extract_name(child_uri),
+                "type": _classify_node_type(child_labels),
+                "labels": child_labels,
+                "children": [],
             }
 
-        if zone_uri:
-            floor_node = tree.get(building_uri, {}).get("children", {}).get(floor_uri, {"children": {}})
-            if zone_uri not in floor_node.get("children", {}):
-                floor_node.setdefault("children", {})[zone_uri] = {
-                    "id": zone_uri,
-                    "name": _extract_name(zone_uri),
-                    "type": "Zone",
-                    "labels": r.get("zone_labels", []),
-                    "children": [],
-                }
+            # hasLocation으로 연결된 층/존에 배치, 없으면 건물 루트에 배치
+            target = location_uri if (location_uri and location_uri in nodes) else building_uri
+            children_map.setdefault(target, [])
+            if child_uri not in children_map[target]:
+                children_map[target].append(child_uri)
 
-            if equip_uri:
-                zone_node = floor_node["children"][zone_uri]
-                zone_node["children"].append({
-                    "id": equip_uri,
-                    "name": _extract_name(equip_uri),
-                    "type": "Equipment",
-                    "labels": r.get("equip_labels", []),
-                })
+    # 트리 구성 (재귀, 무한루프 방지)
+    visited: set[str] = set()
 
-    # dict를 list로 변환
-    result = []
-    for b_key, b_val in tree.items():
-        building = {**b_val, "children": []}
-        for f_key, f_val in b_val.get("children", {}).items():
-            floor = {**f_val, "children": []}
-            for z_key, z_val in f_val.get("children", {}).items():
-                floor["children"].append(z_val)
-            building["children"].append(floor)
-        result.append(building)
+    def build_subtree(uri: str) -> dict:
+        if uri in visited:
+            return nodes.get(uri, {"id": uri, "name": _extract_name(uri), "type": "Other", "labels": [], "children": []})
+        visited.add(uri)
+        node = nodes.get(uri, {
+            "id": uri,
+            "name": _extract_name(uri),
+            "type": "Other",
+            "labels": [],
+            "children": [],
+        })
+        child_uris = children_map.get(uri, [])
+        node["children"] = sorted(
+            [build_subtree(c) for c in child_uris],
+            key=lambda x: x.get("name", ""),
+        )
+        return node
 
-    return result
+    root = build_subtree(building_uri)
+    return [root]
 
 
 def _extract_name(uri: str) -> str:
@@ -364,7 +419,7 @@ def _classify_node_type(labels: list[str]) -> str:
         return "Site"
     if any("Zone" in lbl for lbl in meaningful):
         return "Zone"
-    if "Location" in labels_set or "Room" in labels_set:
+    if "Location" in labels_set or any("Room" in lbl for lbl in meaningful):
         return "Location"
     location_keywords = ["Space", "Mechanical_Room", "Office", "Lobby", "Corridor"]
     for lk in location_keywords:
@@ -375,15 +430,28 @@ def _classify_node_type(labels: list[str]) -> str:
     if "System" in labels_set or any("System" in lbl for lbl in meaningful):
         return "System"
 
+    # Sensor / Point (Equipment보다 먼저 — Damper_Position_Command 등 오분류 방지)
+    sensor_keywords = ["Sensor", "Setpoint", "Command", "Status", "Alarm", "Parameter", "Limit", "Mode"]
+    for sk in sensor_keywords:
+        if sk in labels_set or any(sk in lbl for lbl in meaningful):
+            return "Point"
+
+    if "Point" in labels_set:
+        return "Point"
+
     # Equipment 하위 클래스 (구체적인 것 우선)
     equipment_types = [
         "AHU", "Chiller", "Boiler", "Pump", "Fan", "Cooling_Tower",
         "Heat_Exchanger", "VAV", "Fan_Coil_Unit", "PAC", "MAU", "HEX",
         "Damper", "Valve", "VFD", "Actuator", "Filter",
         "Diffuser", "Meter", "Panel", "Transformer",
-        "Controller", "Server", "Header", "Pipe",
+        "Controller", "Header", "Pipe", "Louver",
         "Chilled_Water_Pump", "Condenser_Water_Pump", "Hot_Water_Pump",
         "Chilled_Ceiling_Panel",
+        "Elevator", "UPS", "Switchgear", "Emergency_Generator",
+        "Water_Pump", "Electrical_Equipment", "HVAC_Equipment",
+        "Lighting_Equipment", "Building_Electrical_Meter",
+        "Inverter", "Generator", "Tank",
     ]
     for et in equipment_types:
         if et in labels_set or any(et in lbl for lbl in meaningful):
@@ -391,15 +459,6 @@ def _classify_node_type(labels: list[str]) -> str:
 
     if "Equipment" in labels_set:
         return "Equipment"
-
-    # Sensor / Point
-    sensor_keywords = ["Sensor", "Setpoint", "Command", "Status", "Alarm", "Parameter", "Limit"]
-    for sk in sensor_keywords:
-        if sk in labels_set or any(sk in lbl for lbl in meaningful):
-            return "Point"
-
-    if "Point" in labels_set:
-        return "Point"
 
     # Loop
     if any("Loop" in lbl for lbl in meaningful):

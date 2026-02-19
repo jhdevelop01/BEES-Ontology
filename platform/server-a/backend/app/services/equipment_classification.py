@@ -73,9 +73,18 @@ _CATEGORY_MAP: dict[str, tuple[str, Optional[str]]] = {
     "Rainwater_Harvesting_System": ("water", None),
     "UFAD_System": ("hvac", "air_handling"),
     "Wastewater_Treatment_System": ("water", None),
+    # ── 토폴로지 장비 확장 ──
+    "Floor_Diffuser": ("hvac", "air_handling"),
+    "Distribution_Header": ("hvac", "distribution"),
+    "Radiant_Heating_Panel": ("hvac", "heating"),
+    "DSF_Louver": ("hvac", "special"),
+    "Building_Automation_System": ("automation", "bms"),
+    "Fire_Safety_System": ("safety", "fire"),
+    "Security_System": ("safety", "security"),
+    "Solar_PV_System": ("electrical", "renewable"),
 }
 
-# Server B CONTROLLABLE_EQUIPMENT과 동기화 (server-b/app/neo4j_loader.py:25-39)
+# Server B CONTROLLABLE_EQUIPMENT과 동기화 (server-b/app/neo4j_loader.py:25-57)
 CONTROLLABLE_TYPES: set[str] = {
     "AHU", "Chiller", "Boiler", "Cooling_Tower",
     "Fan_Coil_Unit", "Exhaust_Fan", "Supply_Fan",
@@ -85,6 +94,9 @@ CONTROLLABLE_TYPES: set[str] = {
     "Valve", "Damper", "VFD", "Water_Pump",
     "Transformer", "UPS", "Emergency_Generator", "Switchgear",
     "HVAC_Equipment", "Controller", "Lighting_Equipment",
+    "Floor_Diffuser", "Distribution_Header", "Radiant_Heating_Panel",
+    "DSF_Louver", "Building_Automation_System",
+    "Fire_Safety_System", "Security_System", "Solar_PV_System",
 }
 
 

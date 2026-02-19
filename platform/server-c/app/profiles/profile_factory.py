@@ -251,6 +251,15 @@ EQUIPMENT_POWER_OVERRIDE: dict[str, dict] = {
     # ── 신규 추가: 특수 HVAC ──
     "HVAC_Equipment": {"base_value": 5.0, "off_base_value": 0.2, "noise_range": 0.5,
                        "max_value": 10.0, "daily_amplitude": 1.0},
+    # ── 신규 추가: 토폴로지 장비 확장 ──
+    "Floor_Diffuser": {"base_value": 0.0, "off_base_value": 0.0, "noise_range": 0.0,
+                       "max_value": 0.0, "daily_amplitude": 0.0},
+    "Distribution_Header": {"base_value": 0.0, "off_base_value": 0.0, "noise_range": 0.0,
+                            "max_value": 0.0, "daily_amplitude": 0.0},
+    "Radiant_Heating_Panel": {"base_value": 0.5, "off_base_value": 0.0, "noise_range": 0.05,
+                              "max_value": 1.0, "daily_amplitude": 0.1},
+    "DSF_Louver": {"base_value": 0.02, "off_base_value": 0.0, "noise_range": 0.005,
+                   "max_value": 0.05, "daily_amplitude": 0.0},
 }
 
 

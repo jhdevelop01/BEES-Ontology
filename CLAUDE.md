@@ -12,7 +12,7 @@
 ## 핵심 파일
 | 파일 | 위치 | 설명 |
 |------|------|------|
-| GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (v2.2.0, ~13,875줄, 11,080 트리플, 1,516 인스턴스) |
+| GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (v2.2.1, ~14,425줄, 11,470 트리플, 1,732 인스턴스) |
 | GEC_B_SHACL.ttl | `ontology/` | SHACL 검증 Shape (v2.0, 24개) |
 | docker-compose.yml | 루트 | 디지털 트윈 플랫폼 9서비스 Docker 오케스트레이션 |
 | .env | 루트 | 환경변수 (Neo4j, MQTT, InfluxDB, PostgreSQL, 서버 간 URL) |
@@ -85,7 +85,7 @@ Brick Schema 온톨로지(1,516 인스턴스)를 기반으로 4개 독립 서버
 
 ### Phase 5 현재 상태 (2026.02.18) — ✅ 전체 완료
 
-**Phase 2~4.5 (유지)**: 201개 장비 + 584개 포인트 실시간 시뮬레이션, 온톨로지 그래프, 토폴로지, LLM 채팅, InfluxDB, 알람, Grafana, BACnet, JWT 인증, 반응형 디자인, 시나리오/고장주입, 열역학 모델, 데이터 품질
+**Phase 2~4.5 (유지)**: 284개 장비 + 670개 포인트 실시간 시뮬레이션, 온톨로지 그래프, 토폴로지, LLM 채팅, InfluxDB, 알람, Grafana, BACnet, JWT 인증, 반응형 디자인, 시나리오/고장주입, 열역학 모델, 데이터 품질
 
 **Phase 5 (신규, 2026.02.18)**:
 - ✅ **알림 채널 확장** — Email(SMTP)/Slack(Webhook) 알림, 설정 UI, 발송 이력 (`/settings/notifications`)
@@ -126,7 +126,7 @@ Brick Schema 온톨로지(1,516 인스턴스)를 기반으로 4개 독립 서버
 ```bash
 docker start neo4j-bees                                 # Neo4j 시작
 docker compose up -d                                    # 전체 기동 (9서비스 + 시뮬레이션 자동 시작)
-curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (584포인트 기대)
+curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (670포인트 기대)
 open http://localhost:3000                               # 프론트엔드
 ```
 

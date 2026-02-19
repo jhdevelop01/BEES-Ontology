@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.19 (시뮬레이션 확장 84→201대, 온톨로지 v2.2.0)
+> **최종 업데이트:** 2026.02.20 (토폴로지 전체 확장 284대 시뮬레이션, 분류 체계 정비)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -2556,6 +2556,100 @@ Room → Zone 직접 연결이 없는 경우, 같은 층 Interior Zone 센서를
 | `server-c/app/profiles/profile_factory.py` | 수정 | POWER_OVERRIDE +12 타입 |
 | `server-a/backend/app/services/equipment_classification.py` | 수정 | _CATEGORY_MAP +25, CONTROLLABLE +11 |
 | `server-b/app/neo4j_loader.py` | 수정 | CONTROLLABLE_EQUIPMENT +12 타입 |
+
+## 31. 토폴로지 전체 장비 시뮬레이션 확장 + 분류 체계 정비 (2026.02.20)
+
+### 31.1 문제
+
+토폴로지 페이지에서 309개(실제 284개 장비) 중 201개만 ON, 나머지 83개가 OFF/N/A로 표시.
+원인:
+1. **토폴로지 트리 쿼리 깊이 부족** — 기존 4단계 고정 쿼리(`site→building→floor→zone→equip`)가 5~6단계 장비 미도달
+2. **78개 장비에 포인트 0개** — Floor_Diffuser(48), CC_Distribution_Header(10), RH_Distribution_Header(10), RH_Panel(10)
+3. **Server C에 8개 장비 타입 미등록** — Floor_Diffuser, Distribution_Header, Radiant_Heating_Panel, DSF_Louver 등
+4. **19개 노드 잘못 분류** — Server_Room(10)→공간인데 장비로, DSF_Control_Mode(4)→모드인데 장비로, 센서/커맨드 포인트(5)→장비로
+
+### 31.2 토폴로지 트리 쿼리 재설계
+
+**`server-a/backend/app/services/neo4j_service.py`**:
+- 기존 4단계 고정 쿼리 → `hasPart*1..6` 가변 깊이 순회로 변경
+- `_build_tree_from_records()` → `_build_tree_from_pairs()` 신규 함수 (부모-자식 쌍 기반 트리 빌드)
+- 고아 장비 쿼리 추가 (hasPart 부모 없는 23개 장비를 hasLocation 기반으로 배치)
+- cycle 방지: `visited` set으로 순환 참조 차단
+- 결과: 628 → 842 트리 노드, 201개 SSE 장비 전부 트리에 매칭
+
+### 31.3 노드 분류 체계 정비
+
+**백엔드 `_classify_node_type()` 수정:**
+- **Sensor/Point 체크를 Equipment보다 먼저** 수행 → `Damper_Position_Command`가 장비 대신 Point로 정확 분류
+- `"Mode"` 키워드 추가 → DSF_Control_Mode가 Point로 분류
+- `"Room"` 부분 매칭 → `Server_Room`이 Location으로 분류 (기존: exact `"Room"` only)
+- equipment_types에서 `"Server"` 제거, `"Louver"` 추가
+- 결과: 19개 오분류 노드 정정 (Equipment 303 → 284)
+
+**프론트엔드 `_isEquipmentByLabels()` 수정:**
+- 백엔드 type이 Point/Zone/Location/Building/Floor/Site면 즉시 false 반환
+- 라벨에 Sensor/Command/Setpoint/Status/Mode/Room 포함 시 false 반환
+- 장비 키워드 매칭 전에 비장비 제외 로직 우선 적용
+
+### 31.4 온톨로지 포인트 추가
+
+**`ontology/GEC_B_Ontology.ttl`**:
+- 78개 장비에 `brick:On_Off_Status` 포인트 추가
+  - Floor_Diffuser × 48: `Floor_Diffuser_{층}_{존}_Status`
+  - CC_Distribution_Header × 10: `CC_Distribution_Header_{층}_Status`
+  - RH_Distribution_Header × 10: `RH_Distribution_Header_{층}_Status`
+  - RH_Panel × 10: `RH_Panel_{층}_Int_Status`
+- 각 포인트: rdf:type + rdfs:label(한국어) + bees:hasConfidence("estimated") + brick:isPointOf
+- 양방향 hasPoint 78쌍 추가
+- 트리플 수: 11,080 → **11,470** (+390)
+- SHACL 검증 통과 (신규 위반 없음, 기존 GHG reportingEntity 이슈만)
+
+### 31.5 Server C 시뮬레이션 확장
+
+**`server-c/app/neo4j_loader.py`**:
+- SIMULATABLE_EQUIPMENT_LABELS: +8 타입 (Floor_Diffuser, Distribution_Header, Radiant_Heating_Panel, DSF_Louver, Building_Automation_System, Fire_Safety_System, Security_System, Solar_PV_System)
+
+**`server-c/app/profiles/profile_factory.py`**:
+- EQUIPMENT_POWER_OVERRIDE: +4 타입 (Floor_Diffuser 0kW 패시브, Distribution_Header 0kW 패시브, Radiant_Heating_Panel 0.5kW, DSF_Louver 0.02kW)
+
+### 31.6 Server A/B 확장
+
+**`server-a/backend/app/services/equipment_classification.py`**:
+- _CATEGORY_MAP: +8 매핑 (Floor_Diffuser→hvac/air_handling, Distribution_Header→hvac/distribution, Radiant_Heating_Panel→hvac/heating, DSF_Louver→hvac/special, Building_Automation_System→automation/bms, Fire_Safety_System→safety/fire, Security_System→safety/security, Solar_PV_System→electrical/renewable)
+- CONTROLLABLE_TYPES: +8 동기화
+
+**`server-b/app/neo4j_loader.py`**:
+- CONTROLLABLE_EQUIPMENT: +8 타입 (모두 ON/OFF 명령)
+
+### 31.7 Neo4j 동기화
+
+- TTL → Neo4j 재임포트: 11,690 트리플, 1,732 노드
+- `docker cp` + `n10s.rdf.import.fetch('file:///import/GEC_B_Ontology.ttl', 'Turtle')`
+
+### 31.8 최종 결과
+
+| 항목 | 이전 (섹션30) | 이후 |
+|------|:------------:|:----:|
+| TTL 트리플 | 11,080 | **11,470** |
+| Neo4j 노드 | 1,516 | **1,732** |
+| 시뮬레이션 장비 | 201 | **284** |
+| 시뮬레이션 포인트 | 584 | **670** |
+| SIMULATABLE 타입 | 39 | **47** |
+| 제어 가능 장비 | 136 | **219** |
+| 토폴로지 OFF/N/A 장비 | 102 | **0** |
+| 프론트엔드 장비 판별 | 303 | **284** (19개 오분류 정정) |
+
+### 31.9 수정/신규 파일 목록
+
+| 파일 | 유형 | 변경 |
+|------|------|------|
+| `ontology/GEC_B_Ontology.ttl` | 수정 | +78 On_Off_Status 포인트, +390 트리플 |
+| `server-a/backend/app/services/neo4j_service.py` | 수정 | 토폴로지 가변깊이 쿼리, _classify_node_type 정비 |
+| `server-a/frontend/app/topology/page.tsx` | 수정 | _isEquipmentByLabels 분류 정비, isSimulated 로직 |
+| `server-a/backend/app/services/equipment_classification.py` | 수정 | +8 카테고리, +8 CONTROLLABLE |
+| `server-b/app/neo4j_loader.py` | 수정 | +8 CONTROLLABLE 타입 |
+| `server-c/app/neo4j_loader.py` | 수정 | +8 SIMULATABLE 타입 |
+| `server-c/app/profiles/profile_factory.py` | 수정 | +4 POWER_OVERRIDE |
 
 ---
 

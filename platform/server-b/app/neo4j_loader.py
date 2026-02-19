@@ -54,6 +54,15 @@ CONTROLLABLE_EQUIPMENT: dict[str, list[str]] = {
     "Controller": ["ON", "OFF"],
     # ── 조명 ──
     "Lighting_Equipment": ["ON", "OFF"],
+    # ── 토폴로지 장비 확장 ──
+    "Floor_Diffuser": ["ON", "OFF"],
+    "Distribution_Header": ["ON", "OFF"],
+    "Radiant_Heating_Panel": ["ON", "OFF"],
+    "DSF_Louver": ["ON", "OFF"],
+    "Building_Automation_System": ["ON", "OFF"],
+    "Fire_Safety_System": ["ON", "OFF"],
+    "Security_System": ["ON", "OFF"],
+    "Solar_PV_System": ["ON", "OFF"],
 }
 
 # 일반적인 상위 라벨 (필터링 대상)

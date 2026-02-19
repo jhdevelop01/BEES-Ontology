@@ -63,7 +63,44 @@ function toMonitoringId(nodeId: string): string {
 
 /* ── 부품(Component) 판별 ── */
 
-const COMPONENT_LABELS = new Set(["valve", "damper", "vfd", "actuator", "condenser", "compressor"]);
+const COMPONENT_LABELS = new Set(["actuator", "condenser", "compressor"]);
+
+/* 장비 라벨 키워드 — type 또는 labels에 포함되면 장비로 판별 */
+const EQUIPMENT_KEYWORDS = [
+  "equipment", "ahu", "pump", "chiller", "fan", "vav", "fcu", "boiler",
+  "cooling_tower", "heat_exchanger", "elevator", "transformer", "ups",
+  "switchgear", "emergency_generator", "water_pump", "vfd", "valve", "damper",
+  "controller", "lighting", "meter", "panel", "system", "plant", "server",
+  "solar", "inverter", "generator", "tank", "fire", "sprinkler", "cctv",
+  "access_control", "intercom", "parking", "bms", "dali", "dsf", "shelf",
+];
+
+function _isEquipmentByLabels(node: TopologyNode): boolean {
+  // 백엔드가 Point/Zone/Location으로 분류한 노드는 장비 아님
+  const tp = node.type.toLowerCase();
+  if (["point", "sensor", "zone", "location", "building", "floor", "site"].includes(tp)) return false;
+
+  // 라벨에 Sensor/Command/Setpoint/Status/Mode/Room 포함 시 장비 아님
+  if (node.labels) {
+    const isPointOrRoom = node.labels.some((l) => {
+      const ll = l.toLowerCase();
+      return (
+        ll.includes("sensor") || ll.includes("command") || ll.includes("setpoint") ||
+        ll.includes("_status") || ll.includes("_mode") || ll.includes("room")
+      );
+    });
+    if (isPointOrRoom) return false;
+  }
+
+  if (EQUIPMENT_KEYWORDS.some(kw => tp.includes(kw))) return true;
+  if (node.labels) {
+    return node.labels.some(l => {
+      const ll = l.toLowerCase();
+      return ll !== "resource" && EQUIPMENT_KEYWORDS.some(kw => ll.includes(kw));
+    });
+  }
+  return false;
+}
 
 function isComponentNode(node: TopologyNode): boolean {
   if (!node.labels) return false;
@@ -97,24 +134,13 @@ function TreeItem({
   const Icon = getTypeIcon(node.type);
 
   const t = useTranslations("topology");
-  // 장비 활성 상태 확인 (name 또는 id 기반)
-  const isActive =
-    deviceStatusMap[node.name] || deviceStatusMap[node.id] || false;
+  // SSE에 존재하는 시뮬레이션 장비인지 확인
+  const isSimulated = node.name in deviceStatusMap || node.id in deviceStatusMap;
+  const isActive = isSimulated
+    ? (deviceStatusMap[node.name] || deviceStatusMap[node.id] || false)
+    : false;
   const isComponent = isComponentNode(node);
-  const isEquipment =
-    !isComponent &&
-    (node.type.toLowerCase().includes("equipment") ||
-    node.type.toLowerCase().includes("ahu") ||
-    node.type.toLowerCase().includes("pump") ||
-    node.type.toLowerCase().includes("chiller") ||
-    node.type.toLowerCase().includes("fan") ||
-    node.type.toLowerCase().includes("vav") ||
-    (node.labels && node.labels.some(l => {
-      const ll = l.toLowerCase();
-      return ll.includes("equipment") || ll.includes("ahu") || ll.includes("pump") ||
-        ll.includes("chiller") || ll.includes("fan") || ll.includes("vav") ||
-        ll.includes("fcu") || ll.includes("boiler");
-    })));
+  const isEquipment = !isComponent && _isEquipmentByLabels(node);
 
   return (
     <div>
@@ -160,9 +186,9 @@ function TreeItem({
           </span>
         )}
 
-        {/* 장비 활성 표시 */}
-        {isEquipment && isActive && (
-          <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
+        {/* 장비 활성 표시 — SSE 시뮬레이션 장비만 */}
+        {isEquipment && isSimulated && (
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? "bg-green-500" : "bg-red-400"}`} />
         )}
       </button>
 
@@ -192,11 +218,12 @@ function TreeItem({
 interface EquipmentCardProps {
   node: TopologyNode;
   isActive: boolean;
+  isSimulated: boolean;
   sensorValues?: Array<{ name: string; value: number | null; unit: string }>;
   lastUpdate?: number | null;
 }
 
-function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCardProps) {
+function EquipmentCard({ node, isActive, isSimulated, sensorValues, lastUpdate }: EquipmentCardProps) {
   const t = useTranslations("topology");
   const Icon = getTypeIcon(node.type);
   const [pulse, setPulse] = useState(false);
@@ -216,19 +243,24 @@ function EquipmentCard({ node, isActive, sensorValues, lastUpdate }: EquipmentCa
     <Card className={`relative overflow-hidden transition-shadow ${pulse ? "ring-2 ring-blue-400 ring-opacity-50" : ""}`}>
       <div
         className={`absolute top-0 left-0 right-0 h-1 ${
-          isActive ? "bg-green-500" : "bg-gray-200"
+          !isSimulated ? "bg-gray-100" : isActive ? "bg-green-500" : "bg-red-300"
         }`}
       />
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-center justify-between mb-2">
           <Icon className="h-5 w-5 text-gray-400" />
-          <div className="flex items-center gap-2">
-            {/* LED 인디케이터 */}
-            <span className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-green-500 animate-pulse" : "bg-gray-300"}`} />
-            <Badge variant={isActive ? "success" : "secondary"}>
-              {isActive ? "ON" : "OFF"}
-            </Badge>
-          </div>
+          {isSimulated ? (
+            <div className="flex items-center gap-2">
+              <span className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-green-500 animate-pulse" : "bg-red-400"}`} />
+              <Badge variant={isActive ? "success" : "secondary"}>
+                {isActive ? "ON" : "OFF"}
+              </Badge>
+            </div>
+          ) : (
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">
+              N/A
+            </span>
+          )}
         </div>
         <p className="text-sm font-medium text-gray-900 truncate">
           {node.name}
@@ -346,26 +378,8 @@ export default function TopologyPage() {
     const collect = (n: TopologyNode) => {
       if (isComponentNode(n)) {
         components.push(n);
-      } else {
-        const tp = n.type.toLowerCase();
-        if (
-          tp.includes("equipment") ||
-          tp.includes("ahu") ||
-          tp.includes("pump") ||
-          tp.includes("chiller") ||
-          tp.includes("fan") ||
-          tp.includes("vav") ||
-          tp.includes("fcu") ||
-          tp.includes("boiler") ||
-          (n.labels && n.labels.some(l => {
-            const ll = l.toLowerCase();
-            return ll.includes("equipment") || ll.includes("ahu") || ll.includes("pump") ||
-              ll.includes("chiller") || ll.includes("fan") || ll.includes("vav") ||
-              ll.includes("fcu") || ll.includes("boiler");
-          }))
-        ) {
-          mainEquipment.push(n);
-        }
+      } else if (_isEquipmentByLabels(n)) {
+        mainEquipment.push(n);
       }
       n.children?.forEach(collect);
     };
@@ -421,24 +435,7 @@ export default function TopologyPage() {
   /* ── 선택된 노드가 장비인지 ── */
   const isEquipmentNode = (node: TopologyNode): boolean => {
     if (isComponentNode(node)) return false;
-    const tp = node.type.toLowerCase();
-    if (
-      tp.includes("equipment") ||
-      tp.includes("ahu") ||
-      tp.includes("pump") ||
-      tp.includes("chiller") ||
-      tp.includes("fan") ||
-      tp.includes("vav") ||
-      tp.includes("fcu") ||
-      tp.includes("boiler")
-    ) return true;
-    if (node.labels && node.labels.some(l => {
-      const ll = l.toLowerCase();
-      return ll.includes("equipment") || ll.includes("ahu") || ll.includes("pump") ||
-        ll.includes("chiller") || ll.includes("fan") || ll.includes("vav") ||
-        ll.includes("fcu") || ll.includes("boiler");
-    })) return true;
-    return false;
+    return _isEquipmentByLabels(node);
   };
 
   /* ── 렌더 ── */
@@ -712,10 +709,10 @@ export default function TopologyPage() {
                         /* 그리드 뷰 */
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                           {mainEquipment.map((eq) => {
-                            const isActive =
-                              deviceStatusMap[eq.name] ||
-                              deviceStatusMap[eq.id] ||
-                              false;
+                            const eqSimulated = eq.name in deviceStatusMap || eq.id in deviceStatusMap;
+                            const isActive = eqSimulated
+                              ? (deviceStatusMap[eq.name] || deviceStatusMap[eq.id] || false)
+                              : false;
                             return (
                               <div
                                 key={eq.id}
@@ -732,6 +729,7 @@ export default function TopologyPage() {
                                 <EquipmentCard
                                   node={eq}
                                   isActive={isActive}
+                                  isSimulated={eqSimulated}
                                   sensorValues={getSensorValuesForEquipment(eq)}
                                   lastUpdate={getLastUpdateForEquipment(eq)}
                                 />
@@ -760,10 +758,10 @@ export default function TopologyPage() {
                                 </thead>
                                 <tbody>
                                   {mainEquipment.map((eq) => {
-                                    const isActive =
-                                      deviceStatusMap[eq.name] ||
-                                      deviceStatusMap[eq.id] ||
-                                      false;
+                                    const eqSim = eq.name in deviceStatusMap || eq.id in deviceStatusMap;
+                                    const isActive = eqSim
+                                      ? (deviceStatusMap[eq.name] || deviceStatusMap[eq.id] || false)
+                                      : false;
                                     return (
                                       <tr
                                         key={eq.id}
@@ -786,13 +784,13 @@ export default function TopologyPage() {
                                           </Badge>
                                         </td>
                                         <td className="py-2.5 px-4 text-center">
-                                          <Badge
-                                            variant={
-                                              isActive ? "success" : "secondary"
-                                            }
-                                          >
-                                            {isActive ? "ON" : "OFF"}
-                                          </Badge>
+                                          {eqSim ? (
+                                            <Badge variant={isActive ? "success" : "secondary"}>
+                                              {isActive ? "ON" : "OFF"}
+                                            </Badge>
+                                          ) : (
+                                            <span className="text-xs text-gray-400">N/A</span>
+                                          )}
                                         </td>
                                       </tr>
                                     );
@@ -826,10 +824,10 @@ export default function TopologyPage() {
                           {showComponents && (
                             <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                               {components.map((comp) => {
-                                const isActive =
-                                  deviceStatusMap[comp.name] ||
-                                  deviceStatusMap[comp.id] ||
-                                  false;
+                                const compSim = comp.name in deviceStatusMap || comp.id in deviceStatusMap;
+                                const isActive = compSim
+                                  ? (deviceStatusMap[comp.name] || deviceStatusMap[comp.id] || false)
+                                  : false;
                                 return (
                                   <Card
                                     key={comp.id}
@@ -846,9 +844,13 @@ export default function TopologyPage() {
                                     <CardContent className="pt-3 pb-2 px-3">
                                       <div className="flex items-center justify-between mb-1">
                                         <Cpu className="h-4 w-4 text-gray-300" />
-                                        <Badge variant={isActive ? "success" : "secondary"} className="text-[10px]">
-                                          {isActive ? "ON" : "OFF"}
-                                        </Badge>
+                                        {compSim ? (
+                                          <Badge variant={isActive ? "success" : "secondary"} className="text-[10px]">
+                                            {isActive ? "ON" : "OFF"}
+                                          </Badge>
+                                        ) : (
+                                          <span className="text-[10px] text-gray-400">N/A</span>
+                                        )}
                                       </div>
                                       <p className="text-sm text-gray-500 truncate">{comp.name}</p>
                                       <div className="flex items-center gap-1 mt-1">
