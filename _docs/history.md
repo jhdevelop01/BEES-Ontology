@@ -2191,18 +2191,18 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 - **neo4j_service.py**: `get_equipment_list()` 응답에 `category`, `subcategory`, `controllable` 필드 추가
 - **control.py**: `GET /api/devices/status`에 `controllable_only` 쿼리 파라미터 추가, 응답에 분류 필드 포함
 
-### 27.5 모니터링 페이지 — 2단계 필터
+### 27.5 모니터링 페이지 — 2단계 필터 + 부품 배너
 - 기존 TYPE_FILTERS 10개 평면 탭 → **2단계 분류 체계**
-- 1단계 대분류: 전체 / HVAC / 전기·수송 / 부품 (탭 + 카운트 배지)
-- 2단계 HVAC 서브필터: 전체 / 냉방 / 난방 / 공조 (HVAC 선택 시에만 표시)
-- 부품 탭: 안내 배너 표시 ("부품은 상위 장비에 종속되어 독립 제어 불가")
+- 1단계 대분류: 전체 84 / HVAC 72 / 전기·수송 12 (부품 탭 제거)
+- 2단계 HVAC 서브필터: 전체 / 냉방 32 / 난방 6 / 공조 34 (HVAC 선택 시에만 표시)
+- **부품(26개)은 카드 그리드에서 제외** → 하단 접힘 요약 배너로 표시 (밸브 22 · 댐퍼 3 · 인버터 1)
 - API `category`/`subcategory` 필드 우선 활용, 없으면 `brick_class` 폴백
 
-### 27.6 제어 페이지 — 제어 가능 장비 분리
-- `controllableDevices` / `monitorOnlyDevices` useMemo로 분리
-- 상단: 제어 가능 장비만 기존 카드 그대로 표시
-- 하단: 모니터링 전용 접힘 섹션 (opacity-70, ON/OFF 버튼 없음, "모니터링 전용" 배지)
-- 헤더: "제어 가능 X대" 카운트 표시
+### 27.6 제어 페이지 — 84대 전체 제어 가능
+- CC_Panel(20개) + Elevator(12개)를 제어 가능으로 전환 → 84대 전체 동일 ON/OFF 카드
+- "모니터링 전용" 섹션 삭제 (모든 장비가 제어 가능해짐)
+- Server B `CONTROLLABLE_EQUIPMENT`에 `Chilled_Ceiling_Panel`, `Elevator` 추가
+- `CONTROLLABLE_TYPES` 11종 → 13종으로 확장
 
 ### 27.7 토폴로지 페이지 — 부품 노드 분리
 - `isComponentNode()` 함수: Valve/Damper/VFD/Actuator/Condenser/Compressor 판별
@@ -2210,29 +2210,48 @@ TTL의 펌프 장비는 Brick 서브클래스를 사용:
 - 트리: 부품 노드 연한 색상 + "부품" 태그
 - 상세 패널: 주요 장비 그리드 + 접힘 가능 부품 섹션 (border-dashed, opacity-70)
 
-### 27.8 i18n
-- `ko.json` / `en.json`: monitoring 9키, control 4키, topology 2키 추가 (총 15키)
+### 27.8 AHU_5F 하드코딩 센서 차트 제거
+- Phase 1 MVP 잔존물 — `SENSORS` 상수에 AHU_5F 센서 5개가 하드코딩되어 있었음
+- 장비 상세 페이지(`/monitoring/[equipmentId]`)에서 이미 모든 장비의 센서 차트 제공 → **중복 제거**
+- 삭제: `SENSORS` 상수, `LiveChart` import, `chartDataMap` useMemo, 센서 차트 JSX 전체 (**-208줄**)
+- 모니터링 페이지 크기: 5.6kB → 3.9kB
 
-### 27.9 커밋 이력
+### 27.9 i18n
+- `ko.json` / `en.json`: 부품 요약 배너 7개 키 추가, HVAC 서브필터 3키
+- 제어 페이지: `monitorOnlyDevices`, `monitorOnlyLabel`, `controllableCount` 등 불필요 키 삭제
+- 모니터링: `categoryParts`, `partsNote` 삭제, `componentSummaryTitle` 등 7키 추가
+
+### 27.10 커밋 이력
 
 | 커밋 | 설명 |
 |------|------|
 | `4420103` | fix: Cooling_Coil/Heating_Coil 유령 라벨 제거 (섹션 27.2) |
-| `9fbb8c7` | feat: 장비 카테고리 분류 개선 — 모니터링·제어·토폴로지 3개 페이지 (섹션 27.3~27.8) |
+| `9fbb8c7` | feat: 장비 카테고리 분류 개선 — 모니터링·제어·토폴로지 3개 페이지 (섹션 27.3~27.7) |
+| `5e9521e` | feat: CC_Panel·Elevator 제어 가능화 + 모니터링 부품 배너 전환 (섹션 27.5~27.6) |
+| `898dc94` | refactor: 모니터링 페이지 AHU_5F 하드코딩 센서 차트 섹션 제거 (섹션 27.8) |
 
-### 27.10 수정 파일 전체 목록
+### 27.11 수정 파일 전체 목록
 
 | 서버 | 파일 | 변경 내용 |
 |------|------|-----------|
-| Server A 백엔드 | `app/services/equipment_classification.py` | **신규** — 장비 분류 모듈 |
+| Server A 백엔드 | `app/services/equipment_classification.py` | **신규** — 장비 분류 모듈 (CONTROLLABLE_TYPES 13종) |
 | Server A 백엔드 | `app/services/neo4j_service.py` | category/subcategory/controllable 필드 추가 |
 | Server A 백엔드 | `app/routers/control.py` | controllable_only 파라미터, 분류 필드 응답 |
-| Server A 프론트 | `app/monitoring/page.tsx` | 2단계 필터 UI (대분류 + HVAC 서브필터) |
-| Server A 프론트 | `app/control/page.tsx` | 제어 가능 / 모니터링 전용 분리 |
+| Server A 프론트 | `app/monitoring/page.tsx` | 2단계 필터 + 부품 배너 + AHU_5F 센서 섹션 제거 |
+| Server A 프론트 | `app/control/page.tsx` | 84대 전체 제어 카드 (모니터링 전용 섹션 삭제) |
 | Server A 프론트 | `app/topology/page.tsx` | 부품 노드 분리 + 접힘 섹션 |
 | Server A 프론트 | `lib/api.ts` | 타입 정의 + API 함수 확장 |
-| Server A 프론트 | `messages/ko.json` | 분류 관련 15개 키 추가 |
-| Server A 프론트 | `messages/en.json` | 분류 관련 15개 키 추가 |
+| Server A 프론트 | `messages/ko.json` | 분류/부품 배너 키 추가, 불필요 키 삭제 |
+| Server A 프론트 | `messages/en.json` | 동일 구조 영어 |
+| Server B | `app/neo4j_loader.py` | CONTROLLABLE_EQUIPMENT에 CC_Panel, Elevator 추가 |
+
+### 27.12 최종 페이지 상태 (Phase 5.1)
+
+| 페이지 | 장비 수 | 주요 변경 |
+|--------|:------:|-----------|
+| 모니터링 | **84대** | 3탭(전체/HVAC/전기수송) + HVAC 서브필터 + 부품 요약 배너(26개) |
+| 제어 | **84대** | 전체 ON/OFF 제어 가능, 모니터링 전용 섹션 없음 |
+| 토폴로지 | 트리 전체 | 부품 노드 시각적 분리(연한색 + "부품" 태그) |
 
 ---
 
