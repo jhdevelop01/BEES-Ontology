@@ -14,7 +14,7 @@ import re
 from typing import Any
 
 from app.config import OPENAI_API_KEY, OPENAI_MODEL
-from app.services import neo4j_service
+from app.services import neo4j_service, mqtt_service
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,13 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - CC_Panel은 CC_System 소속 (UFAD_System과 별개)
 - Distribution_Header는 CC_Panel과 같은 층에 위치하며, CHW_Pump에서 냉수를 받아 CC_Panel에 분배
 - **CHW/CW/HW는 별도 시스템 노드가 아님** — get_system_info에서 '냉수','CHW','냉방' 등으로 검색 가능
+
+## 실시간 센서 데이터
+- 670개 포인트의 실시간 값을 조회할 수 있습니다 (5초 주기 갱신)
+- 주요 온도 포인트: AHU_N_RAT(실내환기온도), AHU_N_SAT(급기온도), AHU_N_MAT(혼합온도)
+- AHU UFAD 번호 → 층 매핑: 1→5F, 2→6F, 3→7F, 4→8F, 5→9F, 6→10F, 7→11F, 8→12F, 9→14F, 10→15F, 11→RF
+- 층별 온도 비교, 가장 높은/낮은 온도 층 질문에는 get_floor_temperature 사용
+- 특정 장비의 센서값 조회에는 get_realtime_sensor_data 사용
 
 ## 응답 형식 (반드시 준수)
 마크다운 기호를 절대 사용하지 마세요. **, ##, -, *, `, ```, > 등 마크다운 서식 문자를 쓰지 마세요.
@@ -222,6 +229,39 @@ TOOLS = [
                     },
                 },
                 "required": ["equipment_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_realtime_sensor_data",
+            "description": "실시간 센서 데이터를 조회합니다. 키워드로 포인트를 검색하여 현재값을 반환합니다. 온도, 습도, 전력, 유량, 압력, CO2 등 실시간 측정값을 확인할 수 있습니다.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "keyword": {
+                        "type": "string",
+                        "description": "검색할 포인트 키워드. 예: 'Temp'(온도), 'Power'(전력), 'Humidity'(습도), 'CO2', 'Flow'(유량), 'Pressure'(압력), 'AHU_2'(특정 장비), 'Chiller_1'",
+                    },
+                    "unit_filter": {
+                        "type": "string",
+                        "description": "단위 필터 (선택). 예: 'degC'(섭씨), 'kW'(전력), '%'(퍼센트)",
+                    },
+                },
+                "required": ["keyword"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_floor_temperature",
+            "description": "건물 전체 층별 온도를 비교합니다. 각 층의 실내 온도(RAT: Return Air Temperature)를 조회하여 가장 높은/낮은 층을 판별합니다. '온도가 가장 높은 층', '층별 온도 비교', '가장 추운 층' 등의 질문에 사용하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
             },
         },
     },
@@ -588,6 +628,72 @@ async def _tool_get_energy_flow(equipment_name: str, direction: str = "both") ->
     return results_data
 
 
+# ─── AHU UFAD 번호 → 층 매핑 ────────────────────────────────
+
+_AHU_FLOOR_MAP: dict[str, str] = {
+    "1": "5F", "2": "6F", "3": "7F", "4": "8F", "5": "9F",
+    "6": "10F", "7": "11F", "8": "12F", "9": "14F", "10": "15F", "11": "RF",
+}
+
+
+async def _tool_get_realtime_sensor_data(keyword: str, unit_filter: str = "") -> dict[str, Any]:
+    """실시간 센서 데이터를 키워드로 검색"""
+    cache = mqtt_service.get_point_cache()
+    results = []
+    kw = keyword.upper()
+
+    for point_id, data in cache.items():
+        pid_upper = point_id.upper()
+        if kw in pid_upper:
+            unit = data.get("unit", "")
+            if unit_filter and unit_filter != unit:
+                continue
+            results.append({
+                "point_id": point_id,
+                "value": round(data.get("value", 0), 2) if isinstance(data.get("value"), (int, float)) else data.get("value"),
+                "unit": unit,
+            })
+
+    results.sort(key=lambda x: x["point_id"])
+    return {
+        "keyword": keyword,
+        "count": len(results),
+        "points": results[:50],
+    }
+
+
+async def _tool_get_floor_temperature() -> dict[str, Any]:
+    """층별 실내 온도(RAT) 비교"""
+    cache = mqtt_service.get_point_cache()
+
+    floor_temps: list[dict[str, Any]] = []
+    for ahu_num, floor in _AHU_FLOOR_MAP.items():
+        rat_key = f"bldg:AHU_{ahu_num}_RAT"
+        if rat_key in cache:
+            val = cache[rat_key].get("value")
+            if val is not None:
+                floor_temps.append({
+                    "floor": floor,
+                    "ahu": f"AHU_UFAD_{ahu_num}",
+                    "temperature": round(val, 2),
+                    "unit": "degC",
+                })
+
+    # 정렬 (온도 높은 순)
+    floor_temps.sort(key=lambda x: x["temperature"], reverse=True)
+
+    highest = floor_temps[0] if floor_temps else None
+    lowest = floor_temps[-1] if floor_temps else None
+
+    return {
+        "count": len(floor_temps),
+        "floors": floor_temps,
+        "highest": highest,
+        "lowest": lowest,
+        "description": f"가장 높은 층: {highest['floor']} ({highest['temperature']}degC), 가장 낮은 층: {lowest['floor']} ({lowest['temperature']}degC)" if highest and lowest else "데이터 없음",
+    }
+
+
 # ─── 마크다운 기호 제거 (후처리 안전장치) ────────────────────
 
 def _strip_markdown(text: str) -> str:
@@ -628,6 +734,13 @@ async def _execute_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
                 arguments["equipment_name"],
                 arguments.get("direction", "both"),
             )
+        elif name == "get_realtime_sensor_data":
+            return await _tool_get_realtime_sensor_data(
+                arguments["keyword"],
+                arguments.get("unit_filter", ""),
+            )
+        elif name == "get_floor_temperature":
+            return await _tool_get_floor_temperature()
         else:
             return {"error": f"알 수 없는 도구: {name}"}
     except Exception as e:
