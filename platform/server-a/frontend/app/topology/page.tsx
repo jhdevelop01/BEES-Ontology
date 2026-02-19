@@ -1,12 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import Link from "next/link";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Header } from "@/components/layout/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useSSE } from "@/lib/sse";
 import {
   getTopologyTree,
@@ -14,98 +10,24 @@ import {
   type TopologyResponse,
 } from "@/lib/api";
 import {
+  _isEquipmentByLabels,
+  isComponentNode,
+  getTypeIcon,
+  getTypeLabel,
+  EQUIPMENT_KEYWORDS,
+  COMPONENT_LABELS,
+} from "@/components/topology/utils";
+import { BuildingOverview } from "@/components/topology/building-overview";
+import { FloorDetailView } from "@/components/topology/floor-detail-view";
+import { EquipmentDetailView } from "@/components/topology/equipment-detail-view";
+import { SystemOverview } from "@/components/topology/system-overview";
+import {
   ChevronRight,
   ChevronDown,
   Building2,
-  Layers,
-  MapPin,
-  Cpu,
-  LayoutGrid,
-  List,
   Loader2,
   AlertCircle,
-  Activity,
-  ExternalLink,
 } from "lucide-react";
-
-/* ── 타입 아이콘 매핑 ── */
-
-function getTypeIcon(type: string) {
-  const t = type.toLowerCase();
-  if (t.includes("building")) return Building2;
-  if (t.includes("floor") || t.includes("story")) return Layers;
-  if (t.includes("zone") || t.includes("room") || t.includes("space"))
-    return MapPin;
-  return Cpu;
-}
-
-function getTypeLabel(type: string): string {
-  const t = type.toLowerCase();
-  if (t.includes("building")) return "typeBuilding";
-  if (t.includes("floor") || t.includes("story")) return "typeFloor";
-  if (t.includes("zone") || t.includes("room") || t.includes("space"))
-    return "typeZone";
-  if (t.includes("system")) return "typeSystem";
-  if (t.includes("sensor")) return "typeSensor";
-  return "typeEquipment";
-}
-
-/* ── 토폴로지 노드 ID → 모니터링 페이지용 ID 변환 ── */
-
-function toMonitoringId(nodeId: string): string {
-  // URI 형태인 경우 이름만 추출
-  if (nodeId.includes("#")) {
-    return "bldg:" + nodeId.split("#").pop();
-  }
-  if (nodeId.startsWith("bldg:")) return nodeId;
-  return "bldg:" + nodeId;
-}
-
-/* ── 부품(Component) 판별 ── */
-
-const COMPONENT_LABELS = new Set(["actuator", "condenser", "compressor"]);
-
-/* 장비 라벨 키워드 — type 또는 labels에 포함되면 장비로 판별 */
-const EQUIPMENT_KEYWORDS = [
-  "equipment", "ahu", "pump", "chiller", "fan", "vav", "fcu", "boiler",
-  "cooling_tower", "heat_exchanger", "elevator", "transformer", "ups",
-  "switchgear", "emergency_generator", "water_pump", "vfd", "valve", "damper",
-  "controller", "lighting", "meter", "panel", "system", "plant", "server",
-  "solar", "inverter", "generator", "tank", "fire", "sprinkler", "cctv",
-  "access_control", "intercom", "parking", "bms", "dali", "dsf", "shelf",
-];
-
-function _isEquipmentByLabels(node: TopologyNode): boolean {
-  // 백엔드가 Point/Zone/Location으로 분류한 노드는 장비 아님
-  const tp = node.type.toLowerCase();
-  if (["point", "sensor", "zone", "location", "building", "floor", "site"].includes(tp)) return false;
-
-  // 라벨에 Sensor/Command/Setpoint/Status/Mode/Room 포함 시 장비 아님
-  if (node.labels) {
-    const isPointOrRoom = node.labels.some((l) => {
-      const ll = l.toLowerCase();
-      return (
-        ll.includes("sensor") || ll.includes("command") || ll.includes("setpoint") ||
-        ll.includes("_status") || ll.includes("_mode") || ll.includes("room")
-      );
-    });
-    if (isPointOrRoom) return false;
-  }
-
-  if (EQUIPMENT_KEYWORDS.some(kw => tp.includes(kw))) return true;
-  if (node.labels) {
-    return node.labels.some(l => {
-      const ll = l.toLowerCase();
-      return ll !== "resource" && EQUIPMENT_KEYWORDS.some(kw => ll.includes(kw));
-    });
-  }
-  return false;
-}
-
-function isComponentNode(node: TopologyNode): boolean {
-  if (!node.labels) return false;
-  return node.labels.some(l => COMPONENT_LABELS.has(l.toLowerCase()));
-}
 
 /* ── 트리 아이템 컴포넌트 ── */
 
@@ -213,97 +135,6 @@ function TreeItem({
   );
 }
 
-/* ── 장비 카드 컴포넌트 (실시간 SSE 데이터 반영) ── */
-
-interface EquipmentCardProps {
-  node: TopologyNode;
-  isActive: boolean;
-  isSimulated: boolean;
-  sensorValues?: Array<{ name: string; value: number | null; unit: string }>;
-  lastUpdate?: number | null;
-}
-
-function EquipmentCard({ node, isActive, isSimulated, sensorValues, lastUpdate }: EquipmentCardProps) {
-  const t = useTranslations("topology");
-  const Icon = getTypeIcon(node.type);
-  const [pulse, setPulse] = useState(false);
-  const prevActiveRef = useRef(isActive);
-
-  // 상태 변경 시 pulse 애니메이션
-  useEffect(() => {
-    if (prevActiveRef.current !== isActive) {
-      setPulse(true);
-      const timer = setTimeout(() => setPulse(false), 1000);
-      prevActiveRef.current = isActive;
-      return () => clearTimeout(timer);
-    }
-  }, [isActive]);
-
-  return (
-    <Card className={`relative overflow-hidden transition-shadow ${
-      pulse ? "ring-2 ring-cyan-400 ring-opacity-50" : ""
-    } ${isSimulated && isActive ? "shadow-glow-emerald" : isSimulated && !isActive ? "" : ""}`}>
-      <div
-        className={`absolute top-0 left-0 right-0 h-1 ${
-          !isSimulated ? "bg-white/5" : isActive ? "bg-emerald-500" : "bg-rose-400/50"
-        }`}
-      />
-      <CardContent className="pt-4 pb-3 px-4">
-        <div className="flex items-center justify-between mb-2">
-          <Icon className="h-5 w-5 text-slate-500" />
-          {isSimulated ? (
-            <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-emerald-500 animate-pulse" : "bg-rose-400"}`} />
-              <Badge variant={isActive ? "success" : "secondary"}>
-                {isActive ? "ON" : "OFF"}
-              </Badge>
-            </div>
-          ) : (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500">
-              N/A
-            </span>
-          )}
-        </div>
-        <p className="text-sm font-medium text-white truncate">
-          {node.name}
-        </p>
-        <p className="text-xs text-slate-400 mt-0.5">{t(getTypeLabel(node.type))}</p>
-
-        {/* 실시간 센서 값 (최대 2개) */}
-        {sensorValues && sensorValues.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-white/5 space-y-1">
-            {sensorValues.slice(0, 2).map((sv) => (
-              <div key={sv.name} className="flex items-center justify-between text-xs">
-                <span className="text-slate-500 truncate mr-2">{sv.name}</span>
-                <span className="font-semibold text-slate-200 whitespace-nowrap">
-                  {sv.value !== null ? sv.value.toFixed(1) : "--"}{" "}
-                  <span className="text-slate-500 font-normal">{sv.unit}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* 마지막 업데이트 시간 */}
-        {lastUpdate && (
-          <p className="text-[10px] text-slate-600 mt-1.5">
-            {new Date(lastUpdate * 1000).toLocaleTimeString("ko-KR")}
-          </p>
-        )}
-
-        {/* 장비 상세 링크 */}
-        <Link
-          href={`/monitoring/${encodeURIComponent(toMonitoringId(node.id))}`}
-          className="mt-2 flex items-center justify-center gap-1 text-xs text-cyan-400 hover:text-cyan-300"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {t("detailView")}
-        </Link>
-      </CardContent>
-    </Card>
-  );
-}
-
 /* ── 메인 페이지 ── */
 
 export default function TopologyPage() {
@@ -315,8 +146,6 @@ export default function TopologyPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<TopologyNode | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [showComponents, setShowComponents] = useState(false);
 
   /* ── 디바이스 상태 맵 생성 ── */
   const deviceStatusMap: Record<string, boolean> = {};
@@ -370,75 +199,27 @@ export default function TopologyPage() {
     });
   }, []);
 
-  /* ── 선택된 노드의 자식 장비 수집 (주요 장비 + 부품 분리) ── */
-  const getChildEquipment = (node: TopologyNode): {
-    mainEquipment: TopologyNode[];
-    components: TopologyNode[];
-  } => {
-    const mainEquipment: TopologyNode[] = [];
-    const components: TopologyNode[] = [];
-    const collect = (n: TopologyNode) => {
-      if (isComponentNode(n)) {
-        components.push(n);
-      } else if (_isEquipmentByLabels(n)) {
-        mainEquipment.push(n);
-      }
-      n.children?.forEach(collect);
-    };
-    node.children?.forEach(collect);
-    return { mainEquipment, components };
-  };
+  /* ── 뷰 모드 결정 ── */
+  const viewMode = useMemo(() => {
+    if (!selectedNode) return "empty";
+    const type = selectedNode.type.toLowerCase();
+    if (type.includes("building")) return "building-overview";
+    if (type.includes("floor") || type.includes("story")) return "floor-detail";
+    if (type.includes("system")) return "system-overview";
+    if (_isEquipmentByLabels(selectedNode)) return "equipment-detail";
+    // zone/room도 하위 장비가 있으면 floor-detail처럼 보여줌
+    return "floor-detail";
+  }, [selectedNode]);
 
-  /* ── 선택된 노드의 자식 센서 수집 ── */
-  const getChildSensors = (node: TopologyNode): TopologyNode[] => {
-    const results: TopologyNode[] = [];
-    const collect = (n: TopologyNode) => {
-      const t = n.type.toLowerCase();
-      if (t.includes("sensor") || t.includes("point")) {
-        results.push(n);
-      }
-      n.children?.forEach(collect);
-    };
-    node.children?.forEach(collect);
-    return results;
-  };
-
-  /* ── 장비에 매칭되는 센서 값 추출 ── */
-  const getSensorValuesForEquipment = useCallback(
-    (eq: TopologyNode): Array<{ name: string; value: number | null; unit: string }> => {
-      const results: Array<{ name: string; value: number | null; unit: string }> = [];
-      const nodeName = eq.name.toLowerCase();
-      const nodeId = eq.id.toLowerCase();
-      for (const [pid, pdata] of Object.entries(points)) {
-        const pidLower = pid.toLowerCase();
-        if (pidLower.includes(nodeName) || pidLower.includes(nodeId)) {
-          const shortName = pid.split(":").pop()?.replace(/_/g, " ") || pid;
-          results.push({
-            name: shortName,
-            value: pdata.value,
-            unit: pdata.unit,
-          });
-        }
-      }
-      return results;
-    },
-    [points]
-  );
-
-  /* ── 장비의 마지막 업데이트 시간 ── */
-  const getLastUpdateForEquipment = useCallback(
-    (eq: TopologyNode): number | null => {
-      const dev = devices[eq.id] || devices[eq.name];
-      return dev?.ts || null;
-    },
-    [devices]
-  );
-
-  /* ── 선택된 노드가 장비인지 ── */
-  const isEquipmentNode = (node: TopologyNode): boolean => {
-    if (isComponentNode(node)) return false;
-    return _isEquipmentByLabels(node);
-  };
+  /* ── 노드 선택 + 트리 확장 핸들러 ── */
+  const handleSelectAndExpand = useCallback((node: TopologyNode) => {
+    setSelectedNode(node);
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.add(node.id);
+      return next;
+    });
+  }, []);
 
   /* ── 렌더 ── */
   return (
@@ -491,8 +272,7 @@ export default function TopologyPage() {
 
         {/* 오른쪽: 상세 영역 */}
         <div className="flex-1 overflow-y-auto p-6">
-          {!selectedNode ? (
-            /* 빈 상태 */
+          {viewMode === "empty" && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Building2 className="h-12 w-12 text-slate-700 mx-auto mb-4" />
@@ -504,389 +284,43 @@ export default function TopologyPage() {
                 </p>
               </div>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {/* 선택된 노드 헤더 */}
-              <div className="flex items-center gap-3">
-                {React.createElement(getTypeIcon(selectedNode.type), {
-                  className: "h-6 w-6 text-cyan-400",
-                })}
-                <div>
-                  <h2 className="text-lg font-semibold text-white">
-                    {selectedNode.name}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <Badge variant="outline">
-                      {t(getTypeLabel(selectedNode.type))}
-                    </Badge>
-                    {selectedNode.labels?.map((l) => (
-                      <Badge key={l} variant="secondary" className="text-[10px]">
-                        {l}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
+          )}
 
-              {/* 장비 노드 선택: 상세 모니터링 링크 */}
-              {isEquipmentNode(selectedNode) && (
-                <Link
-                  href={`/monitoring/${encodeURIComponent(toMonitoringId(selectedNode.id))}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-colors"
-                >
-                  <ExternalLink className="h-3.5 w-3.5" />
-                  {t("equipmentDetail")}
-                </Link>
-              )}
+          {viewMode === "building-overview" && (
+            <BuildingOverview
+              node={selectedNode!}
+              deviceStatusMap={deviceStatusMap}
+              points={points}
+              onSelectFloor={handleSelectAndExpand}
+            />
+          )}
 
-              {/* 장비 노드 선택: 센서 데이터 표시 */}
-              {isEquipmentNode(selectedNode) && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Activity className="h-4 w-4" />
-                      {t("sensorCurrent")}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {(() => {
-                      const sensors = getChildSensors(selectedNode);
-                      // 직접 하위 센서가 없으면 SSE points에서 매칭 시도
-                      const matchedPoints: Array<{
-                        id: string;
-                        name: string;
-                        value: number | null;
-                        unit: string;
-                        quality: string;
-                        ts: number;
-                      }> = [];
+          {viewMode === "floor-detail" && (
+            <FloorDetailView
+              node={selectedNode!}
+              deviceStatusMap={deviceStatusMap}
+              points={points}
+              devices={devices}
+              onSelectEquipment={handleSelectAndExpand}
+            />
+          )}
 
-                      // 1) 자식 센서 노드 기반 매칭
-                      for (const s of sensors) {
-                        const point = points[s.id] || points[s.name];
-                        matchedPoints.push({
-                          id: s.id,
-                          name: s.name,
-                          value: point?.value ?? null,
-                          unit: point?.unit || "",
-                          quality: point?.quality || "N/A",
-                          ts: point?.ts || 0,
-                        });
-                      }
+          {viewMode === "equipment-detail" && (
+            <EquipmentDetailView
+              node={selectedNode!}
+              deviceStatusMap={deviceStatusMap}
+              points={points}
+              devices={devices}
+            />
+          )}
 
-                      // 2) SSE points에서 장비 이름 포함하는 포인트 매칭
-                      if (matchedPoints.length === 0) {
-                        const nodeName = selectedNode.name.toLowerCase();
-                        const nodeId = selectedNode.id.toLowerCase();
-                        for (const [pid, pdata] of Object.entries(points)) {
-                          const pidLower = pid.toLowerCase();
-                          if (
-                            pidLower.includes(nodeName) ||
-                            pidLower.includes(nodeId)
-                          ) {
-                            matchedPoints.push({
-                              id: pid,
-                              name: pid.split(":").pop() || pid,
-                              value: pdata.value,
-                              unit: pdata.unit,
-                              quality: pdata.quality,
-                              ts: pdata.ts,
-                            });
-                          }
-                        }
-                      }
-
-                      if (matchedPoints.length === 0) {
-                        return (
-                          <p className="text-sm text-slate-500 py-4 text-center">
-                            {t("noRealtimeData")}
-                          </p>
-                        );
-                      }
-
-                      return (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="border-b border-white/10">
-                                <th className="text-left py-2 px-3 text-slate-400 font-medium">
-                                  {t("thSensor")}
-                                </th>
-                                <th className="text-right py-2 px-3 text-slate-400 font-medium">
-                                  {t("thValue")}
-                                </th>
-                                <th className="text-left py-2 px-3 text-slate-400 font-medium">
-                                  {t("thUnit")}
-                                </th>
-                                <th className="text-left py-2 px-3 text-slate-400 font-medium">
-                                  {t("thStatus")}
-                                </th>
-                                <th className="text-right py-2 px-3 text-slate-400 font-medium">
-                                  {t("thTime")}
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {matchedPoints.map((mp) => (
-                                <tr
-                                  key={mp.id}
-                                  className="border-b border-white/5 hover:bg-white/5"
-                                >
-                                  <td className="py-2 px-3 font-medium text-slate-200">
-                                    {mp.name}
-                                  </td>
-                                  <td className="py-2 px-3 text-right font-semibold text-white">
-                                    {mp.value !== null
-                                      ? mp.value.toFixed(2)
-                                      : "--"}
-                                  </td>
-                                  <td className="py-2 px-3 text-slate-400">
-                                    {mp.unit}
-                                  </td>
-                                  <td className="py-2 px-3">
-                                    <Badge
-                                      variant={
-                                        mp.quality === "good"
-                                          ? "success"
-                                          : mp.quality !== "N/A"
-                                          ? "warning"
-                                          : "secondary"
-                                      }
-                                    >
-                                      {mp.quality}
-                                    </Badge>
-                                  </td>
-                                  <td className="py-2 px-3 text-right text-xs text-slate-500">
-                                    {mp.ts
-                                      ? new Date(
-                                          mp.ts * 1000
-                                        ).toLocaleTimeString("ko-KR")
-                                      : "-"}
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    })()}
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* 층/존 선택: 하위 장비 목록 */}
-              {!isEquipmentNode(selectedNode) &&
-                selectedNode.children &&
-                selectedNode.children.length > 0 &&
-                (() => {
-                  const { mainEquipment, components } = getChildEquipment(selectedNode);
-                  return (
-                    <>
-                      {/* 뷰 모드 토글 */}
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-slate-200">
-                          {t("childEquipment", { count: mainEquipment.length })}
-                        </h3>
-                        <div className="flex items-center gap-1 border border-white/10 rounded-lg p-0.5">
-                          <Button
-                            variant={viewMode === "grid" ? "secondary" : "ghost"}
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => setViewMode("grid")}
-                          >
-                            <LayoutGrid className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant={viewMode === "list" ? "secondary" : "ghost"}
-                            size="sm"
-                            className="h-7 px-2"
-                            onClick={() => setViewMode("list")}
-                          >
-                            <List className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {viewMode === "grid" ? (
-                        /* 그리드 뷰 */
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                          {mainEquipment.map((eq) => {
-                            const eqSimulated = eq.name in deviceStatusMap || eq.id in deviceStatusMap;
-                            const isActive = eqSimulated
-                              ? (deviceStatusMap[eq.name] || deviceStatusMap[eq.id] || false)
-                              : false;
-                            return (
-                              <div
-                                key={eq.id}
-                                className="cursor-pointer"
-                                onClick={() => {
-                                  setSelectedNode(eq);
-                                  setExpandedIds((prev) => {
-                                    const next = new Set(prev);
-                                    next.add(eq.id);
-                                    return next;
-                                  });
-                                }}
-                              >
-                                <EquipmentCard
-                                  node={eq}
-                                  isActive={isActive}
-                                  isSimulated={eqSimulated}
-                                  sensorValues={getSensorValuesForEquipment(eq)}
-                                  lastUpdate={getLastUpdateForEquipment(eq)}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        /* 리스트 뷰 */
-                        <Card>
-                          <CardContent className="p-0">
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-sm">
-                                <thead>
-                                  <tr className="border-b border-white/10">
-                                    <th className="text-left py-2.5 px-4 text-slate-400 font-medium">
-                                      {t("thName")}
-                                    </th>
-                                    <th className="text-left py-2.5 px-4 text-slate-400 font-medium">
-                                      {t("thType")}
-                                    </th>
-                                    <th className="text-center py-2.5 px-4 text-slate-400 font-medium">
-                                      {t("thStatus")}
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {mainEquipment.map((eq) => {
-                                    const eqSim = eq.name in deviceStatusMap || eq.id in deviceStatusMap;
-                                    const isActive = eqSim
-                                      ? (deviceStatusMap[eq.name] || deviceStatusMap[eq.id] || false)
-                                      : false;
-                                    return (
-                                      <tr
-                                        key={eq.id}
-                                        className="border-b border-white/5 hover:bg-white/5 cursor-pointer"
-                                        onClick={() => {
-                                          setSelectedNode(eq);
-                                          setExpandedIds((prev) => {
-                                            const next = new Set(prev);
-                                            next.add(eq.id);
-                                            return next;
-                                          });
-                                        }}
-                                      >
-                                        <td className="py-2.5 px-4 font-medium text-white">
-                                          {eq.name}
-                                        </td>
-                                        <td className="py-2.5 px-4">
-                                          <Badge variant="outline">
-                                            {t(getTypeLabel(eq.type))}
-                                          </Badge>
-                                        </td>
-                                        <td className="py-2.5 px-4 text-center">
-                                          {eqSim ? (
-                                            <Badge variant={isActive ? "success" : "secondary"}>
-                                              {isActive ? "ON" : "OFF"}
-                                            </Badge>
-                                          ) : (
-                                            <span className="text-xs text-slate-500">N/A</span>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                            {mainEquipment.length === 0 && (
-                              <div className="py-8 text-center text-sm text-slate-500">
-                                {t("noChildEquipment")}
-                              </div>
-                            )}
-                          </CardContent>
-                        </Card>
-                      )}
-
-                      {/* 부품 접힘 섹션 */}
-                      {components.length > 0 && (
-                        <div className="mt-4">
-                          <button
-                            className="flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
-                            onClick={() => setShowComponents(!showComponents)}
-                          >
-                            {showComponents ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                            {t("childComponents", { count: components.length })}
-                          </button>
-                          {showComponents && (
-                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                              {components.map((comp) => {
-                                const compSim = comp.name in deviceStatusMap || comp.id in deviceStatusMap;
-                                const isActive = compSim
-                                  ? (deviceStatusMap[comp.name] || deviceStatusMap[comp.id] || false)
-                                  : false;
-                                return (
-                                  <Card
-                                    key={comp.id}
-                                    className="border-dashed opacity-70 cursor-pointer hover:opacity-100 transition-opacity"
-                                    onClick={() => {
-                                      setSelectedNode(comp);
-                                      setExpandedIds((prev) => {
-                                        const next = new Set(prev);
-                                        next.add(comp.id);
-                                        return next;
-                                      });
-                                    }}
-                                  >
-                                    <CardContent className="pt-3 pb-2 px-3">
-                                      <div className="flex items-center justify-between mb-1">
-                                        <Cpu className="h-4 w-4 text-slate-600" />
-                                        {compSim ? (
-                                          <Badge variant={isActive ? "success" : "secondary"} className="text-[10px]">
-                                            {isActive ? "ON" : "OFF"}
-                                          </Badge>
-                                        ) : (
-                                          <span className="text-[10px] text-slate-500">N/A</span>
-                                        )}
-                                      </div>
-                                      <p className="text-sm text-slate-400 truncate">{comp.name}</p>
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500">
-                                          {t("componentTag")}
-                                        </span>
-                                        {comp.labels?.map((l) => (
-                                          <span key={l} className="text-[10px] text-slate-600">{l}</span>
-                                        ))}
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-
-              {/* 자식 없는 비장비 노드 */}
-              {!isEquipmentNode(selectedNode) &&
-                (!selectedNode.children ||
-                  selectedNode.children.length === 0) && (
-                  <div className="text-center py-12">
-                    <MapPin className="h-8 w-8 text-slate-700 mx-auto mb-3" />
-                    <p className="text-sm text-slate-500">
-                      {t("noChildNodes")}
-                    </p>
-                  </div>
-                )}
-            </div>
+          {viewMode === "system-overview" && (
+            <SystemOverview
+              node={selectedNode!}
+              deviceStatusMap={deviceStatusMap}
+              points={points}
+              onSelectNode={handleSelectAndExpand}
+            />
           )}
         </div>
       </div>

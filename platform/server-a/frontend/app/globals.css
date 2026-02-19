@@ -97,3 +97,44 @@ body {
 .text-glow-emerald {
   text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
 }
+
+/* 토폴로지 플로우 커넥터 유틸리티 */
+.flow-line-h {
+  width: 24px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.3), transparent);
+  flex-shrink: 0;
+}
+
+.flow-line-v {
+  width: 2px;
+  height: 24px;
+  background: linear-gradient(180deg, transparent, rgba(34, 211, 238, 0.3), transparent);
+  margin: 0 auto;
+}
+
+.flow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(34, 211, 238, 0.5);
+  flex-shrink: 0;
+}
+
+.flow-arrow-down {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid rgba(34, 211, 238, 0.4);
+  margin: 0 auto;
+}
+
+.flow-arrow-right {
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 7px solid rgba(34, 211, 238, 0.4);
+  flex-shrink: 0;
+}

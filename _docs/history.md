@@ -2769,6 +2769,86 @@ Phase 1(Foundation) 완료 후 Phase 2(3개 에이전트 병렬) → Phase 3(빌
 | 차트 | `charts/live-chart.tsx` | Recharts 다크 테마 |
 | 층별 | `floors/*.tsx` (4개) | 다크 히트맵/카드/리스트/상세 |
 
+## 33. 토폴로지 페이지 리디자인 — 3D 프로세스 플로우 (2026.02.20)
+
+### 33.1 배경
+
+섹션 32에서 전체 다크 글래스모피즘 테마 적용 완료 후, 토폴로지 페이지를 **3D 디지털 트윈 프로세스 플로우** 스타일로 전면 리디자인.
+기존: 왼쪽 트리 + 오른쪽 장비 그리드/리스트 단순 뷰 (896줄 단일 파일).
+변경: 왼쪽 트리 유지 + 오른쪽 **4가지 뷰 모드** (건물 개요 / 층 상세 / 장비 상세 / 시스템 개요) 프로세스 플로우 다이어그램.
+
+### 33.2 Agent Teams 실행
+
+TeamCreate로 `topology-redesign` 팀 구성, 2명 병렬 작업:
+
+| 팀원 | 역할 | 파일 수 | 결과 |
+|------|------|:------:|------|
+| component-builder | 신규 컴포넌트 9개 + CSS 유틸리티 | 10 | 완료 |
+| page-integrator | page.tsx 리팩토링 + i18n 키 30+ | 3 | 완료 |
+
+### 33.3 신규 컴포넌트 (`components/topology/`)
+
+| 파일 | 줄 수 | 역할 |
+|------|:-----:|------|
+| `utils.ts` | 77 | 유틸 함수 추출 (getTypeIcon, _isEquipmentByLabels 등) |
+| `flow-card.tsx` | 80 | 층/장비 공통 플로우 카드 (상태배지, 가동률바, 센서카운트) |
+| `flow-connector.tsx` | 29 | CSS 기반 플로우 연결선 (수평/수직/화살표) |
+| `group-container.tsx` | 50 | 색상 테두리 그룹 래퍼 (cyan/purple/emerald/amber/slate) |
+| `status-indicator.tsx` | 72 | NORMAL/WARNING/CRITICAL 상태 배지 + 가동률 바 |
+| `building-overview.tsx` | 183 | 건물 개요 뷰 — 지상/지하/옥상 그룹 + 층 카드 플로우 |
+| `floor-detail-view.tsx` | 327 | 층 상세 뷰 — 룸 그리드 + 장비 카테고리별 프로세스 플로우 + 환경 |
+| `equipment-detail-view.tsx` | 264 | 장비 상세 뷰 — 히어로 카드 + 부품 + 센서 테이블 + 모니터링 링크 |
+| `system-overview.tsx` | 167 | 시스템 개요 뷰 — BAS 등 시스템 하위 장비 카테고리 플로우 |
+
+### 33.4 4가지 뷰 모드
+
+**1. BuildingOverview** (GEC_Tower_B 클릭)
+- 층을 3그룹(지상 사무층/지하 기계층/옥상)으로 분류, GroupContainer(cyan/purple/emerald)로 묶음
+- 각 층 FlowCard: 이름, 타입배지, 장비 가동률 프로그레스 바, E:n S:n 카운트
+- 그룹 간 FlowConnector(수직 화살표) 연결
+
+**2. FloorDetailView** (특정 층 클릭)
+- 공간 섹션: Room 카드 그리드 (이름, 타입, 면적, 환경센서값) — getFloorDetails API 활용
+- 장비 프로세스 플로우: 카테고리별 GroupContainer (HVAC/전기/수배관/기타)
+- 환경 요약: 온도/습도/CO2 대시 카드 (SSE 실시간)
+
+**3. EquipmentDetailView** (장비 클릭)
+- 히어로 카드: 상태(ON/OFF), 운전 모드(auto/standby), 마지막 업데이트
+- 하위 부품 FlowCard 그리드
+- 센서 현재값 테이블
+- 모니터링 상세 링크 (`/monitoring/{id}`)
+
+**4. SystemOverview** (BAS 등 시스템 노드 클릭)
+- 하위 장비를 카테고리별 GroupContainer + FlowCard로 표시
+- BuildingOverview와 유사한 레이아웃이나 장비 카드 기반
+
+### 33.5 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `app/topology/page.tsx` | 896줄 → 329줄 (뷰 라우팅 구조로 리팩토링) |
+| `app/globals.css` | flow-line-h/v, flow-dot, flow-arrow CSS 유틸리티 추가 |
+| `messages/ko.json` | topology 섹션 30+ 키 추가 |
+| `messages/en.json` | topology 섹션 30+ 키 추가 |
+
+### 33.6 핵심 디자인 요소
+
+- **FlowCard**: dark glass bg + 상태 배지(emerald/amber/rose) + 가동률 바 + 센서 카운트
+- **GroupContainer**: `border-l-2 border-{color}-500/50 bg-{color}-500/5` 색상 그룹 래퍼
+- **FlowConnector**: CSS linear-gradient 기반 연결선 (SVG 없음)
+- **카테고리 분류**: HVAC(cyan), 전기(amber), 수배관(indigo), 기타(slate)
+- **SSE 실시간**: 장비 ON/OFF, 센서값, 가동률 모두 실시간 반영
+
+### 33.7 검증
+
+| 항목 | 결과 |
+|------|------|
+| `npx next build` | 21페이지 0 errors |
+| Docker 재배포 | `bees-frontend` 정상 가동 |
+| `/topology` 접속 | 200 OK |
+| page.tsx 축소율 | 896줄 → 329줄 (63% 축소) |
+| 신규 컴포넌트 | 9개, 총 1,249줄 |
+
 ---
 
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*
