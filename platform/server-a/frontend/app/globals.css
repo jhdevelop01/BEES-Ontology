@@ -2,10 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 기본 스타일 */
+/* 기본 스타일 — 디지털 트윈 다크 테마 */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
+  background: linear-gradient(135deg, #020617 0%, #0c1a3a 50%, #020617 100%);
+  min-height: 100vh;
 }
 
 /* 애니메이션 */
@@ -29,24 +31,69 @@ body {
   }
 }
 
+@keyframes slide-in-from-top-2 {
+  from {
+    transform: translateY(-8px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 .animate-in {
   animation: fade-in 0.2s ease-out, slide-in-from-bottom-2 0.2s ease-out;
 }
 
-/* 스크롤바 커스텀 */
+/* 다크 스크롤바 */
 ::-webkit-scrollbar {
   width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(15, 23, 42, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: rgba(148, 163, 184, 0.5);
+}
+
+/* 글래스모피즘 유틸리티 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 그리드 배경 패턴 (3D depth) */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* 네온 텍스트 글로우 */
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+}
+
+.text-glow-emerald {
+  text-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
 }

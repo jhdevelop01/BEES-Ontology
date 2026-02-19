@@ -99,7 +99,7 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
         </CardTitle>
         {hasData && (
           <div className="flex items-center gap-4 text-sm">
-            <span className="font-semibold text-amber-600">
+            <span className="font-semibold text-amber-400">
               {t("energyTotalKwh", { value: totalKwh.toLocaleString() })}
             </span>
             <span className="text-muted-foreground">
@@ -117,21 +117,21 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
             >
               <defs>
                 <linearGradient id="kwhGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05} />
+                  <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
               <XAxis
                 dataKey="time"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: '#94a3b8' }}
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
               />
               <YAxis
                 yAxisId="kwh"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: '#94a3b8' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => v.toLocaleString()}
@@ -140,7 +140,7 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
               <YAxis
                 yAxisId="kw"
                 orientation="right"
-                tick={{ fontSize: 11 }}
+                tick={{ fontSize: 11, fill: '#94a3b8' }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: number) => v.toLocaleString()}
@@ -154,11 +154,13 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
                   }
                   return [`${value.toLocaleString()} kW`, t("energyTooltipPower")];
                 }}
-                labelStyle={{ fontWeight: 600 }}
+                labelStyle={{ fontWeight: 600, color: '#e2e8f0' }}
                 contentStyle={{
                   fontSize: 12,
                   borderRadius: 8,
-                  border: "1px solid #e5e7eb",
+                  background: 'rgba(15,23,42,0.9)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#e2e8f0',
                 }}
               />
               <Legend
@@ -168,13 +170,13 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
                   return value;
                 }}
                 iconSize={10}
-                wrapperStyle={{ fontSize: 11 }}
+                wrapperStyle={{ fontSize: 11, color: '#94a3b8' }}
               />
               <Area
                 yAxisId="kwh"
                 type="monotone"
                 dataKey="cumulativeKwh"
-                stroke="#f59e0b"
+                stroke="#fbbf24"
                 strokeWidth={2}
                 fill="url(#kwhGradient)"
                 dot={false}
@@ -193,7 +195,7 @@ export function WidgetEnergyTrend({ profileData }: WidgetEnergyTrendProps) {
             </ComposedChart>
           </ResponsiveContainer>
         ) : (
-          <div className="flex items-center justify-center h-48 text-sm text-gray-400">
+          <div className="flex items-center justify-center h-48 text-sm text-slate-500">
             {t("energyNoData")}
           </div>
         )}

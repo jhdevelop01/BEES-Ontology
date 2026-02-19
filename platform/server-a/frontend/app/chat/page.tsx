@@ -58,7 +58,7 @@ function CypherBlock({ queries }: { queries: string[] }) {
   return (
     <div className="mt-2">
       <button
-        className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+        className="flex items-center gap-1 text-xs text-slate-400 hover:text-slate-200"
         onClick={() => setOpen(!open)}
       >
         {open ? (
@@ -74,7 +74,7 @@ function CypherBlock({ queries }: { queries: string[] }) {
           {queries.map((q, i) => (
             <pre
               key={i}
-              className="bg-gray-900 text-green-400 text-xs p-2.5 rounded-md overflow-x-auto"
+              className="bg-black/40 text-green-400 text-xs p-2.5 rounded-md overflow-x-auto border border-white/5"
             >
               {q}
             </pre>
@@ -187,20 +187,20 @@ export default function ChatPage() {
       <Header title={t("title")} description={t("description")} />
 
       {/* 상태 바 */}
-      <div className="px-6 py-2 border-b border-gray-100 flex items-center gap-2">
+      <div className="px-6 py-2 border-b border-white/10 flex items-center gap-2">
         {statusLoading ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-400" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-500" />
         ) : status?.available ? (
           <>
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-            <span className="text-xs text-green-600">
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="text-xs text-emerald-400">
               {t("connected", { model: status.model || "GPT-4o" })}
             </span>
           </>
         ) : (
           <>
-            <AlertCircle className="h-3.5 w-3.5 text-yellow-500" />
-            <span className="text-xs text-yellow-600">{t("apiKeyNotSet")}</span>
+            <AlertCircle className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-xs text-amber-400">{t("apiKeyNotSet")}</span>
           </>
         )}
       </div>
@@ -211,13 +211,13 @@ export default function ChatPage() {
           /* 빈 상태 */
           <div className="flex items-center justify-center h-full">
             <div className="text-center max-w-lg">
-              <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4">
-                <MessageCircle className="h-8 w-8 text-blue-500" />
+              <div className="w-16 h-16 rounded-full bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
+                <MessageCircle className="h-8 w-8 text-cyan-400" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              <h2 className="text-xl font-semibold text-white mb-2">
                 {t("assistantTitle")}
               </h2>
-              <p className="text-sm text-gray-500 mb-6">
+              <p className="text-sm text-slate-400 mb-6">
                 {t("assistantDesc")}
               </p>
 
@@ -226,7 +226,7 @@ export default function ChatPage() {
                 {EXAMPLE_QUESTIONS.map((q) => (
                   <button
                     key={q}
-                    className="text-left px-3 py-2.5 text-sm text-gray-600 bg-gray-50 hover:bg-blue-50 hover:text-blue-700 rounded-lg border border-gray-200 hover:border-blue-200 transition-colors"
+                    className="text-left px-3 py-2.5 text-sm text-slate-300 bg-white/5 hover:bg-cyan-500/10 hover:text-cyan-300 rounded-lg border border-white/10 hover:border-cyan-500/20 transition-colors"
                     onClick={() => handleSend(t(q))}
                   >
                     {t(q)}
@@ -247,8 +247,8 @@ export default function ChatPage() {
               >
                 {/* 어시스턴트 아바타 */}
                 {msg.role === "assistant" && (
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-blue-600" />
+                  <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-4 w-4 text-cyan-400" />
                   </div>
                 )}
 
@@ -261,15 +261,15 @@ export default function ChatPage() {
                   <Card
                     className={`${
                       msg.role === "user"
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white"
+                        ? "bg-cyan-500/10 border-cyan-500/20"
+                        : "bg-white/5"
                     }`}
                   >
                     <CardContent className="p-3">
                       {/* 메시지 본문 */}
                       <div
                         className={`text-sm whitespace-pre-wrap ${
-                          msg.role === "user" ? "text-white" : "text-gray-800"
+                          msg.role === "user" ? "text-white" : "text-slate-200"
                         }`}
                       >
                         {msg.content}
@@ -297,8 +297,8 @@ export default function ChatPage() {
 
                       {/* 출처 */}
                       {msg.sources && msg.sources.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-gray-100">
-                          <p className="text-[10px] text-gray-400 mb-1">
+                        <div className="mt-2 pt-2 border-t border-white/10">
+                          <p className="text-[10px] text-slate-500 mb-1">
                             {t("sources")}
                           </p>
                           <div className="flex flex-wrap gap-1">
@@ -321,8 +321,8 @@ export default function ChatPage() {
                   <p
                     className={`text-[10px] mt-1 ${
                       msg.role === "user"
-                        ? "text-right text-gray-400"
-                        : "text-gray-400"
+                        ? "text-right text-slate-500"
+                        : "text-slate-500"
                     }`}
                   >
                     {msg.timestamp.toLocaleTimeString("ko-KR", {
@@ -334,8 +334,8 @@ export default function ChatPage() {
 
                 {/* 사용자 아바타 */}
                 {msg.role === "user" && (
-                  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-gray-600" />
+                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 text-slate-300" />
                   </div>
                 )}
               </div>
@@ -344,12 +344,12 @@ export default function ChatPage() {
             {/* 로딩 인디케이터 */}
             {loading && (
               <div className="flex gap-3 justify-start">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <Bot className="h-4 w-4 text-blue-600" />
+                <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                  <Bot className="h-4 w-4 text-cyan-400" />
                 </div>
-                <Card className="bg-white">
+                <Card className="bg-white/5">
                   <CardContent className="p-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-slate-400">
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span>{t("loadingData")}</span>
                     </div>
@@ -364,13 +364,13 @@ export default function ChatPage() {
       </div>
 
       {/* 입력 바 */}
-      <div className="border-t border-gray-200 bg-white p-4">
+      <div className="border-t border-white/10 bg-white/5 backdrop-blur-xl p-4">
         <div className="max-w-3xl mx-auto flex items-center gap-3">
           <input
             ref={inputRef}
             type="text"
             placeholder={t("inputPlaceholder")}
-            className="flex-1 px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-4 py-2.5 text-sm bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}

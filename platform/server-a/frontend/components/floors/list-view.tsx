@@ -96,44 +96,44 @@ function sortData(
 }
 
 function fmt(value: number | null, decimals = 1): string {
-  if (value === null || value === undefined) return "—";
+  if (value === null || value === undefined) return "\u2014";
   return value.toFixed(decimals);
 }
 
 /** Temperature text color based on thresholds */
 function tempTextClass(temp: number | null): string {
-  if (temp === null) return "text-gray-400";
-  if (temp > 28 || temp < 18) return "text-red-600 font-medium";
-  if (temp > 26 || temp < 20) return "text-amber-600 font-medium";
+  if (temp === null) return "text-slate-500";
+  if (temp > 28 || temp < 18) return "text-rose-400 font-medium";
+  if (temp > 26 || temp < 20) return "text-amber-400 font-medium";
   return "";
 }
 
 /** CO2 text color based on thresholds */
 function co2TextClass(co2: number | null): string {
-  if (co2 === null) return "text-gray-400";
-  if (co2 > 1000) return "text-red-600 font-medium";
-  if (co2 > 800) return "text-amber-600 font-medium";
+  if (co2 === null) return "text-slate-500";
+  if (co2 > 1000) return "text-rose-400 font-medium";
+  if (co2 > 800) return "text-amber-400 font-medium";
   return "";
 }
 
 /** Status dot color */
 function statusDotClass(status: FloorData["status"]): string {
-  if (status === "critical") return "bg-red-500";
+  if (status === "critical") return "bg-rose-500";
   if (status === "warning") return "bg-amber-400";
   return "bg-emerald-500";
 }
 
 /** Status text color */
 function statusTextClass(status: FloorData["status"]): string {
-  if (status === "critical") return "text-red-600 font-medium";
-  if (status === "warning") return "text-amber-600 font-medium";
-  return "text-emerald-600";
+  if (status === "critical") return "text-rose-400 font-medium";
+  if (status === "warning") return "text-amber-400 font-medium";
+  return "text-emerald-400";
 }
 
 /** Alarm text color */
 function alarmTextClass(floor: FloorData): string {
-  if (floor.alarmCritical > 0) return "text-red-600 font-medium";
-  if (floor.alarmWarning > 0) return "text-amber-600 font-medium";
+  if (floor.alarmCritical > 0) return "text-rose-400 font-medium";
+  if (floor.alarmWarning > 0) return "text-amber-400 font-medium";
   return "";
 }
 
@@ -192,21 +192,21 @@ export default function ListView({ data, onSelectFloor }: ListViewProps) {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             {/* ---- Header ---- */}
-            <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
+            <thead className="sticky top-0 z-10 bg-white/[0.02] border-b border-white/10">
               <tr>
                 {COLUMNS.map((col) => (
                   <th
                     key={col.key}
-                    className={`px-4 py-3 font-medium text-gray-600 select-none cursor-pointer hover:bg-gray-100 transition-colors whitespace-nowrap ${alignClass(col.align)}`}
+                    className={`px-4 py-3 font-medium text-slate-400 select-none cursor-pointer hover:bg-white/5 transition-colors whitespace-nowrap ${alignClass(col.align)}`}
                     onClick={() => handleSort(col.key)}
                   >
                     <span className="inline-flex items-center gap-1">
                       {t(col.labelKey)}
                       {sortKey === col.key &&
                         (sortDir === "asc" ? (
-                          <ChevronUp className="h-3.5 w-3.5 text-gray-900" />
+                          <ChevronUp className="h-3.5 w-3.5 text-white" />
                         ) : (
-                          <ChevronDown className="h-3.5 w-3.5 text-gray-900" />
+                          <ChevronDown className="h-3.5 w-3.5 text-white" />
                         ))}
                     </span>
                   </th>
@@ -215,12 +215,12 @@ export default function ListView({ data, onSelectFloor }: ListViewProps) {
             </thead>
 
             {/* ---- Body ---- */}
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-white/5">
               {sorted.length === 0 ? (
                 <tr>
                   <td
                     colSpan={COLUMNS.length}
-                    className="px-4 py-8 text-center text-gray-400"
+                    className="px-4 py-8 text-center text-slate-500"
                   >
                     {t("noData")}
                   </td>
@@ -242,11 +242,11 @@ export default function ListView({ data, onSelectFloor }: ListViewProps) {
                   return (
                     <tr
                       key={floor.key}
-                      className="cursor-pointer hover:bg-gray-50 transition-colors"
+                      className="cursor-pointer hover:bg-white/5 transition-colors"
                       onClick={() => onSelectFloor(floor.key)}
                     >
                       {/* Floor */}
-                      <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">
+                      <td className="px-4 py-3 font-semibold text-white whitespace-nowrap">
                         {floor.label}
                       </td>
 
@@ -267,17 +267,17 @@ export default function ListView({ data, onSelectFloor }: ListViewProps) {
                         className={`px-4 py-3 text-right whitespace-nowrap ${tempTextClass(floor.temperature)}`}
                       >
                         {floor.temperature !== null
-                          ? `${fmt(floor.temperature)}°C`
-                          : "—"}
+                          ? `${fmt(floor.temperature)}\u00B0C`
+                          : "\u2014"}
                       </td>
 
                       {/* Humidity */}
                       <td
-                        className={`px-4 py-3 text-right whitespace-nowrap ${floor.humidity === null ? "text-gray-400" : ""}`}
+                        className={`px-4 py-3 text-right whitespace-nowrap ${floor.humidity === null ? "text-slate-500" : ""}`}
                       >
                         {floor.humidity !== null
                           ? `${fmt(floor.humidity, 0)}%`
-                          : "—"}
+                          : "\u2014"}
                       </td>
 
                       {/* CO2 */}
@@ -286,33 +286,33 @@ export default function ListView({ data, onSelectFloor }: ListViewProps) {
                       >
                         {floor.co2 !== null
                           ? `${fmt(floor.co2, 0)} ppm`
-                          : "—"}
+                          : "\u2014"}
                       </td>
 
                       {/* Power */}
                       <td
-                        className={`px-4 py-3 text-right whitespace-nowrap ${floor.powerKw === null ? "text-gray-400" : ""}`}
+                        className={`px-4 py-3 text-right whitespace-nowrap ${floor.powerKw === null ? "text-slate-500" : ""}`}
                       >
                         {floor.powerKw !== null
                           ? `${fmt(floor.powerKw)} kW`
-                          : "—"}
+                          : "\u2014"}
                       </td>
 
                       {/* Energy kWh */}
                       <td
-                        className={`px-4 py-3 text-right whitespace-nowrap ${floor.energyKwh === null ? "text-gray-400" : ""}`}
+                        className={`px-4 py-3 text-right whitespace-nowrap ${floor.energyKwh === null ? "text-slate-500" : ""}`}
                       >
                         {floor.energyKwh !== null
                           ? `${fmt(floor.energyKwh, 0)} kWh`
-                          : "—"}
+                          : "\u2014"}
                       </td>
 
                       {/* Equipment */}
                       <td className="px-4 py-3 text-right whitespace-nowrap">
-                        <span className="text-gray-700">
+                        <span className="text-slate-200">
                           {floor.activeEquipment}
                         </span>
-                        <span className="text-gray-400">
+                        <span className="text-slate-500">
                           {" / "}
                           {floor.totalEquipment}
                         </span>
@@ -322,7 +322,7 @@ export default function ListView({ data, onSelectFloor }: ListViewProps) {
                       <td
                         className={`px-4 py-3 text-right whitespace-nowrap ${alarmTextClass(floor)}`}
                       >
-                        {totalAlarms > 0 ? totalAlarms : "—"}
+                        {totalAlarms > 0 ? totalAlarms : "\u2014"}
                       </td>
                     </tr>
                   );

@@ -42,7 +42,7 @@ export function LiveChart({
   data,
   title,
   unit = "",
-  color = "#3b82f6",
+  color = "#22d3ee",
   height = 200,
   yMin,
   yMax,
@@ -51,30 +51,31 @@ export function LiveChart({
   return (
     <div>
       {title && (
-        <p className="text-sm font-medium text-gray-700 mb-2">{title}</p>
+        <p className="text-sm font-medium text-slate-200 mb-2">{title}</p>
       )}
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
           <XAxis
             dataKey="time"
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickLine={false}
-            axisLine={{ stroke: "#e5e7eb" }}
+            stroke="rgba(148,163,184,0.3)"
           />
           <YAxis
             domain={[yMin ?? "auto", yMax ?? "auto"]}
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickLine={false}
-            axisLine={{ stroke: "#e5e7eb" }}
+            stroke="rgba(148,163,184,0.3)"
             unit={unit ? ` ${unit}` : ""}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              fontSize: "12px",
+              background: 'rgba(15,23,42,0.9)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              color: '#e2e8f0',
+              fontSize: '12px',
             }}
             formatter={(value: number) => [
               `${value.toFixed(1)}${unit ? ` ${unit}` : ""}`,
@@ -124,32 +125,33 @@ export function MultiLineChart({
   return (
     <div>
       {title && (
-        <p className="text-sm font-medium text-gray-700 mb-2">{title}</p>
+        <p className="text-sm font-medium text-slate-200 mb-2">{title}</p>
       )}
       <ResponsiveContainer width="100%" height={height}>
         <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
           <XAxis
             dataKey="time"
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickLine={false}
-            axisLine={{ stroke: "#e5e7eb" }}
+            stroke="rgba(148,163,184,0.3)"
           />
           <YAxis
-            tick={{ fontSize: 10, fill: "#9ca3af" }}
+            tick={{ fontSize: 10, fill: '#94a3b8' }}
             tickLine={false}
-            axisLine={{ stroke: "#e5e7eb" }}
+            stroke="rgba(148,163,184,0.3)"
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              fontSize: "12px",
+              background: 'rgba(15,23,42,0.9)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              color: '#e2e8f0',
+              fontSize: '12px',
             }}
           />
           <Legend
-            wrapperStyle={{ fontSize: "12px" }}
+            wrapperStyle={{ fontSize: "12px", color: "#94a3b8" }}
           />
           {lines.map((line) => (
             <Line

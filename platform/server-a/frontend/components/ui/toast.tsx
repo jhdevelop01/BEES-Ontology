@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-/* 토스트 알림 컴포넌트 */
+/* 토스트 알림 컴포넌트 — 디지털 트윈 다크 테마 */
 
 export interface Toast {
   id: string;
@@ -68,13 +68,13 @@ function ToastContainer({
         <div
           key={toast.id}
           className={cn(
-            "rounded-lg px-4 py-3 shadow-lg border max-w-sm animate-in fade-in slide-in-from-bottom-2",
+            "rounded-lg px-4 py-3 shadow-glow border max-w-sm animate-in backdrop-blur-xl",
             toast.variant === "success" &&
-              "bg-green-50 border-green-200 text-green-800",
+              "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
             toast.variant === "error" &&
-              "bg-red-50 border-red-200 text-red-800",
+              "bg-rose-500/10 border-rose-500/20 text-rose-300",
             (!toast.variant || toast.variant === "default") &&
-              "bg-white border-gray-200 text-gray-900"
+              "bg-white/5 border-white/10 text-white"
           )}
         >
           <div className="flex items-start justify-between gap-2">
@@ -86,7 +86,7 @@ function ToastContainer({
             </div>
             <button
               onClick={() => onRemove(toast.id)}
-              className="text-gray-400 hover:text-gray-600 text-sm"
+              className="text-slate-500 hover:text-slate-300 text-sm"
             >
               x
             </button>

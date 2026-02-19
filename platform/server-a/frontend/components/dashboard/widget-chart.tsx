@@ -24,13 +24,13 @@ export function WidgetChart({ data }: WidgetChartProps) {
           <LiveChart
             data={data}
             unit="°C"
-            color="#3b82f6"
+            color="#22d3ee"
             height={200}
             yMin={10}
             yMax={30}
           />
         ) : (
-          <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+          <div className="flex items-center justify-center h-full text-slate-500 text-sm">
             <div className="text-center">
               <Radio className="h-8 w-8 mx-auto mb-2 opacity-30" />
               <p>{t("waitingData")}</p>

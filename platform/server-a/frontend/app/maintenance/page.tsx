@@ -206,12 +206,12 @@ export default function MaintenancePage() {
               </CardHeader>
               <CardContent>
                 {loading ? (
-                  <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
+                  <div className="flex items-center justify-center py-12 text-slate-500 text-sm">
                     <Loader2 className="h-5 w-5 animate-spin mr-2" />
                     {tc("loading")}
                   </div>
                 ) : workOrders.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400 text-sm">
+                  <div className="text-center py-12 text-slate-500 text-sm">
                     <Wrench className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p>{t("noWorkOrders")}</p>
                   </div>
@@ -219,21 +219,21 @@ export default function MaintenancePage() {
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thId")}</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thEquipment")}</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thTitle")}</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thPriority")}</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
-                          <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thAssignee")}</th>
-                          <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thCreatedAt")}</th>
+                        <tr className="border-b border-white/10">
+                          <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thId")}</th>
+                          <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thEquipment")}</th>
+                          <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thTitle")}</th>
+                          <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thPriority")}</th>
+                          <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thStatus")}</th>
+                          <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thAssignee")}</th>
+                          <th className="text-right py-2 px-3 text-slate-400 font-medium">{t("thCreatedAt")}</th>
                         </tr>
                       </thead>
                       <tbody>
                         {workOrders.map((wo) => (
                           <tr
                             key={wo.id}
-                            className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
+                            className="border-b border-white/5 hover:bg-white/5 cursor-pointer"
                             onClick={() => handleRowClick(wo)}
                           >
                             <td className="py-2 px-3 font-mono text-xs">#{wo.id}</td>
@@ -251,10 +251,10 @@ export default function MaintenancePage() {
                                 {t(STATUS_LABEL_KEY[wo.status] || wo.status)}
                               </Badge>
                             </td>
-                            <td className="py-2 px-3 text-xs text-gray-500">
+                            <td className="py-2 px-3 text-xs text-slate-400">
                               {wo.assigned_to_name || (wo.assigned_to ? `User#${wo.assigned_to}` : "-")}
                             </td>
-                            <td className="py-2 px-3 text-right text-xs text-gray-400">
+                            <td className="py-2 px-3 text-right text-xs text-slate-500">
                               {new Date(wo.created_at).toLocaleDateString("ko-KR")}
                             </td>
                           </tr>
@@ -275,7 +275,7 @@ export default function MaintenancePage() {
                     >
                       {tc("previous")}
                     </Button>
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-slate-400">
                       {tc("pageOf", { page, totalPages: Math.ceil(total / 20) })}
                     </span>
                     <Button
@@ -331,7 +331,7 @@ export default function MaintenancePage() {
             </CardHeader>
             <CardContent>
               {calendarLoading ? (
-                <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
+                <div className="flex items-center justify-center py-12 text-slate-500 text-sm">
                   <Loader2 className="h-5 w-5 animate-spin mr-2" />
                   {tc("loading")}
                 </div>
@@ -392,31 +392,31 @@ function CalendarGrid({ month, events }: { month: string; events: CalendarEvent[
   const cells = [];
   // 빈 셀
   for (let i = 0; i < firstDay; i++) {
-    cells.push(<div key={`empty-${i}`} className="h-20 border border-gray-50" />);
+    cells.push(<div key={`empty-${i}`} className="h-20 border border-white/5" />);
   }
   // 날짜 셀
   for (let day = 1; day <= daysInMonth; day++) {
     const dayEvents = eventsByDay[day] || [];
     cells.push(
-      <div key={day} className="h-20 border border-gray-100 p-1 overflow-hidden">
-        <div className="text-xs font-medium text-gray-600">{day}</div>
+      <div key={day} className="h-20 border border-white/10 p-1 overflow-hidden">
+        <div className="text-xs font-medium text-slate-300">{day}</div>
         <div className="mt-0.5 space-y-0.5">
           {dayEvents.slice(0, 3).map((ev, i) => (
             <div
               key={i}
               className={`text-[10px] truncate px-1 rounded ${
                 ev.type === "scheduled"
-                  ? "bg-blue-100 text-blue-700"
+                  ? "bg-cyan-500/10 text-cyan-300"
                   : ev.type === "completed"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-yellow-100 text-yellow-700"
+                  ? "bg-emerald-500/10 text-emerald-300"
+                  : "bg-amber-500/10 text-amber-300"
               }`}
             >
               {ev.title}
             </div>
           ))}
           {dayEvents.length > 3 && (
-            <div className="text-[10px] text-gray-400">+{dayEvents.length - 3}</div>
+            <div className="text-[10px] text-slate-500">+{dayEvents.length - 3}</div>
           )}
         </div>
       </div>
@@ -428,21 +428,21 @@ function CalendarGrid({ month, events }: { month: string; events: CalendarEvent[
       {/* 범례 */}
       <div className="flex gap-4 mb-3 text-xs">
         <div className="flex items-center gap-1">
-          <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-cyan-400" />
           {t("scheduled")}
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
           {t("completed")}
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
+          <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
           {t("inProgress")}
         </div>
       </div>
 
       {/* 요일 헤더 */}
-      <div className="grid grid-cols-7 text-center text-xs font-medium text-gray-500 mb-1">
+      <div className="grid grid-cols-7 text-center text-xs font-medium text-slate-400 mb-1">
         {t("dayNames").split(",").map((d: string) => (
           <div key={d} className="py-1">{d}</div>
         ))}
@@ -497,60 +497,60 @@ function CreateWorkOrderModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-slate-900/95 backdrop-blur-2xl rounded-xl shadow-glow border border-white/10 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h3 className="text-lg font-semibold">{t("createTitle")}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("equipmentId")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("equipmentId")}</label>
             <input
               type="number"
               value={equipmentId}
               onChange={(e) => setEquipmentId(e.target.value)}
               min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("titleRequired")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("titleRequired")}</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t("titlePlaceholder")}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("descriptionLabel")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("descriptionLabel")}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder={t("descriptionPlaceholder")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("priority")}</label>
+              <label className="block text-sm font-medium text-slate-200 mb-1">{t("priority")}</label>
               <select
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
                 {PRIORITY_OPTIONS.map((p) => (
                   <option key={p.value} value={p.value}>{t(p.labelKey)}</option>
@@ -559,11 +559,11 @@ function CreateWorkOrderModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("assignee")}</label>
+              <label className="block text-sm font-medium text-slate-200 mb-1">{t("assignee")}</label>
               <select
                 value={assignedTo}
                 onChange={(e) => setAssignedTo(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
                 <option value="">{t("unassigned")}</option>
                 {users.map((u) => (
@@ -574,7 +574,7 @@ function CreateWorkOrderModal({
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</div>
+            <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{error}</div>
           )}
 
           <div className="flex justify-end gap-2 pt-2">
@@ -633,14 +633,14 @@ function WorkOrderDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
+        className="bg-slate-900/95 backdrop-blur-2xl rounded-xl shadow-glow border border-white/10 w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h3 className="text-lg font-semibold">{t("detailTitle", { id: order.id })}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -649,30 +649,30 @@ function WorkOrderDetailModal({
           {/* 기본 정보 */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <span className="text-gray-500">{t("titleLabel")}</span>
+              <span className="text-slate-400">{t("titleLabel")}</span>
               <p className="font-medium">{order.title}</p>
             </div>
             <div>
-              <span className="text-gray-500">{t("equipmentLabel")}</span>
+              <span className="text-slate-400">{t("equipmentLabel")}</span>
               <p className="font-medium">{order.equipment_ontology_id || `#${order.equipment_id}`}</p>
             </div>
             <div>
-              <span className="text-gray-500">{t("priorityLabel")}</span>
+              <span className="text-slate-400">{t("priorityLabel")}</span>
               <Badge variant={PRIORITY_BADGE[order.priority] || "secondary"} className="ml-1">
                 {t(PRIORITY_LABEL_KEY[order.priority] || order.priority)}
               </Badge>
             </div>
             <div>
-              <span className="text-gray-500">{t("requester")}</span>
+              <span className="text-slate-400">{t("requester")}</span>
               <p className="font-medium">{order.requested_by_name || "-"}</p>
             </div>
             <div>
-              <span className="text-gray-500">{t("createdAt")}</span>
+              <span className="text-slate-400">{t("createdAt")}</span>
               <p className="text-xs">{new Date(order.created_at).toLocaleString("ko-KR")}</p>
             </div>
             {order.completed_at && (
               <div>
-                <span className="text-gray-500">{t("completedAt")}</span>
+                <span className="text-slate-400">{t("completedAt")}</span>
                 <p className="text-xs">{new Date(order.completed_at).toLocaleString("ko-KR")}</p>
               </div>
             )}
@@ -680,20 +680,20 @@ function WorkOrderDetailModal({
 
           {order.description && (
             <div>
-              <span className="text-sm text-gray-500">{t("descriptionLabel")}:</span>
-              <p className="text-sm mt-1 bg-gray-50 rounded-lg px-3 py-2">{order.description}</p>
+              <span className="text-sm text-slate-400">{t("descriptionLabel")}:</span>
+              <p className="text-sm mt-1 bg-white/5 rounded-lg px-3 py-2">{order.description}</p>
             </div>
           )}
 
-          <hr className="border-gray-100" />
+          <hr className="border-white/10" />
 
           {/* 수정 영역 */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("updateStatus")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("updateStatus")}</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="requested">{t("statusRequested")}</option>
               <option value="in_progress">{t("statusInProgress")}</option>
@@ -704,41 +704,41 @@ function WorkOrderDetailModal({
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("actualHours")}</label>
+              <label className="block text-sm font-medium text-slate-200 mb-1">{t("actualHours")}</label>
               <input
                 type="number"
                 step="0.5"
                 value={actualHours}
                 onChange={(e) => setActualHours(e.target.value)}
                 placeholder="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("cost")}</label>
+              <label className="block text-sm font-medium text-slate-200 mb-1">{t("cost")}</label>
               <input
                 type="number"
                 value={cost}
                 onChange={(e) => setCost(e.target.value)}
                 placeholder="0"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("notes")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("notes")}</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
               placeholder={t("notesPlaceholder")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
             />
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</div>
+            <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{error}</div>
           )}
 
           <div className="flex justify-end gap-2 pt-2">

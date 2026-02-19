@@ -110,9 +110,9 @@ export default function ReportsPage() {
       <div className="p-3 md:p-6 space-y-6">
         {/* 프리셋 보고서 카드 */}
         <div>
-          <h3 className="text-sm font-medium text-gray-500 mb-3">{t("presets")}</h3>
+          <h3 className="text-sm font-medium text-slate-400 mb-3">{t("presets")}</h3>
           {presetsLoading ? (
-            <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
+            <div className="flex items-center justify-center py-8 text-slate-500 text-sm">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
               {tc("loading")}
             </div>
@@ -121,15 +121,15 @@ export default function ReportsPage() {
               {presets.map((preset) => {
                 const Icon = PRESET_ICONS[preset.id] || FileText;
                 return (
-                  <Card key={preset.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                  <Card key={preset.id} className="hover:shadow-glow-sm transition-shadow cursor-pointer">
                     <CardContent className="pt-5 pb-4 px-4">
                       <div className="flex items-start gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg">
-                          <Icon className="h-5 w-5 text-blue-600" />
+                        <div className="p-2 bg-cyan-500/10 rounded-lg">
+                          <Icon className="h-5 w-5 text-cyan-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-semibold text-gray-900">{preset.name}</h4>
-                          <p className="text-xs text-gray-500 mt-1">{preset.description}</p>
+                          <h4 className="text-sm font-semibold text-white">{preset.name}</h4>
+                          <p className="text-xs text-slate-400 mt-1">{preset.description}</p>
                         </div>
                       </div>
                       <Button
@@ -157,12 +157,12 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             {historyLoading ? (
-              <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
+              <div className="flex items-center justify-center py-12 text-slate-500 text-sm">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 {tc("loading")}
               </div>
             ) : history.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 text-sm">
+              <div className="text-center py-12 text-slate-500 text-sm">
                 <FileText className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p>{t("noReports")}</p>
                 <p className="text-xs mt-1">{t("noReportsHint")}</p>
@@ -171,23 +171,23 @@ export default function ReportsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thCreatedAt")}</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thType")}</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thPeriod")}</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thFormat")}</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
-                      <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thDownload")}</th>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thCreatedAt")}</th>
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thType")}</th>
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thPeriod")}</th>
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thFormat")}</th>
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thStatus")}</th>
+                      <th className="text-right py-2 px-3 text-slate-400 font-medium">{t("thDownload")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {history.map((item) => (
-                      <tr key={item.report_id} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="py-2 px-3 text-xs text-gray-500">
+                      <tr key={item.report_id} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="py-2 px-3 text-xs text-slate-400">
                           {new Date(item.generated_at).toLocaleString("ko-KR")}
                         </td>
                         <td className="py-2 px-3 font-medium">{item.preset_id || t("custom")}</td>
-                        <td className="py-2 px-3 text-xs text-gray-500">
+                        <td className="py-2 px-3 text-xs text-slate-400">
                           {item.period_start} ~ {item.period_end}
                         </td>
                         <td className="py-2 px-3">
@@ -202,7 +202,7 @@ export default function ReportsPage() {
                           {item.status === "completed" && (
                             <a
                               href={getReportDownloadUrl(item.report_id)}
-                              className="inline-flex items-center text-blue-600 hover:text-blue-800 text-xs"
+                              className="inline-flex items-center text-cyan-400 hover:text-cyan-300 text-xs"
                             >
                               <Download className="h-3.5 w-3.5 mr-1" />
                               {tc("download")}
@@ -277,24 +277,24 @@ function GenerateReportModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md mx-4"
+        className="bg-slate-900/95 backdrop-blur-2xl rounded-xl shadow-glow border border-white/10 w-full max-w-md mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h3 className="text-lg font-semibold">{preset.name}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
-          <p className="text-sm text-gray-500">{preset.description}</p>
+          <p className="text-sm text-slate-400">{preset.description}</p>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-200 mb-1">
                 <Calendar className="inline h-3.5 w-3.5 mr-1" />
                 {t("startDate")}
               </label>
@@ -302,11 +302,11 @@ function GenerateReportModal({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-200 mb-1">
                 <Calendar className="inline h-3.5 w-3.5 mr-1" />
                 {t("endDate")}
               </label>
@@ -314,13 +314,13 @@ function GenerateReportModal({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">{t("outputFormat")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-2">{t("outputFormat")}</label>
             <div className="flex gap-3">
               {FORMAT_OPTIONS.map((opt) => (
                 <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
@@ -330,7 +330,7 @@ function GenerateReportModal({
                     value={opt.value}
                     checked={format === opt.value}
                     onChange={(e) => setFormat(e.target.value)}
-                    className="text-blue-600"
+                    className="text-cyan-500"
                   />
                   <span className="text-sm">{opt.label}</span>
                 </label>
@@ -339,7 +339,7 @@ function GenerateReportModal({
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</div>
+            <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{error}</div>
           )}
 
           <div className="flex justify-end gap-2 pt-2">

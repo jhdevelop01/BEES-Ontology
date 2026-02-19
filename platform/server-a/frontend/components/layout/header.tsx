@@ -29,19 +29,19 @@ function LanguageSwitcher() {
 
   return (
     <div className="relative group">
-      <button className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded-md hover:bg-gray-100 transition-colors">
+      <button className="flex items-center gap-1 text-xs text-slate-400 hover:text-white px-2 py-1 rounded-md hover:bg-white/5 transition-colors">
         <Globe className="h-3.5 w-3.5" />
         <span>{currentLocale === "ko" ? t("ko") : t("en")}</span>
       </button>
-      <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-50"><div className="bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-[100px]">
+      <div className="absolute right-0 top-full pt-1 hidden group-hover:block z-50"><div className="bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg shadow-glow py-1 min-w-[100px]">
         <button
-          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${currentLocale === "ko" ? "font-semibold text-blue-600" : "text-gray-600"}`}
+          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 ${currentLocale === "ko" ? "font-semibold text-cyan-400" : "text-slate-400"}`}
           onClick={() => switchLocale("ko")}
         >
           {t("ko")}
         </button>
         <button
-          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${currentLocale === "en" ? "font-semibold text-blue-600" : "text-gray-600"}`}
+          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 ${currentLocale === "en" ? "font-semibold text-cyan-400" : "text-slate-400"}`}
           onClick={() => switchLocale("en")}
         >
           {t("en")}
@@ -55,11 +55,11 @@ export function Header({ title, description, connected }: HeaderProps) {
   const t = useTranslations("header");
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-gray-200 bg-white/95 backdrop-blur px-4 pl-14 md:pl-6 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-slate-900/60 backdrop-blur-xl px-4 pl-14 md:pl-6 lg:px-6">
       <div>
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <h2 className="text-lg font-semibold text-white">{title}</h2>
         {description && (
-          <p className="text-sm text-gray-500">{description}</p>
+          <p className="text-sm text-slate-400">{description}</p>
         )}
       </div>
 
@@ -85,7 +85,7 @@ export function Header({ title, description, connected }: HeaderProps) {
         <LanguageSwitcher />
 
         {/* 현재 시각 */}
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-slate-500">
           {t("buildingLabel")}
         </span>
       </div>

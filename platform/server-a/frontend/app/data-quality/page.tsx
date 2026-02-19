@@ -121,7 +121,7 @@ export default function DataQualityPage() {
   const SortIcon = ({ field }: { field: SortField }) => (
     <ArrowUpDown
       className={`h-3 w-3 ml-1 inline ${
-        sortField === field ? "text-blue-500" : "text-gray-300"
+        sortField === field ? "text-cyan-400" : "text-slate-600"
       }`}
     />
   );
@@ -137,12 +137,12 @@ export default function DataQualityPage() {
           <Card>
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center justify-between">
-                <Activity className="h-5 w-5 text-blue-500" />
-                <span className="text-2xl font-bold text-blue-600">
+                <Activity className="h-5 w-5 text-cyan-400" />
+                <span className="text-2xl font-bold text-cyan-400">
                   {points.length}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">{t("totalPoints")}</p>
+              <p className="text-xs text-slate-400 mt-1">{t("totalPoints")}</p>
             </CardContent>
           </Card>
 
@@ -150,12 +150,12 @@ export default function DataQualityPage() {
           <Card>
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center justify-between">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="text-2xl font-bold text-green-600">
+                <CheckCircle className="h-5 w-5 text-emerald-400" />
+                <span className="text-2xl font-bold text-emerald-400">
                   {qualityStats.good.toLocaleString()}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-400 mt-1">
                 {t("goodPct", { pct: qualityStats.goodPct })}
               </p>
             </CardContent>
@@ -165,12 +165,12 @@ export default function DataQualityPage() {
           <Card>
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center justify-between">
-                <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                <span className="text-2xl font-bold text-yellow-600">
+                <AlertTriangle className="h-5 w-5 text-amber-400" />
+                <span className="text-2xl font-bold text-amber-400">
                   {qualityStats.uncertain.toLocaleString()}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">{t("uncertain")}</p>
+              <p className="text-xs text-slate-400 mt-1">{t("uncertain")}</p>
             </CardContent>
           </Card>
 
@@ -178,12 +178,12 @@ export default function DataQualityPage() {
           <Card>
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center justify-between">
-                <XCircle className="h-5 w-5 text-red-500" />
-                <span className="text-2xl font-bold text-red-600">
+                <XCircle className="h-5 w-5 text-rose-400" />
+                <span className="text-2xl font-bold text-rose-400">
                   {qualityStats.bad.toLocaleString()}
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">{t("bad")}</p>
+              <p className="text-xs text-slate-400 mt-1">{t("bad")}</p>
             </CardContent>
           </Card>
         </div>
@@ -194,7 +194,7 @@ export default function DataQualityPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Database className="h-4 w-4 text-gray-500" />
+                <Database className="h-4 w-4 text-slate-400" />
                 {t("historianStatus")}
               </CardTitle>
             </CardHeader>
@@ -202,7 +202,7 @@ export default function DataQualityPage() {
               {health ? (
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-500">{t("service")}</span>
+                    <span className="text-slate-400">{t("service")}</span>
                     <span className="ml-2">
                       <Badge
                         variant={health.status === "ok" ? "success" : "warning"}
@@ -212,7 +212,7 @@ export default function DataQualityPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">InfluxDB:</span>
+                    <span className="text-slate-400">InfluxDB:</span>
                     <span className="ml-2">
                       <Badge
                         variant={
@@ -224,7 +224,7 @@ export default function DataQualityPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">PostgreSQL:</span>
+                    <span className="text-slate-400">PostgreSQL:</span>
                     <span className="ml-2">
                       <Badge
                         variant={
@@ -236,7 +236,7 @@ export default function DataQualityPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">MQTT:</span>
+                    <span className="text-slate-400">MQTT:</span>
                     <span className="ml-2">
                       <Badge
                         variant={
@@ -248,14 +248,14 @@ export default function DataQualityPage() {
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-gray-500">{t("uptime")}</span>
+                    <span className="text-slate-400">{t("uptime")}</span>
                     <span className="ml-2 font-mono text-xs">
                       {t("uptimeFormat", { hours: Math.floor(health.uptime_seconds / 3600), minutes: Math.floor((health.uptime_seconds % 3600) / 60) })}
                     </span>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">{t("connectionCheck")}</p>
+                <p className="text-sm text-slate-500">{t("connectionCheck")}</p>
               )}
             </CardContent>
           </Card>
@@ -265,7 +265,7 @@ export default function DataQualityPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-green-500" />
+                  <ShieldCheck className="h-4 w-4 text-emerald-400" />
                   {t("qualityStats")}
                 </CardTitle>
                 <Button
@@ -284,25 +284,25 @@ export default function DataQualityPage() {
               {workerStats ? (
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-gray-500">{t("messagesReceived")}</span>
+                    <span className="text-slate-400">{t("messagesReceived")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.messages_received.toLocaleString()}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">{t("pointsWritten")}</span>
+                    <span className="text-slate-400">{t("pointsWritten")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.points_written.toLocaleString()}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">{t("alarmsSaved")}</span>
+                    <span className="text-slate-400">{t("alarmsSaved")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.alarms_saved.toLocaleString()}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">{t("errors")}</span>
+                    <span className="text-slate-400">{t("errors")}</span>
                     <span className="ml-2 font-mono">
                       <Badge
                         variant={workerStats.errors > 0 ? "danger" : "success"}
@@ -312,13 +312,13 @@ export default function DataQualityPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">{t("buffer")}</span>
+                    <span className="text-slate-400">{t("buffer")}</span>
                     <span className="ml-2 font-mono">
                       {workerStats.buffer_size}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-500">MQTT:</span>
+                    <span className="text-slate-400">MQTT:</span>
                     <span className="ml-2">
                       <Badge
                         variant={
@@ -331,7 +331,7 @@ export default function DataQualityPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-gray-400">{t("noStats")}</p>
+                <p className="text-sm text-slate-500">{t("noStats")}</p>
               )}
             </CardContent>
           </Card>
@@ -346,13 +346,13 @@ export default function DataQualityPage() {
                 {t("pointStatus", { count: filteredPoints.length })}
               </CardTitle>
               <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <input
                   type="text"
                   placeholder={t("pointIdSearch")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
             </div>
@@ -360,32 +360,32 @@ export default function DataQualityPage() {
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
               </div>
             ) : filteredPoints.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200">
+                    <tr className="border-b border-white/10">
                       <th
-                        className="text-left py-2 px-3 text-gray-500 font-medium cursor-pointer hover:text-gray-700"
+                        className="text-left py-2 px-3 text-slate-400 font-medium cursor-pointer hover:text-slate-200"
                         onClick={() => handleSort("point_id")}
                       >
                         {t("thPointId")}
                         <SortIcon field="point_id" />
                       </th>
                       <th
-                        className="text-right py-2 px-3 text-gray-500 font-medium cursor-pointer hover:text-gray-700"
+                        className="text-right py-2 px-3 text-slate-400 font-medium cursor-pointer hover:text-slate-200"
                         onClick={() => handleSort("last_value")}
                       >
                         {t("thLatestValue")}
                         <SortIcon field="last_value" />
                       </th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">
                         {t("thUnit")}
                       </th>
                       <th
-                        className="text-left py-2 px-3 text-gray-500 font-medium cursor-pointer hover:text-gray-700"
+                        className="text-left py-2 px-3 text-slate-400 font-medium cursor-pointer hover:text-slate-200"
                         onClick={() => handleSort("last_time")}
                       >
                         {t("thLastReceived")}
@@ -397,7 +397,7 @@ export default function DataQualityPage() {
                     {filteredPoints.map((pt) => (
                       <tr
                         key={pt.point_id}
-                        className="border-b border-gray-50 hover:bg-gray-50"
+                        className="border-b border-white/5 hover:bg-white/5"
                       >
                         <td className="py-2 px-3 font-mono text-xs">
                           {pt.point_id}
@@ -407,10 +407,10 @@ export default function DataQualityPage() {
                             ? pt.last_value.toFixed(2)
                             : "--"}
                         </td>
-                        <td className="py-2 px-3 text-xs text-gray-500">
+                        <td className="py-2 px-3 text-xs text-slate-400">
                           {pt.unit || "-"}
                         </td>
-                        <td className="py-2 px-3 text-xs text-gray-400">
+                        <td className="py-2 px-3 text-xs text-slate-500">
                           {pt.last_time
                             ? new Date(pt.last_time).toLocaleString("ko-KR", {
                                 month: "2-digit",
@@ -427,7 +427,7 @@ export default function DataQualityPage() {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-400 text-sm">
+              <div className="text-center py-12 text-slate-500 text-sm">
                 <Info className="h-8 w-8 mx-auto mb-3 opacity-30" />
                 <p>{t("noPointData")}</p>
                 <p className="text-xs mt-1">{t("checkServerD")}</p>

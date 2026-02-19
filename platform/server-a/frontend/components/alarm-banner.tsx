@@ -91,10 +91,10 @@ export function AlarmBanner() {
           <button
             onClick={toggleNotifications}
             className={cn(
-              "p-1.5 rounded-full shadow-md border text-xs flex items-center gap-1",
+              "p-1.5 rounded-full shadow-glow border text-xs flex items-center gap-1",
               notifEnabled
-                ? "bg-blue-50 border-blue-200 text-blue-600"
-                : "bg-gray-50 border-gray-200 text-gray-500"
+                ? "bg-cyan-500/10 border-cyan-500/20 text-cyan-400"
+                : "bg-white/5 border-white/10 text-slate-500"
             )}
             title={notifEnabled ? "Push 알림 끄기" : "Push 알림 켜기"}
           >
@@ -111,16 +111,16 @@ export function AlarmBanner() {
             <div
               key={entry.id}
               className={cn(
-                "pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border text-sm animate-in slide-in-from-top-2",
+                "pointer-events-auto flex items-start gap-3 px-4 py-3 rounded-lg shadow-glow border text-sm animate-in slide-in-from-top-2",
                 isCritical
-                  ? "bg-red-50 border-red-200 text-red-800"
-                  : "bg-yellow-50 border-yellow-200 text-yellow-800"
+                  ? "bg-rose-500/10 border-rose-500/20 text-rose-300"
+                  : "bg-amber-500/10 border-amber-500/20 text-amber-300"
               )}
             >
               {isCritical ? (
-                <AlertOctagon className="h-5 w-5 flex-shrink-0 mt-0.5 text-red-500" />
+                <AlertOctagon className="h-5 w-5 flex-shrink-0 mt-0.5 text-rose-400" />
               ) : (
-                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5 text-yellow-500" />
+                <AlertTriangle className="h-5 w-5 flex-shrink-0 mt-0.5 text-amber-400" />
               )}
 
               <div className="flex-1 min-w-0">
@@ -140,8 +140,8 @@ export function AlarmBanner() {
               <button
                 onClick={() => dismiss(entry.id)}
                 className={cn(
-                  "flex-shrink-0 p-1 rounded hover:bg-black/5",
-                  isCritical ? "text-red-400" : "text-yellow-400"
+                  "flex-shrink-0 p-1 rounded hover:bg-white/5",
+                  isCritical ? "text-rose-500" : "text-amber-500"
                 )}
                 aria-label="닫기"
               >

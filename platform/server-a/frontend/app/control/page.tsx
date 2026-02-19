@@ -219,14 +219,14 @@ export default function ControlPage() {
 
       <div className="p-3 md:p-6 space-y-6">
         {/* 전체 시뮬레이션 제어 패널 */}
-        <Card className="border-2 border-blue-100 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+        <Card className="border-2 border-cyan-500/20 bg-gradient-to-r from-cyan-500/5 to-indigo-500/5">
           <CardContent className="py-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Activity className={`h-5 w-5 ${activeCount > 0 ? "text-green-500" : "text-gray-400"}`} />
+                <Activity className={`h-5 w-5 ${activeCount > 0 ? "text-emerald-400" : "text-slate-500"}`} />
                 <div>
-                  <h3 className="font-semibold text-gray-900">{t("simulationControl")}</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="font-semibold text-white">{t("simulationControl")}</h3>
+                  <p className="text-sm text-slate-400">
                     {t("simulationDesc")}
                   </p>
                 </div>
@@ -279,10 +279,10 @@ export default function ControlPage() {
             const isActive = device.is_active;
 
             return (
-              <Card key={device.device_id} className="relative overflow-hidden">
+              <Card key={device.device_id} className={`relative overflow-hidden ${isActive ? "shadow-glow-emerald" : ""}`}>
                 <div
                   className={`absolute top-0 left-0 right-0 h-1 ${
-                    isActive ? "bg-green-500" : "bg-gray-300"
+                    isActive ? "bg-emerald-500" : "bg-white/10"
                   }`}
                 />
 
@@ -291,17 +291,17 @@ export default function ControlPage() {
                     <CardTitle className="text-lg">
                       {getDisplayName(locale, device.label, device.device_id)}
                     </CardTitle>
-                    <p className="text-[10px] text-gray-400 font-mono mt-0.5">
+                    <p className="text-[10px] text-slate-500 font-mono mt-0.5">
                       {device.device_id}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-slate-400 mt-1">
                       {device.type && `${localizeType(locale, device.type)} `}
                       {device.location && `| ${formatLocation(locale, device.location)}`}
                     </p>
                   </div>
                   <Badge
                     variant={isActive ? "success" : "secondary"}
-                    className="text-sm px-3 py-1"
+                    className={`text-sm px-3 py-1 ${isActive ? "shadow-glow-emerald" : "shadow-glow-rose"}`}
                   >
                     {isActive ? (
                       <>
@@ -320,8 +320,8 @@ export default function ControlPage() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-500">{t("operationMode")}</span>
-                      <span className="ml-2 font-medium">
+                      <span className="text-slate-400">{t("operationMode")}</span>
+                      <span className="ml-2 font-medium text-white">
                         {device.mode === "auto"
                           ? t("modeAuto")
                           : device.mode === "standby"
@@ -330,8 +330,8 @@ export default function ControlPage() {
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500">{t("lastUpdate")}</span>
-                      <span className="ml-2 font-medium text-xs">
+                      <span className="text-slate-400">{t("lastUpdate")}</span>
+                      <span className="ml-2 font-medium text-xs text-white">
                         {device.ts
                           ? new Date(device.ts * 1000).toLocaleTimeString(
                               "ko-KR"
@@ -389,7 +389,7 @@ export default function ControlPage() {
                 {commandHistory.map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 text-sm"
+                    className="flex items-center justify-between py-2 px-3 rounded-lg bg-white/[0.02] text-sm"
                   >
                     <div className="flex items-center gap-3">
                       <Badge
@@ -397,14 +397,14 @@ export default function ControlPage() {
                       >
                         {entry.success ? t("commandSuccess") : t("commandFailed")}
                       </Badge>
-                      <span className="font-medium">{entry.deviceId}</span>
-                      <span className="text-gray-500">{entry.command}</span>
+                      <span className="font-medium text-white">{entry.deviceId}</span>
+                      <span className="text-slate-400">{entry.command}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-slate-500">
                         {entry.message}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-slate-500">
                         {entry.timestamp.toLocaleTimeString("ko-KR")}
                       </span>
                     </div>
@@ -412,7 +412,7 @@ export default function ControlPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-400 text-sm">
+              <div className="text-center py-8 text-slate-500 text-sm">
                 <Send className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p>{t("noCommands")}</p>
                 <p className="text-xs mt-1">

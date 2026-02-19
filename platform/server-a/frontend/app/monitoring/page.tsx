@@ -116,29 +116,29 @@ const HVAC_SUB_FILTERS = [
   },
 ] as const;
 
-// ── 장비 유형별 아이콘 색상 ──
+// ── 장비 유형별 아이콘 색상 (다크 테마) ──
 function getTypeColor(type: string): string {
   const t = type.toLowerCase();
-  if (t.includes("ahu") || t.includes("air_handler")) return "bg-blue-100 text-blue-700";
-  if (t.includes("fan")) return "bg-cyan-100 text-cyan-700";
-  if (t.includes("pump")) return "bg-indigo-100 text-indigo-700";
-  if (t.includes("chiller")) return "bg-sky-100 text-sky-700";
-  if (t.includes("boiler")) return "bg-orange-100 text-orange-700";
-  if (t.includes("cooling_tower")) return "bg-teal-100 text-teal-700";
-  if (t.includes("fcu")) return "bg-violet-100 text-violet-700";
-  if (t.includes("elevator")) return "bg-gray-100 text-gray-700";
-  if (t.includes("vfd")) return "bg-purple-100 text-purple-700";
-  if (t.includes("heat_exchanger")) return "bg-amber-100 text-amber-700";
-  if (t.includes("valve")) return "bg-emerald-100 text-emerald-700";
-  if (t.includes("damper")) return "bg-lime-100 text-lime-700";
-  if (t.includes("transformer") || t.includes("switchgear")) return "bg-yellow-100 text-yellow-700";
-  if (t.includes("ups") || t.includes("generator")) return "bg-amber-100 text-amber-700";
-  if (t.includes("water_pump")) return "bg-blue-100 text-blue-700";
-  if (t.includes("controller")) return "bg-slate-100 text-slate-700";
-  if (t.includes("lighting")) return "bg-yellow-100 text-yellow-600";
-  if (t.includes("meter")) return "bg-pink-100 text-pink-700";
-  if (t.includes("system") || t.includes("plant")) return "bg-stone-100 text-stone-700";
-  return "bg-gray-100 text-gray-600";
+  if (t.includes("ahu") || t.includes("air_handler")) return "bg-blue-500/20 text-blue-400";
+  if (t.includes("fan")) return "bg-cyan-500/20 text-cyan-400";
+  if (t.includes("pump")) return "bg-indigo-500/20 text-indigo-400";
+  if (t.includes("chiller")) return "bg-sky-500/20 text-sky-400";
+  if (t.includes("boiler")) return "bg-orange-500/20 text-orange-400";
+  if (t.includes("cooling_tower")) return "bg-teal-500/20 text-teal-400";
+  if (t.includes("fcu")) return "bg-violet-500/20 text-violet-400";
+  if (t.includes("elevator")) return "bg-white/10 text-slate-300";
+  if (t.includes("vfd")) return "bg-purple-500/20 text-purple-400";
+  if (t.includes("heat_exchanger")) return "bg-amber-500/20 text-amber-400";
+  if (t.includes("valve")) return "bg-emerald-500/20 text-emerald-400";
+  if (t.includes("damper")) return "bg-lime-500/20 text-lime-400";
+  if (t.includes("transformer") || t.includes("switchgear")) return "bg-yellow-500/20 text-yellow-400";
+  if (t.includes("ups") || t.includes("generator")) return "bg-amber-500/20 text-amber-400";
+  if (t.includes("water_pump")) return "bg-blue-500/20 text-blue-400";
+  if (t.includes("controller")) return "bg-slate-500/20 text-slate-300";
+  if (t.includes("lighting")) return "bg-yellow-500/20 text-yellow-400";
+  if (t.includes("meter")) return "bg-pink-500/20 text-pink-400";
+  if (t.includes("system") || t.includes("plant")) return "bg-stone-500/20 text-stone-400";
+  return "bg-white/10 text-slate-400";
 }
 
 export default function MonitoringPage() {
@@ -332,13 +332,13 @@ export default function MonitoringPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           {/* 검색 */}
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
             <input
               type="text"
               placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-9 pr-3 py-2 text-sm border border-white/10 bg-white/5 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             />
           </div>
         </div>
@@ -357,15 +357,15 @@ export default function MonitoringPage() {
                 }}
                 className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
                   isActive
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                    ? "bg-cyan-500 text-white"
+                    : "bg-white/5 text-slate-300 hover:bg-white/10"
                 }`}
               >
                 {t(group.label)}
                 {count > 0 && (
                   <span
                     className={`ml-1 ${
-                      isActive ? "text-blue-200" : "text-gray-400"
+                      isActive ? "text-cyan-200" : "text-slate-500"
                     }`}
                   >
                     {count}
@@ -378,7 +378,7 @@ export default function MonitoringPage() {
 
         {/* HVAC 서브필터 (HVAC 선택 시에만 표시) */}
         {categoryFilter === "hvac" && (
-          <div className="flex flex-wrap gap-1.5 pl-3 border-l-2 border-blue-200">
+          <div className="flex flex-wrap gap-1.5 pl-3 border-l-2 border-cyan-500/30">
             {HVAC_SUB_FILTERS.map((sub) => {
               const count = hvacSubCounts[sub.key] || 0;
               const isActive = hvacSubFilter === sub.key;
@@ -389,14 +389,14 @@ export default function MonitoringPage() {
                   className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
                     isActive
                       ? "bg-sky-500 text-white"
-                      : "bg-sky-50 text-sky-600 hover:bg-sky-100"
+                      : "bg-sky-500/10 text-sky-400 hover:bg-sky-500/20"
                   }`}
                 >
                   {t(sub.label)}
                   {count > 0 && (
                     <span
                       className={`ml-1 ${
-                        isActive ? "text-sky-200" : "text-sky-400"
+                        isActive ? "text-sky-200" : "text-sky-500"
                       }`}
                     >
                       {count}
@@ -411,13 +411,13 @@ export default function MonitoringPage() {
         {/* 장비 카드 그리드 */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
-            <span className="ml-2 text-sm text-gray-500">{t("equipmentLoading")}</span>
+            <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
+            <span className="ml-2 text-sm text-slate-400">{t("equipmentLoading")}</span>
           </div>
         ) : filteredEquipment.length === 0 ? (
           <div className="text-center py-16">
-            <Cpu className="h-10 w-10 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm text-gray-400">
+            <Cpu className="h-10 w-10 text-slate-700 mx-auto mb-3" />
+            <p className="text-sm text-slate-500">
               {searchQuery || categoryFilter !== "all"
                 ? t("noEquipmentFiltered")
                 : t("noEquipment")}
@@ -433,15 +433,15 @@ export default function MonitoringPage() {
                   href={`/monitoring/${encodeURIComponent(eq.id)}`}
                   className="block group"
                 >
-                  <Card className="relative overflow-hidden transition-all hover:shadow-md hover:border-blue-200 group-hover:border-blue-200">
+                  <Card className="relative overflow-hidden transition-all hover:shadow-glow-sm hover:border-cyan-500/30 group-hover:border-cyan-500/30">
                     {/* 상태 바 */}
                     <div
                       className={`absolute top-0 left-0 right-0 h-1 ${
                         isActive === true
-                          ? "bg-green-500"
+                          ? "bg-emerald-500"
                           : isActive === false
-                          ? "bg-gray-200"
-                          : "bg-gray-100"
+                          ? "bg-white/10"
+                          : "bg-white/5"
                       }`}
                     />
                     <CardContent className="pt-4 pb-3 px-4">
@@ -453,23 +453,23 @@ export default function MonitoringPage() {
                         </Badge>
                         <div className="flex items-center gap-1.5">
                           {isActive === true && (
-                            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                           )}
                           {isActive !== null && (
                             isActive ? (
-                              <Power className="h-3.5 w-3.5 text-green-500" />
+                              <Power className="h-3.5 w-3.5 text-emerald-400" />
                             ) : (
-                              <PowerOff className="h-3.5 w-3.5 text-gray-300" />
+                              <PowerOff className="h-3.5 w-3.5 text-slate-600" />
                             )
                           )}
                         </div>
                       </div>
-                      <p className="text-sm font-medium text-gray-900 truncate group-hover:text-blue-600 transition-colors">
+                      <p className="text-sm font-medium text-white truncate group-hover:text-cyan-400 transition-colors">
                         {getDisplayName(locale, eq.label, eq.name)}
                       </p>
-                      <p className="text-[10px] text-gray-400 font-mono truncate">{eq.name}</p>
+                      <p className="text-[10px] text-slate-500 font-mono truncate">{eq.name}</p>
                       {eq.location && (
-                        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1">
+                        <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
                           <MapPin className="h-3 w-3" />
                           {formatLocation(locale, eq.location)}
                         </p>
@@ -484,10 +484,10 @@ export default function MonitoringPage() {
 
         {/* 부품 현황 요약 배너 */}
         {componentEquipment.length > 0 && (
-          <div className="border border-gray-200 rounded-lg">
+          <div className="border border-white/10 rounded-lg">
             <button
               onClick={() => setShowComponentSummary(!showComponentSummary)}
-              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50 rounded-lg"
+              className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-slate-400 hover:bg-white/5 rounded-lg"
             >
               <span className="flex items-center gap-2">
                 {showComponentSummary ? (
@@ -496,7 +496,7 @@ export default function MonitoringPage() {
                   <ChevronRight className="h-4 w-4" />
                 )}
                 {t("componentSummaryTitle")}
-                <span className="text-gray-400 text-xs">
+                <span className="text-slate-500 text-xs">
                   {t("componentSummaryCount", {
                     valve: componentSummary["Valve"]?.count || 0,
                     damper: componentSummary["Damper"]?.count || 0,
@@ -513,7 +513,7 @@ export default function MonitoringPage() {
               <div className="px-4 pb-3 pt-1">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="text-gray-400 border-b">
+                    <tr className="text-slate-500 border-b border-white/10">
                       <th className="text-left py-1.5 font-medium">{t("componentType")}</th>
                       <th className="text-center py-1.5 font-medium">{t("componentCount")}</th>
                       <th className="text-left py-1.5 font-medium">{t("componentParent")}</th>
@@ -521,14 +521,14 @@ export default function MonitoringPage() {
                   </thead>
                   <tbody>
                     {Object.entries(componentSummary).map(([type, group]) => (
-                      <tr key={type} className="border-b border-gray-50">
+                      <tr key={type} className="border-b border-white/5">
                         <td className="py-1.5">
                           <Badge className={`text-[10px] ${getTypeColor(type)}`}>
                             {getTypeLabelI18n(type)}
                           </Badge>
                         </td>
-                        <td className="text-center text-gray-600">{group.count}</td>
-                        <td className="text-gray-400">
+                        <td className="text-center text-slate-300">{group.count}</td>
+                        <td className="text-slate-500">
                           {group.items[0]?.location
                             ? formatLocation(locale, group.items[0].location)
                             : "—"}
@@ -538,7 +538,7 @@ export default function MonitoringPage() {
                     ))}
                   </tbody>
                 </table>
-                <p className="text-[10px] text-gray-400 mt-2">
+                <p className="text-[10px] text-slate-500 mt-2">
                   {t("componentNote")}
                 </p>
               </div>

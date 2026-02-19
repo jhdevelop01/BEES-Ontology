@@ -169,10 +169,10 @@ export default function ScenariosPage() {
       {/* Toast */}
       {toast && (
         <div
-          className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium ${
+          className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-lg shadow-glow text-sm font-medium ${
             toast.type === "success"
-              ? "bg-green-50 text-green-800 border border-green-200"
-              : "bg-red-50 text-red-800 border border-red-200"
+              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+              : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
           }`}
         >
           {toast.message}
@@ -187,7 +187,7 @@ export default function ScenariosPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Play className="h-4 w-4 text-blue-500" />
+                    <Play className="h-4 w-4 text-cyan-400" />
                     {t("scenarioList")}
                   </CardTitle>
                   <Button
@@ -203,7 +203,7 @@ export default function ScenariosPage() {
               <CardContent>
                 {scenarioLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                    <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
                   </div>
                 ) : scenarios.length > 0 ? (
                   <div className="space-y-3">
@@ -214,8 +214,8 @@ export default function ScenariosPage() {
                           key={scenario.name}
                           className={`flex items-start justify-between p-4 rounded-lg border transition-colors ${
                             isActive
-                              ? "bg-blue-50 border-blue-200"
-                              : "bg-white border-gray-200 hover:bg-gray-50"
+                              ? "bg-cyan-500/10 border-cyan-500/20"
+                              : "bg-white/5 border-white/10 hover:bg-white/10"
                           }`}
                         >
                           <div className="flex-1 min-w-0 mr-3">
@@ -228,11 +228,11 @@ export default function ScenariosPage() {
                               )}
                             </div>
                             {scenario.description && (
-                              <p className="text-xs text-gray-500 mb-2">
+                              <p className="text-xs text-slate-400 mb-2">
                                 {scenario.description}
                               </p>
                             )}
-                            <div className="flex flex-wrap gap-2 text-[10px] text-gray-400">
+                            <div className="flex flex-wrap gap-2 text-[10px] text-slate-500">
                               {scenario.occupancy !== undefined && (
                                 <span>{t("occupancy")} {(scenario.occupancy * 100).toFixed(0)}%</span>
                               )}
@@ -266,7 +266,7 @@ export default function ScenariosPage() {
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-12 text-gray-400 text-sm">
+                  <div className="text-center py-12 text-slate-500 text-sm">
                     <Info className="h-8 w-8 mx-auto mb-3 opacity-30" />
                     <p>{t("noScenarios")}</p>
                     <p className="text-xs mt-1">{t("checkServerC")}</p>
@@ -280,27 +280,27 @@ export default function ScenariosPage() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    <CheckCircle className="h-4 w-4 text-emerald-400" />
                     {t("activeScenario")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <span className="text-gray-500">{t("scenarioName")}</span>
+                      <span className="text-slate-400">{t("scenarioName")}</span>
                       <span className="ml-2 font-medium">
                         {activeScenario.display_name || activeScenario.name}
                       </span>
                     </div>
                     {activeScenario.hvac_mode && (
                       <div>
-                        <span className="text-gray-500">{t("hvacMode")}</span>
+                        <span className="text-slate-400">{t("hvacMode")}</span>
                         <span className="ml-2">{activeScenario.hvac_mode}</span>
                       </div>
                     )}
                     {activeScenario.occupancy !== undefined && (
                       <div>
-                        <span className="text-gray-500">{t("occupancy")}</span>
+                        <span className="text-slate-400">{t("occupancy")}</span>
                         <span className="ml-2">
                           {(activeScenario.occupancy * 100).toFixed(0)}%
                         </span>
@@ -308,7 +308,7 @@ export default function ScenariosPage() {
                     )}
                     {activeScenario.solar_factor !== undefined && (
                       <div>
-                        <span className="text-gray-500">{t("solarFactor")}</span>
+                        <span className="text-slate-400">{t("solarFactor")}</span>
                         <span className="ml-2">x{activeScenario.solar_factor}</span>
                       </div>
                     )}
@@ -325,7 +325,7 @@ export default function ScenariosPage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-orange-500" />
+                    <Zap className="h-4 w-4 text-orange-400" />
                     {t("faultInjection")}
                   </CardTitle>
                   <Button
@@ -341,19 +341,19 @@ export default function ScenariosPage() {
               <CardContent>
                 {faultLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                    <Loader2 className="h-6 w-6 animate-spin text-orange-400" />
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {/* 고장 유형 선택 */}
                     <div>
-                      <label className="text-xs font-medium text-gray-500 block mb-2">
+                      <label className="text-xs font-medium text-slate-400 block mb-2">
                         {t("faultType")}
                       </label>
                       <select
                         value={selectedFaultType}
                         onChange={(e) => setSelectedFaultType(e.target.value)}
-                        className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full text-sm bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                       >
                         <option value="">{t("selectOption")}</option>
                         {faultTypes.map((ft) => (
@@ -366,13 +366,13 @@ export default function ScenariosPage() {
 
                     {/* 대상 장비 선택 */}
                     <div>
-                      <label className="text-xs font-medium text-gray-500 block mb-2">
+                      <label className="text-xs font-medium text-slate-400 block mb-2">
                         {t("targetDevice")}
                       </label>
                       <select
                         value={selectedDevice}
                         onChange={(e) => setSelectedDevice(e.target.value)}
-                        className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full text-sm bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                       >
                         {devices.map((d) => (
                           <option key={d.device_id} value={d.device_id}>
@@ -405,7 +405,7 @@ export default function ScenariosPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                  <AlertTriangle className="h-4 w-4 text-rose-400" />
                   {t("activeFaults", { count: activeFaults.length })}
                 </CardTitle>
               </CardHeader>
@@ -415,18 +415,18 @@ export default function ScenariosPage() {
                     {activeFaults.map((fault) => (
                       <div
                         key={fault.fault_id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-red-50 border-red-200"
+                        className="flex items-center justify-between p-3 rounded-lg border bg-rose-500/10 border-rose-500/20"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-sm">{fault.fault_type}</span>
                             <Badge variant="danger">{t("active")}</Badge>
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-xs text-slate-400 mt-0.5">
                             {t("target", { target: fault.target_id })}
                           </p>
                           {fault.injected_at && (
-                            <p className="text-[10px] text-gray-400 mt-0.5">
+                            <p className="text-[10px] text-slate-500 mt-0.5">
                               {t("injectedAt", { time: new Date(fault.injected_at).toLocaleString("ko-KR") })}
                             </p>
                           )}
@@ -448,7 +448,7 @@ export default function ScenariosPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-400 text-sm">
+                  <div className="text-center py-8 text-slate-500 text-sm">
                     <CheckCircle className="h-6 w-6 mx-auto mb-2 opacity-30" />
                     <p>{t("noActiveFaults")}</p>
                   </div>
@@ -461,7 +461,7 @@ export default function ScenariosPage() {
               <Card>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Info className="h-4 w-4 text-gray-400" />
+                    <Info className="h-4 w-4 text-slate-500" />
                     {t("faultTypeGuide")}
                   </CardTitle>
                 </CardHeader>
@@ -470,12 +470,12 @@ export default function ScenariosPage() {
                     {faultTypes.map((ft) => (
                       <div
                         key={ft.id || ft.name}
-                        className="flex items-start gap-2 text-xs p-2 rounded bg-gray-50"
+                        className="flex items-start gap-2 text-xs p-2 rounded bg-white/5"
                       >
                         <Badge variant="outline" className="flex-shrink-0 mt-0.5">
                           {ft.id || ft.name}
                         </Badge>
-                        <span className="text-gray-600">{ft.description}</span>
+                        <span className="text-slate-300">{ft.description}</span>
                       </div>
                     ))}
                   </div>

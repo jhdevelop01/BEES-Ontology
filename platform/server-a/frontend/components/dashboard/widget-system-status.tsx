@@ -15,12 +15,12 @@ interface WidgetSystemStatusProps {
 type SystemKey = "cooling" | "heating" | "air_handling" | "electrical" | "water" | "automation";
 
 const SYSTEM_ICONS: Record<SystemKey, React.ReactNode> = {
-  cooling: <Snowflake className="h-5 w-5 text-blue-500" />,
-  heating: <Flame className="h-5 w-5 text-red-500" />,
-  air_handling: <Wind className="h-5 w-5 text-teal-500" />,
-  electrical: <Zap className="h-5 w-5 text-yellow-500" />,
+  cooling: <Snowflake className="h-5 w-5 text-cyan-400" />,
+  heating: <Flame className="h-5 w-5 text-rose-400" />,
+  air_handling: <Wind className="h-5 w-5 text-teal-400" />,
+  electrical: <Zap className="h-5 w-5 text-amber-400" />,
   water: <Droplets className="h-5 w-5 text-cyan-500" />,
-  automation: <Cpu className="h-5 w-5 text-purple-500" />,
+  automation: <Cpu className="h-5 w-5 text-purple-400" />,
 };
 
 const I18N_KEYS: Record<SystemKey, string> = {
@@ -89,10 +89,10 @@ export function WidgetSystemStatus({
           const allGood = total > 0 && active === total;
           const allOff = active === 0;
           const bgColor = allGood
-            ? "bg-green-50 border-green-200"
+            ? "bg-emerald-500/10 border-emerald-500/20"
             : allOff
-            ? "bg-red-50 border-red-200"
-            : "bg-yellow-50 border-yellow-200";
+            ? "bg-rose-500/10 border-rose-500/20"
+            : "bg-amber-500/10 border-amber-500/20";
           const offCount = total - active;
           const statusText = allGood
             ? t("systemAllGood")
@@ -105,14 +105,14 @@ export function WidgetSystemStatus({
               >
                 <div className="flex items-center gap-2 mb-1">
                   {SYSTEM_ICONS[key as SystemKey]}
-                  <span className="text-xs font-medium text-gray-700">
+                  <span className="text-xs font-medium text-slate-200">
                     {t(I18N_KEYS[key as SystemKey])}
                   </span>
                 </div>
-                <div className="text-lg font-bold text-gray-800">
+                <div className="text-lg font-bold text-white">
                   {t("systemActive", { active, total })}
                 </div>
-                <p className="text-xs text-gray-500 mt-0.5">{statusText}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{statusText}</p>
               </div>
             </Link>
           );

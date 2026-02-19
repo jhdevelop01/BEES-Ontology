@@ -45,8 +45,16 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-const PIE_COLORS = ["#3b82f6", "#ef4444", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#06b6d4"];
-const BAR_COLORS = ["#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe"];
+const PIE_COLORS = ["#22d3ee", "#f472b6", "#fbbf24", "#34d399", "#818cf8", "#ec4899", "#06b6d4"];
+const BAR_COLORS = ["#22d3ee", "#34d399", "#fbbf24", "#818cf8", "#f472b6"];
+
+const DARK_TOOLTIP = {
+  background: 'rgba(15,23,42,0.9)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: '8px',
+  color: '#e2e8f0',
+  fontSize: '12px',
+};
 
 const PROFILE_PERIODS = [
   { labelKey: "period24h", value: "24h" },
@@ -179,7 +187,7 @@ export default function EnergyPage() {
       <div className="min-h-screen">
         <Header title={t("title")} description={t("loadingDesc")} />
         <div className="flex items-center justify-center h-96">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-cyan-400" />
         </div>
       </div>
     );
@@ -199,17 +207,17 @@ export default function EnergyPage() {
                 <Zap className="h-5 w-5 text-yellow-500" />
                 <Badge variant="success">{t("realtime")}</Badge>
               </div>
-              <p className="text-xs text-gray-500">{t("currentTotalPower")}</p>
-              <p className="text-3xl font-bold mt-1">
+              <p className="text-xs text-slate-400">{t("currentTotalPower")}</p>
+              <p className="text-3xl font-bold mt-1 text-white">
                 {realtime?.total_kw?.toFixed(1) ?? "--"}
-                <span className="text-sm font-normal text-gray-400 ml-1">kW</span>
+                <span className="text-sm font-normal text-slate-500 ml-1">kW</span>
               </p>
               {breakdownItems.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-100 space-y-1">
+                <div className="mt-3 pt-3 border-t border-white/5 space-y-1">
                   {breakdownItems.slice(0, 3).map((item) => (
                     <div key={item.system} className="flex items-center justify-between text-xs">
-                      <span className="text-gray-500">{item.system}</span>
-                      <span className="font-medium">{item.kw.toFixed(1)} kW</span>
+                      <span className="text-slate-400">{item.system}</span>
+                      <span className="font-medium text-white">{item.kw.toFixed(1)} kW</span>
                     </div>
                   ))}
                 </div>
@@ -221,8 +229,8 @@ export default function EnergyPage() {
           <Card>
             <CardContent className="pt-5 pb-4 px-5">
               <div className="flex items-center justify-between mb-2">
-                <PieChartIcon className="h-5 w-5 text-blue-500" />
-                <span className="text-xs text-gray-400">{t("systemRatio")}</span>
+                <PieChartIcon className="h-5 w-5 text-cyan-400" />
+                <span className="text-xs text-slate-500">{t("systemRatio")}</span>
               </div>
               {pieData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={160}>
@@ -242,17 +250,12 @@ export default function EnergyPage() {
                     </Pie>
                     <Tooltip
                       formatter={(value: number) => [`${value.toFixed(1)} kW`, ""]}
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
+                      contentStyle={DARK_TOOLTIP}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-[160px] text-gray-400 text-sm">
+                <div className="flex items-center justify-center h-[160px] text-slate-500 text-sm">
                   {tc("noData")}
                 </div>
               )}
@@ -264,7 +267,7 @@ export default function EnergyPage() {
                         className="w-2 h-2 rounded-full"
                         style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
                       />
-                      <span className="text-gray-500">{d.name}</span>
+                      <span className="text-slate-400">{d.name}</span>
                     </div>
                   ))}
                 </div>
@@ -276,26 +279,26 @@ export default function EnergyPage() {
           <Card>
             <CardContent className="pt-5 pb-4 px-5">
               <div className="flex items-center justify-between mb-2">
-                <Gauge className="h-5 w-5 text-green-500" />
-                <span className="text-xs text-gray-400">{t("energyIntensity")}</span>
+                <Gauge className="h-5 w-5 text-emerald-400" />
+                <span className="text-xs text-slate-500">{t("energyIntensity")}</span>
               </div>
-              <p className="text-xs text-gray-500">{t("euiLabel")}</p>
-              <p className="text-3xl font-bold mt-1">
+              <p className="text-xs text-slate-400">{t("euiLabel")}</p>
+              <p className="text-3xl font-bold mt-1 text-white">
                 {eui?.eui?.toFixed(1) ?? "--"}
               </p>
               {eui && (
                 <>
-                  <div className="mt-3 w-full bg-gray-100 rounded-full h-3">
+                  <div className="mt-3 w-full bg-white/5 rounded-full h-3">
                     <div
                       className={`h-3 rounded-full transition-all ${
-                        eui.eui <= eui.benchmark ? "bg-green-500" : "bg-red-500"
+                        eui.eui <= eui.benchmark ? "bg-emerald-500" : "bg-rose-500"
                       }`}
                       style={{ width: `${Math.min((eui.eui / (eui.benchmark * 1.5)) * 100, 100)}%` }}
                     />
                   </div>
                   <div className="flex items-center justify-between text-[10px] mt-1">
-                    <span className="text-gray-400">0</span>
-                    <span className="text-gray-400">
+                    <span className="text-slate-500">0</span>
+                    <span className="text-slate-500">
                       {t("benchmark", { value: eui.benchmark })}
                     </span>
                   </div>
@@ -303,14 +306,14 @@ export default function EnergyPage() {
                     <Badge variant={eui.eui <= eui.benchmark ? "success" : "danger"}>
                       {eui.rating || (eui.eui <= eui.benchmark ? t("ratingGood") : t("ratingExceed"))}
                     </Badge>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-slate-400">
                       {t("floorArea", { area: eui.area_m2?.toLocaleString() ?? "-" })}
                     </span>
                   </div>
                 </>
               )}
               {!eui && (
-                <div className="mt-4 text-sm text-gray-400">{t("noEUIData")}</div>
+                <div className="mt-4 text-sm text-slate-500">{t("noEUIData")}</div>
               )}
             </CardContent>
           </Card>
@@ -344,32 +347,27 @@ export default function EnergyPage() {
             {profileChartData.length > 0 ? (
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={profileChartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis
                     dataKey="time"
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
+                    tick={{ fontSize: 10, fill: '#94a3b8' }}
                     tickLine={false}
-                    axisLine={{ stroke: "#e5e7eb" }}
+                    stroke="rgba(148,163,184,0.3)"
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
+                    tick={{ fontSize: 10, fill: '#94a3b8' }}
                     tickLine={false}
-                    axisLine={{ stroke: "#e5e7eb" }}
+                    stroke="rgba(148,163,184,0.3)"
                     unit=" kW"
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
+                    contentStyle={DARK_TOOLTIP}
                     formatter={(value: number) => [`${value.toFixed(1)} kW`, t("power")]}
                   />
                   <Line
                     type="monotone"
                     dataKey="total"
-                    stroke="#3b82f6"
+                    stroke="#22d3ee"
                     strokeWidth={2}
                     dot={false}
                     activeDot={{ r: 4 }}
@@ -378,7 +376,7 @@ export default function EnergyPage() {
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-[300px] text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-[300px] text-slate-500 text-sm">
                 <div className="text-center">
                   <Activity className="h-8 w-8 mx-auto mb-2 opacity-30" />
                   <p>{t("noProfileData")}</p>
@@ -402,32 +400,29 @@ export default function EnergyPage() {
               {floorData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={floorData} layout="vertical">
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis
                       type="number"
-                      tick={{ fontSize: 10, fill: "#9ca3af" }}
+                      tick={{ fontSize: 10, fill: '#94a3b8' }}
                       unit=" kW"
+                      stroke="rgba(148,163,184,0.3)"
                     />
                     <YAxis
                       type="category"
                       dataKey="name"
-                      tick={{ fontSize: 10, fill: "#9ca3af" }}
+                      tick={{ fontSize: 10, fill: '#94a3b8' }}
                       width={40}
+                      stroke="rgba(148,163,184,0.3)"
                     />
                     <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
+                      contentStyle={DARK_TOOLTIP}
                       formatter={(value: number) => [`${value.toFixed(1)} kW`, t("power")]}
                     />
-                    <Bar dataKey="kw" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="kw" fill="#22d3ee" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
+                <div className="flex items-center justify-center h-[280px] text-slate-500 text-sm">
                   <div className="text-center">
                     <BarChart3 className="h-6 w-6 mx-auto mb-2 opacity-30" />
                     <p>{t("noFloorData")}</p>
@@ -467,7 +462,7 @@ export default function EnergyPage() {
                   <div className="text-center">
                     <div
                       className={`inline-flex items-center gap-2 text-4xl font-bold ${
-                        comparison.change_pct <= 0 ? "text-green-600" : "text-red-600"
+                        comparison.change_pct <= 0 ? "text-emerald-400" : "text-rose-400"
                       }`}
                     >
                       {comparison.change_pct <= 0 ? (
@@ -478,7 +473,7 @@ export default function EnergyPage() {
                       {comparison.change_pct > 0 ? "+" : ""}
                       {comparison.change_pct}%
                     </div>
-                    <p className="text-sm text-gray-500 mt-2">
+                    <p className="text-sm text-slate-400 mt-2">
                       {comparisonPeriod === "week" ? t("vsLastWeek") : t("vsLastMonth")}
                     </p>
                   </div>
@@ -487,14 +482,14 @@ export default function EnergyPage() {
                   <div className="space-y-3">
                     <div>
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-500">
+                        <span className="text-slate-400">
                           {comparisonPeriod === "week" ? t("thisWeek") : t("thisMonth")}
                         </span>
-                        <span className="font-semibold">{comparison.current.total_kwh.toFixed(1)} kWh</span>
+                        <span className="font-semibold text-white">{comparison.current.total_kwh.toFixed(1)} kWh</span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-4">
+                      <div className="w-full bg-white/5 rounded-full h-4">
                         <div
-                          className="h-4 rounded-full bg-blue-500 transition-all"
+                          className="h-4 rounded-full bg-cyan-500 transition-all"
                           style={{
                             width: `${
                               comparison.previous.total_kwh > 0
@@ -510,14 +505,14 @@ export default function EnergyPage() {
                     </div>
                     <div>
                       <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-500">
+                        <span className="text-slate-400">
                           {comparisonPeriod === "week" ? t("lastWeek") : t("lastMonth")}
                         </span>
-                        <span className="font-semibold">{comparison.previous.total_kwh.toFixed(1)} kWh</span>
+                        <span className="font-semibold text-white">{comparison.previous.total_kwh.toFixed(1)} kWh</span>
                       </div>
-                      <div className="w-full bg-gray-100 rounded-full h-4">
+                      <div className="w-full bg-white/5 rounded-full h-4">
                         <div
-                          className="h-4 rounded-full bg-gray-400 transition-all"
+                          className="h-4 rounded-full bg-slate-500 transition-all"
                           style={{
                             width: `${
                               comparison.current.total_kwh > 0
@@ -543,7 +538,7 @@ export default function EnergyPage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center h-[280px] text-gray-400 text-sm">
+                <div className="flex items-center justify-center h-[280px] text-slate-500 text-sm">
                   <div className="text-center">
                     <TrendingUp className="h-6 w-6 mx-auto mb-2 opacity-30" />
                     <p>{t("noComparisonData")}</p>

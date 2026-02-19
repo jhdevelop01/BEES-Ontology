@@ -36,7 +36,7 @@ export function Sheet({ open, onClose, children, title, className }: SheetProps)
       {/* Overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/30 transition-opacity duration-300",
+          "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -45,7 +45,8 @@ export function Sheet({ open, onClose, children, title, className }: SheetProps)
       {/* Panel */}
       <div
         className={cn(
-          "fixed top-0 right-0 z-50 h-full w-full max-w-md bg-white shadow-xl",
+          "fixed top-0 right-0 z-50 h-full w-full max-w-md",
+          "bg-slate-900/95 backdrop-blur-2xl border-l border-white/10 shadow-glow-lg",
           "transform transition-transform duration-300 ease-in-out",
           "overflow-y-auto",
           open ? "translate-x-0" : "translate-x-full",
@@ -54,11 +55,11 @@ export function Sheet({ open, onClose, children, title, className }: SheetProps)
       >
         {/* Header */}
         {title && (
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b bg-white px-4 py-3">
-            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-slate-900/80 backdrop-blur-xl px-4 py-3">
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              className="rounded-lg p-1.5 text-slate-400 hover:bg-white/5 hover:text-white transition-colors"
             >
               <X className="h-5 w-5" />
             </button>

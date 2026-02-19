@@ -2,21 +2,21 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-/* 버튼 컴포넌트 (shadcn/ui 스타일) */
+/* 버튼 컴포넌트 — 디지털 트윈 다크 테마 */
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-lg text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm",
-        destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
+        default: "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:shadow-glow",
+        destructive: "bg-gradient-to-r from-rose-500 to-red-600 text-white hover:shadow-glow-rose",
         outline:
-          "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50",
-        secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200",
-        ghost: "text-gray-700 hover:bg-gray-100",
-        link: "text-blue-600 underline-offset-4 hover:underline",
-        success: "bg-green-600 text-white hover:bg-green-700 shadow-sm",
+          "border border-white/20 bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white",
+        secondary: "bg-white/10 text-slate-200 hover:bg-white/15",
+        ghost: "text-slate-300 hover:bg-white/5 hover:text-white",
+        link: "text-cyan-400 underline-offset-4 hover:underline",
+        success: "bg-gradient-to-r from-emerald-500 to-green-500 text-white hover:shadow-glow-emerald",
       },
       size: {
         default: "h-10 px-4 py-2",

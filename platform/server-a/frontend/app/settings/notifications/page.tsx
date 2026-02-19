@@ -45,13 +45,13 @@ function getSeverityBadge(severity: string, labels: Record<string, string>) {
 function getChannelBadge(channel: string) {
   if (channel === "email") {
     return (
-      <Badge variant="default" className="bg-blue-100 text-blue-700 border-blue-200">
+      <Badge variant="default" className="bg-cyan-500/10 text-cyan-300 border-cyan-500/20">
         <Mail className="h-3 w-3 mr-1" />Email
       </Badge>
     );
   }
   return (
-    <Badge variant="default" className="bg-purple-100 text-purple-700 border-purple-200">
+    <Badge variant="default" className="bg-purple-500/10 text-purple-300 border-purple-500/20">
       <MessageSquare className="h-3 w-3 mr-1" />Slack
     </Badge>
   );
@@ -152,26 +152,26 @@ export default function NotificationLogPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{stats?.email?.success ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">{t("emailSuccess")}</div>
+              <div className="text-2xl font-bold text-emerald-400">{stats?.email?.success ?? 0}</div>
+              <div className="text-xs text-slate-400 mt-1">{t("emailSuccess")}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{stats?.email?.failed ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">{t("emailFailed")}</div>
+              <div className="text-2xl font-bold text-rose-400">{stats?.email?.failed ?? 0}</div>
+              <div className="text-xs text-slate-400 mt-1">{t("emailFailed")}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-green-600">{stats?.slack?.success ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">{t("slackSuccess")}</div>
+              <div className="text-2xl font-bold text-emerald-400">{stats?.slack?.success ?? 0}</div>
+              <div className="text-xs text-slate-400 mt-1">{t("slackSuccess")}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-red-600">{stats?.slack?.failed ?? 0}</div>
-              <div className="text-xs text-gray-500 mt-1">{t("slackFailed")}</div>
+              <div className="text-2xl font-bold text-rose-400">{stats?.slack?.failed ?? 0}</div>
+              <div className="text-xs text-slate-400 mt-1">{t("slackFailed")}</div>
             </CardContent>
           </Card>
         </div>
@@ -184,7 +184,7 @@ export default function NotificationLogPage() {
               setChannelFilter(e.target.value);
               setPage(0);
             }}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-sm bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
           >
             <option value="">{t("allChannels")}</option>
             <option value="email">Email</option>
@@ -196,7 +196,7 @@ export default function NotificationLogPage() {
               setStatusFilter(e.target.value);
               setPage(0);
             }}
-            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-sm bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
           >
             <option value="">{t("allStatus")}</option>
             <option value="success">{tc("success")}</option>
@@ -209,25 +209,25 @@ export default function NotificationLogPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
               </div>
             ) : items.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thTime")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thChannel")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thEquipment")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thSeverity")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thRecipient")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
+                    <tr className="border-b border-white/10 bg-white/5">
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thTime")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thChannel")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thEquipment")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thSeverity")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thRecipient")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thStatus")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {items.map((item) => (
-                      <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50">
-                        <td className="py-2 px-3 text-xs text-gray-500 whitespace-nowrap">
+                      <tr key={item.id} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="py-2 px-3 text-xs text-slate-400 whitespace-nowrap">
                           {item.created_at
                             ? new Date(item.created_at).toLocaleString("ko-KR", {
                                 month: "2-digit",
@@ -240,7 +240,7 @@ export default function NotificationLogPage() {
                         <td className="py-2 px-3">{getChannelBadge(item.channel)}</td>
                         <td className="py-2 px-3 font-medium text-xs">{item.alarm_equipment}</td>
                         <td className="py-2 px-3">{getSeverityBadge(item.alarm_severity, sevLabels)}</td>
-                        <td className="py-2 px-3 text-xs text-gray-600">{item.recipient}</td>
+                        <td className="py-2 px-3 text-xs text-slate-300">{item.recipient}</td>
                         <td className="py-2 px-3">{getStatusBadge(item.status, statusLabels)}</td>
                       </tr>
                     ))}
@@ -248,7 +248,7 @@ export default function NotificationLogPage() {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-16 text-gray-400 text-sm">
+              <div className="text-center py-16 text-slate-500 text-sm">
                 <Mail className="h-8 w-8 mx-auto mb-3 opacity-30" />
                 <p>{t("noNotifHistory")}</p>
               </div>
@@ -256,15 +256,15 @@ export default function NotificationLogPage() {
 
             {/* 페이지네이션 */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-                <p className="text-xs text-gray-400">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
+                <p className="text-xs text-slate-500">
                   {tc("totalOf", { total, start: page * PAGE_SIZE + 1, end: Math.min((page + 1) * PAGE_SIZE, total) })}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-gray-600">{tc("pageOf", { page: page + 1, totalPages })}</span>
+                  <span className="text-sm text-slate-300">{tc("pageOf", { page: page + 1, totalPages })}</span>
                   <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>

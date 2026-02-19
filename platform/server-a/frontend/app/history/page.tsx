@@ -49,9 +49,17 @@ const AGGREGATION_OPTIONS = [
 ] as const;
 
 const LINE_COLORS = [
-  "#3b82f6", "#ef4444", "#10b981", "#f59e0b",
-  "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16",
+  "#22d3ee", "#34d399", "#fbbf24", "#818cf8",
+  "#f472b6", "#ec4899", "#06b6d4", "#84cc16",
 ];
+
+const DARK_TOOLTIP = {
+  background: 'rgba(15,23,42,0.9)',
+  border: '1px solid rgba(255,255,255,0.1)',
+  borderRadius: '8px',
+  color: '#e2e8f0',
+  fontSize: '12px',
+};
 
 /* ── 타입 ── */
 
@@ -235,13 +243,13 @@ export default function HistoryPage() {
             <CardContent className="space-y-3">
               {/* 검색 */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <input
                   type="text"
                   placeholder={t("pointSearch")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-3 py-2 text-sm border border-white/10 bg-white/5 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
 
@@ -267,14 +275,14 @@ export default function HistoryPage() {
               )}
 
               {/* 포인트 리스트 */}
-              <div className="max-h-[320px] overflow-y-auto border border-gray-100 rounded-lg">
+              <div className="max-h-[320px] overflow-y-auto border border-white/5 rounded-lg">
                 {pointsLoading ? (
-                  <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
+                  <div className="flex items-center justify-center py-8 text-slate-500 text-sm">
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     {t("pointListLoading")}
                   </div>
                 ) : filteredPoints.length === 0 ? (
-                  <div className="py-8 text-center text-gray-400 text-sm">
+                  <div className="py-8 text-center text-slate-500 text-sm">
                     {searchQuery ? t("noSearchResults") : t("noPoints")}
                   </div>
                 ) : (
@@ -285,8 +293,8 @@ export default function HistoryPage() {
                       <button
                         key={p.point_id}
                         onClick={() => togglePoint(p.point_id)}
-                        className={`w-full text-left px-3 py-2 text-xs border-b border-gray-50 hover:bg-gray-50 transition-colors flex items-center justify-between ${
-                          selected ? "bg-blue-50" : ""
+                        className={`w-full text-left px-3 py-2 text-xs border-b border-white/5 hover:bg-white/5 transition-colors flex items-center justify-between ${
+                          selected ? "bg-cyan-500/10" : ""
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0">
@@ -298,11 +306,11 @@ export default function HistoryPage() {
                               }}
                             />
                           )}
-                          <span className="truncate font-mono">
+                          <span className="truncate font-mono text-slate-300">
                             {shortName(p.point_id)}
                           </span>
                         </div>
-                        <span className="text-gray-400 flex-shrink-0 ml-2">
+                        <span className="text-slate-500 flex-shrink-0 ml-2">
                           {p.unit}
                         </span>
                       </button>
@@ -310,7 +318,7 @@ export default function HistoryPage() {
                   })
                 )}
               </div>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-slate-500">
                 {tc("selected", { count: selectedPoints.length, total: pointList.length })}
               </p>
             </CardContent>
@@ -335,7 +343,7 @@ export default function HistoryPage() {
             <CardContent className="space-y-4">
               {/* 기간 프리셋 */}
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-2 block">
+                <label className="text-xs font-medium text-slate-400 mb-2 block">
                   {t("period")}
                 </label>
                 <div className="flex flex-wrap gap-2">
@@ -356,7 +364,7 @@ export default function HistoryPage() {
               {/* 집계 윈도우 + 함수 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-medium text-gray-500 mb-2 block">
+                  <label className="text-xs font-medium text-slate-400 mb-2 block">
                     {t("aggregateWindow")}
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -373,7 +381,7 @@ export default function HistoryPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-500 mb-2 block">
+                  <label className="text-xs font-medium text-slate-400 mb-2 block">
                     {t("aggregateFunction")}
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -393,7 +401,7 @@ export default function HistoryPage() {
 
               {/* 에러 표시 */}
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">
                   {error}
                 </div>
               )}
@@ -407,7 +415,7 @@ export default function HistoryPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">{t("chartTitle")}</CardTitle>
               {loading && (
-                <div className="flex items-center text-sm text-gray-400">
+                <div className="flex items-center text-sm text-slate-500">
                   <Loader2 className="h-4 w-4 animate-spin mr-1.5" />
                   {t("querying")}
                 </div>
@@ -416,7 +424,7 @@ export default function HistoryPage() {
           </CardHeader>
           <CardContent>
             {selectedPoints.length === 0 ? (
-              <div className="flex items-center justify-center h-[350px] text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-[350px] text-slate-500 text-sm">
                 <div className="text-center">
                   <Clock className="h-8 w-8 mx-auto mb-3 opacity-30" />
                   <p>{t("selectPointHint")}</p>
@@ -424,7 +432,7 @@ export default function HistoryPage() {
                 </div>
               </div>
             ) : chartData.length === 0 && !loading ? (
-              <div className="flex items-center justify-center h-[350px] text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-[350px] text-slate-500 text-sm">
                 <div className="text-center">
                   <Clock className="h-8 w-8 mx-auto mb-3 opacity-30" />
                   <p>{t("noDataInPeriod")}</p>
@@ -433,25 +441,20 @@ export default function HistoryPage() {
             ) : (
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis
                     dataKey="time"
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
+                    tick={{ fontSize: 10, fill: '#94a3b8' }}
                     tickLine={false}
-                    axisLine={{ stroke: "#e5e7eb" }}
+                    stroke="rgba(148,163,184,0.3)"
                   />
                   <YAxis
-                    tick={{ fontSize: 10, fill: "#9ca3af" }}
+                    tick={{ fontSize: 10, fill: '#94a3b8' }}
                     tickLine={false}
-                    axisLine={{ stroke: "#e5e7eb" }}
+                    stroke="rgba(148,163,184,0.3)"
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
+                    contentStyle={DARK_TOOLTIP}
                     labelFormatter={(label) => t("tooltipTime", { time: label })}
                     formatter={(value: number, name: string) => [
                       `${value.toFixed(2)} ${unitMap[name] || ""}`,
@@ -459,7 +462,7 @@ export default function HistoryPage() {
                     ]}
                   />
                   <Legend
-                    wrapperStyle={{ fontSize: "12px" }}
+                    wrapperStyle={{ fontSize: "12px", color: "#94a3b8" }}
                     formatter={(value) => shortName(value)}
                   />
                   {selectedPoints.map((pid, i) => (
@@ -491,9 +494,9 @@ export default function HistoryPage() {
             <CardContent>
               <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
                 <table className="w-full text-sm">
-                  <thead className="sticky top-0 bg-white">
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                  <thead className="sticky top-0 bg-slate-900/95 backdrop-blur">
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">
                         {tc("time")}
                       </th>
                       {selectedPoints.map((pid, i) => (
@@ -509,11 +512,11 @@ export default function HistoryPage() {
                                   LINE_COLORS[i % LINE_COLORS.length],
                               }}
                             />
-                            <span className="text-gray-600 text-xs">
+                            <span className="text-slate-300 text-xs">
                               {shortName(pid)}
                             </span>
                             {unitMap[pid] && (
-                              <span className="text-gray-400 text-xs">
+                              <span className="text-slate-500 text-xs">
                                 ({unitMap[pid]})
                               </span>
                             )}
@@ -526,15 +529,15 @@ export default function HistoryPage() {
                     {chartData.slice(-100).map((row, idx) => (
                       <tr
                         key={idx}
-                        className="border-b border-gray-50 hover:bg-gray-50"
+                        className="border-b border-white/5 hover:bg-white/5"
                       >
-                        <td className="py-1.5 px-3 text-xs text-gray-500 font-mono whitespace-nowrap">
+                        <td className="py-1.5 px-3 text-xs text-slate-400 font-mono whitespace-nowrap">
                           {row.time}
                         </td>
                         {selectedPoints.map((pid) => (
                           <td
                             key={pid}
-                            className="py-1.5 px-3 text-right text-xs font-mono"
+                            className="py-1.5 px-3 text-right text-xs font-mono text-slate-300"
                           >
                             {typeof row[pid] === "number"
                               ? (row[pid] as number).toFixed(2)
@@ -547,7 +550,7 @@ export default function HistoryPage() {
                 </table>
               </div>
               {chartData.length > 100 && (
-                <p className="text-xs text-gray-400 mt-2 text-center">
+                <p className="text-xs text-slate-500 mt-2 text-center">
                   {t("recentRows", { total: chartData.length })}
                 </p>
               )}

@@ -119,7 +119,7 @@ export default function UserManagementPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
+      <div className="min-h-screen flex items-center justify-center text-slate-400">
         {t("description")}
       </div>
     );
@@ -133,8 +133,8 @@ export default function UserManagementPage() {
         {/* 상단 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="h-5 w-5 text-red-500" />
-            <span className="text-sm text-gray-500">{t("description")}</span>
+            <Shield className="h-5 w-5 text-rose-400" />
+            <span className="text-sm text-slate-400">{t("description")}</span>
           </div>
           <Button size="sm" onClick={() => setShowCreateModal(true)}>
             <Plus className="h-4 w-4 mr-1" />
@@ -152,12 +152,12 @@ export default function UserManagementPage() {
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
+              <div className="flex items-center justify-center py-12 text-slate-500 text-sm">
                 <Loader2 className="h-5 w-5 animate-spin mr-2" />
                 {tc("loading")}
               </div>
             ) : users.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 text-sm">
+              <div className="text-center py-12 text-slate-500 text-sm">
                 <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                 <p>{tc("noData")}</p>
               </div>
@@ -165,21 +165,21 @@ export default function UserManagementPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thName")}</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thEmail")}</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thRole")}</th>
-                      <th className="text-left py-2 px-3 text-gray-500 font-medium">{tc("status")}</th>
-                      <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thCreated")}</th>
-                      <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thActions")}</th>
+                    <tr className="border-b border-white/10">
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thName")}</th>
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thEmail")}</th>
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thRole")}</th>
+                      <th className="text-left py-2 px-3 text-slate-400 font-medium">{tc("status")}</th>
+                      <th className="text-right py-2 px-3 text-slate-400 font-medium">{t("thCreated")}</th>
+                      <th className="text-right py-2 px-3 text-slate-400 font-medium">{t("thActions")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {users.map((user) => (
                       <React.Fragment key={user.id}>
-                        <tr className="border-b border-gray-50 hover:bg-gray-50">
+                        <tr className="border-b border-white/5 hover:bg-white/5">
                           <td className="py-2 px-3 font-medium">{user.name}</td>
-                          <td className="py-2 px-3 text-xs text-gray-500">{user.email}</td>
+                          <td className="py-2 px-3 text-xs text-slate-400">{user.email}</td>
                           <td className="py-2 px-3">
                             <Badge variant={ROLE_BADGE[user.role] || "secondary"}>
                               {t(ROLE_LABEL_KEY[user.role] || user.role)}
@@ -190,7 +190,7 @@ export default function UserManagementPage() {
                               {user.is_active ? tc("on") : tc("off")}
                             </Badge>
                           </td>
-                          <td className="py-2 px-3 text-right text-xs text-gray-400">
+                          <td className="py-2 px-3 text-right text-xs text-slate-500">
                             {user.last_login
                               ? new Date(user.last_login).toLocaleString("ko-KR")
                               : "-"}
@@ -230,31 +230,31 @@ export default function UserManagementPage() {
                         {/* 접근 로그 확장 */}
                         {expandedUserId === user.id && (
                           <tr>
-                            <td colSpan={6} className="bg-gray-50 px-6 py-3">
+                            <td colSpan={6} className="bg-white/5 px-6 py-3">
                               {logLoading ? (
-                                <div className="flex items-center text-gray-400 text-xs">
+                                <div className="flex items-center text-slate-500 text-xs">
                                   <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
                                   {tc("loading")}
                                 </div>
                               ) : accessLogs.length === 0 ? (
-                                <p className="text-xs text-gray-400">{t("accessLog")}</p>
+                                <p className="text-xs text-slate-500">{t("accessLog")}</p>
                               ) : (
                                 <table className="w-full text-xs">
                                   <thead>
-                                    <tr className="border-b border-gray-200">
-                                      <th className="text-left py-1 px-2 text-gray-400">{tc("time")}</th>
-                                      <th className="text-left py-1 px-2 text-gray-400">{t("thActions")}</th>
-                                      <th className="text-left py-1 px-2 text-gray-400">IP</th>
+                                    <tr className="border-b border-white/10">
+                                      <th className="text-left py-1 px-2 text-slate-500">{tc("time")}</th>
+                                      <th className="text-left py-1 px-2 text-slate-500">{t("thActions")}</th>
+                                      <th className="text-left py-1 px-2 text-slate-500">IP</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {accessLogs.map((log) => (
-                                      <tr key={log.id} className="border-b border-gray-100">
-                                        <td className="py-1 px-2 text-gray-500">
+                                      <tr key={log.id} className="border-b border-white/10">
+                                        <td className="py-1 px-2 text-slate-400">
                                           {new Date(log.created_at).toLocaleString("ko-KR")}
                                         </td>
                                         <td className="py-1 px-2">{log.action}</td>
-                                        <td className="py-1 px-2 text-gray-400 font-mono">{log.ip_address || "-"}</td>
+                                        <td className="py-1 px-2 text-slate-500 font-mono">{log.ip_address || "-"}</td>
                                       </tr>
                                     ))}
                                   </tbody>
@@ -342,57 +342,57 @@ function CreateUserModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-md mx-4"
+        className="bg-slate-900/95 backdrop-blur-2xl rounded-xl shadow-glow border border-white/10 w-full max-w-md mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h3 className="text-lg font-semibold">{t("createUser")}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userName")} *</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("userName")} *</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userEmail")} *</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("userEmail")} *</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userPassword")} *</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("userPassword")} *</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">{t("userRole")}</label>
+              <label className="block text-sm font-medium text-slate-200 mb-1">{t("userRole")}</label>
               <select
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
                 <option value="viewer">{t("roleViewer")}</option>
                 <option value="operator">{t("roleOperator")}</option>
@@ -401,19 +401,19 @@ function CreateUserModal({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+              <label className="block text-sm font-medium text-slate-200 mb-1">Department</label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 placeholder=""
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</div>
+            <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{error}</div>
           )}
 
           <div className="flex justify-end gap-2 pt-2">
@@ -467,37 +467,37 @@ function EditUserModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="bg-white rounded-xl shadow-xl border border-gray-200 w-full max-w-sm mx-4"
+        className="bg-slate-900/95 backdrop-blur-2xl rounded-xl shadow-glow border border-white/10 w-full max-w-sm mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-white/10">
           <h3 className="text-lg font-semibold">{t("editUser")}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
             <X className="h-5 w-5" />
           </button>
         </div>
 
         <div className="p-4 space-y-4">
-          <div className="text-sm text-gray-500">{user.email}</div>
+          <div className="text-sm text-slate-400">{user.email}</div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userName")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("userName")}</label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t("userRole")}</label>
+            <label className="block text-sm font-medium text-slate-200 mb-1">{t("userRole")}</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="viewer">{t("roleViewer")}</option>
               <option value="operator">{t("roleOperator")}</option>
@@ -514,11 +514,11 @@ function EditUserModal({
               onChange={(e) => setIsActive(e.target.checked)}
               className="rounded"
             />
-            <label htmlFor="active" className="text-sm text-gray-700">{tc("status")}</label>
+            <label htmlFor="active" className="text-sm text-slate-200">{tc("status")}</label>
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</div>
+            <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">{error}</div>
           )}
 
           <div className="flex justify-end gap-2 pt-2">

@@ -180,7 +180,7 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen">
         <Header title={t("title")} description={t("description")} />
-        <div className="flex items-center justify-center py-20 text-gray-400 text-sm">
+        <div className="flex items-center justify-center py-20 text-slate-500 text-sm">
           <Loader2 className="h-5 w-5 animate-spin mr-2" />
           {tc("loading")}
         </div>
@@ -204,22 +204,22 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("buildingName")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("buildingName")}</label>
                 <input
                   type="text"
                   value={buildingName}
                   onChange={(e) => setBuildingName(e.target.value)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02] disabled:text-slate-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("timezone")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("timezone")}</label>
                 <select
                   value={timezone}
                   onChange={(e) => setTimezone(e.target.value)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 >
                   <option value="Asia/Seoul">Asia/Seoul (KST)</option>
                   <option value="UTC">UTC</option>
@@ -227,7 +227,7 @@ export default function SettingsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("tempUnit")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("tempUnit")}</label>
                 <div className="flex gap-3">
                   {["°C", "°F"].map((unit) => (
                     <label key={unit} className="flex items-center gap-2 cursor-pointer">
@@ -238,7 +238,7 @@ export default function SettingsPage() {
                         checked={tempUnit === unit}
                         onChange={(e) => setTempUnit(e.target.value)}
                         disabled={!isAdmin}
-                        className="text-blue-600"
+                        className="text-cyan-500"
                       />
                       <span className="text-sm">{unit}</span>
                     </label>
@@ -246,12 +246,12 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("dashboardRefresh")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("dashboardRefresh")}</label>
                 <select
                   value={dashboardRefresh}
                   onChange={(e) => setDashboardRefresh(parseInt(e.target.value))}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 >
                   <option value={5}>5s</option>
                   <option value={10}>10s</option>
@@ -274,28 +274,28 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("energyRate")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("energyRate")}</label>
                 <input
                   type="number"
                   value={energyRate}
                   onChange={(e) => setEnergyRate(parseFloat(e.target.value) || 0)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("floorArea")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("floorArea")}</label>
                 <input
                   type="number"
                   value={floorArea}
                   onChange={(e) => setFloorArea(parseFloat(e.target.value) || 0)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">EUI Target</label>
-                <div className="px-3 py-2 text-sm text-gray-500 bg-gray-50 rounded-lg">
+                <label className="block text-sm font-medium text-slate-200 mb-1">EUI Target</label>
+                <div className="px-3 py-2 text-sm text-slate-400 bg-white/5 rounded-lg">
                   {floorArea > 0 ? `${(energyRate * 8760 / floorArea).toFixed(1)} kWh/m²/yr` : "-"}
                 </div>
               </div>
@@ -314,55 +314,55 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("tempHigh")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("tempHigh")}</label>
                 <input
                   type="number"
                   step="0.5"
                   value={alarmTempHigh}
                   onChange={(e) => setAlarmTempHigh(parseFloat(e.target.value) || 0)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("tempLow")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("tempLow")}</label>
                 <input
                   type="number"
                   step="0.5"
                   value={alarmTempLow}
                   onChange={(e) => setAlarmTempLow(parseFloat(e.target.value) || 0)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("humidityHigh")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("humidityHigh")}</label>
                 <input
                   type="number"
                   value={alarmHumidityHigh}
                   onChange={(e) => setAlarmHumidityHigh(parseFloat(e.target.value) || 0)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("humidityLow")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("humidityLow")}</label>
                 <input
                   type="number"
                   value={alarmHumidityLow}
                   onChange={(e) => setAlarmHumidityLow(parseFloat(e.target.value) || 0)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t("co2High")}</label>
+                <label className="block text-sm font-medium text-slate-200 mb-1">{t("co2High")}</label>
                 <input
                   type="number"
                   value={alarmCo2High}
                   onChange={(e) => setAlarmCo2High(parseFloat(e.target.value) || 0)}
                   disabled={!isAdmin}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                  className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                 />
               </div>
             </div>
@@ -378,7 +378,7 @@ export default function SettingsPage() {
                 {t("notificationSettings")}
               </CardTitle>
               <Link href="/settings/notifications">
-                <Button variant="ghost" size="sm" className="text-xs text-gray-500">
+                <Button variant="ghost" size="sm" className="text-xs text-slate-400">
                   {t("notificationLog")} <ExternalLink className="h-3 w-3 ml-1" />
                 </Button>
               </Link>
@@ -387,14 +387,14 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
             {/* Rate Limit */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-200 mb-1">
                 {t("rateLimit")}
               </label>
               <select
                 value={rateLimitMin}
                 onChange={(e) => setRateLimitMin(parseInt(e.target.value))}
                 disabled={!isAdmin}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
               >
                 <option value={5}>5 min</option>
                 <option value={10}>10 min</option>
@@ -404,10 +404,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Email 설정 */}
-            <div className="border rounded-lg p-4 space-y-3">
+            <div className="border border-white/10 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-blue-500" /> Email
+                  <Mail className="h-4 w-4 text-cyan-400" /> Email
                 </h4>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -415,7 +415,7 @@ export default function SettingsPage() {
                     checked={emailEnabled}
                     onChange={(e) => setEmailEnabled(e.target.checked)}
                     disabled={!isAdmin}
-                    className="rounded text-blue-600"
+                    className="rounded text-cyan-500"
                   />
                   <span className="text-sm">{emailEnabled ? t("emailEnabled") : t("emailChannel")}</span>
                 </label>
@@ -423,24 +423,24 @@ export default function SettingsPage() {
               {emailEnabled && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t("emailRecipients")}</label>
+                    <label className="block text-sm font-medium text-slate-200 mb-1">{t("emailRecipients")}</label>
                     <input
                       type="text"
                       value={emailRecipients}
                       onChange={(e) => setEmailRecipients(e.target.value)}
                       disabled={!isAdmin}
                       placeholder="admin@example.com, ops@example.com"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                     />
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{t("emailSeverity")}</label>
+                      <label className="block text-sm font-medium text-slate-200 mb-1">{t("emailSeverity")}</label>
                       <select
                         value={emailSeverity}
                         onChange={(e) => setEmailSeverity(e.target.value)}
                         disabled={!isAdmin}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 disabled:bg-white/[0.02]"
                       >
                         <option value="info">Info+</option>
                         <option value="warning">Warning+</option>
@@ -468,10 +468,10 @@ export default function SettingsPage() {
             </div>
 
             {/* Slack 설정 */}
-            <div className="border rounded-lg p-4 space-y-3">
+            <div className="border border-white/10 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-medium flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-purple-500" /> Slack
+                  <MessageSquare className="h-4 w-4 text-purple-400" /> Slack
                 </h4>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -479,7 +479,7 @@ export default function SettingsPage() {
                     checked={slackEnabled}
                     onChange={(e) => setSlackEnabled(e.target.checked)}
                     disabled={!isAdmin}
-                    className="rounded text-purple-600"
+                    className="rounded text-purple-500"
                   />
                   <span className="text-sm">{slackEnabled ? t("slackEnabled") : t("slackChannel")}</span>
                 </label>
@@ -487,24 +487,24 @@ export default function SettingsPage() {
               {slackEnabled && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">{t("slackWebhook")}</label>
+                    <label className="block text-sm font-medium text-slate-200 mb-1">{t("slackWebhook")}</label>
                     <input
                       type="text"
                       value={slackWebhook}
                       onChange={(e) => setSlackWebhook(e.target.value)}
                       disabled={!isAdmin}
                       placeholder="https://hooks.slack.com/services/..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-50"
+                      className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-white/[0.02]"
                     />
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">{t("slackSeverity")}</label>
+                      <label className="block text-sm font-medium text-slate-200 mb-1">{t("slackSeverity")}</label>
                       <select
                         value={slackSeverity}
                         onChange={(e) => setSlackSeverity(e.target.value)}
                         disabled={!isAdmin}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-50"
+                        className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-sm text-white focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-white/[0.02]"
                       >
                         <option value="info">Info+</option>
                         <option value="warning">Warning+</option>
@@ -546,7 +546,7 @@ export default function SettingsPage() {
             </Button>
           </div>
         ) : (
-          <div className="text-sm text-gray-400 text-center">
+          <div className="text-sm text-slate-500 text-center">
             {t("userManagement")}
           </div>
         )}

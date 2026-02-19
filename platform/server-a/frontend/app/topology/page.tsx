@@ -147,8 +147,8 @@ function TreeItem({
       <button
         className={`w-full flex items-center gap-1.5 py-1.5 px-2 text-sm rounded-md transition-colors ${
           isSelected
-            ? "bg-blue-50 text-blue-700"
-            : "text-gray-700 hover:bg-gray-50"
+            ? "bg-cyan-500/10 text-cyan-400"
+            : "text-slate-300 hover:bg-white/5"
         }`}
         style={{ paddingLeft: `${level * 16 + 8}px` }}
         onClick={() => {
@@ -160,9 +160,9 @@ function TreeItem({
         <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
           {hasChildren ? (
             isExpanded ? (
-              <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+              <ChevronDown className="h-3.5 w-3.5 text-slate-500" />
             ) : (
-              <ChevronRight className="h-3.5 w-3.5 text-gray-400" />
+              <ChevronRight className="h-3.5 w-3.5 text-slate-500" />
             )
           ) : (
             <span className="w-3.5" />
@@ -172,23 +172,23 @@ function TreeItem({
         {/* 타입 아이콘 */}
         <Icon
           className={`h-4 w-4 flex-shrink-0 ${
-            isSelected ? "text-blue-600" : "text-gray-400"
+            isSelected ? "text-cyan-400" : "text-slate-500"
           }`}
         />
 
         {/* 이름 */}
-        <span className={`truncate flex-1 text-left ${isComponent ? "text-gray-400" : ""}`}>{node.name}</span>
+        <span className={`truncate flex-1 text-left ${isComponent ? "text-slate-600" : ""}`}>{node.name}</span>
 
         {/* 부품 태그 */}
         {isComponent && (
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400 flex-shrink-0">
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500 flex-shrink-0">
             {t("componentTag")}
           </span>
         )}
 
         {/* 장비 활성 표시 — SSE 시뮬레이션 장비만 */}
         {isEquipment && isSimulated && (
-          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? "bg-green-500" : "bg-red-400"}`} />
+          <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? "bg-emerald-500" : "bg-rose-400"}`} />
         )}
       </button>
 
@@ -240,42 +240,44 @@ function EquipmentCard({ node, isActive, isSimulated, sensorValues, lastUpdate }
   }, [isActive]);
 
   return (
-    <Card className={`relative overflow-hidden transition-shadow ${pulse ? "ring-2 ring-blue-400 ring-opacity-50" : ""}`}>
+    <Card className={`relative overflow-hidden transition-shadow ${
+      pulse ? "ring-2 ring-cyan-400 ring-opacity-50" : ""
+    } ${isSimulated && isActive ? "shadow-glow-emerald" : isSimulated && !isActive ? "" : ""}`}>
       <div
         className={`absolute top-0 left-0 right-0 h-1 ${
-          !isSimulated ? "bg-gray-100" : isActive ? "bg-green-500" : "bg-red-300"
+          !isSimulated ? "bg-white/5" : isActive ? "bg-emerald-500" : "bg-rose-400/50"
         }`}
       />
       <CardContent className="pt-4 pb-3 px-4">
         <div className="flex items-center justify-between mb-2">
-          <Icon className="h-5 w-5 text-gray-400" />
+          <Icon className="h-5 w-5 text-slate-500" />
           {isSimulated ? (
             <div className="flex items-center gap-2">
-              <span className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-green-500 animate-pulse" : "bg-red-400"}`} />
+              <span className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-emerald-500 animate-pulse" : "bg-rose-400"}`} />
               <Badge variant={isActive ? "success" : "secondary"}>
                 {isActive ? "ON" : "OFF"}
               </Badge>
             </div>
           ) : (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500">
               N/A
             </span>
           )}
         </div>
-        <p className="text-sm font-medium text-gray-900 truncate">
+        <p className="text-sm font-medium text-white truncate">
           {node.name}
         </p>
-        <p className="text-xs text-gray-500 mt-0.5">{t(getTypeLabel(node.type))}</p>
+        <p className="text-xs text-slate-400 mt-0.5">{t(getTypeLabel(node.type))}</p>
 
         {/* 실시간 센서 값 (최대 2개) */}
         {sensorValues && sensorValues.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-gray-100 space-y-1">
+          <div className="mt-2 pt-2 border-t border-white/5 space-y-1">
             {sensorValues.slice(0, 2).map((sv) => (
               <div key={sv.name} className="flex items-center justify-between text-xs">
-                <span className="text-gray-400 truncate mr-2">{sv.name}</span>
-                <span className="font-semibold text-gray-700 whitespace-nowrap">
+                <span className="text-slate-500 truncate mr-2">{sv.name}</span>
+                <span className="font-semibold text-slate-200 whitespace-nowrap">
                   {sv.value !== null ? sv.value.toFixed(1) : "--"}{" "}
-                  <span className="text-gray-400 font-normal">{sv.unit}</span>
+                  <span className="text-slate-500 font-normal">{sv.unit}</span>
                 </span>
               </div>
             ))}
@@ -284,7 +286,7 @@ function EquipmentCard({ node, isActive, isSimulated, sensorValues, lastUpdate }
 
         {/* 마지막 업데이트 시간 */}
         {lastUpdate && (
-          <p className="text-[10px] text-gray-300 mt-1.5">
+          <p className="text-[10px] text-slate-600 mt-1.5">
             {new Date(lastUpdate * 1000).toLocaleTimeString("ko-KR")}
           </p>
         )}
@@ -292,7 +294,7 @@ function EquipmentCard({ node, isActive, isSimulated, sensorValues, lastUpdate }
         {/* 장비 상세 링크 */}
         <Link
           href={`/monitoring/${encodeURIComponent(toMonitoringId(node.id))}`}
-          className="mt-2 flex items-center justify-center gap-1 text-xs text-blue-500 hover:text-blue-700"
+          className="mt-2 flex items-center justify-center gap-1 text-xs text-cyan-400 hover:text-cyan-300"
           onClick={(e) => e.stopPropagation()}
         >
           {t("detailView")}
@@ -449,10 +451,10 @@ export default function TopologyPage() {
 
       <div className="flex flex-col md:flex-row" style={{ minHeight: "calc(100vh - 64px)" }}>
         {/* 왼쪽: 트리뷰 */}
-        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-gray-200 bg-white flex-shrink-0 overflow-y-auto max-h-[40vh] md:max-h-none md:h-auto">
-          <div className="p-4 border-b border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-700">{t("buildingStructure")}</h3>
-            <p className="text-xs text-gray-400 mt-0.5">
+        <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-white/10 bg-white/[0.02] flex-shrink-0 overflow-y-auto max-h-[40vh] md:max-h-none md:h-auto">
+          <div className="p-4 border-b border-white/10">
+            <h3 className="text-sm font-semibold text-slate-200">{t("buildingStructure")}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
               {treeData ? `${treeData.source}` : tc("loading")}
             </p>
           </div>
@@ -460,14 +462,14 @@ export default function TopologyPage() {
           <div className="py-2">
             {loading && (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
               </div>
             )}
 
             {error && (
               <div className="px-4 py-8 text-center">
-                <AlertCircle className="h-6 w-6 text-red-400 mx-auto mb-2" />
-                <p className="text-sm text-red-500">{error}</p>
+                <AlertCircle className="h-6 w-6 text-rose-400 mx-auto mb-2" />
+                <p className="text-sm text-rose-400">{error}</p>
               </div>
             )}
 
@@ -493,11 +495,11 @@ export default function TopologyPage() {
             /* 빈 상태 */
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <Building2 className="h-12 w-12 text-gray-200 mx-auto mb-4" />
-                <p className="text-gray-400 text-sm">
+                <Building2 className="h-12 w-12 text-slate-700 mx-auto mb-4" />
+                <p className="text-slate-500 text-sm">
                   {t("selectNode")}
                 </p>
-                <p className="text-gray-300 text-xs mt-1">
+                <p className="text-slate-600 text-xs mt-1">
                   {t("selectNodeHint")}
                 </p>
               </div>
@@ -507,10 +509,10 @@ export default function TopologyPage() {
               {/* 선택된 노드 헤더 */}
               <div className="flex items-center gap-3">
                 {React.createElement(getTypeIcon(selectedNode.type), {
-                  className: "h-6 w-6 text-blue-600",
+                  className: "h-6 w-6 text-cyan-400",
                 })}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-white">
                     {selectedNode.name}
                   </h2>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -530,7 +532,7 @@ export default function TopologyPage() {
               {isEquipmentNode(selectedNode) && (
                 <Link
                   href={`/monitoring/${encodeURIComponent(toMonitoringId(selectedNode.id))}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20 rounded-lg transition-colors"
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   {t("equipmentDetail")}
@@ -596,7 +598,7 @@ export default function TopologyPage() {
 
                       if (matchedPoints.length === 0) {
                         return (
-                          <p className="text-sm text-gray-400 py-4 text-center">
+                          <p className="text-sm text-slate-500 py-4 text-center">
                             {t("noRealtimeData")}
                           </p>
                         );
@@ -606,20 +608,20 @@ export default function TopologyPage() {
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm">
                             <thead>
-                              <tr className="border-b border-gray-200">
-                                <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                              <tr className="border-b border-white/10">
+                                <th className="text-left py-2 px-3 text-slate-400 font-medium">
                                   {t("thSensor")}
                                 </th>
-                                <th className="text-right py-2 px-3 text-gray-500 font-medium">
+                                <th className="text-right py-2 px-3 text-slate-400 font-medium">
                                   {t("thValue")}
                                 </th>
-                                <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                                <th className="text-left py-2 px-3 text-slate-400 font-medium">
                                   {t("thUnit")}
                                 </th>
-                                <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                                <th className="text-left py-2 px-3 text-slate-400 font-medium">
                                   {t("thStatus")}
                                 </th>
-                                <th className="text-right py-2 px-3 text-gray-500 font-medium">
+                                <th className="text-right py-2 px-3 text-slate-400 font-medium">
                                   {t("thTime")}
                                 </th>
                               </tr>
@@ -628,17 +630,17 @@ export default function TopologyPage() {
                               {matchedPoints.map((mp) => (
                                 <tr
                                   key={mp.id}
-                                  className="border-b border-gray-50 hover:bg-gray-50"
+                                  className="border-b border-white/5 hover:bg-white/5"
                                 >
-                                  <td className="py-2 px-3 font-medium">
+                                  <td className="py-2 px-3 font-medium text-slate-200">
                                     {mp.name}
                                   </td>
-                                  <td className="py-2 px-3 text-right font-semibold">
+                                  <td className="py-2 px-3 text-right font-semibold text-white">
                                     {mp.value !== null
                                       ? mp.value.toFixed(2)
                                       : "--"}
                                   </td>
-                                  <td className="py-2 px-3 text-gray-500">
+                                  <td className="py-2 px-3 text-slate-400">
                                     {mp.unit}
                                   </td>
                                   <td className="py-2 px-3">
@@ -654,7 +656,7 @@ export default function TopologyPage() {
                                       {mp.quality}
                                     </Badge>
                                   </td>
-                                  <td className="py-2 px-3 text-right text-xs text-gray-400">
+                                  <td className="py-2 px-3 text-right text-xs text-slate-500">
                                     {mp.ts
                                       ? new Date(
                                           mp.ts * 1000
@@ -682,10 +684,10 @@ export default function TopologyPage() {
                     <>
                       {/* 뷰 모드 토글 */}
                       <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-gray-700">
+                        <h3 className="text-sm font-semibold text-slate-200">
                           {t("childEquipment", { count: mainEquipment.length })}
                         </h3>
-                        <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-0.5">
+                        <div className="flex items-center gap-1 border border-white/10 rounded-lg p-0.5">
                           <Button
                             variant={viewMode === "grid" ? "secondary" : "ghost"}
                             size="sm"
@@ -744,14 +746,14 @@ export default function TopologyPage() {
                             <div className="overflow-x-auto">
                               <table className="w-full text-sm">
                                 <thead>
-                                  <tr className="border-b border-gray-200">
-                                    <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
+                                  <tr className="border-b border-white/10">
+                                    <th className="text-left py-2.5 px-4 text-slate-400 font-medium">
                                       {t("thName")}
                                     </th>
-                                    <th className="text-left py-2.5 px-4 text-gray-500 font-medium">
+                                    <th className="text-left py-2.5 px-4 text-slate-400 font-medium">
                                       {t("thType")}
                                     </th>
-                                    <th className="text-center py-2.5 px-4 text-gray-500 font-medium">
+                                    <th className="text-center py-2.5 px-4 text-slate-400 font-medium">
                                       {t("thStatus")}
                                     </th>
                                   </tr>
@@ -765,7 +767,7 @@ export default function TopologyPage() {
                                     return (
                                       <tr
                                         key={eq.id}
-                                        className="border-b border-gray-50 hover:bg-gray-50 cursor-pointer"
+                                        className="border-b border-white/5 hover:bg-white/5 cursor-pointer"
                                         onClick={() => {
                                           setSelectedNode(eq);
                                           setExpandedIds((prev) => {
@@ -775,7 +777,7 @@ export default function TopologyPage() {
                                           });
                                         }}
                                       >
-                                        <td className="py-2.5 px-4 font-medium text-gray-900">
+                                        <td className="py-2.5 px-4 font-medium text-white">
                                           {eq.name}
                                         </td>
                                         <td className="py-2.5 px-4">
@@ -789,7 +791,7 @@ export default function TopologyPage() {
                                               {isActive ? "ON" : "OFF"}
                                             </Badge>
                                           ) : (
-                                            <span className="text-xs text-gray-400">N/A</span>
+                                            <span className="text-xs text-slate-500">N/A</span>
                                           )}
                                         </td>
                                       </tr>
@@ -799,7 +801,7 @@ export default function TopologyPage() {
                               </table>
                             </div>
                             {mainEquipment.length === 0 && (
-                              <div className="py-8 text-center text-sm text-gray-400">
+                              <div className="py-8 text-center text-sm text-slate-500">
                                 {t("noChildEquipment")}
                               </div>
                             )}
@@ -811,7 +813,7 @@ export default function TopologyPage() {
                       {components.length > 0 && (
                         <div className="mt-4">
                           <button
-                            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors"
+                            className="flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
                             onClick={() => setShowComponents(!showComponents)}
                           >
                             {showComponents ? (
@@ -843,22 +845,22 @@ export default function TopologyPage() {
                                   >
                                     <CardContent className="pt-3 pb-2 px-3">
                                       <div className="flex items-center justify-between mb-1">
-                                        <Cpu className="h-4 w-4 text-gray-300" />
+                                        <Cpu className="h-4 w-4 text-slate-600" />
                                         {compSim ? (
                                           <Badge variant={isActive ? "success" : "secondary"} className="text-[10px]">
                                             {isActive ? "ON" : "OFF"}
                                           </Badge>
                                         ) : (
-                                          <span className="text-[10px] text-gray-400">N/A</span>
+                                          <span className="text-[10px] text-slate-500">N/A</span>
                                         )}
                                       </div>
-                                      <p className="text-sm text-gray-500 truncate">{comp.name}</p>
+                                      <p className="text-sm text-slate-400 truncate">{comp.name}</p>
                                       <div className="flex items-center gap-1 mt-1">
-                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-400">
+                                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-slate-500">
                                           {t("componentTag")}
                                         </span>
                                         {comp.labels?.map((l) => (
-                                          <span key={l} className="text-[10px] text-gray-300">{l}</span>
+                                          <span key={l} className="text-[10px] text-slate-600">{l}</span>
                                         ))}
                                       </div>
                                     </CardContent>
@@ -878,8 +880,8 @@ export default function TopologyPage() {
                 (!selectedNode.children ||
                   selectedNode.children.length === 0) && (
                   <div className="text-center py-12">
-                    <MapPin className="h-8 w-8 text-gray-200 mx-auto mb-3" />
-                    <p className="text-sm text-gray-400">
+                    <MapPin className="h-8 w-8 text-slate-700 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">
                       {t("noChildNodes")}
                     </p>
                   </div>

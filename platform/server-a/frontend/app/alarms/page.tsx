@@ -48,36 +48,36 @@ const SEVERITY_CONFIG: Record<string, {
 }> = {
   critical: {
     label: "sevCritical",
-    color: "text-red-600",
-    bgColor: "bg-red-50 border-red-200",
+    color: "text-rose-400",
+    bgColor: "bg-rose-500/10 border-rose-500/20",
     icon: AlertOctagon,
     variant: "danger",
   },
   major: {
     label: "sevMajor",
-    color: "text-orange-600",
-    bgColor: "bg-orange-50 border-orange-200",
+    color: "text-orange-400",
+    bgColor: "bg-orange-500/10 border-orange-500/20",
     icon: AlertTriangle,
     variant: "warning",
   },
   warning: {
     label: "sevWarning",
-    color: "text-yellow-600",
-    bgColor: "bg-yellow-50 border-yellow-200",
+    color: "text-amber-400",
+    bgColor: "bg-amber-500/10 border-amber-500/20",
     icon: AlertTriangle,
     variant: "warning",
   },
   minor: {
     label: "sevMinor",
-    color: "text-blue-600",
-    bgColor: "bg-blue-50 border-blue-200",
+    color: "text-cyan-400",
+    bgColor: "bg-cyan-500/10 border-cyan-500/20",
     icon: Info,
     variant: "default",
   },
   info: {
     label: "sevInfo",
-    color: "text-gray-600",
-    bgColor: "bg-gray-50 border-gray-200",
+    color: "text-slate-400",
+    bgColor: "bg-white/5 border-white/10",
     icon: Info,
     variant: "secondary",
   },
@@ -107,25 +107,25 @@ function SuppressModal({
   const [submitting, setSubmitting] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-slate-900/95 backdrop-blur-2xl rounded-xl shadow-glow border border-white/10 w-full max-w-md mx-4 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold flex items-center gap-2">
-            <BellOff className="h-5 w-5 text-gray-500" />
+            <BellOff className="h-5 w-5 text-slate-400" />
             {t("suppressTitle")}
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-300">
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-slate-400 mb-4">
           {t("suppressDesc", { equipment })}
         </p>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-medium text-gray-500 block mb-2">{t("suppressDuration")}</label>
+            <label className="text-xs font-medium text-slate-400 block mb-2">{t("suppressDuration")}</label>
             <div className="flex gap-2">
               {[
                 { label: t("dur1h"), value: 1 },
@@ -146,13 +146,13 @@ function SuppressModal({
           </div>
 
           <div>
-            <label className="text-xs font-medium text-gray-500 block mb-2">{t("suppressReason")}</label>
+            <label className="text-xs font-medium text-slate-400 block mb-2">{t("suppressReason")}</label>
             <input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t("suppressReasonPlaceholder")}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
         </div>
@@ -201,10 +201,10 @@ function AckModal({
   const [submitting, setSubmitting] = useState(false);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="bg-slate-900/95 backdrop-blur-2xl rounded-xl shadow-glow border border-white/10 w-full max-w-sm mx-4 p-6">
         <h3 className="text-base font-semibold mb-3">{t("ackTitle")}</h3>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-slate-400 mb-4">
           {t("ackDesc", { equipment, id: alarmId })}
         </p>
         <div className="flex justify-end gap-2">
@@ -392,8 +392,8 @@ export default function AlarmsPage() {
             return (
               <Card
                 key={sev}
-                className={`cursor-pointer transition-shadow hover:shadow-md ${
-                  severityFilter === sev ? "ring-2 ring-blue-400" : ""
+                className={`cursor-pointer transition-shadow hover:shadow-glow-sm ${
+                  severityFilter === sev ? "ring-2 ring-cyan-400" : ""
                 }`}
                 onClick={() => {
                   setSeverityFilter(severityFilter === sev ? "" : sev);
@@ -405,7 +405,7 @@ export default function AlarmsPage() {
                     <Icon className={`h-5 w-5 ${config.color}`} />
                     <span className={`text-2xl font-bold ${config.color}`}>{count}</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">{t(config.label)}</p>
+                  <p className="text-xs text-slate-400 mt-1">{t(config.label)}</p>
                 </CardContent>
               </Card>
             );
@@ -413,17 +413,17 @@ export default function AlarmsPage() {
 
           {/* 억제 카운트 카드 */}
           <Card
-            className={`cursor-pointer transition-shadow hover:shadow-md ${
+            className={`cursor-pointer transition-shadow hover:shadow-glow-sm ${
               showSuppressed ? "ring-2 ring-purple-400" : ""
             }`}
             onClick={() => setShowSuppressed(!showSuppressed)}
           >
             <CardContent className="pt-4 pb-3 px-4">
               <div className="flex items-center justify-between">
-                <BellOff className="h-5 w-5 text-purple-500" />
-                <span className="text-2xl font-bold text-purple-600">{suppressed.length}</span>
+                <BellOff className="h-5 w-5 text-purple-400" />
+                <span className="text-2xl font-bold text-purple-400">{suppressed.length}</span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">{t("suppressed")}</p>
+              <p className="text-xs text-slate-400 mt-1">{t("suppressed")}</p>
             </CardContent>
           </Card>
         </div>
@@ -433,7 +433,7 @@ export default function AlarmsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <BellOff className="h-4 w-4 text-purple-500" />
+                <BellOff className="h-4 w-4 text-purple-400" />
                 {t("suppressedAlarms", { count: suppressed.length })}
               </CardTitle>
             </CardHeader>
@@ -442,14 +442,14 @@ export default function AlarmsPage() {
                 {suppressed.map((s) => (
                   <div
                     key={s.alarm_id}
-                    className="flex items-center justify-between px-4 py-3 rounded-lg border bg-purple-50 border-purple-200"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg border bg-purple-500/10 border-purple-500/20"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{s.equipment || t("unknownEquipment")}</span>
                         <Badge variant="secondary">{s.severity}</Badge>
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
+                      <p className="text-xs text-slate-400 mt-0.5">
                         {t("reasonLabel", { reason: s.reason || "-", minutes: Math.round(s.remaining_seconds / 60) })}
                       </p>
                     </div>
@@ -474,7 +474,7 @@ export default function AlarmsPage() {
           <CardContent className="py-3 px-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <div className="relative flex-1 w-full sm:w-auto">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 <input
                   type="text"
                   placeholder={t("equipmentSearch")}
@@ -483,7 +483,7 @@ export default function AlarmsPage() {
                     setEquipmentSearch(e.target.value);
                     setPage(0);
                   }}
-                  className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-9 pr-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -493,7 +493,7 @@ export default function AlarmsPage() {
                     setSeverityFilter(e.target.value);
                     setPage(0);
                   }}
-                  className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="text-sm bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 >
                   <option value="">{t("allSeverity")}</option>
                   <option value="critical">{t("sevCritical")}</option>
@@ -525,7 +525,7 @@ export default function AlarmsPage() {
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm flex items-center gap-2">
-                <Bell className="h-4 w-4 text-red-500" />
+                <Bell className="h-4 w-4 text-rose-400" />
                 {t("activeAlarms", { count: activeAlarms.length })}
               </CardTitle>
             </CardHeader>
@@ -547,10 +547,10 @@ export default function AlarmsPage() {
                           </span>
                           <Badge variant={config.variant}>{t(config.label)}</Badge>
                         </div>
-                        <p className="text-xs text-gray-600 mt-0.5">
+                        <p className="text-xs text-slate-300 mt-0.5">
                           {alarm.type || t("alarmDefault")} — {t("thValue")}: {alarm.value?.toFixed(1) ?? "-"} ({t("thThreshold")}: {alarm.threshold?.toFixed(1) ?? "-"})
                         </p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">
+                        <p className="text-[10px] text-slate-500 mt-0.5">
                           {new Date(alarm.ts * 1000).toLocaleString("ko-KR")}
                         </p>
                       </div>
@@ -571,29 +571,29 @@ export default function AlarmsPage() {
                 {t("alarmHistory")}
               </CardTitle>
               {historyLoading && (
-                <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                <Loader2 className="h-4 w-4 animate-spin text-slate-500" />
               )}
             </div>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
               </div>
             ) : filteredHistory.length > 0 ? (
               <>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-gray-200">
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thSeverity")}</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thEquipment")}</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thType")}</th>
-                        <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thValue")}</th>
-                        <th className="text-right py-2 px-3 text-gray-500 font-medium">{t("thThreshold")}</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thOccurred")}</th>
-                        <th className="text-left py-2 px-3 text-gray-500 font-medium">{t("thStatus")}</th>
-                        <th className="text-center py-2 px-3 text-gray-500 font-medium">{t("thAction")}</th>
+                      <tr className="border-b border-white/10">
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thSeverity")}</th>
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thEquipment")}</th>
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thType")}</th>
+                        <th className="text-right py-2 px-3 text-slate-400 font-medium">{t("thValue")}</th>
+                        <th className="text-right py-2 px-3 text-slate-400 font-medium">{t("thThreshold")}</th>
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thOccurred")}</th>
+                        <th className="text-left py-2 px-3 text-slate-400 font-medium">{t("thStatus")}</th>
+                        <th className="text-center py-2 px-3 text-slate-400 font-medium">{t("thAction")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -603,8 +603,8 @@ export default function AlarmsPage() {
                         return (
                           <tr
                             key={alarm.id}
-                            className={`border-b border-gray-50 hover:bg-gray-50 cursor-pointer ${
-                              selectedAlarm?.id === alarm.id ? "bg-blue-50" : ""
+                            className={`border-b border-white/5 hover:bg-white/5 cursor-pointer ${
+                              selectedAlarm?.id === alarm.id ? "bg-cyan-500/10" : ""
                             }`}
                             onClick={() =>
                               setSelectedAlarm(
@@ -621,7 +621,7 @@ export default function AlarmsPage() {
                             <td className="py-2 px-3 font-medium text-xs">
                               {alarm.equipment_id || "-"}
                             </td>
-                            <td className="py-2 px-3 text-xs text-gray-600">
+                            <td className="py-2 px-3 text-xs text-slate-300">
                               {alarm.alarm_type}
                             </td>
                             <td className="py-2 px-3 text-right font-mono text-xs">
@@ -630,7 +630,7 @@ export default function AlarmsPage() {
                             <td className="py-2 px-3 text-right font-mono text-xs">
                               {alarm.threshold_value?.toFixed(1) ?? "-"}
                             </td>
-                            <td className="py-2 px-3 text-xs text-gray-500 whitespace-nowrap">
+                            <td className="py-2 px-3 text-xs text-slate-400 whitespace-nowrap">
                               {alarm.onset_at
                                 ? new Date(alarm.onset_at).toLocaleString("ko-KR", {
                                     month: "2-digit",
@@ -665,7 +665,7 @@ export default function AlarmsPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 text-xs text-purple-600"
+                                  className="h-7 text-xs text-purple-400"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setSuppressTarget(alarm);
@@ -684,24 +684,24 @@ export default function AlarmsPage() {
 
                 {/* 선택된 알람 상세 패널 */}
                 {selectedAlarm && (
-                  <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/10">
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="text-sm font-semibold">{t("alarmDetail", { id: selectedAlarm.id })}</h4>
                       <button onClick={() => setSelectedAlarm(null)}>
-                        <X className="h-4 w-4 text-gray-400" />
+                        <X className="h-4 w-4 text-slate-500" />
                       </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
                       <div>
-                        <span className="text-gray-500">{t("detailEquipment")}</span>
+                        <span className="text-slate-400">{t("detailEquipment")}</span>
                         <span className="ml-2 font-medium">{selectedAlarm.equipment_id}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailType")}</span>
+                        <span className="text-slate-400">{t("detailType")}</span>
                         <span className="ml-2">{selectedAlarm.alarm_type}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailSeverity")}</span>
+                        <span className="text-slate-400">{t("detailSeverity")}</span>
                         <span className="ml-2">
                           <Badge variant={getSeverityConfig(selectedAlarm.severity).variant}>
                             {t(getSeverityConfig(selectedAlarm.severity).label)}
@@ -709,19 +709,19 @@ export default function AlarmsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailCurrentValue")}</span>
+                        <span className="text-slate-400">{t("detailCurrentValue")}</span>
                         <span className="ml-2 font-mono">{selectedAlarm.actual_value?.toFixed(2) ?? "-"}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailThreshold")}</span>
+                        <span className="text-slate-400">{t("detailThreshold")}</span>
                         <span className="ml-2 font-mono">{selectedAlarm.threshold_value?.toFixed(2) ?? "-"}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailMessage")}</span>
+                        <span className="text-slate-400">{t("detailMessage")}</span>
                         <span className="ml-2">{selectedAlarm.message || "-"}</span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailOnset")}</span>
+                        <span className="text-slate-400">{t("detailOnset")}</span>
                         <span className="ml-2">
                           {selectedAlarm.onset_at
                             ? new Date(selectedAlarm.onset_at).toLocaleString("ko-KR")
@@ -729,7 +729,7 @@ export default function AlarmsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailCleared")}</span>
+                        <span className="text-slate-400">{t("detailCleared")}</span>
                         <span className="ml-2">
                           {selectedAlarm.cleared_at
                             ? new Date(selectedAlarm.cleared_at).toLocaleString("ko-KR")
@@ -737,7 +737,7 @@ export default function AlarmsPage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-gray-500">{t("detailAck")}</span>
+                        <span className="text-slate-400">{t("detailAck")}</span>
                         <span className="ml-2">
                           {selectedAlarm.acknowledged_at
                             ? new Date(selectedAlarm.acknowledged_at).toLocaleString("ko-KR")
@@ -747,7 +747,7 @@ export default function AlarmsPage() {
                     </div>
 
                     {/* 액션 버튼 */}
-                    <div className="flex gap-2 mt-4 pt-3 border-t border-gray-200">
+                    <div className="flex gap-2 mt-4 pt-3 border-t border-white/10">
                       {!selectedAlarm.acknowledged_at && (
                         <Button size="sm" onClick={() => setAckTarget(selectedAlarm)}>
                           <Check className="h-4 w-4 mr-1" />
@@ -773,8 +773,8 @@ export default function AlarmsPage() {
 
                 {/* 페이지네이션 */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
-                    <p className="text-xs text-gray-400">
+                  <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">
+                    <p className="text-xs text-slate-500">
                       {tc("totalOf", { total: historyTotal, start: page * pageSize + 1, end: Math.min((page + 1) * pageSize, historyTotal) })}
                     </p>
                     <div className="flex items-center gap-2">
@@ -786,7 +786,7 @@ export default function AlarmsPage() {
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </Button>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-slate-300">
                         {tc("pageOf", { page: page + 1, totalPages })}
                       </span>
                       <Button
@@ -802,7 +802,7 @@ export default function AlarmsPage() {
                 )}
               </>
             ) : (
-              <div className="text-center py-12 text-gray-400 text-sm">
+              <div className="text-center py-12 text-slate-500 text-sm">
                 <Bell className="h-8 w-8 mx-auto mb-3 opacity-30" />
                 <p>{t("noAlarmHistory")}</p>
               </div>

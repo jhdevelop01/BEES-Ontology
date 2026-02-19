@@ -131,7 +131,7 @@ export function DashboardGrid(props: DashboardGridProps) {
   }, []);
 
   const editRing = editing
-    ? "ring-2 ring-blue-200 ring-dashed rounded-lg"
+    ? "ring-2 ring-cyan-500/30 ring-dashed rounded-lg"
     : "";
 
   const viewButtons: { key: FloorViewMode; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] = [
@@ -213,7 +213,7 @@ export function DashboardGrid(props: DashboardGridProps) {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-gray-500" />
+              <Building2 className="h-4 w-4 text-slate-400" />
               {t("floorOverview")}
             </CardTitle>
             <div className="flex gap-1.5">
@@ -234,7 +234,7 @@ export function DashboardGrid(props: DashboardGridProps) {
         </CardHeader>
         <CardContent>
           {floorLoading && floorData.length === 0 ? (
-            <div className="flex items-center justify-center h-40 text-gray-400">
+            <div className="flex items-center justify-center h-40 text-slate-500">
               <Loader2 className="h-5 w-5 animate-spin mr-2" />
               {tFloors("loading")}
             </div>

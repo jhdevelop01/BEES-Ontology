@@ -152,7 +152,7 @@ export default function AlarmHistoryPage() {
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
               <input
                 type="text"
                 placeholder={t("equipmentSearch")}
@@ -161,7 +161,7 @@ export default function AlarmHistoryPage() {
                   setEquipmentSearch(e.target.value);
                   setPage(0);
                 }}
-                className="pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="pl-9 pr-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
             <select
@@ -170,7 +170,7 @@ export default function AlarmHistoryPage() {
                 setSeverityFilter(e.target.value);
                 setPage(0);
               }}
-              className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="">{t("allSeverity")}</option>
               <option value="critical">{t("sevCritical")}</option>
@@ -190,16 +190,16 @@ export default function AlarmHistoryPage() {
             <CardContent className="py-4 px-4">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-semibold flex items-center gap-2">
-                  <BellOff className="h-4 w-4 text-purple-500" />
+                  <BellOff className="h-4 w-4 text-purple-400" />
                   {t("suppressInlineTitle", { id: suppressId })}
                 </h4>
                 <button onClick={() => setSuppressId(null)}>
-                  <X className="h-4 w-4 text-gray-400" />
+                  <X className="h-4 w-4 text-slate-500" />
                 </button>
               </div>
               <div className="flex flex-col sm:flex-row items-start sm:items-end gap-3">
                 <div>
-                  <label className="text-xs text-gray-500 block mb-1">{t("suppressDuration")}</label>
+                  <label className="text-xs text-slate-400 block mb-1">{t("suppressDuration")}</label>
                   <div className="flex gap-1">
                     {[1, 4, 12, 24].map((h) => (
                       <Button
@@ -214,13 +214,13 @@ export default function AlarmHistoryPage() {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <label className="text-xs text-gray-500 block mb-1">{t("suppressReason")}</label>
+                  <label className="text-xs text-slate-400 block mb-1">{t("suppressReason")}</label>
                   <input
                     type="text"
                     value={suppressReason}
                     onChange={(e) => setSuppressReason(e.target.value)}
                     placeholder={t("suppressReasonPlaceholder")}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-lg"
+                    className="w-full px-3 py-1.5 text-sm bg-white/5 border border-white/10 rounded-lg text-white"
                   />
                 </div>
                 <Button
@@ -241,38 +241,38 @@ export default function AlarmHistoryPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                <Loader2 className="h-6 w-6 animate-spin text-cyan-400" />
               </div>
             ) : alarms.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50">
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thSeverity")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thEquipment")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thType")}</th>
-                      <th className="text-right py-2.5 px-3 text-gray-500 font-medium">{t("thValueThreshold")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thOccurred")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thCleared")}</th>
-                      <th className="text-left py-2.5 px-3 text-gray-500 font-medium">{t("thAcknowledged")}</th>
-                      <th className="text-center py-2.5 px-3 text-gray-500 font-medium">{t("thAction")}</th>
+                    <tr className="border-b border-white/10 bg-white/5">
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thSeverity")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thEquipment")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thType")}</th>
+                      <th className="text-right py-2.5 px-3 text-slate-400 font-medium">{t("thValueThreshold")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thOccurred")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thCleared")}</th>
+                      <th className="text-left py-2.5 px-3 text-slate-400 font-medium">{t("thAcknowledged")}</th>
+                      <th className="text-center py-2.5 px-3 text-slate-400 font-medium">{t("thAction")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {alarms.map((alarm) => (
-                      <tr key={alarm.id} className="border-b border-gray-50 hover:bg-gray-50">
+                      <tr key={alarm.id} className="border-b border-white/5 hover:bg-white/5">
                         <td className="py-2 px-3">{getSeverityBadge(alarm.severity, t)}</td>
                         <td className="py-2 px-3 font-medium text-xs">{alarm.equipment_id}</td>
-                        <td className="py-2 px-3 text-xs text-gray-600">{alarm.alarm_type}</td>
+                        <td className="py-2 px-3 text-xs text-slate-300">{alarm.alarm_type}</td>
                         <td className="py-2 px-3 text-right text-xs font-mono">
                           {alarm.actual_value?.toFixed(1) ?? "-"} / {alarm.threshold_value?.toFixed(1) ?? "-"}
                         </td>
-                        <td className="py-2 px-3 text-xs text-gray-500 whitespace-nowrap">
+                        <td className="py-2 px-3 text-xs text-slate-400 whitespace-nowrap">
                           {alarm.onset_at ? new Date(alarm.onset_at).toLocaleString("ko-KR", {
                             month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
                           }) : "-"}
                         </td>
-                        <td className="py-2 px-3 text-xs text-gray-500 whitespace-nowrap">
+                        <td className="py-2 px-3 text-xs text-slate-400 whitespace-nowrap">
                           {alarm.cleared_at ? new Date(alarm.cleared_at).toLocaleString("ko-KR", {
                             month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit",
                           }) : "-"}
@@ -302,7 +302,7 @@ export default function AlarmHistoryPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 text-xs text-purple-600"
+                              className="h-7 text-xs text-purple-400"
                               onClick={() => setSuppressId(alarm.id)}
                             >
                               <BellOff className="h-3 w-3" />
@@ -315,7 +315,7 @@ export default function AlarmHistoryPage() {
                 </table>
               </div>
             ) : (
-              <div className="text-center py-16 text-gray-400 text-sm">
+              <div className="text-center py-16 text-slate-500 text-sm">
                 <Clock className="h-8 w-8 mx-auto mb-3 opacity-30" />
                 <p>{t("noAlarmHistory")}</p>
               </div>
@@ -323,15 +323,15 @@ export default function AlarmHistoryPage() {
 
             {/* 페이지네이션 */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-                <p className="text-xs text-gray-400">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-white/10">
+                <p className="text-xs text-slate-500">
                   {tc("totalOf", { total, start: page * PAGE_SIZE + 1, end: Math.min((page + 1) * PAGE_SIZE, total) })}
                 </p>
                 <div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  <span className="text-sm text-gray-600">{tc("pageOf", { page: page + 1, totalPages })}</span>
+                  <span className="text-sm text-slate-300">{tc("pageOf", { page: page + 1, totalPages })}</span>
                   <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage((p) => p + 1)}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>

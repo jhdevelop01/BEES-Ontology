@@ -29,17 +29,17 @@ export function WidgetEquipment({ devices }: WidgetEquipmentProps) {
             {devices.map((device) => (
               <div
                 key={device.device_id}
-                className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
               >
                 <div className="flex items-center gap-2">
                   {device.is_active ? (
-                    <Power className="h-4 w-4 text-green-500" />
+                    <Power className="h-4 w-4 text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]" />
                   ) : (
-                    <PowerOff className="h-4 w-4 text-gray-300" />
+                    <PowerOff className="h-4 w-4 text-slate-600" />
                   )}
                   <Link
                     href={`/monitoring/${encodeURIComponent(device.device_id)}`}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                    className="text-sm font-medium text-cyan-400 hover:text-cyan-300 hover:underline"
                   >
                     {device.device_id}
                   </Link>
@@ -51,7 +51,7 @@ export function WidgetEquipment({ devices }: WidgetEquipmentProps) {
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-400 text-sm">
+          <div className="text-center py-8 text-slate-500 text-sm">
             <PowerOff className="h-8 w-8 mx-auto mb-2 opacity-30" />
             <p>{t("noEquipmentData")}</p>
             <p className="text-xs mt-1">{t("noEquipmentHint")}</p>

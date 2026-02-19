@@ -9,7 +9,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <AlarmBanner />
       <Sidebar />
-      <main className="ml-0 md:ml-16 lg:ml-64 flex-1">{children}</main>
+      <main className="ml-0 md:ml-16 lg:ml-64 flex-1 bg-grid">{children}</main>
     </div>
   );
 }

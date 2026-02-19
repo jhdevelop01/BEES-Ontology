@@ -280,7 +280,7 @@ export default function OntologyPage() {
               "text-valign": "bottom",
               "text-halign": "center",
               "text-margin-y": 5,
-              color: "#374151",
+              color: "#94a3b8",
               "text-max-width": "80px",
               "text-wrap": "ellipsis",
               "border-width": 2,
@@ -319,7 +319,7 @@ export default function OntologyPage() {
               opacity: 1,
               label: "data(label)",
               "font-size": "9px",
-              "text-background-color": "#ffffff",
+              "text-background-color": "#0f172a",
               "text-background-opacity": 0.9,
               "text-background-padding": "2px",
             },
@@ -800,11 +800,11 @@ export default function OntologyPage() {
         <div className="flex flex-wrap items-center gap-2 md:gap-3">
           {/* 검색 */}
           <div className="relative flex-1 min-w-[180px] md:min-w-[240px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
             <input
               type="text"
               placeholder={t("searchPlaceholder")}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 text-sm border border-white/10 bg-white/5 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => {
@@ -813,7 +813,7 @@ export default function OntologyPage() {
             />
             {searchQuery && (
               <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
                 onClick={() => {
                   setSearchQuery("");
                   setSearchResults([]);
@@ -826,15 +826,15 @@ export default function OntologyPage() {
 
             {/* 검색 드롭다운 */}
             {searchOpen && searchResults.length > 0 && (
-              <div className="absolute z-50 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="absolute z-50 top-full mt-1 w-full bg-white/5 backdrop-blur-xl border border-white/10 rounded-lg shadow-glow max-h-60 overflow-y-auto">
                 {searchResults.map((r) => (
                   <button
                     key={r.uri}
-                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 border-b border-gray-50 last:border-0"
+                    className="w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 border-b border-white/5 last:border-0"
                     onClick={() => handleSearchSelect(r)}
                   >
-                    <p className="font-medium text-gray-900">{getDisplayName(locale, r.label, r.name)}</p>
-                    <p className="text-[10px] text-gray-400 font-mono">{r.name}</p>
+                    <p className="font-medium text-white">{getDisplayName(locale, r.label, r.name)}</p>
+                    <p className="text-[10px] text-slate-500 font-mono">{r.name}</p>
                     <div className="flex gap-1.5 mt-1">
                       {r.labels.slice(0, 3).map((l) => (
                         <Badge key={l} variant="secondary" className="text-[10px] px-1.5 py-0">
@@ -872,7 +872,7 @@ export default function OntologyPage() {
           </div>
 
           {/* 레이아웃 선택 — 모바일에서 숨김 */}
-          <div className="hidden md:flex items-center gap-1.5 border-l border-gray-200 pl-3">
+          <div className="hidden md:flex items-center gap-1.5 border-l border-white/10 pl-3">
             {LAYOUTS.map((l) => (
               <Button
                 key={l.value}
@@ -886,8 +886,8 @@ export default function OntologyPage() {
           </div>
 
           {/* 노드 수 제어 */}
-          <div className="hidden md:flex items-center gap-1.5 border-l border-gray-200 pl-3">
-            <span className="text-xs text-gray-500 mr-1">{t("nodeLimit") ?? "노드"}</span>
+          <div className="hidden md:flex items-center gap-1.5 border-l border-white/10 pl-3">
+            <span className="text-xs text-slate-400 mr-1">{t("nodeLimit") ?? "노드"}</span>
             {LIMIT_OPTIONS.map((opt) => (
               <Button
                 key={opt.value}
@@ -902,7 +902,7 @@ export default function OntologyPage() {
           </div>
 
           {/* 줌 컨트롤 */}
-          <div className="flex items-center gap-1 md:border-l md:border-gray-200 md:pl-3">
+          <div className="flex items-center gap-1 md:border-l md:border-white/10 md:pl-3">
             <Button variant="ghost" size="icon" onClick={zoomIn} title={t("zoomIn")}>
               <ZoomIn className="h-4 w-4" />
             </Button>
@@ -919,9 +919,9 @@ export default function OntologyPage() {
 
           {/* 통계 */}
           {graphData && (
-            <div className="flex items-center gap-2 text-xs text-gray-500 border-l border-gray-200 pl-3">
+            <div className="flex items-center gap-2 text-xs text-slate-400 border-l border-white/10 pl-3">
               <span>{t("nodeCount", { count: graphData.stats.node_count })}</span>
-              <span className="text-gray-300">|</span>
+              <span className="text-slate-600">|</span>
               <span>{t("edgeCount", { count: graphData.stats.edge_count })}</span>
             </div>
           )}
@@ -931,17 +931,17 @@ export default function OntologyPage() {
         <div className="bg-gray-900 rounded-lg overflow-hidden">
           {/* 토글 헤더 */}
           <button
-            className="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2 text-sm text-slate-600 hover:bg-gray-800 transition-colors"
             onClick={() => setCypherOpen(!cypherOpen)}
           >
             <div className="flex items-center gap-2">
               <Terminal className="h-4 w-4 text-green-400" />
               <span className="font-mono text-green-400">neo4j$</span>
-              <span className="text-gray-500">{t("cypherToggle")}</span>
+              <span className="text-slate-400">{t("cypherToggle")}</span>
             </div>
             <div className="flex items-center gap-2">
               {cypherMode && cypherResult && (
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-slate-400">
                   {cypherResult.stats.node_count} nodes, {cypherResult.stats.edge_count} edges — {cypherResult.stats.execution_ms}ms
                 </span>
               )}
@@ -987,7 +987,7 @@ export default function OntologyPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-8 text-xs border-gray-600 text-gray-300 hover:bg-gray-700"
+                      className="h-8 text-xs border-gray-600 text-slate-600 hover:bg-gray-700"
                       onClick={exitCypherMode}
                     >
                       <ArrowLeft className="h-3 w-3 mr-1" />
@@ -999,11 +999,11 @@ export default function OntologyPage() {
 
               {/* 예시 쿼리 */}
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[10px] text-gray-500 mr-1">예시:</span>
+                <span className="text-[10px] text-slate-400 mr-1">예시:</span>
                 {CYPHER_EXAMPLES.map((ex) => (
                   <button
                     key={ex.label}
-                    className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-white transition-colors"
+                    className="text-[11px] px-2 py-0.5 rounded-full bg-gray-700 text-slate-600 hover:bg-gray-600 hover:text-white transition-colors"
                     onClick={() => setCypherQuery(ex.cypher)}
                   >
                     {ex.label}
@@ -1027,10 +1027,10 @@ export default function OntologyPage() {
           <Card className="flex-1 relative overflow-hidden min-h-[300px]">
             <CardContent className="p-0 h-full">
               {loading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-10">
                   <div className="text-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
-                    <p className="text-sm text-gray-500">
+                    <Loader2 className="h-8 w-8 animate-spin text-cyan-400 mx-auto mb-2" />
+                    <p className="text-sm text-slate-400">
                       {loadingStage === "api" ? t("loadingApi")
                         : loadingStage === "init" ? t("loadingInit")
                         : loadingStage === "layout" ? t("loadingLayout")
@@ -1040,9 +1040,9 @@ export default function OntologyPage() {
                 </div>
               )}
               {error && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-10">
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-950/80 z-10">
                   <div className="text-center">
-                    <p className="text-sm text-red-500 mb-2">{error}</p>
+                    <p className="text-sm text-rose-400 mb-2">{error}</p>
                     <Button
                       variant="outline"
                       size="sm"
@@ -1057,15 +1057,15 @@ export default function OntologyPage() {
 
               {/* 이웃 확장 로딩 */}
               {expanding && (
-                <div className="absolute top-4 right-4 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
+                <div className="absolute top-4 right-4 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 shadow-sm flex items-center gap-2">
                   <Loader2 className="h-4 w-4 animate-spin text-amber-500" />
-                  <span className="text-xs text-amber-700">{t("neighborLoading")}</span>
+                  <span className="text-xs text-amber-400">{t("neighborLoading")}</span>
                 </div>
               )}
 
               {/* 범례 — 모바일에서 숨김 */}
-              <div className="hidden md:block absolute bottom-4 left-4 bg-white/95 border border-gray-200 rounded-lg p-3 shadow-sm">
-                <p className="text-xs font-semibold text-gray-600 mb-2">
+              <div className="hidden md:block absolute bottom-4 left-4 bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-lg p-3 shadow-sm">
+                <p className="text-xs font-semibold text-slate-300 mb-2">
                   {t("nodeType")}
                 </p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -1075,11 +1075,11 @@ export default function OntologyPage() {
                         className="w-3 h-3 rounded-sm"
                         style={{ backgroundColor: color }}
                       />
-                      <span className="text-[10px] text-gray-600">{type}</span>
+                      <span className="text-[10px] text-slate-300">{type}</span>
                     </div>
                   ))}
                 </div>
-                <p className="text-xs font-semibold text-gray-600 mt-2 mb-1">
+                <p className="text-xs font-semibold text-slate-300 mt-2 mb-1">
                   {t("relationship")}
                 </p>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1">
@@ -1089,12 +1089,12 @@ export default function OntologyPage() {
                         borderColor: style.color,
                         borderStyle: style.style === "dotted" ? "dotted" : style.style === "dashed" ? "dashed" : "solid",
                       }} />
-                      <span className="text-[10px] text-gray-600">{rel}</span>
+                      <span className="text-[10px] text-slate-300">{rel}</span>
                     </div>
                   ))}
                 </div>
-                <div className="mt-2 pt-2 border-t border-gray-100">
-                  <p className="text-[9px] text-gray-400">
+                <div className="mt-2 pt-2 border-t border-white/5">
+                  <p className="text-[9px] text-slate-500">
                     {t("clickHint")}
                   </p>
                 </div>
@@ -1109,7 +1109,7 @@ export default function OntologyPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">{t("nodeDetail")}</CardTitle>
                   <button
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-slate-500 hover:text-slate-300"
                     onClick={() => setSelectedNode(null)}
                   >
                     <X className="h-4 w-4" />
@@ -1119,16 +1119,16 @@ export default function OntologyPage() {
               <CardContent className="space-y-4">
                 {detailLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+                    <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
                   </div>
                 ) : selectedNode ? (
                   <>
                     {/* 이름 */}
                     <div>
-                      <h3 className="text-base font-semibold text-gray-900">
+                      <h3 className="text-base font-semibold text-white">
                         {getDisplayName(locale, selectedNode.rdfsLabel, selectedNode.name)}
                       </h3>
-                      <p className="text-xs text-gray-400 font-mono mt-1 break-all">
+                      <p className="text-xs text-slate-500 font-mono mt-1 break-all">
                         {selectedNode.uri}
                       </p>
                     </div>
@@ -1156,7 +1156,7 @@ export default function OntologyPage() {
                     {/* 속성 */}
                     {Object.keys(selectedNode.properties).length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-1">
+                        <p className="text-xs font-semibold text-slate-300 mb-1">
                           {t("properties")}
                         </p>
                         <div className="space-y-1">
@@ -1164,10 +1164,10 @@ export default function OntologyPage() {
                             ([key, val]) => (
                               <div
                                 key={key}
-                                className="flex justify-between text-xs py-1 border-b border-gray-50"
+                                className="flex justify-between text-xs py-1 border-b border-white/5"
                               >
-                                <span className="text-gray-500">{key}</span>
-                                <span className="text-gray-900 font-medium text-right max-w-[160px] truncate">
+                                <span className="text-slate-400">{key}</span>
+                                <span className="text-white font-medium text-right max-w-[160px] truncate">
                                   {String(val)}
                                 </span>
                               </div>
@@ -1180,14 +1180,14 @@ export default function OntologyPage() {
                     {/* 연결 */}
                     {selectedNode.connections.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-gray-600 mb-1">
+                        <p className="text-xs font-semibold text-slate-300 mb-1">
                           {t("connections")} ({selectedNode.connections.length})
                         </p>
                         <div className="space-y-1.5 max-h-64 overflow-y-auto">
                           {selectedNode.connections.map((conn, i) => (
                             <div
                               key={i}
-                              className="flex items-start gap-2 text-xs py-1.5 px-2 rounded bg-gray-50 hover:bg-gray-100 cursor-pointer"
+                              className="flex items-start gap-2 text-xs py-1.5 px-2 rounded bg-white/5 hover:bg-white/10 cursor-pointer"
                               onClick={() => {
                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                 const cy = cyRef.current as any;
@@ -1206,20 +1206,20 @@ export default function OntologyPage() {
                               <span
                                 className={`mt-0.5 font-mono text-[10px] flex-shrink-0 ${
                                   conn.direction === "outgoing"
-                                    ? "text-red-500"
-                                    : "text-blue-500"
+                                    ? "text-rose-400"
+                                    : "text-cyan-400"
                                 }`}
                               >
                                 {conn.direction === "outgoing" ? "->" : "<-"}
                               </span>
                               <div className="min-w-0">
-                                <p className="font-medium text-gray-700 flex items-center gap-1">
-                                  <span className="text-[10px] text-gray-400">
+                                <p className="font-medium text-slate-200 flex items-center gap-1">
+                                  <span className="text-[10px] text-slate-500">
                                     [{conn.rel}]
                                   </span>
-                                  <ExternalLink className="h-2.5 w-2.5 text-gray-300" />
+                                  <ExternalLink className="h-2.5 w-2.5 text-slate-600" />
                                 </p>
-                                <p className="text-gray-500 truncate">
+                                <p className="text-slate-400 truncate">
                                   {conn.target_uri.split("/").pop() ||
                                     conn.target_uri}
                                 </p>

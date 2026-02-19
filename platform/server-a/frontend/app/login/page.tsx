@@ -31,24 +31,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 px-4">
       <div className="w-full max-w-sm">
         {/* 로고 */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-600 text-white mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white mb-4">
             <Building2 className="h-7 w-7" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">{t("title")}</h1>
-          <p className="text-sm text-gray-500 mt-1">{t("subtitle")}</p>
+          <h1 className="text-2xl font-bold text-white">{t("title")}</h1>
+          <p className="text-sm text-slate-400 mt-1">{t("subtitle")}</p>
         </div>
 
         {/* 로그인 카드 */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">{t("heading")}</h2>
+        <div className="bg-white/5 backdrop-blur-xl rounded-xl shadow-glow border border-white/10 p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">{t("heading")}</h2>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-200 mb-1">
                 {t("email")}
               </label>
               <input
@@ -58,12 +58,12 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@bees.dev"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-200 mb-1">
                 {t("password")}
               </label>
               <input
@@ -73,12 +73,12 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t("passwordPlaceholder")}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-white/10 bg-white/5 rounded-lg text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
               />
             </div>
 
             {error && (
-              <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">
+              <div className="text-sm text-rose-400 bg-rose-500/10 rounded-lg px-3 py-2">
                 {error}
               </div>
             )}
@@ -86,13 +86,13 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 px-4 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-lg hover:shadow-glow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {loading ? t("loggingIn") : t("loginButton")}
             </button>
           </form>
 
-          <div className="mt-4 text-xs text-gray-400 text-center">
+          <div className="mt-4 text-xs text-slate-500 text-center">
             <p>{t("testAccount")}</p>
           </div>
         </div>

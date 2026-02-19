@@ -22,20 +22,20 @@ export function WidgetSensors({ points }: WidgetSensorsProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-2 px-3 text-slate-400 font-medium">
                     {t("thSensorId")}
                   </th>
-                  <th className="text-right py-2 px-3 text-gray-500 font-medium">
+                  <th className="text-right py-2 px-3 text-slate-400 font-medium">
                     {t("thValue")}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                  <th className="text-left py-2 px-3 text-slate-400 font-medium">
                     {t("thUnit")}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                  <th className="text-left py-2 px-3 text-slate-400 font-medium">
                     {t("thQuality")}
                   </th>
-                  <th className="text-right py-2 px-3 text-gray-500 font-medium">
+                  <th className="text-right py-2 px-3 text-slate-400 font-medium">
                     {t("thTime")}
                   </th>
                 </tr>
@@ -47,17 +47,17 @@ export function WidgetSensors({ points }: WidgetSensorsProps) {
                   .map((p) => (
                     <tr
                       key={p.point_id}
-                      className="border-b border-gray-50 hover:bg-gray-50"
+                      className="border-b border-white/5 hover:bg-white/5"
                     >
                       <td className="py-2 px-3 font-mono text-xs">
                         {p.point_id}
                       </td>
-                      <td className="py-2 px-3 text-right font-semibold">
+                      <td className="py-2 px-3 text-right font-semibold text-cyan-400">
                         {typeof p.value === "number"
                           ? p.value.toFixed(2)
                           : "-"}
                       </td>
-                      <td className="py-2 px-3 text-gray-500">{p.unit}</td>
+                      <td className="py-2 px-3 text-slate-400">{p.unit}</td>
                       <td className="py-2 px-3">
                         <Badge
                           variant={
@@ -67,7 +67,7 @@ export function WidgetSensors({ points }: WidgetSensorsProps) {
                           {p.quality}
                         </Badge>
                       </td>
-                      <td className="py-2 px-3 text-right text-xs text-gray-400">
+                      <td className="py-2 px-3 text-right text-xs text-slate-500">
                         {p.ts
                           ? new Date(p.ts * 1000).toLocaleTimeString("ko-KR")
                           : "-"}
@@ -78,7 +78,7 @@ export function WidgetSensors({ points }: WidgetSensorsProps) {
             </table>
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-400 text-sm">
+          <div className="text-center py-8 text-slate-500 text-sm">
             <p>{t("noSensorData")}</p>
             <p className="text-xs mt-1">
               {t("noSensorHint")}

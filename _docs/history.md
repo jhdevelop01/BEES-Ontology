@@ -2653,4 +2653,122 @@ Room → Zone 직접 연결이 없는 경우, 같은 층 Interior Zone 센서를
 
 ---
 
+## 32. 디지털 트윈 UI 리디자인 — Dark Glassmorphism 3D 테마 (2026.02.20)
+
+### 32.1 배경
+
+기존 BEES 프론트엔드는 밝은 기업 SaaS 스타일(white background, gray borders, blue accents)로, 디지털 트윈 플랫폼의 미래지향적 이미지와 맞지 않았음. 사용자 요청: "디지털 트윈 컨셉, 3D 입체감, 세련된 디자인".
+
+### 32.2 디자인 시스템 변경
+
+**컬러 팔레트 전환 (Light → Dark):**
+- 배경: `bg-gray-50` → `bg-slate-950` + CSS gradient (`from-slate-950 via-blue-950/50`)
+- 카드: `bg-white border-gray-200` → `bg-white/5 backdrop-blur-xl border-white/10`
+- 텍스트: `text-gray-900/500` → `text-white/slate-400`
+- 액센트: `blue-600` → `cyan-400` (#22d3ee)
+- 상태색: green → emerald (glow), red → rose (glow), yellow → amber (glow)
+
+**3D/깊이 효과:**
+- glassmorphism 카드: `backdrop-blur-xl` + semi-transparent background
+- neon glow shadow: `shadow-glow-sm/glow/glow-lg/glow-emerald/glow-rose/glow-amber`
+- 장비 ON 상태: `shadow-[0_0_12px_rgba(52,211,153,0.4)]` (emerald glow)
+- 사이드바/헤더: `bg-slate-900/80 backdrop-blur-2xl`
+
+**Tailwind 확장:**
+- `dt` 색상 팔레트 (bg, card, border, accent, glow)
+- 6종 glow boxShadow
+- `pulse-glow` animation (2s ease-in-out infinite)
+
+**globals.css 추가:**
+- 다크 스크롤바 (slate 계열)
+- `.glass-card` 유틸리티 클래스
+- `.bg-grid` 그리드 배경 패턴 (cyan 0.03 opacity)
+- `.text-glow-cyan`, `.text-glow-emerald` 네온 텍스트
+
+### 32.3 컴포넌트 변환
+
+**UI 기반 컴포넌트 (6개):**
+| 컴포넌트 | 핵심 변환 |
+|---------|----------|
+| `card.tsx` | `bg-white/5 backdrop-blur-xl border-white/10 shadow-glow-sm` |
+| `badge.tsx` | 각 variant에 반투명 bg + glow border (`bg-cyan-500/10 border-cyan-500/20`) |
+| `button.tsx` | gradient 버튼 (`from-cyan-500 to-blue-500`) + hover glow |
+| `toast.tsx` | 다크 glassmorphism + variant별 glow |
+| `sheet.tsx` | `bg-slate-900/95 backdrop-blur-2xl border-l border-white/10` |
+| `layout.tsx` | body: `bg-slate-950 text-white` |
+
+**레이아웃 컴포넌트 (4개):**
+| 컴포넌트 | 핵심 변환 |
+|---------|----------|
+| `sidebar.tsx` | `bg-slate-900/80 backdrop-blur-2xl`, 활성: `bg-cyan-500/10 text-cyan-400` |
+| `header.tsx` | `bg-slate-900/60 backdrop-blur-xl border-b border-white/5` |
+| `client-layout.tsx` | main에 `bg-grid` 추가 |
+| `alarm-banner.tsx` | critical: `bg-rose-500/10`, warning: `bg-amber-500/10` |
+
+### 32.4 페이지 변환 (20개 전체)
+
+모든 페이지에 동일 규칙 일관 적용:
+```
+bg-white → bg-white/5 backdrop-blur-xl
+border-gray-200 → border-white/10
+text-gray-900 → text-white
+text-gray-500 → text-slate-400
+hover:bg-gray-50 → hover:bg-white/5
+text-blue-600 → text-cyan-400
+bg-blue-600 → bg-cyan-500
+shadow-sm → shadow-glow-sm
+```
+
+**특별 처리 페이지:**
+- **로그인**: 그라디언트 배경 (`from-slate-950 via-blue-950`), 글로우 카드, 그라디언트 버튼
+- **제어**: ON 장비 `shadow-glow-emerald`, OFF 장비 `shadow-glow-rose`
+- **차트 (energy, history, monitoring, dashboard 위젯)**: Recharts 다크 테마 — CartesianGrid `rgba(255,255,255,0.05)`, 축 tick `#94a3b8`, Tooltip `rgba(15,23,42,0.9)` 배경, 라인 색상 `["#22d3ee","#34d399","#fbbf24","#818cf8","#f472b6"]`
+- **온톨로지**: Cytoscape 노드 라벨/배경 다크 변환
+- **토폴로지**: TreeItem, EquipmentCard 글로우 상태 표시
+
+### 32.5 실행 방식
+
+4개 에이전트 병렬 처리:
+1. **Foundation** (직접): tailwind.config.ts, globals.css, layout.tsx, UI 컴포넌트 6개 → 8개 파일
+2. **Agent-Layout**: sidebar, header, client-layout, alarm-banner, dashboard 위젯 8개, page.tsx → 13개 파일
+3. **Agent-Pages-A**: login, monitoring, control, topology, ontology, energy, history, live-chart, floors 4개 → 14개 파일
+4. **Agent-Pages-B**: alarms, chat, scenarios, data-quality, maintenance, reports, settings 3개 → 10개 파일
+
+Phase 1(Foundation) 완료 후 Phase 2(3개 에이전트 병렬) → Phase 3(빌드 검증+배포).
+
+### 32.6 결과
+
+| 항목 | 수치 |
+|------|:----:|
+| 변환 파일 수 | **43** |
+| 추가/삭제 라인 | +1,211 / -1,134 |
+| 신규 Tailwind 토큰 | dt 색상 5종, glow shadow 6종, animation 1종 |
+| CSS 유틸리티 | glass-card, bg-grid, text-glow-cyan, text-glow-emerald |
+| Next.js 빌드 | 0 errors |
+| TypeScript 검증 | 0 errors |
+
+### 32.7 수정 파일 목록
+
+| 레이어 | 파일 | 변경 |
+|--------|------|------|
+| 디자인 시스템 | `tailwind.config.ts` | dt 팔레트, glow shadow, animation |
+| 디자인 시스템 | `globals.css` | 다크 스크롤바, glass-card, bg-grid |
+| 디자인 시스템 | `app/layout.tsx` | body `bg-slate-950 text-white` |
+| UI 컴포넌트 | `ui/card.tsx` | glassmorphism 기본 |
+| UI 컴포넌트 | `ui/badge.tsx` | 다크 glow variant |
+| UI 컴포넌트 | `ui/button.tsx` | gradient + glow |
+| UI 컴포넌트 | `ui/toast.tsx` | 다크 glassmorphism |
+| UI 컴포넌트 | `ui/sheet.tsx` | 다크 glass panel |
+| 레이아웃 | `layout/sidebar.tsx` | 다크 glass sidebar |
+| 레이아웃 | `layout/header.tsx` | 다크 glass header |
+| 레이아웃 | `client-layout.tsx` | bg-grid 배경 |
+| 레이아웃 | `alarm-banner.tsx` | rose/amber glow |
+| 대시보드 | `dashboard/dashboard-grid.tsx` | 다크 그리드 |
+| 대시보드 | `dashboard/widget-*.tsx` (7개) | KPI font-mono, neon 상태, 다크 차트 |
+| 페이지 | 20개 전체 | 다크 글래스모피즘 일관 적용 |
+| 차트 | `charts/live-chart.tsx` | Recharts 다크 테마 |
+| 층별 | `floors/*.tsx` (4개) | 다크 히트맵/카드/리스트/상세 |
+
+---
+
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*
