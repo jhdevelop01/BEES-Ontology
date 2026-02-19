@@ -12,6 +12,7 @@ import {
   type ChatMessage,
   type ChatResponse,
   type ChatStatusResponse,
+  type ChatSourceInfo,
 } from "@/lib/api";
 import {
   Send,
@@ -45,7 +46,7 @@ interface DisplayMessage {
     arguments: Record<string, unknown>;
     result_count: number;
   }>;
-  sources?: string[];
+  sources?: ChatSourceInfo[];
 }
 
 /* ── Cypher 코드 블록 컴포넌트 ── */
@@ -308,7 +309,7 @@ export default function ChatPage() {
                                 variant="secondary"
                                 className="text-[10px]"
                               >
-                                {s}
+                                {s.tool} ({s.result_count} 건)
                               </Badge>
                             ))}
                           </div>

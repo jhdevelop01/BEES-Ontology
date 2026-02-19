@@ -419,10 +419,16 @@ export interface ToolCallInfo {
   result_count: number;
 }
 
+export interface ChatSourceInfo {
+  tool: string;
+  arguments: Record<string, unknown>;
+  result_count: number;
+}
+
 export interface ChatResponse {
   response: string;
   cypher_queries: string[];
-  sources: string[];
+  sources: ChatSourceInfo[];
   tool_calls: ToolCallInfo[];
 }
 

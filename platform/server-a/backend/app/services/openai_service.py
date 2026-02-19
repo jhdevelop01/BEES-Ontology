@@ -282,30 +282,71 @@ async def _tool_query_building_ontology(cypher: str) -> dict[str, Any]:
 
 
 async def _tool_get_equipment_on_floor(floor: str) -> dict[str, Any]:
-    """특정 층의 장비 목록 조회"""
+    """특정 층의 장비 목록 조회 (hasLocation 관계 + URI 패턴 병행)"""
     floor_code = _normalize_floor(floor)
-    cypher = """
-        MATCH (n)
-        WHERE n.uri CONTAINS $floor_code
-          AND any(label IN labels(n) WHERE
-              label = 'Equipment' OR label = 'AHU' OR label = 'VAV' OR
-              label = 'FCU' OR label = 'Fan' OR label = 'Pump' OR
-              label = 'Chiller' OR label = 'Boiler' OR label = 'PAC' OR
-              label = 'MAU' OR label = 'Damper' OR label = 'Valve'
-          )
-        RETURN n.uri AS uri, labels(n) AS labels
+    # floor_code에서 층 코드만 추출 (예: "B_5F" → "5F")
+    short_code = floor_code.replace("B_", "", 1) if floor_code.startswith("B_") else floor_code
+
+    EQUIP_LABELS = [
+        "Equipment", "AHU", "VAV", "FCU", "Fan", "Pump",
+        "Chiller", "Boiler", "PAC", "MAU", "Damper", "Valve",
+        "Cooling_Tower", "VFD", "Controller", "Lighting_Equipment",
+        "Elevator", "Transformer", "UPS", "Switchgear",
+        "Emergency_Generator", "Water_Pump", "Fan_Coil_Unit",
+        "Distribution_Header", "Chilled_Ceiling_Panel", "Floor_Diffuser",
+        "Building_Electrical_Meter", "Electrical_Equipment", "Solar_PV_System",
+        "HVAC_Equipment", "Radiant_Heating_Panel",
+    ]
+
+    # 두 가지 방법으로 장비를 조회하여 합침
+    floor_uri = f"https://example.org/gec-b#{floor_code}"
+
+    # 방법1: hasLocation으로 해당 층 또는 하위 Zone에 위치한 장비
+    cypher1 = """
+        MATCH (f {uri: $floor_uri})
+        OPTIONAL MATCH (f)-[:hasPart*1..2]->(zone)
+        WITH collect(DISTINCT zone.uri) + [$floor_uri] AS locs
+        UNWIND locs AS loc_uri
+        MATCH (equip)-[:hasLocation]->(loc {uri: loc_uri})
+        WHERE any(l IN labels(equip) WHERE l IN $labels)
+        RETURN DISTINCT equip.uri AS uri, labels(equip) AS labels
         LIMIT 50
     """
-    results = await neo4j_service.run_cypher(cypher, {"floor_code": floor_code})
+    results1 = await neo4j_service.run_cypher(cypher1, {
+        "floor_uri": floor_uri,
+        "labels": EQUIP_LABELS,
+    })
+
+    # 방법2: URI에 층 코드가 포함된 장비 (예: CC_Panel_5F_Int)
+    cypher2 = """
+        MATCH (n)
+        WHERE n.uri STARTS WITH 'https://example.org/gec-b#'
+          AND (n.uri CONTAINS ('_' + $short_code + '_') OR n.uri ENDS WITH ('_' + $short_code))
+          AND any(l IN labels(n) WHERE l IN $labels)
+        RETURN DISTINCT n.uri AS uri, labels(n) AS labels
+        LIMIT 50
+    """
+    results2 = await neo4j_service.run_cypher(cypher2, {
+        "short_code": short_code,
+        "labels": EQUIP_LABELS,
+    })
+
+    results = (results1 if not (results1 and "error" in results1[0]) else []) + \
+              (results2 if not (results2 and "error" in results2[0]) else [])
     equipment = []
+    seen = set()
     for r in results:
         if "error" in r:
             return {"error": r["error"]}
         uri = r.get("uri", "")
+        if not uri or uri in seen:
+            continue
+        seen.add(uri)
+        labels = [l for l in r.get("labels", []) if l != "Resource"]
         equipment.append({
             "name": neo4j_service._extract_name(uri),
             "uri": uri,
-            "labels": r.get("labels", []),
+            "labels": labels,
         })
     return {"floor": floor, "floor_code": floor_code, "equipment": equipment, "count": len(equipment)}
 

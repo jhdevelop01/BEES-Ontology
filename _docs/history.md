@@ -3123,4 +3123,45 @@ Agent Teams(3명 병렬)로 작업.
 
 ---
 
+## 39. AI 채팅 버그 수정 — React 크래시 + 층별 장비 조회 실패 (2026.02.20)
+
+### 39.1 문제 현상
+1. `/chat` 페이지에서 메시지 전송 시 **React error #31** ("Objects are not valid as React children") 발생 → 페이지 크래시
+2. "5층에 있는 장비 목록 보여줘" 질문 시 **0건 반환** (토폴로지에서는 14개 장비 확인 가능)
+
+### 39.2 원인 분석
+
+**버그 1: React 크래시**
+- 백엔드 `ChatResponse.sources`가 `list[dict]` (`{tool, arguments, result_count}`)
+- 프론트엔드 `api.ts`에서 `sources: string[]`로 선언 (타입 불일치)
+- `page.tsx`에서 `{s}` — Object를 JSX children으로 직접 렌더링 → React error #31
+
+**버그 2: 층별 장비 0건**
+- `get_equipment_on_floor` 함수가 `n.uri CONTAINS "B_5F"`로만 검색
+- 장비 URI에는 `B_5F`가 포함되지 않음 (예: `AHU_UFAD_1`, `CC_Panel_5F_Int`)
+- 장비는 `hasLocation` 관계로 층/Zone에 연결되어 있으나, 해당 관계 미사용
+- 커스텀 장비 라벨 7종 누락 (`Distribution_Header`, `Chilled_Ceiling_Panel`, `Floor_Diffuser` 등)
+
+### 39.3 수정 내용
+
+| 파일 | 변경 |
+|------|------|
+| `frontend/lib/api.ts` | `ChatSourceInfo` 인터페이스 추가, `sources: ChatSourceInfo[]` 타입 수정 |
+| `frontend/app/chat/page.tsx` | `ChatSourceInfo` import, sources 타입 변경, 렌더링 `{s.tool} ({s.result_count} 건)` |
+| `backend/app/services/openai_service.py` | `_tool_get_equipment_on_floor` 전면 개선 |
+
+**openai_service.py 주요 변경:**
+- 단일 URI 검색 → 2중 쿼리 (hasLocation 관계 + URI 패턴)
+- 쿼리1: `hasLocation`으로 해당 층 또는 하위 Zone에 위치한 장비
+- 쿼리2: URI에 층 코드 패턴 포함된 장비 (`_5F_`, `_5F`)
+- 장비 라벨 30종으로 확장 (기존 12종 + 커스텀 7종 추가)
+- 중복 제거 (`seen` set) + `Resource` 라벨 필터링
+
+### 39.4 검증 결과
+- 5층 장비: 0건 → **14건** (AHU_UFAD_1, CC_Panel, Floor_Diffuser, Valve 등)
+- 지하2층 장비: **7건** (Main_Distribution_Panel, UPS_System, Emergency_Generator 등)
+- React 크래시: 해소, sources 정상 렌더링
+
+---
+
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*
