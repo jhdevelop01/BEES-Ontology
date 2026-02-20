@@ -19,7 +19,7 @@ from typing import Any
 import httpx
 
 from app.config import OPENAI_API_KEY, OPENAI_MODEL, SERVER_D_URL
-from app.services import neo4j_service, mqtt_service, postgres_service
+from app.services import neo4j_service, postgres_service
 
 logger = logging.getLogger(__name__)
 
@@ -101,9 +101,8 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 
 ## 데이터 소스
 1. Neo4j (온톨로지): 건물 구조, 장비 관계, 시스템 구성 → query_building_ontology, get_equipment_on_floor, get_equipment_sensors, get_system_info, count_by_type, get_energy_flow
-2. MQTT (실시간): 현재 센서값, 층별 환경 → get_realtime_sensor_data, get_floor_environment
-3. InfluxDB (시계열 이력): 과거 데이터 추이, 통계 → get_point_history
-4. PostgreSQL (관리): 알람 이력, 유지보수, 장비 정보 → get_alarm_history, get_work_orders, get_equipment_metadata
+2. InfluxDB (실시간 + 시계열): 현재 센서 최신값, 층별 환경, 과거 데이터 추이/통계 → get_realtime_sensor_data, get_floor_environment, get_point_history
+3. PostgreSQL (관리): 알람 이력, 유지보수, 장비 정보 → get_alarm_history, get_work_orders, get_equipment_metadata
 
 복합 질문은 여러 도구를 순차 호출하여 답변. 예: "어제 온도가 가장 높았던 층" → get_point_history로 각 층 조회 → 비교.
 
@@ -249,7 +248,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_realtime_sensor_data",
-            "description": "실시간 센서 데이터를 조회합니다. 키워드로 포인트를 검색하여 현재값을 반환합니다. 온도, 습도, 전력, 유량, 압력, CO2 등 실시간 측정값을 확인할 수 있습니다.",
+            "description": "센서 데이터 최신값을 조회합니다 (InfluxDB). 키워드로 포인트를 검색하여 현재값을 반환합니다. 온도, 습도, 전력, 유량, 압력, CO2 등 측정값을 확인할 수 있습니다.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -270,7 +269,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_floor_environment",
-            "description": "전 층(B4F~RF, 18개)의 실시간 온도/습도/CO2 조회. 층별 비교, 최고/최저 검색에 사용.",
+            "description": "전 층(B4F~RF, 18개)의 최신 온도/습도/CO2 조회 (InfluxDB). 층별 비교, 최고/최저 검색에 사용.",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -759,28 +758,39 @@ _SENSOR_KEYWORD_ALIASES: dict[str, list[str]] = {
 
 
 async def _tool_get_realtime_sensor_data(keyword: str, unit_filter: str = "") -> dict[str, Any]:
-    """실시간 센서 데이터를 키워드로 검색 (한국어 키워드 → 영어 별칭 자동 매핑)"""
-    cache = mqtt_service.get_point_cache()
+    """InfluxDB 최신 센서 데이터를 키워드로 검색 (Server D /data/points/summary 경유)"""
+    try:
+        url = f"{SERVER_D_URL}/data/points/summary"
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return {"error": f"Server D 응답 오류: {resp.status_code}", "count": 0, "points": []}
+            data = resp.json()
+    except httpx.RequestError as e:
+        return {"error": f"Server D 연결 실패: {e}", "count": 0, "points": []}
+    except Exception as e:
+        return {"error": f"센서 데이터 조회 실패: {e}", "count": 0, "points": []}
+
     results = []
     kw = keyword.upper()
 
-    # 한국어 키워드인 경우 영어 별칭 목록 확보
-    alias_keywords: list[str] = []
-    if kw in _SENSOR_KEYWORD_ALIASES:
-        alias_keywords = _SENSOR_KEYWORD_ALIASES[kw]
+    # 한국어 키워드 → 영어 별칭 매핑
+    alias_keywords: list[str] = _SENSOR_KEYWORD_ALIASES.get(kw, [])
 
-    for point_id, data in cache.items():
-        pid_upper = point_id.upper()
+    for pt in data.get("points", []):
+        pid = pt.get("point_id", "")
+        pid_upper = pid.upper()
         matched = kw in pid_upper
         if not matched and alias_keywords:
             matched = any(ak in pid_upper for ak in alias_keywords)
         if matched:
-            unit = data.get("unit", "")
+            unit = pt.get("unit", "")
             if unit_filter and unit_filter != unit:
                 continue
+            val = pt.get("last_value")
             results.append({
-                "point_id": point_id,
-                "value": round(data.get("value", 0), 2) if isinstance(data.get("value"), (int, float)) else data.get("value"),
+                "point_id": pid,
+                "value": round(val, 2) if isinstance(val, (int, float)) else val,
                 "unit": unit,
             })
 
@@ -796,20 +806,31 @@ _ZONE_FLOORS: list[str] = ["B4F", "B3F", "B2F", "B1F", "1F", "2F", "3F"]
 
 
 async def _tool_get_floor_environment() -> dict[str, Any]:
-    """전 층(B4F~RF, 18개)의 실시간 온도/습도/CO2 조회"""
-    cache = mqtt_service.get_point_cache()
+    """전 층(B4F~RF, 18개)의 최신 온도/습도/CO2 조회 (InfluxDB, Server D 경유)"""
+    try:
+        url = f"{SERVER_D_URL}/data/points/summary"
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(url)
+            if resp.status_code != 200:
+                return {"error": f"Server D 응답 오류: {resp.status_code}", "count": 0, "floors": []}
+            data = resp.json()
+    except httpx.RequestError as e:
+        return {"error": f"Server D 연결 실패: {e}", "count": 0, "floors": []}
+    except Exception as e:
+        return {"error": f"층별 환경 조회 실패: {e}", "count": 0, "floors": []}
+
+    # point_id → last_value 매핑
+    pt_map: dict[str, float | None] = {}
+    for pt in data.get("points", []):
+        pt_map[pt.get("point_id", "")] = pt.get("last_value")
 
     floor_env: list[dict[str, Any]] = []
 
     # AHU 매핑 층 (5F~RF): AHU_{N}_RAT / RAH / CO2
     for ahu_num, floor in _AHU_FLOOR_MAP.items():
-        rat_key = f"bldg:AHU_{ahu_num}_RAT"
-        rah_key = f"bldg:AHU_{ahu_num}_RAH"
-        co2_key = f"bldg:AHU_{ahu_num}_CO2"
-
-        temp_val = cache.get(rat_key, {}).get("value")
-        hum_val = cache.get(rah_key, {}).get("value")
-        co2_val = cache.get(co2_key, {}).get("value")
+        temp_val = pt_map.get(f"bldg:AHU_{ahu_num}_RAT")
+        hum_val = pt_map.get(f"bldg:AHU_{ahu_num}_RAH")
+        co2_val = pt_map.get(f"bldg:AHU_{ahu_num}_CO2")
 
         floor_env.append({
             "floor": floor,
@@ -820,13 +841,9 @@ async def _tool_get_floor_environment() -> dict[str, Any]:
 
     # Zone 가상 포인트 층 (B4F~3F): Zone_Temp_{floor} / Zone_Humidity_{floor} / Zone_CO2_{floor}
     for floor in _ZONE_FLOORS:
-        temp_key = f"bldg:Zone_Temp_{floor}"
-        hum_key = f"bldg:Zone_Humidity_{floor}"
-        co2_key = f"bldg:Zone_CO2_{floor}"
-
-        temp_val = cache.get(temp_key, {}).get("value")
-        hum_val = cache.get(hum_key, {}).get("value")
-        co2_val = cache.get(co2_key, {}).get("value")
+        temp_val = pt_map.get(f"bldg:Zone_Temp_{floor}")
+        hum_val = pt_map.get(f"bldg:Zone_Humidity_{floor}")
+        co2_val = pt_map.get(f"bldg:Zone_CO2_{floor}")
 
         floor_env.append({
             "floor": floor,

@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.20 (InfluxDB 시계열 파이프라인 정비 + AI 채팅 전체 DB 연동)
+> **최종 업데이트:** 2026.02.20 (LLM MQTT 직접 접근 제거 → InfluxDB 단일 소스 전환)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -3381,9 +3381,45 @@ MQTT = 전송 통로 (메시지 브로커)
 |------|-----|
 | InfluxDB 총 레코드 | ~10,800,000 (7일 보존, 계속 증가) |
 | 포인트 수 (InfluxDB) | 696 |
-| AI 채팅 도구 | 12개 (Neo4j 8 + MQTT 2 + InfluxDB 1 + PostgreSQL 3) |
+| AI 채팅 도구 | 12개 (Neo4j 6 + InfluxDB 3 + PostgreSQL 3) |
 | 알람 저장 에러 | 0 (데드락 수정 후) |
 | Flux 쿼리 에러 | 0 (파라미터 검증 추가 후) |
+
+---
+
+## 42. LLM MQTT 직접 접근 제거 → InfluxDB 단일 소스 전환 (2026.02.20)
+
+### 배경
+AI 채팅(openai_service.py)에서 `mqtt_service.get_point_cache()`를 직접 호출하여 실시간 데이터를 가져오고 있었음.
+MQTT는 메시지 전송 통로일 뿐이고, 시계열 데이터의 Single Source of Truth는 InfluxDB여야 한다는 원칙에 따라 전환.
+
+### 변경 사항
+
+**1) openai_service.py — MQTT 의존성 완전 제거**
+- `from app.services import mqtt_service` import 제거
+- `_tool_get_realtime_sensor_data()`: `mqtt_service.get_point_cache()` → Server D `/data/points/summary` (InfluxDB 최신값)
+- `_tool_get_floor_environment()`: `mqtt_service.get_point_cache()` → Server D `/data/points/summary` (InfluxDB 최신값)
+- SYSTEM_PROMPT 데이터 소스: "MQTT (실시간)" → "InfluxDB (실시간 + 시계열)"로 통합 (4개→3개 소스)
+- 도구 설명: "실시간" → "최신값 (InfluxDB)"
+
+**2) influxdb_service.py — Flux stop 파라미터 버그 수정**
+- `stop` 파라미터가 상대시간(`-7d`)일 때 `time()` 래핑 방지 (`start`와 동일 로직 적용)
+- 기존: `time(v: "-7d")` → InfluxDB 400 에러 (cannot convert string "-7d" to time)
+- 수정: 상대시간은 그대로, ISO 형식만 `time()` 래핑
+
+### 데이터 흐름 (전환 후)
+```
+[LLM 채팅] → Server A openai_service.py
+             → get_realtime_sensor_data → Server D /data/points/summary → InfluxDB
+             → get_floor_environment   → Server D /data/points/summary → InfluxDB
+             → get_point_history       → Server D /data/points/{id}/history → InfluxDB
+             (MQTT 직접 접근 없음)
+```
+
+### 검증 결과
+- `get_floor_environment`: 18개 층 온도/습도/CO2 전부 조회 ✅
+- `get_realtime_sensor_data`: AHU_1 관련 38개 포인트 조회 ✅
+- 한국어 키워드 ("습도") → 9개 포인트 조회 ✅
 
 ---
 

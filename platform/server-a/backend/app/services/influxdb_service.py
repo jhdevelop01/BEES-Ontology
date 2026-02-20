@@ -88,10 +88,13 @@ async def query_point_history(
         # point_id 이스케이핑 (Flux 문자열 내 특수문자 처리)
         safe_point_id = point_id.replace("\\", "\\\\").replace('"', '\\"')
 
-        # stop 처리: "now()"는 Flux에서 그대로, ISO 형식은 time() 래핑
+        # stop 처리: "now()"는 Flux에서 그대로, 상대시간(-7d)은 그대로, ISO 형식은 time() 래핑
         stop_clause = ""
         if stop and stop != "now()":
-            stop_clause = f', stop: time(v: "{stop}")'
+            if stop.startswith("-"):
+                stop_clause = f", stop: {stop}"
+            else:
+                stop_clause = f', stop: time(v: "{stop}")'
 
         # start 처리: 상대시간(-1h)은 그대로, ISO 형식은 time() 래핑
         if start.startswith("-"):
