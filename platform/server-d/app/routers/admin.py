@@ -53,8 +53,8 @@ async def get_alarm_history(
             param_idx = 1
 
             if equipment:
-                conditions.append(f"equipment_id = ${param_idx}")
-                params.append(equipment)
+                conditions.append(f"equipment_id ILIKE ${param_idx}")
+                params.append(f"%{equipment}%")
                 param_idx += 1
 
             if severity:

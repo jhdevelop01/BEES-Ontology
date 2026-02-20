@@ -99,6 +99,12 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - 층별 온도/습도/CO2 비교, 가장 높은/낮은 온도 층 질문에는 get_floor_environment 사용 (온도, 습도, CO2 모두 조회 가능)
 - 특정 장비의 센서값 조회에는 get_realtime_sensor_data 사용 (한국어 키워드도 지원: 온도, 습도, CO2, 풍량, 전력, 밸브, 압력, 팬, 펌프)
 
+## 알람 장비 ID 규칙
+- 층별 알람: bldg:Floor_B4F(지하4층), bldg:Floor_B3F(지하3층), bldg:Floor_B2F, bldg:Floor_B1F, bldg:Floor_1F ~ bldg:Floor_RF
+- 장비 알람: bldg:Chiller_1, bldg:AHU_5F, bldg:Main_Distribution_Panel 등
+- "3층 알람" → equipment_id에 "B3F" 또는 "3F" 전달 (부분 일치 검색)
+- "지하3층" = B3F, "3층" = 3F, 구분이 모호하면 두 번 조회하여 합산
+
 ## 데이터 소스
 1. Neo4j (온톨로지): 건물 구조, 장비 관계, 시스템 구성 → query_building_ontology, get_equipment_on_floor, get_equipment_sensors, get_system_info, count_by_type, get_energy_flow
 2. InfluxDB (실시간 + 시계열): 현재 센서 최신값, 층별 환경, 과거 데이터 추이/통계 → get_realtime_sensor_data, get_floor_environment, get_point_history
@@ -310,13 +316,13 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_alarm_history",
-            "description": "알람 발생 이력 조회 (PostgreSQL). 장비별/심각도별/기간별 알람 필터링. 발생시간, 해제시간, 확인 여부 포함.",
+            "description": "알람 발생 이력 조회 (PostgreSQL). 장비별/심각도별/기간별 알람 필터링. 발생시간, 해제시간, 확인 여부 포함. 부분 일치 검색 지원.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "equipment_id": {
                         "type": "string",
-                        "description": "장비 ID (선택, 예: bldg:Chiller_1)",
+                        "description": "장비 ID 부분 일치 검색 (선택). 예: 'Chiller_1', 'B3F', 'AHU'. 층 알람은 'Floor_B3F'(지하3층), 'Floor_3F'(3층) 형식. bldg: 접두사 없이 키워드만 전달 가능.",
                     },
                     "severity": {
                         "type": "string",
