@@ -29,16 +29,18 @@ router = APIRouter(tags=["관리 데이터"])
 
 @router.get("/alarm-history", response_model=AlarmHistoryResponse)
 async def get_alarm_history(
-    equipment: Optional[str] = Query(None, description="장비 ID 필터 (예: bldg:AHU_5F)"),
-    severity: Optional[str] = Query(None, description="심각도 필터 (critical/major/minor/info)"),
+    equipment: Optional[str] = Query(None, description="장비 ID 부분 일치 필터 (예: B3F, Chiller)"),
+    severity: Optional[str] = Query(None, description="심각도 필터 (critical/warning)"),
+    alarm_type: Optional[str] = Query(None, description="알람 유형 부분 일치 필터 (예: low_temperature, high_power)"),
     limit: int = Query(50, ge=1, le=500, description="조회 건수"),
     offset: int = Query(0, ge=0, description="시작 위치 (페이지네이션)"),
 ):
     """
     알람 이력 조회
 
-    - equipment: 특정 장비의 알람만 필터링
-    - severity: 심각도 필터 (critical, major, minor, info)
+    - equipment: 장비 ID 부분 일치 필터
+    - severity: 심각도 필터 (critical, warning)
+    - alarm_type: 알람 유형 부분 일치 필터 (low_temperature, high_power)
     - limit/offset: 페이지네이션
     """
     pool = get_pg_pool()
@@ -60,6 +62,11 @@ async def get_alarm_history(
             if severity:
                 conditions.append(f"severity = ${param_idx}")
                 params.append(severity)
+                param_idx += 1
+
+            if alarm_type:
+                conditions.append(f"alarm_type ILIKE ${param_idx}")
+                params.append(f"%{alarm_type}%")
                 param_idx += 1
 
             where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""

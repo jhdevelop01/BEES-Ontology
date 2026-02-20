@@ -323,17 +323,21 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_alarm_history",
-            "description": "알람 발생 이력 조회 (PostgreSQL). 장비별/심각도별/기간별 알람 필터링. 발생시간, 해제시간, 확인 여부 포함. 부분 일치 검색 지원.",
+            "description": "알람 발생 이력 조회 (PostgreSQL). 장비별/유형별/심각도별 알람 필터링. 부분 일치 검색 지원.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "equipment_id": {
                         "type": "string",
-                        "description": "장비 ID 부분 일치 검색 (선택). 예: 'Chiller_1', 'B3F', 'AHU'. 층 알람은 'Floor_B3F'(지하3층), 'Floor_3F'(3층) 형식. bldg: 접두사 없이 키워드만 전달 가능.",
+                        "description": "장비 ID 부분 일치 검색 (선택). 예: 'Chiller_1', 'B3F', 'AHU'. 층 알람은 'Floor_B3F'(지하3층) 형식.",
+                    },
+                    "alarm_type": {
+                        "type": "string",
+                        "description": "알람 유형 필터 (선택): low_temperature(저온), high_power(고전력). 부분 일치.",
                     },
                     "severity": {
                         "type": "string",
-                        "description": "심각도 필터 (선택): critical, major, minor, info",
+                        "description": "심각도 필터 (선택): critical(위험), warning(경고)",
                     },
                     "days_back": {
                         "type": "integer",
@@ -932,7 +936,7 @@ async def _tool_get_point_history(
 
 
 async def _tool_get_alarm_history(
-    equipment_id: str = "", severity: str = "", days_back: int = 7,
+    equipment_id: str = "", alarm_type: str = "", severity: str = "", days_back: int = 7,
 ) -> dict[str, Any]:
     """Server D 경유 알람 이력 조회 (PostgreSQL)"""
     try:
@@ -940,6 +944,8 @@ async def _tool_get_alarm_history(
         params: dict[str, Any] = {"limit": 50, "offset": 0}
         if equipment_id:
             params["equipment"] = equipment_id
+        if alarm_type:
+            params["alarm_type"] = alarm_type
         if severity:
             params["severity"] = severity
         async with httpx.AsyncClient(timeout=10) as client:
@@ -1111,6 +1117,7 @@ async def _execute_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         elif name == "get_alarm_history":
             return await _tool_get_alarm_history(
                 arguments.get("equipment_id", ""),
+                arguments.get("alarm_type", ""),
                 arguments.get("severity", ""),
                 arguments.get("days_back", 7),
             )
