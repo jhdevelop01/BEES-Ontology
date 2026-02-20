@@ -229,12 +229,14 @@ export function useFloorData() {
         ratValues.push(...satValues);
       }
 
-      // Zone 가상 포인트: Zone_Temp_{floorSuffix}, Zone_Humidity_{floorSuffix}
+      // Zone 가상 포인트: Zone_Temp/Zone_Humidity/Zone_CO2_{floorSuffix}
       const floorSuffixZone = floor.key.replace(/^B_/, "");
       const zoneTempPt = mergedPoints[`bldg:Zone_Temp_${floorSuffixZone}`];
       if (zoneTempPt?.value != null) ratValues.push(Number(zoneTempPt.value));
       const zoneHumPt = mergedPoints[`bldg:Zone_Humidity_${floorSuffixZone}`];
       if (zoneHumPt?.value != null) rahValues.push(Number(zoneHumPt.value));
+      const zoneCo2Pt = mergedPoints[`bldg:Zone_CO2_${floorSuffixZone}`];
+      if (zoneCo2Pt?.value != null) co2Values.push(Number(zoneCo2Pt.value));
 
       const avg = (arr: number[]) =>
         arr.length > 0 ? arr.reduce((a, b) => a + b, 0) / arr.length : null;

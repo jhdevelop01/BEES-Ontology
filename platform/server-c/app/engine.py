@@ -227,19 +227,19 @@ class EmulatorEngine:
         return result
 
     def _inject_virtual_zone_points(self) -> None:
-        """공조 온도 센서가 없는 층(B4F~3F, 1F)에 가상 Zone 온도/습도 포인트 추가."""
-        # AHU_UFAD가 없는 층 목록 및 용도별 기본 온도
-        _VIRTUAL_FLOORS: list[tuple[str, float]] = [
-            ("B4F", 18.0),   # 주차장 — 외기에 가까움
-            ("B3F", 18.5),   # 주차장
-            ("B2F", 20.0),   # 주차장/기계실
-            ("B1F", 22.0),   # 기계실/MDF
-            ("1F", 22.0),    # 로비
-            ("2F", 23.0),    # 포디움 사무실
-            ("3F", 23.0),    # 포디움 사무실
+        """공조 온도 센서가 없는 층(B4F~3F, 1F)에 가상 Zone 온도/습도/CO2 포인트 추가."""
+        # AHU_UFAD가 없는 층: (floor_code, base_temp, base_co2)
+        _VIRTUAL_FLOORS: list[tuple[str, float, float]] = [
+            ("B4F", 18.0, 800.0),   # 주차장 — 환기 부족, CO2 높음
+            ("B3F", 18.5, 750.0),   # 주차장
+            ("B2F", 20.0, 650.0),   # 주차장/기계실
+            ("B1F", 22.0, 550.0),   # 기계실/MDF
+            ("1F", 22.0, 500.0),    # 로비 — 출입문 환기
+            ("2F", 23.0, 480.0),    # 포디움 사무실
+            ("3F", 23.0, 480.0),    # 포디움 사무실
         ]
         count = 0
-        for floor_code, base_temp in _VIRTUAL_FLOORS:
+        for floor_code, base_temp, base_co2 in _VIRTUAL_FLOORS:
             # Zone_Temp_{floor}
             temp_id = f"bldg:Zone_Temp_{floor_code}"
             if temp_id not in self._profiles:
@@ -274,6 +274,24 @@ class EmulatorEngine:
                     off_base_value=None,
                 )
                 self._register_profile(hum_profile)
+                count += 1
+
+            # Zone_CO2_{floor}
+            co2_id = f"bldg:Zone_CO2_{floor_code}"
+            if co2_id not in self._profiles:
+                co2_profile = DataProfile(
+                    point_id=co2_id,
+                    brick_class="brick:CO2_Sensor",
+                    base_value=base_co2,
+                    noise_range=50.0,
+                    unit="ppm",
+                    min_value=350.0,
+                    max_value=2000.0,
+                    daily_amplitude=80.0,
+                    equipment_dependency=f"bldg:Floor_{floor_code}",
+                    off_base_value=None,
+                )
+                self._register_profile(co2_profile)
                 count += 1
 
         if count > 0:
