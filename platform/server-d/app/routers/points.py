@@ -52,6 +52,17 @@ async def get_points_summary():
           |> group(columns: ["point_id"])
           |> last()
         '''
+
+        # 전체 레코드 수 집계 (개별 포인트별 카운트 대신 한 번만 쿼리)
+        count_flux = f'''
+        from(bucket: "{settings.influxdb_bucket}")
+          |> range(start: -7d)
+          |> filter(fn: (r) => r._measurement == "sensor_data" and r._field == "value")
+          |> count()
+          |> group()
+          |> sum()
+        '''
+
         tables = query_api.query(flux_query, org=settings.influxdb_org)
 
         points: list[PointSummaryItem] = []
@@ -67,7 +78,17 @@ async def get_points_summary():
                     )
                 )
 
-        return PointSummary(total_points=len(points), points=points)
+        # 전체 레코드 수 집계
+        total_records = 0
+        try:
+            count_tables = query_api.query(count_flux, org=settings.influxdb_org)
+            for table in count_tables:
+                for record in table.records:
+                    total_records = int(record.get_value())
+        except Exception as e:
+            logger.warning("전체 레코드 수 집계 실패 (무시): %s", e)
+
+        return PointSummary(total_points=len(points), total_records=total_records, points=points)
 
     except Exception as e:
         logger.error("포인트 현황 조회 실패: %s", e)

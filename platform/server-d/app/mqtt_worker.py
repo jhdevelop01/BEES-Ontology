@@ -305,7 +305,7 @@ class MQTTWorker:
             self._errors += 1
 
     def _flush_alarms(self) -> None:
-        """알람 버퍼를 PostgreSQL alarm_history에 배치 저장."""
+        """알람 버퍼를 PostgreSQL alarm_history에 배치 저장 (sync — MQTT 콜백 스레드용)."""
         with self._alarm_lock:
             if not self._alarm_buffer:
                 return
@@ -322,7 +322,6 @@ class MQTTWorker:
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running():
-                # MQTT 콜백 스레드에서 호출 → run_coroutine_threadsafe 사용
                 future = asyncio.run_coroutine_threadsafe(
                     self._save_alarms_async(pool, alarms_to_save), loop
                 )
@@ -330,7 +329,27 @@ class MQTTWorker:
             else:
                 asyncio.run(self._save_alarms_async(pool, alarms_to_save))
         except Exception as e:
-            logger.error("알람 PostgreSQL 저장 실패: %s (%d건 유실)", e, len(alarms_to_save))
+            logger.error("알람 PostgreSQL 저장 실패: %s (%d건 유실)", repr(e), len(alarms_to_save))
+            self._errors += 1
+
+    async def _flush_alarms_async(self) -> None:
+        """알람 버퍼를 PostgreSQL에 비동기 저장 (이벤트 루프에서 호출)."""
+        with self._alarm_lock:
+            if not self._alarm_buffer:
+                return
+            alarms_to_save = self._alarm_buffer.copy()
+            self._alarm_buffer.clear()
+
+        pool = get_pg_pool()
+        if not pool:
+            logger.error("PostgreSQL 미연결 — %d 알람 유실", len(alarms_to_save))
+            self._errors += 1
+            return
+
+        try:
+            await self._save_alarms_async(pool, alarms_to_save)
+        except Exception as e:
+            logger.error("알람 PostgreSQL 저장 실패: %s (%d건 유실)", repr(e), len(alarms_to_save))
             self._errors += 1
 
     async def _save_alarms_async(
@@ -410,7 +429,7 @@ class MQTTWorker:
             try:
                 await asyncio.sleep(settings.batch_flush_interval)
                 self._flush_buffer()
-                self._flush_alarms()
+                await self._flush_alarms_async()
             except asyncio.CancelledError:
                 break
             except Exception as e:

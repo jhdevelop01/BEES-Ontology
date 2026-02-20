@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.20 (AI 채팅 고도화 + B4F~3F 대시보드 데이터 표시, 전체 포인트 691개)
+> **최종 업데이트:** 2026.02.20 (InfluxDB 시계열 파이프라인 정비 + AI 채팅 전체 DB 연동)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -3290,6 +3290,100 @@ Agent Teams(3명 병렬)로 작업.
 | Zone 가상 포인트 | 0 | **21** (7층 × 온도+습도+CO2) |
 | AI 채팅 도구 | 6 | **8** (+실시간센서, +층별온도) |
 | 대시보드 데이터 표시 층 | 11/18 (61%) | **18/18 (100%)** |
+
+## 41. InfluxDB 시계열 파이프라인 정비 + AI 채팅 전체 DB 연동 (2026.02.20)
+
+### 41.1 배경
+사용자 질문: "시계열 데이터는 MQTT에서 받아서 InfluxDB에 저장해야 하는 것 아닌가? 다른 서버도 시계열 데이터는 InfluxDB에서 가져와야 하는 것 아닌가?"
+
+### 41.2 아키텍처 분석 결과
+
+**현재 데이터 흐름 (확인됨):**
+```
+Server C (에뮬레이터) → MQTT (전송 통로)
+  ├→ Server A (MQTT 캐시 → SSE/WS → 프론트엔드 실시간)
+  ├→ Server D (MQTT → InfluxDB 배치 저장 → 시계열 조회 API)
+  └→ Grafana (InfluxDB 폴링)
+```
+
+**핵심 발견:**
+- MQTT → InfluxDB 파이프라인은 **이미 구현·작동 중** (포인트당 ~698건/시간, 총 10,793,404건 축적)
+- Server A는 InfluxDB 직접 조회 가능 (`source: influxdb_direct`)
+- Server A history 라우터에 3단계 폴백 구현됨: InfluxDB 직접 → Server D 프록시 → MQTT 캐시
+- **하지만 3가지 버그가 존재하여 파이프라인이 불완전했음**
+
+### 41.3 수정된 버그 3건
+
+**버그 1: Server D 알람 PostgreSQL 저장 데드락** (`mqtt_worker.py`)
+- **원인**: `_periodic_flush()`(asyncio 이벤트 루프)에서 `_flush_alarms()`(sync)를 호출 → 내부의 `future.result(timeout=10)`이 같은 이벤트 루프를 블로킹 → 데드락
+- **증상**: "알람 PostgreSQL 저장 실패: (N건 유실)" 반복, 에러 메시지 비어있음
+- **수정**: `_flush_alarms_async()` async 메서드 추가, `_periodic_flush()`에서 `await` 사용, `repr(e)` 로깅
+
+**버그 2: Server A InfluxDB Flux 쿼리 400 에러** (`influxdb_service.py`)
+- **원인**: `aggregation`/`window` 파라미터 미검증, point_id 이스케이핑 미처리
+- **증상**: `bldg:CT_2_Fan_Speed` 등 특정 포인트에서 400 에러
+- **수정**: `_VALID_AGGREGATIONS` 허용목록, `_VALID_WINDOW_RE` 정규식 검증, `safe_point_id` 이스케이핑, 상세 에러 로깅(`e.body` 포함)
+
+**버그 3: Server D summary API `record_count: 0`** (`points.py`, `models.py`, `health.py`)
+- **원인**: 의도적 생략("개별 카운트는 비용이 크므로")이었지만 전체 통계도 누락
+- **수정**: `PointSummary`에 `total_records` 필드 추가, 전체 레코드 수 Flux 집계 쿼리 추가
+- **추가**: `/health` 엔드포인트에 `PipelineStats` (messages_received, points_written, alarms_saved, errors, buffer_size) 포함
+
+### 41.4 AI 채팅 전체 DB 연동 (이전 세션에서 완료)
+
+LLM(GPT-4o) Function Calling에 4개 데이터 소스 연동:
+| 데이터 소스 | 도구 | 용도 |
+|-------------|------|------|
+| Neo4j | 8개 기존 도구 | 온톨로지 그래프 조회 |
+| MQTT (실시간) | get_realtime_sensor_data, get_floor_environment | 현재 센서값 |
+| InfluxDB (시계열) | get_point_history | 과거 데이터 추이 |
+| PostgreSQL (관리) | get_alarm_history, get_work_orders, get_equipment_metadata | 알람/유지보수/메타 |
+
+- `asyncio.gather` 병렬 도구 실행, `max_iterations` 3→5
+- LangChain/LangGraph 불필요 판단 — OpenAI Function Calling만으로 멀티턴 복합 질의 가능
+
+### 41.5 검증 결과
+
+| 검증 항목 | 수정 전 | 수정 후 |
+|-----------|---------|---------|
+| 알람 PostgreSQL 저장 | 데드락 → 전부 유실 | **1건 저장, 0 에러** |
+| Server D summary total_records | 0 (하드코딩) | **10,793,404** |
+| Server D /health pipeline 통계 | 미포함 | **상세 6개 메트릭 포함** |
+| CT_2_Fan_Speed InfluxDB 조회 | 400 에러 | **119건 정상** |
+| Server A history source | influxdb_direct | **influxdb_direct (변경 없음)** |
+| InfluxDB 총 레코드 | 10,793,404 | **계속 증가 중** |
+
+### 41.6 최종 아키텍처 정리
+
+```
+MQTT = 전송 통로 (메시지 브로커)
+  ├ 실시간 표시: MQTT → Server A 메모리 캐시 → SSE/WS → 프론트엔드 (<1초)
+  └ 영구 저장:   MQTT → Server D → InfluxDB (배치 5초/100건) → 시계열 조회 API
+
+시계열 데이터 소비:
+  - 대시보드/모니터링 (실시간): Server A MQTT 캐시 (저지연)
+  - 이력 차트/에너지분석:      Server A → InfluxDB 직접 또는 Server D 프록시
+  - AI 채팅 시계열:             openai_service → Server D /data/points/{id}/history
+  - Grafana:                    InfluxDB Flux 직접 쿼리
+```
+
+### 41.7 커밋 이력
+
+| 커밋 | 내용 |
+|------|------|
+| `1d81ea2` | AI 채팅 습도 불일치 해결 — get_floor_environment + 한/영 키워드 매핑 |
+| `0b644e2` | AI 채팅 전체 DB 연동 — InfluxDB/PostgreSQL 도구 4개 + 병렬 실행 |
+| (본 세션) | InfluxDB 파이프라인 3건 버그 수정 — 알람 데드락, Flux 400 에러, summary 통계 |
+
+### 41.8 현재 수치
+
+| 항목 | 값 |
+|------|-----|
+| InfluxDB 총 레코드 | ~10,800,000 (7일 보존, 계속 증가) |
+| 포인트 수 (InfluxDB) | 696 |
+| AI 채팅 도구 | 12개 (Neo4j 8 + MQTT 2 + InfluxDB 1 + PostgreSQL 3) |
+| 알람 저장 에러 | 0 (데드락 수정 후) |
+| Flux 쿼리 에러 | 0 (파라미터 검증 추가 후) |
 
 ---
 

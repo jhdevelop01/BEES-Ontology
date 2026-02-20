@@ -64,6 +64,7 @@ class PointSummaryItem(BaseModel):
 class PointSummary(BaseModel):
     """전체 포인트 현황 응답"""
     total_points: int
+    total_records: int = 0
     points: list[PointSummaryItem]
 
 
@@ -117,6 +118,16 @@ class AuditLogResponse(BaseModel):
 # 헬스 체크
 # ─────────────────────────────────────────────
 
+class PipelineStats(BaseModel):
+    """MQTT 파이프라인 통계"""
+    mqtt_connected: bool = False
+    messages_received: int = 0
+    points_written: int = 0
+    alarms_saved: int = 0
+    errors: int = 0
+    buffer_size: int = 0
+
+
 class HealthCheck(BaseModel):
     """헬스 체크 응답"""
     status: str = "ok"
@@ -126,3 +137,4 @@ class HealthCheck(BaseModel):
     postgres: str = "unknown"
     mqtt: str = "unknown"
     uptime_seconds: float = 0.0
+    pipeline: Optional[PipelineStats] = None

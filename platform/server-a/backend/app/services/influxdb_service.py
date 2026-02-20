@@ -5,6 +5,7 @@ measurement: sensor_data, tag: point_id/unit/quality, field: value
 """
 
 import logging
+import re
 from typing import Any
 
 from app.config import INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET
@@ -13,6 +14,9 @@ logger = logging.getLogger(__name__)
 
 _client = None
 _query_api = None
+
+_VALID_AGGREGATIONS = {"mean", "min", "max", "sum", "count", "last", "first", "median"}
+_VALID_WINDOW_RE = re.compile(r"^\d+[smhd]$")
 
 
 async def connect() -> None:
@@ -71,6 +75,19 @@ async def query_point_history(
         return []
 
     try:
+        # 파라미터 검증 및 안전 처리
+        aggregation = aggregation.lower().strip() if aggregation else "mean"
+        if aggregation not in _VALID_AGGREGATIONS:
+            logger.warning("유효하지 않은 aggregation '%s', 기본값 'mean' 사용", aggregation)
+            aggregation = "mean"
+
+        if window and window != "raw" and not _VALID_WINDOW_RE.match(window):
+            logger.warning("유효하지 않은 window '%s', 기본값 '1m' 사용", window)
+            window = "1m"
+
+        # point_id 이스케이핑 (Flux 문자열 내 특수문자 처리)
+        safe_point_id = point_id.replace("\\", "\\\\").replace('"', '\\"')
+
         # stop 처리: "now()"는 Flux에서 그대로, ISO 형식은 time() 래핑
         stop_clause = ""
         if stop and stop != "now()":
@@ -89,7 +106,7 @@ async def query_point_history(
                   |> range(start: {start_expr}{stop_clause})
                   |> filter(fn: (r) => r._measurement == "sensor_data"
                                     and r._field == "value"
-                                    and r.point_id == "{point_id}")
+                                    and r.point_id == "{safe_point_id}")
                   |> aggregateWindow(every: {window}, fn: {aggregation}, createEmpty: false)
                   |> yield(name: "aggregated")
             '''
@@ -99,7 +116,7 @@ async def query_point_history(
                   |> range(start: {start_expr}{stop_clause})
                   |> filter(fn: (r) => r._measurement == "sensor_data"
                                     and r._field == "value"
-                                    and r.point_id == "{point_id}")
+                                    and r.point_id == "{safe_point_id}")
                   |> yield(name: "raw")
             '''
 
@@ -119,7 +136,10 @@ async def query_point_history(
         return results
 
     except Exception as e:
-        logger.warning("InfluxDB 시계열 조회 실패: %s — %s", point_id, e)
+        body = ""
+        if hasattr(e, "body"):
+            body = f" | body: {e.body}"
+        logger.warning("InfluxDB 시계열 조회 실패: %s — %s%s", point_id, e, body)
         return []
 
 
@@ -129,12 +149,15 @@ async def get_point_latest(point_id: str) -> dict[str, Any] | None:
         return None
 
     try:
+        # point_id 이스케이핑
+        safe_point_id = point_id.replace("\\", "\\\\").replace('"', '\\"')
+
         flux = f'''
             from(bucket: "{INFLUXDB_BUCKET}")
               |> range(start: -7d)
               |> filter(fn: (r) => r._measurement == "sensor_data"
                                 and r._field == "value"
-                                and r.point_id == "{point_id}")
+                                and r.point_id == "{safe_point_id}")
               |> last()
         '''
 
@@ -153,5 +176,8 @@ async def get_point_latest(point_id: str) -> dict[str, Any] | None:
         return None
 
     except Exception as e:
-        logger.warning("InfluxDB 최신값 조회 실패: %s — %s", point_id, e)
+        body = ""
+        if hasattr(e, "body"):
+            body = f" | body: {e.body}"
+        logger.warning("InfluxDB 최신값 조회 실패: %s — %s%s", point_id, e, body)
         return None

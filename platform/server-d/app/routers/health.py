@@ -11,7 +11,7 @@ import time
 from fastapi import APIRouter
 
 from ..database import get_influx_client, get_pg_pool
-from ..models import HealthCheck
+from ..models import HealthCheck, PipelineStats
 from ..mqtt_worker import mqtt_worker
 
 logger = logging.getLogger("server-d.health")
@@ -79,6 +79,17 @@ async def health_check():
 
     uptime = time.time() - _start_time
 
+    # ── MQTT 파이프라인 통계 ──
+    worker_stats = mqtt_worker.stats
+    pipeline = PipelineStats(
+        mqtt_connected=worker_stats["mqtt_connected"],
+        messages_received=worker_stats["messages_received"],
+        points_written=worker_stats["points_written"],
+        alarms_saved=worker_stats["alarms_saved"],
+        errors=worker_stats["errors"],
+        buffer_size=worker_stats["buffer_size"],
+    )
+
     return HealthCheck(
         status=overall_status,
         service="server-d",
@@ -87,4 +98,5 @@ async def health_check():
         postgres=postgres_status,
         mqtt=mqtt_status,
         uptime_seconds=round(uptime, 1),
+        pipeline=pipeline,
     )
