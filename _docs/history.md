@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.20 (온톨로지 Neo4j Bloom 스타일, 토폴로지 건물 단면도 3× 스케일업)
+> **최종 업데이트:** 2026.02.20 (AI 채팅 고도화 + B4F~3F 대시보드 데이터 표시, 전체 포인트 691개)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -3200,6 +3200,96 @@ Agent Teams(3명 병렬)로 작업.
 - CHW_Pump_1 → CC_Distribution_Header_*F
 - CHW_Pump_Group → AHU_UFAD_*
 - GPT가 실데이터 기반 정확한 에너지 흐름 응답
+
+---
+
+## 40. AI 채팅 고도화 + B4F~3F 대시보드 데이터 표시 (2026.02.20)
+
+### 40.1 AI 채팅 구조화 응답 포맷
+
+**요구사항**: 채팅 응답에서 마크다운 기호(**,##,- 등) 제거 + [요약]/[상세]/[종합] 3섹션 구조화
+
+**수정 (`openai_service.py`)**:
+- `SYSTEM_PROMPT`에 응답 포맷 규칙 추가: `[요약]` → `[상세]` → `[종합]` 순서로 답변
+- `_strip_markdown()` 후처리 함수 추가 — GPT 응답에서 `**`, `##`, `###`, `- ` 등 마크다운 기호 제거
+- 두 응답 반환 지점 모두에 `_strip_markdown()` 적용
+
+**수정 (`frontend/app/chat/page.tsx`)**:
+- `parseStructuredResponse()` — 정규식으로 `[요약]`/`[상세]`/`[종합]` 섹션 분리
+- `StructuredMessage` 컴포넌트 — 섹션별 색상 구분 (cyan/slate/emerald 보더)
+- `SECTION_STYLES` 상수: 요약=cyan, 상세=slate, 종합=emerald
+
+**TypeScript 빌드 이슈**: `[...text.matchAll()]` 스프레드 구문이 TypeScript 빌드 에러 발생 → `Array.from(text.matchAll())` 으로 수정
+
+### 40.2 AI 채팅 응답 정확도 강화
+
+**문제**: 냉방 시스템 에너지 흐름 답변에 부정확한 내용 포함
+- "두 개의 CC 패널" → 실제 20개
+- "CC 패널이 UFAD와 연결" → 실제로는 CHW_Pump_1에서 공급
+
+**수정 (`openai_service.py` SYSTEM_PROMPT)**:
+- 실제 에너지 흐름 구조 명시 (냉수루프: Chiller→CHW_Pump→AHU/CC, 냉각수루프, 온수루프)
+- 규칙 7: "데이터에 없으면 '조회 결과에 해당 정보가 없습니다' 응답"
+- 규칙 8: "장비 수량은 조회 결과의 정확한 카운트만 사용"
+- 규칙 9: "feeds 방향 정확히 — Chiller→CHW_Pump 순서"
+
+### 40.3 실시간 센서 데이터 조회 도구 추가
+
+**문제**: "건물에서 온도가 가장 높은 층은?" → "전체 층의 온도 데이터를 조회할 수 없다"
+
+**수정 (`openai_service.py`)**:
+- `get_floor_temperature` 도구 추가 — `_AHU_FLOOR_MAP` (UFAD 번호→층 매핑) 기반, `mqtt_service.get_point_cache()`에서 RAT 값 조회
+- `get_realtime_sensor_data` 도구 추가 — 키워드로 실시간 포인트 검색 (온도/습도/CO2/밸브 등)
+- `mqtt_service` import 추가
+- SYSTEM_PROMPT에 실시간 데이터 섹션 추가
+- TOOLS 배열 및 `_execute_tool` 디스패처 업데이트
+
+**결과**: AI가 실시간 MQTT 캐시에서 층별 온도를 직접 비교하여 "가장 높은 층" 정확하게 답변
+
+### 40.4 B4F~3F 대시보드 층별 데이터 표시
+
+**문제**: 대시보드 층별현황에서 3F~B4F (7개 층)의 온도/습도/CO2 데이터가 "—"으로 표시
+
+**원인 분석**:
+- 5F~RF (11개 층)은 AHU_UFAD_1~11이 있어 RAT/RAH/CO2 포인트로 데이터 수집
+- B4F~3F (7개 층)은 AHU_UFAD가 없어 해당 포인트 자체가 존재하지 않음
+- 주차장(B4F~B2F), 기계실(B1F), 로비(1F), 포디움(2F~3F)은 개별 공조 시스템 미모델링
+
+**수정 1: Server C 가상 센서 포인트 생성 (`engine.py`)**:
+- `_inject_virtual_zone_points()` 메서드 추가
+- 7개 층 × 3종 = **21개 가상 Zone 포인트** 생성:
+  - `Zone_Temp_{floor}`: 주차장 18°C ~ 사무실 23°C 기본값
+  - `Zone_Humidity_{floor}`: 50%RH 기본값
+  - `Zone_CO2_{floor}`: 주차장 800ppm ~ 로비 480ppm 기본값
+- DataProfile: noise_range, daily_amplitude, min/max 설정으로 현실적 변동
+
+**수정 2: 프론트엔드 Zone 포인트 매핑 (`use-floor-data.ts`)**:
+- Zone_Temp → `ratValues`, Zone_Humidity → `rahValues`, Zone_CO2 → `co2Values` 매핑
+- SAT→RAT 폴백 로직 추가 (AHU_UFAD 없는 층에서 SAT를 온도 지표로 사용)
+- `floor.key.replace(/^B_/, "")` 로 floor suffix 추출 → `bldg:Zone_Temp_{suffix}` 조회
+
+**빌드 이슈**: `chat/page.tsx`의 `[...text.matchAll()]`이 TypeScript 빌드를 실패시켜 Docker 이미지가 갱신되지 않았음 → `Array.from()` 수정 후 해결
+
+### 40.5 커밋 이력
+
+| 커밋 | 내용 |
+|------|------|
+| `4af0f18` | AI 에너지 흐름 0건 수정 (한/영 장비명 매핑) |
+| `7859481` | AI 구조화 응답 포맷 (마크다운 제거 + 요약/상세/종합) |
+| `e7042b2` | AI 응답 정확도 강화 (추측 금지 + 에너지 흐름 구조 명시) |
+| `9688545` | 실시간 센서 데이터 조회 도구 2종 추가 |
+| `ded729d` | B4F~3F 가상 Zone 센서 14개 추가 (온도+습도) |
+| `c63c25c` | matchAll TypeScript 빌드 에러 수정 |
+| `ba0f516` | Zone CO2 포인트 7개 추가 → 대시보드 3열 완전 표시 |
+
+### 40.6 현재 수치
+
+| 항목 | 이전 | 이후 |
+|------|:----:|:----:|
+| 전체 포인트 | 670 | **691** |
+| Zone 가상 포인트 | 0 | **21** (7층 × 온도+습도+CO2) |
+| AI 채팅 도구 | 6 | **8** (+실시간센서, +층별온도) |
+| 대시보드 데이터 표시 층 | 11/18 (61%) | **18/18 (100%)** |
 
 ---
 
