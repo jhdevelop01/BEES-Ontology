@@ -58,7 +58,7 @@ interface Section {
 
 function parseStructuredResponse(text: string): Section[] | null {
   const sectionRegex = /\[(요약|상세|종합)\]\s*/g;
-  const matches = [...text.matchAll(sectionRegex)];
+  const matches = Array.from(text.matchAll(sectionRegex));
   if (matches.length < 2) return null; // 구조화 응답이 아니면 null
 
   const sections: Section[] = [];
