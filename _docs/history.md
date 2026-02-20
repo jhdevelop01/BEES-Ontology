@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.20 (LLM MQTT 직접 접근 제거 → InfluxDB 단일 소스 전환)
+> **최종 업데이트:** 2026.02.20 (LLM 프롬프트 엔지니어링 5건 수정 — 알람 필터·도구 호출 필수·교차 조회)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -3420,6 +3420,68 @@ MQTT는 메시지 전송 통로일 뿐이고, 시계열 데이터의 Single Sour
 - `get_floor_environment`: 18개 층 온도/습도/CO2 전부 조회 ✅
 - `get_realtime_sensor_data`: AHU_1 관련 38개 포인트 조회 ✅
 - 한국어 키워드 ("습도") → 9개 포인트 조회 ✅
+
+---
+
+## 43. LLM 프롬프트 엔지니어링 5건 수정 (2026.02.20)
+
+### 배경
+AI 채팅에서 사용자 질문에 대한 오답/부정확한 답변 5건을 스크린샷으로 확인하고, 각각의 원인을 분석하여 SYSTEM_PROMPT와 Server D API를 수정.
+
+### 수정 내역
+
+**1) 알람 이력 장비 필터 부분 일치 검색 (afe4127)**
+- 문제: "3층과 관련된 알람" 질문 → 0건 응답 (실제로는 B3F 알람 다수 존재)
+- 원인: Server D `alarm-history` API에서 `equipment_id`를 정확 일치(`=`)로 검색. LLM이 "bldg:3F"를 보내지만 실제 DB 값은 "bldg:Floor_B3F"
+- 수정: `equipment_id` 필터를 `ILIKE` (부분 일치)로 변경, `%keyword%` 패턴 적용
+- SYSTEM_PROMPT에 알람 장비 ID 규칙 섹션 추가: 층별 알람 ID 형식, "3층 알람" → "B3F" 또는 "3F" 전달 가이드
+
+**2) LLM 도구 호출 필수 규칙 (9270e61)**
+- 문제: "4층에서 저온이 발생한 원인을 알려줘" → 도구 호출 없이 일반 상식으로만 답변
+- 원인: 분석 질문("원인을 알려줘")에서 LLM이 도구 호출을 건너뜀
+- 수정: SYSTEM_PROMPT에 "필수 규칙" 섹션 추가
+  - 건물/장비/센서/알람 질문 → 반드시 도구 호출
+  - 추측/일반 상식만으로 답변 금지
+  - 분석 질문에도 먼저 데이터 조회 후 데이터 기반 추론
+
+**3) 존재하지 않는 층 안내 (8597996)**
+- 문제: "4층" 질문 시 B4F(지하4층)로 자동 매핑 → 잘못된 결과 반환
+- 원인: 이 건물에 4F(4층)는 존재하지 않음. "4층" ≠ "지하4층"
+- 수정: SYSTEM_PROMPT 층 구조에 "존재하지 않는 층: 4F(4층), 13F(13층)" 명시, 없는 층 질문 시 "이 건물에 해당 층은 존재하지 않습니다" 안내 규칙 추가
+- "지하3층" = B3F, "3층" = 3F 지하/지상 명확 구분 가이드
+
+**4) alarm_type 필터 추가 + severity 값 수정 (195cdf6)**
+- 문제: "저온이 발생한 층이 있어?" → 0건, 이후 "모든 알람 분석" → low_temperature 알람 존재 확인 (일관성 없음)
+- 원인 1: `alarm_type` 파라미터가 없어서 LLM이 유형별 필터링 불가
+- 원인 2: SYSTEM_PROMPT에 severity 값이 "major/minor/info"로 잘못 기재 (실제: critical/warning)
+- 수정:
+  - Server D `alarm-history` API에 `alarm_type` 쿼리 파라미터 추가 (ILIKE 부분 일치)
+  - LLM 도구 정의에 `alarm_type` 필드 추가 (low_temperature, high_power 등)
+  - severity 값을 "critical(위험), warning(경고)"로 수정
+  - openai_service.py `_tool_get_alarm_history()`에 `alarm_type` 전달 로직 추가
+
+**5) 복합 질문 교차 조회 규칙 (5a1384d)**
+- 문제: "고전력 알람이 발생한 층에 대하여 알려줘" → 장비 목록은 정확하나, 층 위치를 "B1F 기계실"로 추측
+- 원인: LLM이 `get_alarm_history`만 호출하고, 장비의 실제 위치(층)를 Neo4j에서 조회하지 않음
+- 수정: SYSTEM_PROMPT에 "복합 질문 처리 (교차 조회 필수)" 섹션 추가
+  - "~가 발생한 층" → 1단계 알람 조회 → 2단계 hasLocation으로 장비 위치 조회
+  - 장비+데이터 교차 질문 → Neo4j 조회 → InfluxDB 조회 순서
+  - 여러 도구 순차 호출 가이드 (최대 5회)
+
+### 변경된 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `platform/server-a/backend/app/services/openai_service.py` | SYSTEM_PROMPT 5건 수정 (알람 ID 규칙, 필수 규칙, 층 구조, alarm_type 도구 정의, 교차 조회) |
+| `platform/server-d/app/routers/admin.py` | equipment_id ILIKE 변경, alarm_type 파라미터 추가 |
+
+### 커밋 이력
+| 커밋 | 설명 |
+|------|------|
+| `afe4127` | 알람 이력 장비 필터 부분 일치 + 알람 ID 가이드 |
+| `9270e61` | LLM 도구 호출 필수 규칙 + 존재하지 않는 층 매핑 |
+| `8597996` | 없는 층(4F) 질문 시 존재하지 않음 안내 수정 |
+| `195cdf6` | alarm_type 필터 추가 + severity 값 수정 |
+| `5a1384d` | 복합 질문 교차 조회 규칙 추가 |
 
 ---
 
