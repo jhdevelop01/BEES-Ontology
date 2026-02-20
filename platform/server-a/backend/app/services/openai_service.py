@@ -91,8 +91,8 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - 670개 포인트의 실시간 값을 조회할 수 있습니다 (5초 주기 갱신)
 - 주요 온도 포인트: AHU_N_RAT(실내환기온도), AHU_N_SAT(급기온도), AHU_N_MAT(혼합온도)
 - AHU UFAD 번호 → 층 매핑: 1→5F, 2→6F, 3→7F, 4→8F, 5→9F, 6→10F, 7→11F, 8→12F, 9→14F, 10→15F, 11→RF
-- 층별 온도 비교, 가장 높은/낮은 온도 층 질문에는 get_floor_temperature 사용
-- 특정 장비의 센서값 조회에는 get_realtime_sensor_data 사용
+- 층별 온도/습도/CO2 비교, 가장 높은/낮은 온도 층 질문에는 get_floor_environment 사용 (온도, 습도, CO2 모두 조회 가능)
+- 특정 장비의 센서값 조회에는 get_realtime_sensor_data 사용 (한국어 키워드도 지원: 온도, 습도, CO2, 풍량, 전력, 밸브, 압력, 팬, 펌프)
 
 ## 응답 형식 (반드시 준수)
 마크다운 기호를 절대 사용하지 마세요. **, ##, -, *, `, ```, > 등 마크다운 서식 문자를 쓰지 마세요.
@@ -256,8 +256,8 @@ TOOLS = [
     {
         "type": "function",
         "function": {
-            "name": "get_floor_temperature",
-            "description": "건물 전체 층별 온도를 비교합니다. 각 층의 실내 온도(RAT: Return Air Temperature)를 조회하여 가장 높은/낮은 층을 판별합니다. '온도가 가장 높은 층', '층별 온도 비교', '가장 추운 층' 등의 질문에 사용하세요.",
+            "name": "get_floor_environment",
+            "description": "전 층(B4F~RF, 18개)의 실시간 온도/습도/CO2 조회. 층별 비교, 최고/최저 검색에 사용.",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -636,15 +636,36 @@ _AHU_FLOOR_MAP: dict[str, str] = {
 }
 
 
+_SENSOR_KEYWORD_ALIASES: dict[str, list[str]] = {
+    "습도": ["HUMIDITY", "RAH"],
+    "온도": ["TEMP", "RAT"],
+    "CO2": ["CO2"],
+    "풍량": ["AIRFLOW", "SAF", "FLOW"],
+    "전력": ["POWER", "KW", "ENERGY"],
+    "밸브": ["VALVE"],
+    "압력": ["PRESSURE", "DP"],
+    "팬": ["FAN"],
+    "펌프": ["PUMP", "FLOW"],
+}
+
+
 async def _tool_get_realtime_sensor_data(keyword: str, unit_filter: str = "") -> dict[str, Any]:
-    """실시간 센서 데이터를 키워드로 검색"""
+    """실시간 센서 데이터를 키워드로 검색 (한국어 키워드 → 영어 별칭 자동 매핑)"""
     cache = mqtt_service.get_point_cache()
     results = []
     kw = keyword.upper()
 
+    # 한국어 키워드인 경우 영어 별칭 목록 확보
+    alias_keywords: list[str] = []
+    if kw in _SENSOR_KEYWORD_ALIASES:
+        alias_keywords = _SENSOR_KEYWORD_ALIASES[kw]
+
     for point_id, data in cache.items():
         pid_upper = point_id.upper()
-        if kw in pid_upper:
+        matched = kw in pid_upper
+        if not matched and alias_keywords:
+            matched = any(ak in pid_upper for ak in alias_keywords)
+        if matched:
             unit = data.get("unit", "")
             if unit_filter and unit_filter != unit:
                 continue
@@ -662,35 +683,73 @@ async def _tool_get_realtime_sensor_data(keyword: str, unit_filter: str = "") ->
     }
 
 
-async def _tool_get_floor_temperature() -> dict[str, Any]:
-    """층별 실내 온도(RAT) 비교"""
+_ZONE_FLOORS: list[str] = ["B4F", "B3F", "B2F", "B1F", "1F", "2F", "3F"]
+
+
+async def _tool_get_floor_environment() -> dict[str, Any]:
+    """전 층(B4F~RF, 18개)의 실시간 온도/습도/CO2 조회"""
     cache = mqtt_service.get_point_cache()
 
-    floor_temps: list[dict[str, Any]] = []
+    floor_env: list[dict[str, Any]] = []
+
+    # AHU 매핑 층 (5F~RF): AHU_{N}_RAT / RAH / CO2
     for ahu_num, floor in _AHU_FLOOR_MAP.items():
         rat_key = f"bldg:AHU_{ahu_num}_RAT"
-        if rat_key in cache:
-            val = cache[rat_key].get("value")
-            if val is not None:
-                floor_temps.append({
-                    "floor": floor,
-                    "ahu": f"AHU_UFAD_{ahu_num}",
-                    "temperature": round(val, 2),
-                    "unit": "degC",
-                })
+        rah_key = f"bldg:AHU_{ahu_num}_RAH"
+        co2_key = f"bldg:AHU_{ahu_num}_CO2"
 
-    # 정렬 (온도 높은 순)
-    floor_temps.sort(key=lambda x: x["temperature"], reverse=True)
+        temp_val = cache.get(rat_key, {}).get("value")
+        hum_val = cache.get(rah_key, {}).get("value")
+        co2_val = cache.get(co2_key, {}).get("value")
 
-    highest = floor_temps[0] if floor_temps else None
-    lowest = floor_temps[-1] if floor_temps else None
+        floor_env.append({
+            "floor": floor,
+            "temperature": round(temp_val, 2) if temp_val is not None else None,
+            "humidity": round(hum_val, 2) if hum_val is not None else None,
+            "co2": round(co2_val, 2) if co2_val is not None else None,
+        })
+
+    # Zone 가상 포인트 층 (B4F~3F): Zone_Temp_{floor} / Zone_Humidity_{floor} / Zone_CO2_{floor}
+    for floor in _ZONE_FLOORS:
+        temp_key = f"bldg:Zone_Temp_{floor}"
+        hum_key = f"bldg:Zone_Humidity_{floor}"
+        co2_key = f"bldg:Zone_CO2_{floor}"
+
+        temp_val = cache.get(temp_key, {}).get("value")
+        hum_val = cache.get(hum_key, {}).get("value")
+        co2_val = cache.get(co2_key, {}).get("value")
+
+        floor_env.append({
+            "floor": floor,
+            "temperature": round(temp_val, 2) if temp_val is not None else None,
+            "humidity": round(hum_val, 2) if hum_val is not None else None,
+            "co2": round(co2_val, 2) if co2_val is not None else None,
+        })
+
+    # 층 순서 정렬 (B4F→B3F→...→1F→2F→3F→5F→...→15F→RF)
+    _FLOOR_ORDER = {
+        "B4F": 0, "B3F": 1, "B2F": 2, "B1F": 3,
+        "1F": 4, "2F": 5, "3F": 6,
+        "5F": 7, "6F": 8, "7F": 9, "8F": 10, "9F": 11,
+        "10F": 12, "11F": 13, "12F": 14, "14F": 15, "15F": 16, "RF": 17,
+    }
+    floor_env.sort(key=lambda x: _FLOOR_ORDER.get(x["floor"], 99))
+
+    # 온도 기준 최고/최저
+    with_temp = [f for f in floor_env if f["temperature"] is not None]
+    highest = max(with_temp, key=lambda x: x["temperature"]) if with_temp else None
+    lowest = min(with_temp, key=lambda x: x["temperature"]) if with_temp else None
 
     return {
-        "count": len(floor_temps),
-        "floors": floor_temps,
-        "highest": highest,
-        "lowest": lowest,
-        "description": f"가장 높은 층: {highest['floor']} ({highest['temperature']}degC), 가장 낮은 층: {lowest['floor']} ({lowest['temperature']}degC)" if highest and lowest else "데이터 없음",
+        "count": len(floor_env),
+        "floors": floor_env,
+        "highest_temp": highest,
+        "lowest_temp": lowest,
+        "description": (
+            f"가장 높은 층: {highest['floor']} ({highest['temperature']}degC), "
+            f"가장 낮은 층: {lowest['floor']} ({lowest['temperature']}degC)"
+            if highest and lowest else "데이터 없음"
+        ),
     }
 
 
@@ -739,8 +798,8 @@ async def _execute_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
                 arguments["keyword"],
                 arguments.get("unit_filter", ""),
             )
-        elif name == "get_floor_temperature":
-            return await _tool_get_floor_temperature()
+        elif name == "get_floor_environment":
+            return await _tool_get_floor_environment()
         else:
             return {"error": f"알 수 없는 도구: {name}"}
     except Exception as e:
