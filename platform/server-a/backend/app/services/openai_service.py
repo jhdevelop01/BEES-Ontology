@@ -5,16 +5,21 @@ LLM 채팅을 통한 건물 온톨로지 자연어 질의 처리.
 기능:
 - 자연어 → Cypher 변환 (GPT Function Calling)
 - Neo4j 그래프 질의 실행
+- InfluxDB 시계열 이력 조회 (Server D 경유)
+- PostgreSQL 알람 이력 / 유지보수 / 장비 메타데이터 조회
 - 결과를 한국어 자연어로 응답
 """
 
+import asyncio
 import json
 import logging
 import re
 from typing import Any
 
-from app.config import OPENAI_API_KEY, OPENAI_MODEL
-from app.services import neo4j_service, mqtt_service
+import httpx
+
+from app.config import OPENAI_API_KEY, OPENAI_MODEL, SERVER_D_URL
+from app.services import neo4j_service, mqtt_service, postgres_service
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +98,14 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - AHU UFAD 번호 → 층 매핑: 1→5F, 2→6F, 3→7F, 4→8F, 5→9F, 6→10F, 7→11F, 8→12F, 9→14F, 10→15F, 11→RF
 - 층별 온도/습도/CO2 비교, 가장 높은/낮은 온도 층 질문에는 get_floor_environment 사용 (온도, 습도, CO2 모두 조회 가능)
 - 특정 장비의 센서값 조회에는 get_realtime_sensor_data 사용 (한국어 키워드도 지원: 온도, 습도, CO2, 풍량, 전력, 밸브, 압력, 팬, 펌프)
+
+## 데이터 소스
+1. Neo4j (온톨로지): 건물 구조, 장비 관계, 시스템 구성 → query_building_ontology, get_equipment_on_floor, get_equipment_sensors, get_system_info, count_by_type, get_energy_flow
+2. MQTT (실시간): 현재 센서값, 층별 환경 → get_realtime_sensor_data, get_floor_environment
+3. InfluxDB (시계열 이력): 과거 데이터 추이, 통계 → get_point_history
+4. PostgreSQL (관리): 알람 이력, 유지보수, 장비 정보 → get_alarm_history, get_work_orders, get_equipment_metadata
+
+복합 질문은 여러 도구를 순차 호출하여 답변. 예: "어제 온도가 가장 높았던 층" → get_point_history로 각 층 조회 → 비교.
 
 ## 응답 형식 (반드시 준수)
 마크다운 기호를 절대 사용하지 마세요. **, ##, -, *, `, ```, > 등 마크다운 서식 문자를 쓰지 마세요.
@@ -262,6 +275,102 @@ TOOLS = [
                 "type": "object",
                 "properties": {},
                 "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_point_history",
+            "description": "특정 포인트의 시계열 이력 데이터 조회 (InfluxDB). 과거 온도/습도/전력 추이, 일별/시간별 패턴, 최대/최소/평균 통계 분석에 사용. 기간: 최대 7일.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "point_id": {
+                        "type": "string",
+                        "description": "센서 포인트 ID (예: bldg:AHU_1_RAT, bldg:Zone_Temp_3F)",
+                    },
+                    "start": {
+                        "type": "string",
+                        "description": "조회 시작 시간. 상대: -1h, -24h, -7d / 절대: 2026-02-19",
+                    },
+                    "end": {
+                        "type": "string",
+                        "description": "조회 종료 시간 (기본: now)",
+                    },
+                    "aggregation": {
+                        "type": "string",
+                        "description": "집계 윈도우: 1m, 5m, 1h, 1d (기본: 1h)",
+                    },
+                },
+                "required": ["point_id", "start"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_alarm_history",
+            "description": "알람 발생 이력 조회 (PostgreSQL). 장비별/심각도별/기간별 알람 필터링. 발생시간, 해제시간, 확인 여부 포함.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "equipment_id": {
+                        "type": "string",
+                        "description": "장비 ID (선택, 예: bldg:Chiller_1)",
+                    },
+                    "severity": {
+                        "type": "string",
+                        "description": "심각도 필터 (선택): critical, major, minor, info",
+                    },
+                    "days_back": {
+                        "type": "integer",
+                        "description": "조회 기간 일수 (기본: 7)",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_work_orders",
+            "description": "유지보수 작업 지시/이력 조회 (PostgreSQL). 장비별, 상태별(requested/in_progress/completed), 우선순위별 필터링.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "equipment_id": {
+                        "type": "string",
+                        "description": "장비 ID (선택)",
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "상태 필터 (선택): requested, in_progress, completed",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "결과 개수 (기본: 20)",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_equipment_metadata",
+            "description": "장비 마스터 데이터 조회 (PostgreSQL). 제조사, 모델, 시리얼번호, 설치일, 보증기간, 다음 유지보수일, 총 운전시간 등.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "equipment_name": {
+                        "type": "string",
+                        "description": "장비 이름 (예: Chiller_1, AHU_UFAD_5)",
+                    },
+                },
+                "required": ["equipment_name"],
             },
         },
     },
@@ -753,6 +862,168 @@ async def _tool_get_floor_environment() -> dict[str, Any]:
     }
 
 
+# ─── InfluxDB / PostgreSQL 도구 함수들 ────────────────────────
+
+
+async def _tool_get_point_history(
+    point_id: str, start: str = "-24h", end: str = "", aggregation: str = "1h",
+) -> dict[str, Any]:
+    """Server D 경유 시계열 이력 데이터 조회 (InfluxDB)"""
+    try:
+        url = f"{SERVER_D_URL}/data/points/{point_id}/history"
+        params: dict[str, str] = {"from": start, "aggregation": aggregation}
+        if end:
+            params["to"] = end
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code != 200:
+                return {"error": f"Server D 응답 오류: {resp.status_code}", "count": 0, "records": []}
+            data = resp.json()
+    except httpx.RequestError as e:
+        return {"error": f"Server D 연결 실패: {e}", "count": 0, "records": []}
+    except Exception as e:
+        return {"error": f"시계열 조회 실패: {e}", "count": 0, "records": []}
+
+    records = data.get("records", [])[:100]
+    values = [r["value"] for r in records if r.get("value") is not None]
+    return {
+        "point_id": point_id,
+        "start": start,
+        "end": end or "now",
+        "aggregation": aggregation,
+        "count": len(records),
+        "records": records,
+        "statistics": {
+            "min": round(min(values), 2) if values else None,
+            "max": round(max(values), 2) if values else None,
+            "avg": round(sum(values) / len(values), 2) if values else None,
+        },
+    }
+
+
+async def _tool_get_alarm_history(
+    equipment_id: str = "", severity: str = "", days_back: int = 7,
+) -> dict[str, Any]:
+    """Server D 경유 알람 이력 조회 (PostgreSQL)"""
+    try:
+        url = f"{SERVER_D_URL}/alarm-history"
+        params: dict[str, Any] = {"limit": 50, "offset": 0}
+        if equipment_id:
+            params["equipment"] = equipment_id
+        if severity:
+            params["severity"] = severity
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code != 200:
+                return {"error": f"알람 이력 조회 실패: {resp.status_code}", "count": 0, "items": []}
+            data = resp.json()
+    except httpx.RequestError as e:
+        return {"error": f"Server D 연결 실패: {e}", "count": 0, "items": []}
+    except Exception as e:
+        return {"error": f"알람 이력 조회 실패: {e}", "count": 0, "items": []}
+
+    items = data.get("items", [])
+    return {
+        "count": len(items),
+        "total": data.get("total", len(items)),
+        "items": items[:30],
+    }
+
+
+async def _tool_get_work_orders(
+    equipment_id: str = "", status: str = "", limit: int = 20,
+) -> dict[str, Any]:
+    """PostgreSQL 유지보수 작업 지시 조회"""
+    try:
+        pool = postgres_service.get_pool()
+        if pool is None:
+            return {"error": "PostgreSQL 미연결 — 유지보수 기능 사용 불가", "count": 0, "items": []}
+
+        conditions: list[str] = []
+        params: list[Any] = []
+        param_idx = 1
+
+        if equipment_id:
+            # ontology_id로 equipment_metadata.id 찾아서 매칭
+            conditions.append(f"""
+                wo.equipment_id IN (
+                    SELECT id FROM equipment_metadata WHERE ontology_id ILIKE ${param_idx}
+                )
+            """)
+            # bldg: 접두사가 없으면 추가, 부분 매칭 지원
+            search_id = equipment_id if equipment_id.startswith("bldg:") else f"%{equipment_id}%"
+            if equipment_id.startswith("bldg:"):
+                search_id = equipment_id
+            else:
+                search_id = f"%{equipment_id}%"
+            params.append(search_id)
+            param_idx += 1
+        if status:
+            conditions.append(f"wo.status = ${param_idx}")
+            params.append(status)
+            param_idx += 1
+
+        where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
+
+        async with pool.acquire() as conn:
+            query = f"""
+                SELECT wo.*, em.ontology_id AS equipment_ontology_id
+                FROM work_orders wo
+                LEFT JOIN equipment_metadata em ON wo.equipment_id = em.id
+                {where_clause}
+                ORDER BY wo.created_at DESC
+                LIMIT ${param_idx}
+            """
+            params.append(limit)
+            rows = await conn.fetch(query, *params)
+
+        items = []
+        for row in rows:
+            d = dict(row)
+            for k, v in d.items():
+                if hasattr(v, "isoformat"):
+                    d[k] = v.isoformat()
+                elif hasattr(v, "__str__") and type(v).__name__ == "Decimal":
+                    d[k] = float(v)
+            items.append(d)
+
+        return {"count": len(items), "items": items}
+    except Exception as e:
+        return {"error": f"작업 이력 조회 실패: {e}", "count": 0, "items": []}
+
+
+async def _tool_get_equipment_metadata(equipment_name: str) -> dict[str, Any]:
+    """PostgreSQL 장비 마스터 데이터 조회"""
+    try:
+        pool = postgres_service.get_pool()
+        if pool is None:
+            return {"error": "PostgreSQL 미연결 — 장비 메타데이터 조회 불가"}
+
+        # ontology_id 형식 결정: bldg: 접두사가 없으면 추가
+        ontology_id = equipment_name if equipment_name.startswith("bldg:") else f"bldg:{equipment_name}"
+
+        async with pool.acquire() as conn:
+            row = await conn.fetchrow(
+                "SELECT * FROM equipment_metadata WHERE ontology_id = $1",
+                ontology_id,
+            )
+
+        if row is None:
+            return {"error": f"장비 '{equipment_name}' 메타데이터 없음 (ontology_id={ontology_id})"}
+
+        result = {}
+        for k, v in dict(row).items():
+            if hasattr(v, "isoformat"):
+                result[k] = v.isoformat()
+            elif hasattr(v, "__str__") and type(v).__name__ == "Decimal":
+                result[k] = float(v)
+            else:
+                result[k] = v
+        return result
+    except Exception as e:
+        return {"error": f"장비 메타데이터 조회 실패: {e}"}
+
+
 # ─── 마크다운 기호 제거 (후처리 안전장치) ────────────────────
 
 def _strip_markdown(text: str) -> str:
@@ -800,6 +1071,29 @@ async def _execute_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             )
         elif name == "get_floor_environment":
             return await _tool_get_floor_environment()
+        elif name == "get_point_history":
+            return await _tool_get_point_history(
+                arguments.get("point_id", ""),
+                arguments.get("start", "-24h"),
+                arguments.get("end", ""),
+                arguments.get("aggregation", "1h"),
+            )
+        elif name == "get_alarm_history":
+            return await _tool_get_alarm_history(
+                arguments.get("equipment_id", ""),
+                arguments.get("severity", ""),
+                arguments.get("days_back", 7),
+            )
+        elif name == "get_work_orders":
+            return await _tool_get_work_orders(
+                arguments.get("equipment_id", ""),
+                arguments.get("status", ""),
+                arguments.get("limit", 20),
+            )
+        elif name == "get_equipment_metadata":
+            return await _tool_get_equipment_metadata(
+                arguments.get("equipment_name", ""),
+            )
         else:
             return {"error": f"알 수 없는 도구: {name}"}
     except Exception as e:
@@ -850,8 +1144,8 @@ async def chat(
     sources: list[dict] = []
     tool_calls_log: list[dict] = []
 
-    # Function Calling 루프 (최대 3회 반복)
-    max_iterations = 3
+    # Function Calling 루프 (최대 5회 반복 — 복합 질문에 더 많은 도구 호출 허용)
+    max_iterations = 5
     for iteration in range(max_iterations):
         try:
             response = await _client.chat.completions.create(
@@ -881,33 +1175,52 @@ async def chat(
                 "tool_calls": tool_calls_log,
             }
 
-        # Function Call 처리
+        # Function Call 처리 (병렬 실행)
         messages.append(assistant_message)
 
-        for tool_call in assistant_message.tool_calls:
-            func_name = tool_call.function.name
-            try:
-                func_args = json.loads(tool_call.function.arguments)
-            except json.JSONDecodeError:
-                func_args = {}
+        tool_call_list = list(assistant_message.tool_calls)
 
+        # 각 도구 호출의 인자 파싱
+        parsed_args: list[dict[str, Any]] = []
+        for tc in tool_call_list:
+            try:
+                parsed_args.append(json.loads(tc.function.arguments))
+            except json.JSONDecodeError:
+                parsed_args.append({})
+
+        # 로깅
+        for tc, func_args in zip(tool_call_list, parsed_args):
             logger.info(
                 "Function Call [%d/%d]: %s(%s)",
-                iteration + 1, max_iterations, func_name, json.dumps(func_args, ensure_ascii=False)[:200],
+                iteration + 1, max_iterations,
+                tc.function.name,
+                json.dumps(func_args, ensure_ascii=False)[:200],
             )
 
-            # 도구 실행
-            result = await _execute_tool(func_name, func_args)
+        # 병렬 실행 (asyncio.gather)
+        tasks = [
+            _execute_tool(tc.function.name, func_args)
+            for tc, func_args in zip(tool_call_list, parsed_args)
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+        # 결과 처리
+        for tc, func_args, result in zip(tool_call_list, parsed_args, results):
+            func_name = tc.function.name
+
+            if isinstance(result, Exception):
+                logger.warning("도구 병렬 실행 예외 (%s): %s", func_name, result)
+                result = {"error": str(result)}
 
             # Cypher 쿼리 수집
-            if "cypher" in result:
+            if isinstance(result, dict) and "cypher" in result:
                 cypher_queries.append(result["cypher"])
 
             # 소스 정보 수집
             sources.append({
                 "tool": func_name,
                 "arguments": func_args,
-                "result_count": result.get("count", len(result.get("results", []))),
+                "result_count": result.get("count", len(result.get("results", []))) if isinstance(result, dict) else 0,
             })
 
             tool_calls_log.append({
@@ -919,7 +1232,7 @@ async def chat(
             # 결과를 메시지에 추가
             messages.append({
                 "role": "tool",
-                "tool_call_id": tool_call.id,
+                "tool_call_id": tc.id,
                 "content": json.dumps(result, ensure_ascii=False, default=str),
             })
 
