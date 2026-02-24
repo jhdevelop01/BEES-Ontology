@@ -21,6 +21,7 @@ from app.services import neo4j_service, mqtt_service, openai_service, influxdb_s
 from app.routers import (
     alarm, audit, auth, dashboard, control, stream, ontology, history, chat, schedule,
     equipment, energy, floors, maintenance, reports, users, settings, notification,
+    platform,
 )
 
 # 로깅 설정
@@ -146,6 +147,7 @@ tags_metadata = [
     {"name": "사용자", "description": "사용자 CRUD 및 접근 로그"},
     {"name": "설정", "description": "시스템 설정 관리"},
     {"name": "알림", "description": "Email/Slack 알림 채널"},
+    {"name": "플랫폼", "description": "플랫폼 전체 상태 집계"},
 ]
 
 # FastAPI 앱 인스턴스
@@ -193,6 +195,7 @@ app.include_router(reports.router)
 app.include_router(users.router)
 app.include_router(settings.router)
 app.include_router(notification.router)
+app.include_router(platform.router)
 
 
 @app.get("/health", tags=["시스템"], response_model=HealthResponse)

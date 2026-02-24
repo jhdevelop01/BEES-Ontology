@@ -36,6 +36,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { getDisplayName, formatLocation } from "@/lib/utils";
+import { SystemArchitectureDiagram } from "@/components/monitoring/system-architecture-diagram";
 
 /* ── Equipment Icon Mapping (topology 스타일 동일) ── */
 
@@ -491,6 +492,9 @@ export default function MonitoringPage() {
             </div>
           )}
         </div>
+
+        {/* ── 시스템 아키텍처 다이어그램 ── */}
+        <SystemArchitectureDiagram />
 
         {/* ── 장비 카드 그리드 (glassmorphism + neon border) ── */}
         {loading ? (

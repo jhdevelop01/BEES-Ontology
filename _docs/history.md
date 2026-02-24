@@ -1,6 +1,6 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.20 (LLM 프롬프트 엔지니어링 5건 수정 — 알람 필터·도구 호출 필수·교차 조회)
+> **최종 업데이트:** 2026.02.24 (시스템 아키텍처 다이어그램 3D 시각 효과 강화)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -3482,6 +3482,249 @@ AI 채팅에서 사용자 질문에 대한 오답/부정확한 답변 5건을 �
 | `8597996` | 없는 층(4F) 질문 시 존재하지 않음 안내 수정 |
 | `195cdf6` | alarm_type 필터 추가 + severity 값 수정 |
 | `5a1384d` | 복합 질문 교차 조회 규칙 추가 |
+
+## 44. LLM 대시보드 상태 판정 기준 프롬프트 추가 (2026.02.24)
+
+### 문제
+- 사용자: "3층, 2층 등 대시보드에서 위험으로 표기되 이유가 뭐야?"
+- AI 답변: `get_alarm_history`만 2회 호출 → "0건" → 실제 원인(온도 이탈)을 파악하지 못함
+- 대시보드의 실제 위험 표시 원인: 3F(19.0°C), 2F(19.6°C) — 온도 20°C 미만으로 warning 판정
+
+### 원인 분석
+- 프론트엔드 `calculateFloorStatus()`는 알람/온도/CO2 기반으로 층 상태 판정
+- LLM 시스템 프롬프트에 이 판정 기준이 없어서 "위험 = 알람"으로만 해석
+
+### 수정 내용
+
+**1) SYSTEM_PROMPT에 "대시보드 층별 상태 판정 기준" 섹션 추가**
+- `## 알람 장비 ID 규칙` 앞에 새 섹션 삽입
+- 위험(critical): critical 알람 1건+ 또는 온도 >28°C/<18°C
+- 경고(warning): warning 알람 1건+ 또는 온도 >26°C/<20°C 또는 CO2 >1000ppm
+- "위험/경고 표시 이유" 질문 시 get_floor_environment 우선 호출 가이드
+
+**2) 복합 질문 처리 섹션에 대시보드 상태 질문 패턴 추가**
+- "대시보드에서 위험/경고/빨간색으로 나오는 이유" 패턴
+- 1단계: get_floor_environment → 2단계: get_alarm_history → 3단계: 기준 대입 설명
+
+**3) 프롬프트 v2→v3 강화 (LLM 판정 기준 오해 수정)**
+- v2 문제: LLM이 "18°C 초과가 위험"으로 반대 해석, 정상 범위를 18~26°C로 잘못 인식
+- v3 수정: 의사코드(pseudocode) 형태로 판정 로직 명시, 구간별 범위 표 추가, 판정 예시 4개 제공
+- 핵심 강조: "정상 온도 범위는 20°C~26°C입니다. 18°C가 아닙니다!"
+
+**4) 프롬프트 v3→v4 (용어 통일 + 경계값 안내)**
+- v3 문제 1: 대시보드 UI는 "주의"인데 LLM은 "경고"로 답변 (ko.json 731줄: statusWarning="주의")
+- v3 문제 2: 경계값(18°C) 근처 온도에서 시점 차이로 인한 부정확한 판정 (대시보드 17.9°C vs AI 조회 18.43°C)
+- v4 수정:
+  - 전체 용어 "경고" → "주의"로 통일 (의사코드, 구간표, 예시, 복합 질문 섹션)
+  - 대시보드 라벨 명시: "위험(빨간색), 주의(주황색), 정상(초록색)"
+  - 경계값 ±1°C 안내 가이드 + 구체적 답변 템플릿 추가
+  - 17.9°C 판정 예시 추가 (18 미만 → "위험")
+
+### 검증 결과
+| 테스트 | 결과 |
+|--------|------|
+| "3층이 왜 위험으로 표시돼?" (v1) | PASS — get_floor_environment 호출, 온도 기반 답변 |
+| "대시보드에서 경고가 뜨는 층이 있어?" (v1) | PASS — 전층 환경+알람 교차 조회, B4F/B3F 식별 |
+| "3층에 어떤 장비가 있어?" (v1 회귀) | PASS — 기존 기능 영향 없음 |
+| "3층, 2층 대시보드 위험 이유" (v2) | FAIL — "18°C 초과가 위험" 반대 해석 |
+| "3층, 2층 대시보드 위험 이유" (v3) | PASS — "20°C 미만이므로 경고(temp_deviation)" 판정 정확, 용어 불일치 |
+| "3F, 2F 대시보드 위험 이유" (v4) | PASS — "주의" 용어 사용, 판정 정확 (3F=주의, 2F=정상) |
+| "B4F 온도가 몇 도야?" (v4 회귀) | PASS — 15.17°C 정확 답변, 기존 기능 영향 없음 |
+
+### 변경된 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `platform/server-a/backend/app/services/openai_service.py` | SYSTEM_PROMPT에 대시보드 상태 판정 기준 섹션 + 복합 질문 패턴 추가 |
+
+---
+
+## 45. LLM 답변 정확도 v5 종합 개선 (2026.02.24)
+
+### 배경
+v4 프롬프트에서 판정 기준과 용어는 개선되었으나, 리서치(`_docs/research_llm_accuracy.md`) 결과에 따라
+도구 Description 강화, 프롬프트 구조 재배치, 서버측 판정 미리 계산 등 10가지 개선 방안 중 즉시 적용 4건 + 중기 1건을 구현.
+
+### 수정 내용
+
+**1) ko.json 용어 통일 (작업 A)**
+- `platform/server-a/frontend/messages/ko.json` 260줄 (topology 섹션):
+  `"statusWarning": "경고"` → `"statusWarning": "주의"` 변경
+- 이제 토폴로지(260줄)와 층별 현황(731줄) 모두 "주의"로 통일
+- en.json은 이미 "Warning"으로 일관 — 수정 불필요
+
+**2) 도구 Description 강화 — B1 (작업 B)**
+- 12개 도구 전체의 description에 "사용 시점" + "다른 도구와의 구분" 추가
+- 예: `get_floor_environment` — "대시보드에서 위험/주의 표시 이유 확인 시 반드시 사용"
+- 예: `get_alarm_history` — "대시보드 상태 원인 분석 시 get_floor_environment를 먼저 호출하고 보조로 사용"
+- 기대효과: 도구 선택 정확도 5~10% 향상
+
+**3) 시스템 프롬프트 구조 재배치 — B2 (작업 B)**
+- 필수 규칙을 프롬프트 2번째 섹션으로 이동 (기존 11번째 → 2번째, recency bias 방지)
+- 대시보드 판정 기준을 3번째 섹션으로 이동 (기존 7번째 → 3번째)
+- 기존 내용 100% 보존, 위치만 재배치
+
+**4) 질문 유형별 도구 선택 가이드 테이블 — B3 (작업 B)**
+- 10가지 질문 패턴 → 도구 매핑 신규 추가
+- "대시보드에서 위험/주의 이유" → get_floor_environment + get_alarm_history (2개 필수)
+- "장비가 어디에 있어?" → query_building_ontology (hasLocation Cypher)
+
+**5) Few-shot 도구 호출 패턴 예시 — B4 (작업 B)**
+- 3개 복합 질문 예시 추가 (대시보드 위험 이유, 에너지 흐름, 시계열 이력)
+- 각 예시에 단계별 도구 호출 순서 명시
+- 기대효과: 도구 호출 정확도 10~15% 향상
+
+**6) 서버측 판정 미리 계산 — C1 (작업 C)**
+- `_classify_floor_status(temp, co2)` 헬퍼 함수 추가 (openai_service.py)
+  - floor-constants.ts `calculateFloorStatus()`와 동일한 판정 로직
+  - critical: temp > 28 or temp < 18, warning: temp > 26 or temp < 20 or co2 > 1000
+  - `near_boundary`: 임계값(18/20/26/28°C) ±1°C 이내 여부
+- `_tool_get_floor_environment()` 반환값에 각 층별 `dashboard_status`, `status_reason`, `near_boundary` 필드 추가
+- LLM이 판정 기준을 직접 적용할 필요 없어지므로 판정 오류가 구조적으로 불가능
+
+### 검증 결과
+| 테스트 | 결과 |
+|--------|------|
+| "3층, 2층 대시보드 위험/주의 이유" (v5) | PASS — get_floor_environment → get_alarm_history 순서 호출, dashboard_status 필드 활용 |
+| "5층 장비 목록" (v5 회귀) | PASS — 14개 장비 정확 조회, 기존 기능 영향 없음 |
+| "어제 5층 온도" (v5 회귀) | PASS — get_point_history 도구 올바르게 선택 |
+
+### 변경된 파일
+| 파일 | 변경 내용 |
+|------|----------|
+| `platform/server-a/backend/app/services/openai_service.py` | B1 도구 Description + B2 구조 재배치 + B3 도구 가이드 + B4 Few-shot + C1 판정 함수/필드 |
+| `platform/server-a/frontend/messages/ko.json` | 260줄 statusWarning "경고" → "주의" |
+
+### 미적용 중기/장기 개선 (향후 검토)
+- C2: 대시보드 컨텍스트 선제 주입 (프론트엔드→백엔드, 시점 차이 근본 해결)
+- C3: 답변 검증 후처리 파이프라인 (온도-판정 조합 코드 검증)
+- RAG/벡터 검색: 도구 30개+ 시 도입 (현재 12개 — 불필요)
+- Fine-tuning: 프롬프트 최적화 여지 충분 (현재 불필요)
+
+---
+
+## 46. 모니터링 페이지 — 3D 시스템 아키텍처 다이어그램 (2026.02.24)
+
+### 배경
+모니터링 페이지(`/monitoring`)에 현재 동작 중인 4개 서버 + 4개 인프라의 시스템 아키텍처와 데이터 흐름을 3D 디지털트윈 스타일로 시각화하는 컴포넌트를 추가.
+Three.js 없이 CSS 3D 효과(perspective, conic-gradient, radial-gradient)와 SVG 애니메이션으로 구현.
+
+### 구현 내용
+
+#### 백엔드: `/api/platform/health` 집계 엔드포인트
+- **신규 파일**: `backend/app/routers/platform.py`
+- Server A가 `asyncio.gather`로 Server B/C/D의 `/health`를 동시 호출 (3초 타임아웃)
+- 인프라 상태 추론: Neo4j(직접 쿼리), MQTT(클라이언트 연결 상태), InfluxDB/PostgreSQL(Server D 응답에서 간접)
+- 개별 서버 실패 시에도 나머지 정상 반환 (Pydantic response_model 적용)
+
+#### 프론트엔드: 5개 신규 컴포넌트
+| 파일 | 설명 |
+|------|------|
+| `components/monitoring/architecture-data.ts` | 9개 노드(4서버+4인프라+Dashboard) + 9개 연결 정적 데이터, 5열 LTR 레이아웃(%) |
+| `components/monitoring/use-server-health.ts` | 15초 폴링 훅, 접힘 시 일시정지, 백엔드 object→array 변환 |
+| `components/monitoring/architecture-server-node.tsx` | 글래스모피즘 카드 + conic-gradient 회전 링 + lucide 아이콘 + 상태 도트 |
+| `components/monitoring/architecture-flow-line.tsx` | SVG cubic bezier + stroke-dasharray 애니메이션 + 프로토콜 라벨 + arrow marker + glow filter |
+| `components/monitoring/system-architecture-diagram.tsx` | 메인 컨테이너: ResizeObserver SVG 매칭, 접기/펼치기, 반응형 |
+
+#### 데이터 흐름 시각화 (9개 연결, 좌→우 LTR 레이아웃)
+```
+[에뮬레이터] → MQTT Pub → [MQTT 브로커] → MQTT Sub → [수집서버(Historian)] → HTTP → [InfluxDB]
+                                                                            → SQL → [PostgreSQL]
+                                        → MQTT Sub → [API 서버] → Bolt → [Neo4j]
+                                                                 → REST/SSE → [대시보드]
+
+제어 역방향: [API 서버] → REST → [제어 어댑터(BAS)] → REST → [에뮬레이터]
+```
+- 5열 좌→우 배치: 데이터 소스(Col1) → 허브(Col2) → 처리서버(Col3) → 저장소/UI(Col4a/4b)
+- 프로토콜별 색상: MQTT=cyan, REST=blue, Bolt=yellow, SQL=green, SSE=purple, HTTP=orange
+- 프로토콜별 애니메이션 속도: MQTT 0.8s(빠름), REST 2.0s(느림), Bolt 1.2s
+
+#### CSS 3D 효과
+- `arch-perspective-grid`: 그리드 라인 배경 (mask-image로 가장자리 페이드)
+- `arch-health-pulse`: 온라인 노드 cyan 글로우 펄스
+- `arch-flow-dash`: SVG dash 애니메이션 (`--flow-speed` CSS 변수)
+- `arch-icon-spin`: conic-gradient 회전 링 (4s linear infinite)
+- `arch-node-card`: 호버 시 scale(1.05) + 글로우 강화
+
+#### i18n
+- `ko.json` / `en.json` monitoring 섹션에 `arch*` 키 18개 추가 (제목, 상태, 서버 역할명 등)
+
+### 수정된 파일 요약
+| 파일 | 변경 |
+|------|------|
+| `backend/app/routers/platform.py` | 신규 — 플랫폼 헬스 집계 라우터 (165줄) |
+| `backend/app/main.py` | platform 라우터 import + 등록 1줄 |
+| `frontend/components/monitoring/architecture-data.ts` | 신규 — 노드/연결 정적 데이터 (208줄) |
+| `frontend/components/monitoring/use-server-health.ts` | 신규 — 15초 폴링 훅 (100줄) |
+| `frontend/components/monitoring/architecture-server-node.tsx` | 신규 — 노드 카드 컴포넌트 (137줄) |
+| `frontend/components/monitoring/architecture-flow-line.tsx` | 신규 — SVG 흐름 라인 (147줄) |
+| `frontend/components/monitoring/system-architecture-diagram.tsx` | 신규 — 메인 다이어그램 (195줄) |
+| `frontend/app/monitoring/page.tsx` | import + JSX 삽입 (2줄) |
+| `frontend/app/globals.css` | 6개 CSS 블록 추가 (~50줄) |
+| `frontend/lib/api.ts` | `getPlatformHealth()` 함수 추가 |
+| `frontend/messages/ko.json` | `arch*` 18개 한국어 키 |
+| `frontend/messages/en.json` | `arch*` 18개 영문 키 |
+
+### 통합 시 발견/수정한 이슈
+1. **타입 불일치**: 백엔드는 servers를 `{server_a: {...}}` 객체로 반환하지만 프론트 훅은 배열 기대 → 훅에서 object→array 변환 추가
+2. **i18n 키 불일치**: 컴포넌트의 `archServerStatus`/`archLastUpdated` vs i18n의 `archBannerStatus`/`archLastUpdate` → i18n 키 수정
+3. **frontend 노드 상태**: 백엔드 응답에 frontend 미포함 → API 응답 성공 시 자동 online 판정
+
+### 레이아웃 재배치 (좌→우 데이터 흐름, 서버 이름 변경)
+- 3행 수직 배치 → 5열 좌→우(LTR) 데이터 흐름 레이아웃으로 전면 재배치
+- Server A/B/C/D → API 서버/제어 어댑터/에뮬레이터/히스토리안(수집서버) 구체적 이름으로 변경
+- `architecture-server-node.tsx`에 `I18N_LABEL_KEY` 매핑 추가 → i18n 번역 이름 우선 표시
+- ko.json: API 서버, 제어 어댑터, 대시보드, MQTT 브로커 / en.json: API Server, Dashboard, MQTT Broker
+
+### 검증 결과
+- Python AST 구문 검증: OK (platform.py, main.py)
+- JSON 구문 검증: OK (ko.json, en.json)
+- Docker 재빌드: backend + frontend 성공
+- `/api/platform/health`: 4/4 서버 online, 4/4 인프라 online
+- `/monitoring` 페이지: HTTP 200 OK
+
+### 3D 디지털 트윈 시각 효과 강화 (2026.02.24)
+
+기존 아키텍처 다이어그램을 CSS + SVG 기반 3D 디지털 트윈 스타일로 전면 강화. Three.js 없이 순수 CSS/SVG로 구현.
+
+**수정 파일 3개:**
+- `architecture-server-node.tsx` — 아이콘 구체 입체화 + 카드 강화
+- `architecture-flow-line.tsx` — 파티클 트레일 + 글로우 강화
+- `system-architecture-diagram.tsx` + `globals.css` — 배경 원근 + 앰비언트 효과
+
+**아이콘 구체 입체화 (architecture-server-node.tsx):**
+- Specular highlight: `radial-gradient(circle at 35% 25%, rgba(255,255,255,0.6))` 흰색 빛점
+- 다층 그림자: 외부 링에 `boxShadow: 0 4px 12px color+40, 0 8px 24px rgba(0,0,0,0.4)` 부유감
+- 부유 애니메이션: `arch-float` 클래스 (3초 주기 translateY(-3px)), 온라인 노드만
+- 내부 원 그라디언트 강화: opacity 20→35 + 하단 반사광 레이어 추가
+- 카드 그라디언트 보더: `borderImage: linear-gradient(135deg, color+40, transparent, color+20)`
+- 카드 3층 depth shadow: 근거리(color+20) / 중거리(rgba(0,0,0,0.3)) / 원거리(color+10)
+- 호버 3D 틸트: `perspective(400px) rotateY(3deg) scale(1.05)`
+- 텍스트 글로우: 온라인 시 `textShadow: 0 0 8px color+50`
+
+**플로우 라인 파티클 (architecture-flow-line.tsx):**
+- SVG 파티클 트레일: `<circle>` + `<animateMotion>` (연결당 3개, 시작 오프셋 0/1/3/2/3)
+- 파티클 글로우 필터: 별도 `feGaussianBlur stdDeviation="3"` 필터
+- 글로우 강화: stdDeviation 2→3, strokeWidth 3→5, opacity 0.15→0.2
+- 연결점 펄스: 출발 노드에 `r: 3→8, opacity: 0.6→0` 원형 펄스
+
+**배경 + 앰비언트 (system-architecture-diagram.tsx + globals.css):**
+- 원근 그리드: `perspective: 1200px` + `rotateX(15deg)` (배경 레이어만, 노드 미변형)
+- 그리드 밝기 강화: cyan opacity 0.03→0.05
+- 스캔라인 스위프: `arch-scanline-sweep` 8초 주기 좌→우 빛 띠
+- 플로팅 파티클: 8개 SVG 원, `useMemo([])`로 위치 고정, 4가지 drift 변형 (15~25초)
+- 비네트 오버레이: `radial-gradient(ellipse 80% 70%, transparent 40%, rgba(0,0,0,0.4))` z-index:20
+- Dead Code 정리: 미사용 `.arch-perspective-grid` (rotateX 55deg) 제거
+- 접근성: `@media (prefers-reduced-motion: reduce)` 모든 아키텍처 애니메이션 비활성화
+
+**Agent Teams (3명 병렬):**
+- node-vfx: 노드 카드 + 아이콘 입체화
+- flow-vfx: 플로우 라인 파티클 + 글로우
+- ambient-vfx: 배경 원근 + 앰비언트 + CSS 키프레임
+
+**검증 결과:**
+- Next.js 빌드: ✓ Compiled successfully (21개 페이지)
+- `/monitoring`: HTTP 200 OK
+- `/api/platform/health`: 4/4 서버 online
 
 ---
 

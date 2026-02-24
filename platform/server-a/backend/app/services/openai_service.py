@@ -57,6 +57,74 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - **온톨로지**: Brick Schema 1.3+ 기반, 845개 인스턴스, 5,756 트리플
 - **데이터 저장소**: Neo4j 그래프 데이터베이스 (n10s 플러그인)
 
+## 필수 규칙
+- 건물/장비/센서/알람에 대한 질문에는 반드시 도구를 호출하여 실제 데이터를 조회한 후 답변하세요.
+- 추측이나 일반 상식만으로 답변하지 마세요. 데이터 없이는 "조회 결과 ~" 형태로 사실만 전달하세요.
+- "원인을 알려줘" 같은 분석 질문에도 먼저 관련 데이터(알람 이력, 센서값, 장비 상태)를 조회한 뒤, 데이터 기반으로 원인을 추론하세요.
+
+## 대시보드 층별 상태 판정 기준 (반드시 이 기준대로 판정하세요)
+대시보드 "층별 현황"은 각 층의 Zone_Temp 센서를 기준으로 상태를 실시간 판정합니다.
+대시보드에 표시되는 상태 라벨: 위험(빨간색), 주의(주황색), 정상(초록색)
+아래 의사코드를 정확히 따라 판정하세요. 이 기준을 임의로 변경하지 마세요:
+
+  if critical_alarm >= 1: return "위험" — 원인: critical_alarm
+  elif temp > 28 or temp < 18: return "위험" — 원인: temp_extreme
+  elif warning_alarm >= 1: return "주의" — 원인: warning_alarm
+  elif temp > 26 or temp < 20: return "주의" — 원인: temp_deviation
+  elif co2 > 1000: return "주의" — 원인: co2_high
+  else: return "정상" — 적정 온도: 20°C 이상 26°C 이하
+
+핵심: 정상 온도 범위는 20°C~26°C입니다. 18°C가 아닙니다!
+  온도 < 18°C → "위험" (temp_extreme)
+  온도 18°C~19.99°C → "주의" (temp_deviation, 20°C 미만이므로)
+  온도 20°C~26°C → "정상"
+  온도 26.01°C~28°C → "주의" (temp_deviation)
+  온도 > 28°C → "위험" (temp_extreme)
+
+판정 예시 (반드시 이렇게 답변하세요):
+  18.5°C → 18 이상이므로 "위험" 아님, 20 미만이므로 "주의" (temp_deviation)
+  19.0°C → 18 이상이므로 "위험" 아님, 20 미만이므로 "주의" (temp_deviation)
+  17.5°C → 18 미만이므로 "위험" (temp_extreme)
+  17.9°C → 18 미만이므로 "위험" (temp_extreme)
+  22.0°C → 20~26 범위이므로 "정상"
+
+경계값 안내: 온도가 임계값(18°C 또는 20°C) 근처(±1°C)일 때는 시뮬레이션이 5초마다 변동하므로 판정이 수시로 바뀔 수 있습니다.
+예를 들어 현재 조회값이 18.4°C("주의")이더라도, 사용자가 대시보드를 볼 때 17.9°C("위험")였을 수 있습니다.
+이 경우 반드시 이렇게 안내하세요:
+  "현재 조회된 온도는 18.4°C로 '주의' 수준이지만, 18°C 경계에 매우 가까워 대시보드 확인 시점에는 18°C 미만으로 '위험'이 표시되었을 수 있습니다. 시뮬레이션 데이터가 5초 주기로 변동하기 때문입니다."
+
+"대시보드에서 위험/주의로 표시된 이유"를 질문받으면:
+  1) get_floor_environment로 해당 층의 온도/습도/CO2를 먼저 조회하고
+  2) 위 의사코드에 온도값을 대입하여 판정 결과를 구체적으로 설명하세요
+  3) 알람이 원인일 수 있으므로 get_alarm_history도 보조 조회하세요
+
+## 질문 유형별 도구 선택 가이드
+- "~층에 뭐가 있어?" → get_equipment_on_floor
+- "온도/습도 비교, 가장 높은/낮은 층" → get_floor_environment
+- "대시보드에서 위험/주의 이유" → get_floor_environment + get_alarm_history (2개 필수)
+- "특정 장비 센서값" → get_realtime_sensor_data
+- "어제 온도 추이" → get_point_history
+- "알람 이력" → get_alarm_history
+- "냉방 시스템 구성" → get_system_info
+- "에너지 흐름" → get_energy_flow
+- "장비가 어디에 있어?" → query_building_ontology (hasLocation Cypher)
+- "장비 제조사/모델/설치일" → get_equipment_metadata
+
+## 도구 호출 패턴 예시
+
+예시 1 - "대시보드에서 7층이 위험으로 나오는데 왜 그래?"
+  → 1단계: get_floor_environment() 호출하여 7층 온도 확인
+  → 2단계: get_alarm_history(equipment_id="7F") 호출하여 알람 확인
+  → 답변: 온도를 판정 기준에 대입하여 "18°C 미만이므로 위험(temp_extreme)" 설명
+
+예시 2 - "냉동기가 공급하는 장비 목록 알려줘"
+  → get_energy_flow(equipment_name="Chiller_1", direction="feeds") 호출
+  → 결과의 feeds_to 목록을 나열
+
+예시 3 - "어제 5층 온도가 어땠어?"
+  → get_point_history(point_id="bldg:AHU_1_RAT", start="-24h") 호출
+  → 시간대별 온도 추이와 min/max/avg 통계 제공
+
 ## Neo4j 그래프 구조
 - 노드에는 `uri` 속성이 있으며, 형식: `https://example.org/gec-b#엔티티명`
 - 노드 라벨은 Brick 클래스: Building, Floor, AHU, Chiller, Pump, Fan, Boiler, VAV, FCU, Sensor, Point 등
@@ -114,11 +182,6 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 
 복합 질문은 여러 도구를 순차 호출하여 답변. 예: "어제 온도가 가장 높았던 층" → get_point_history로 각 층 조회 → 비교.
 
-## 필수 규칙
-- 건물/장비/센서/알람에 대한 질문에는 반드시 도구를 호출하여 실제 데이터를 조회한 후 답변하세요.
-- 추측이나 일반 상식만으로 답변하지 마세요. 데이터 없이는 "조회 결과 ~" 형태로 사실만 전달하세요.
-- "원인을 알려줘" 같은 분석 질문에도 먼저 관련 데이터(알람 이력, 센서값, 장비 상태)를 조회한 뒤, 데이터 기반으로 원인을 추론하세요.
-
 ## 복합 질문 처리 (교차 조회 필수)
 - "~한 층이 어디야", "~가 발생한 층" 등 위치 관련 질문:
   1) 먼저 관련 데이터(알람, 센서)를 조회하여 장비를 찾고
@@ -127,6 +190,10 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
   장비 위치를 추측하지 마세요. 반드시 온톨로지에서 hasLocation 관계를 조회하세요.
 - "~한 장비의 센서값" 등 장비+데이터 교차 질문:
   1) Neo4j에서 장비/센서 관계 조회 → 2) InfluxDB에서 해당 센서 데이터 조회
+- "대시보드에서 위험/주의/빨간색으로 나오는 이유" 등 상태 표시 관련 질문:
+  1) get_floor_environment로 실시간 온도/CO2 조회
+  2) get_alarm_history로 알람 여부 확인
+  3) 대시보드 상태 판정 기준(위 섹션 참조)에 대입하여 원인 설명
 - 한 번의 도구 호출로 부족하면 여러 도구를 순차 호출하세요 (최대 5회 가능).
 
 ## 응답 형식 (반드시 준수)
@@ -164,7 +231,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "query_building_ontology",
-            "description": "Neo4j 그래프 DB에 Cypher 쿼리를 실행하여 건물 온톨로지 데이터를 조회합니다. 읽기 전용 쿼리만 가능합니다.",
+            "description": "Neo4j 그래프 DB에 Cypher 쿼리를 실행하여 건물 온톨로지 데이터를 조회합니다. 읽기 전용 쿼리만 가능합니다. 사용 시점: 건물 구조, 장비 관계, 장비 위치(hasLocation), 시스템 구성 등 정적 데이터를 직접 조회할 때. 장비 위치를 찾을 때는 반드시 hasLocation 관계로 조회하세요. 센서값/환경 데이터가 필요하면 get_realtime_sensor_data 또는 get_floor_environment를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -181,7 +248,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_equipment_on_floor",
-            "description": "특정 층의 장비 목록을 조회합니다.",
+            "description": "특정 층에 설치된 장비 목록을 조회합니다 (Neo4j 온톨로지). 사용 시점: '5층에 어떤 장비가 있어?', '지하2층 장비 목록' 등 특정 층의 장비 구성을 알고 싶을 때. 장비의 센서값이 필요하면 이 도구로 장비를 찾은 후 get_realtime_sensor_data를 사용하세요. 전 층 온도/습도 비교는 get_floor_environment를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -198,7 +265,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_equipment_sensors",
-            "description": "특정 장비에 연결된 센서/포인트 목록을 조회합니다.",
+            "description": "특정 장비에 연결된 센서/포인트 목록을 조회합니다 (Neo4j 온톨로지). 사용 시점: '냉동기에 어떤 센서가 있어?', 'AHU_5F 센서 목록' 등 장비-센서 관계를 알고 싶을 때. 센서의 실시간값이 필요하면 이 도구로 센서명을 확인한 후 get_realtime_sensor_data를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -215,7 +282,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_system_info",
-            "description": "특정 시스템의 구성 정보와 하위 장비 목록을 조회합니다. 냉방/냉수/CHW, 난방/온수/HW, HVAC, 전력, 소방, 조명, 급수, BAS 등 키워드로 검색 가능합니다. 에너지 흐름을 알고 싶으면 get_energy_flow를 사용하세요.",
+            "description": "특정 시스템의 구성 정보와 하위 장비 목록을 조회합니다 (Neo4j 온톨로지). 사용 시점: '냉방 시스템 구성', 'HVAC 장비 목록' 등 시스템 수준의 정보가 필요할 때. 냉방/냉수/CHW, 난방/온수/HW, HVAC, 전력, 소방, 조명, 급수, BAS 등 키워드로 검색 가능합니다. 에너지 흐름(공급/수급 관계)을 알고 싶으면 get_energy_flow를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -232,7 +299,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "count_by_type",
-            "description": "특정 Brick 클래스의 인스턴스 수를 집계합니다.",
+            "description": "특정 Brick 클래스의 인스턴스 수를 집계합니다 (Neo4j). 사용 시점: '냉동기가 몇 대야?', '센서 총 개수' 등 수량 질문에 사용. 상세 목록이 필요하면 get_equipment_on_floor 또는 query_building_ontology를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -249,7 +316,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_energy_flow",
-            "description": "에너지 흐름(feeds/isFedBy 관계)을 추적합니다. 특정 장비가 어디에 에너지를 공급하거나 공급받는지 조회합니다. 한국어(냉방, 냉수, 난방 등)와 영문(Chiller_1, CHW 등) 모두 사용 가능합니다.",
+            "description": "에너지 흐름(feeds/isFedBy 관계)을 추적합니다 (Neo4j 온톨로지). 사용 시점: '냉동기가 어디에 공급해?', '이 장비는 어디서 에너지를 받아?' 등 공급/수급 관계 질문에 사용. 한국어(냉방, 냉수, 난방 등)와 영문(Chiller_1, CHW 등) 모두 사용 가능합니다. 시스템 구성/목록은 get_system_info를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -271,7 +338,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_realtime_sensor_data",
-            "description": "센서 데이터 최신값을 조회합니다 (InfluxDB). 키워드로 포인트를 검색하여 현재값을 반환합니다. 온도, 습도, 전력, 유량, 압력, CO2 등 측정값을 확인할 수 있습니다.",
+            "description": "센서 데이터 최신값을 키워드로 검색하여 조회합니다 (InfluxDB). 사용 시점: '냉동기 온도', '5층 전력', '특정 장비 센서값' 등 특정 장비/키워드의 현재 센서값이 필요할 때. 전 층(18개) 온도/습도/CO2를 한번에 비교하려면 get_floor_environment를 사용하세요. 과거 데이터 추이/통계가 필요하면 get_point_history를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -292,7 +359,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_floor_environment",
-            "description": "전 층(B4F~RF, 18개)의 최신 온도/습도/CO2 조회 (InfluxDB). 층별 비교, 최고/최저 검색에 사용.",
+            "description": "전 층(B4F~RF, 18개)의 최신 온도/습도/CO2를 한번에 조회합니다 (InfluxDB). 사용 시점: '층별 온도 비교', '가장 더운/추운 층', '대시보드에서 위험/주의 표시 이유' 등 전 층 환경 비교 또는 대시보드 상태 확인 시 반드시 사용. 특정 장비 한 대의 센서값만 필요하면 get_realtime_sensor_data를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {},
@@ -304,7 +371,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_point_history",
-            "description": "특정 포인트의 시계열 이력 데이터 조회 (InfluxDB). 과거 온도/습도/전력 추이, 일별/시간별 패턴, 최대/최소/평균 통계 분석에 사용. 기간: 최대 7일.",
+            "description": "특정 포인트의 시계열 이력 데이터를 조회합니다 (InfluxDB, Server D 경유). 사용 시점: '어제 5층 온도 추이', '지난 7일 전력 패턴', '최대/최소/평균 통계' 등 과거 데이터 분석이 필요할 때. 현재값만 필요하면 get_realtime_sensor_data를 사용하세요. 기간: 최대 7일.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -333,7 +400,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_alarm_history",
-            "description": "알람 발생 이력 조회 (PostgreSQL). 장비별/유형별/심각도별 알람 필터링. 부분 일치 검색 지원.",
+            "description": "알람 발생 이력을 조회합니다 (PostgreSQL, Server D 경유). 사용 시점: '최근 알람', '특정 장비 알람', '위험/주의 알람 이력' 등 알람 관련 질문에 사용. 대시보드 상태(위험/주의) 원인 분석 시에는 get_floor_environment를 먼저 호출하고, 이 도구를 보조로 사용하세요. 장비별/유형별/심각도별 필터링 및 부분 일치 검색을 지원합니다.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -362,7 +429,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_work_orders",
-            "description": "유지보수 작업 지시/이력 조회 (PostgreSQL). 장비별, 상태별(requested/in_progress/completed), 우선순위별 필터링.",
+            "description": "유지보수 작업 지시/이력을 조회합니다 (PostgreSQL). 사용 시점: '정비 예정', '진행 중인 작업', '특정 장비 정비 이력' 등 유지보수 관련 질문에 사용. 장비별, 상태별(requested/in_progress/completed), 우선순위별 필터링 가능.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -387,7 +454,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "get_equipment_metadata",
-            "description": "장비 마스터 데이터 조회 (PostgreSQL). 제조사, 모델, 시리얼번호, 설치일, 보증기간, 다음 유지보수일, 총 운전시간 등.",
+            "description": "장비 마스터 데이터를 조회합니다 (PostgreSQL). 사용 시점: '냉동기 제조사', '장비 모델', '설치일', '다음 정비일' 등 장비 사양/관리 정보가 필요할 때. 실시간 센서값은 get_realtime_sensor_data, 연결 관계는 get_equipment_sensors를 사용하세요.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -832,6 +899,35 @@ async def _tool_get_realtime_sensor_data(keyword: str, unit_filter: str = "") ->
 _ZONE_FLOORS: list[str] = ["B4F", "B3F", "B2F", "B1F", "1F", "2F", "3F"]
 
 
+def _classify_floor_status(
+    temp: float | None, co2: float | None = None,
+) -> tuple[str, str | None, bool]:
+    """
+    대시보드 층별 상태 판정 — floor-constants.ts calculateFloorStatus()와 동일 로직.
+    Returns: (status, reason, near_boundary)
+    - status: "위험" | "주의" | "정상"
+    - reason: "temp_extreme" | "temp_deviation" | "co2_high" | None
+    - near_boundary: 온도가 임계값(18°C, 20°C, 26°C, 28°C) ±1°C 이내인지
+    """
+    near_boundary = False
+    if temp is not None:
+        # 경계값 근접 여부 판단 (±1°C)
+        for threshold in (18, 20, 26, 28):
+            if abs(temp - threshold) <= 1:
+                near_boundary = True
+                break
+
+        if temp > 28 or temp < 18:
+            return "위험", "temp_extreme", near_boundary
+        if temp > 26 or temp < 20:
+            return "주의", "temp_deviation", near_boundary
+
+    if co2 is not None and co2 > 1000:
+        return "주의", "co2_high", near_boundary
+
+    return "정상", None, near_boundary
+
+
 async def _tool_get_floor_environment() -> dict[str, Any]:
     """전 층(B4F~RF, 18개)의 최신 온도/습도/CO2 조회 (InfluxDB, Server D 경유)"""
     try:
@@ -859,11 +955,18 @@ async def _tool_get_floor_environment() -> dict[str, Any]:
         hum_val = pt_map.get(f"bldg:AHU_{ahu_num}_RAH")
         co2_val = pt_map.get(f"bldg:AHU_{ahu_num}_CO2")
 
+        status, reason, near_bnd = _classify_floor_status(
+            round(temp_val, 2) if temp_val is not None else None,
+            round(co2_val, 2) if co2_val is not None else None,
+        )
         floor_env.append({
             "floor": floor,
             "temperature": round(temp_val, 2) if temp_val is not None else None,
             "humidity": round(hum_val, 2) if hum_val is not None else None,
             "co2": round(co2_val, 2) if co2_val is not None else None,
+            "dashboard_status": status,
+            "status_reason": reason,
+            "near_boundary": near_bnd,
         })
 
     # Zone 가상 포인트 층 (B4F~3F): Zone_Temp_{floor} / Zone_Humidity_{floor} / Zone_CO2_{floor}
@@ -872,11 +975,18 @@ async def _tool_get_floor_environment() -> dict[str, Any]:
         hum_val = pt_map.get(f"bldg:Zone_Humidity_{floor}")
         co2_val = pt_map.get(f"bldg:Zone_CO2_{floor}")
 
+        status, reason, near_bnd = _classify_floor_status(
+            round(temp_val, 2) if temp_val is not None else None,
+            round(co2_val, 2) if co2_val is not None else None,
+        )
         floor_env.append({
             "floor": floor,
             "temperature": round(temp_val, 2) if temp_val is not None else None,
             "humidity": round(hum_val, 2) if hum_val is not None else None,
             "co2": round(co2_val, 2) if co2_val is not None else None,
+            "dashboard_status": status,
+            "status_reason": reason,
+            "near_boundary": near_bnd,
         })
 
     # 층 순서 정렬 (B4F→B3F→...→1F→2F→3F→5F→...→15F→RF)

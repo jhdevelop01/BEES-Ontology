@@ -347,3 +347,95 @@ body {
 .ctrl-history-entry:hover {
   background: rgba(255,255,255,0.05);
 }
+
+/* ── System Architecture Diagram ── */
+
+/* Node Float Animation (shared — used by node-vfx) */
+@keyframes arch-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+.arch-float {
+  animation: arch-float 3s ease-in-out infinite;
+}
+
+/* Scanline Sweep — left to right */
+@keyframes arch-scanline-sweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.arch-scanline {
+  overflow: hidden;
+}
+.arch-scanline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 30%;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.03), transparent);
+  animation: arch-scanline-sweep 8s linear infinite;
+}
+
+/* Floating Particles (4 drift variants) */
+@keyframes float-particle-0 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(10px,-15px); } }
+@keyframes float-particle-1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-8px,12px); } }
+@keyframes float-particle-2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(12px,8px); } }
+@keyframes float-particle-3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-6px,-10px); } }
+.float-particle-0 { animation: float-particle-0 18s ease-in-out infinite; }
+.float-particle-1 { animation: float-particle-1 22s ease-in-out infinite; }
+.float-particle-2 { animation: float-particle-2 15s ease-in-out infinite; }
+.float-particle-3 { animation: float-particle-3 25s ease-in-out infinite; }
+
+/* Node Health Pulse */
+@keyframes arch-health-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(34,211,238,0.3); }
+  50% { box-shadow: 0 0 20px rgba(34,211,238,0.6); }
+}
+.arch-node-online {
+  animation: arch-health-pulse 2s ease-in-out infinite;
+}
+
+/* Flow Line Dash Animation */
+@keyframes arch-flow-dash {
+  to { stroke-dashoffset: -20; }
+}
+.arch-flow-active {
+  animation: arch-flow-dash var(--flow-speed, 2s) linear infinite;
+}
+
+/* Node Card Hover */
+.arch-node-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.arch-node-card:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 24px rgba(34,211,238,0.4);
+}
+
+/* Icon Ring Rotation */
+@keyframes arch-icon-spin {
+  to { transform: rotate(360deg); }
+}
+.arch-icon-ring {
+  background: conic-gradient(from 0deg, rgba(34,211,238,0.6), transparent 60%, rgba(34,211,238,0.6));
+  animation: arch-icon-spin 6s linear infinite;
+}
+
+/* Mobile Collapsed Banner */
+.arch-collapsed-banner {
+  background: linear-gradient(135deg, rgba(15,23,42,0.8), rgba(30,41,59,0.8));
+  backdrop-filter: blur(8px);
+}
+
+/* Reduce Motion — disable all architecture animations */
+@media (prefers-reduced-motion: reduce) {
+  .arch-float,
+  .arch-scanline::before,
+  .arch-node-online,
+  .arch-flow-active,
+  .arch-icon-ring,
+  [class^="float-particle-"] {
+    animation: none !important;
+  }
+}

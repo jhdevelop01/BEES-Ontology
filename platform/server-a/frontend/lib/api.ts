@@ -309,6 +309,25 @@ export async function healthCheck(): Promise<{ status: string }> {
   return fetchJSON<{ status: string }>("/health");
 }
 
+// ─── 플랫폼 헬스 (아키텍처 다이어그램용) ───
+
+export interface ServerHealthStatus {
+  id: string;
+  name: string;
+  status: "online" | "offline" | "error";
+  latency_ms?: number;
+}
+
+export interface PlatformHealthResponse {
+  servers: ServerHealthStatus[];
+  infrastructure: ServerHealthStatus[];
+  timestamp: number;
+}
+
+export async function getPlatformHealth(): Promise<PlatformHealthResponse> {
+  return fetchJSON<PlatformHealthResponse>("/api/platform/health");
+}
+
 // ─── 온톨로지 그래프 ───
 
 export interface GraphNode {
