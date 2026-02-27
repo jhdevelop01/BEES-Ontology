@@ -82,10 +82,14 @@ export function categorizeEquipment(name: string, labels: string[]): EquipCatego
 
 export function detectSystemFromEquip(name: string, labels: string[]): SystemKey {
   const combined = (name + " " + labels.join(" ")).toLowerCase();
+  // Distribution Header 분류 (일반 패턴보다 먼저)
+  if (/cc_distribution/.test(combined)) return "chw";
+  if (/rh_distribution/.test(combined)) return "hw";
   if (/chw|chill|chilled/.test(combined)) return "chw";
-  if (/\bhw\b|hot_water|boiler|heating/.test(combined)) return "hw";
+  if (/\bhw\b|hot_water|boiler|heating|radiant/.test(combined)) return "hw";
   if (/\bcw\b|cooling_tower|condenser/.test(combined)) return "cw";
-  if (/transformer|ups|switchgear|generator|solar|pv|inverter|meter|panel|power/.test(combined)) return "elec";
+  // panel → distribution_panel로 한정 (CC_Panel이 잘못 잡히지 않도록)
+  if (/transformer|ups|switchgear|generator|solar|pv|inverter|meter|distribution_panel|power/.test(combined)) return "elec";
   return "air";
 }
 

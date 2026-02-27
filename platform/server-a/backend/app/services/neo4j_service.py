@@ -151,6 +151,68 @@ async def get_topology_connections() -> list[dict[str, str]]:
         return []
 
 
+async def get_zone_feeds() -> dict[str, Any]:
+    """
+    Zone과 Equipment 간 feeds 관계 조회.
+    HVAC_Zone에 연결된 장비 feeds 엣지 + Zone 메타데이터 반환.
+    """
+    if not _driver:
+        return {"connections": [], "zones": [], "count": 0}
+
+    try:
+        async with _driver.session() as session:
+            result = await session.run("""
+                MATCH (equip)-[r:feeds]->(zone)
+                WHERE equip.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND zone.uri STARTS WITH 'https://example.org/gec-b#'
+                  AND any(label IN labels(zone) WHERE label IN [
+                      'HVAC_Zone', 'Lighting_Zone', 'Fire_Zone'
+                  ])
+                RETURN
+                    replace(equip.uri, 'https://example.org/gec-b#', '') AS source,
+                    type(r) AS rel_type,
+                    replace(zone.uri, 'https://example.org/gec-b#', '') AS target,
+                    [l IN labels(zone) WHERE l <> 'Resource'] AS zone_labels
+            """)
+            records = [record.data() async for record in result]
+
+            connections = [
+                {"source": r["source"], "rel_type": r["rel_type"], "target": r["target"]}
+                for r in records
+            ]
+
+            # Zone 메타데이터 집계
+            zone_map: dict[str, dict[str, Any]] = {}
+            for r in records:
+                zname = r["target"]
+                if zname not in zone_map:
+                    # floor 추출: B_5F_xxx → B_5F, Lobby_Zone_1F → B_1F
+                    floor = ""
+                    m = re.search(r"B_(\w+F)", zname)
+                    if m:
+                        floor = f"B_{m.group(1)}"
+                    else:
+                        m2 = re.search(r"(\d+F)", zname)
+                        if m2:
+                            floor = f"B_{m2.group(1)}"
+                    zone_map[zname] = {
+                        "name": zname,
+                        "floor": floor,
+                        "labels": r["zone_labels"],
+                        "connected_equipment_count": 0,
+                    }
+                zone_map[zname]["connected_equipment_count"] += 1
+
+            return {
+                "connections": connections,
+                "zones": list(zone_map.values()),
+                "count": len(connections),
+            }
+    except Exception as e:
+        logger.warning("Zone feeds 조회 실패: %s", e)
+        return {"connections": [], "zones": [], "count": 0}
+
+
 async def search_instances(query: str, limit: int = 20) -> list[dict[str, Any]]:
     """
     Brick 인스턴스 검색.
@@ -244,7 +306,8 @@ async def get_equipment_list(
                     'Air_Handler_Unit',
                     'Supply_Fan', 'Return_Fan', 'Exhaust_Fan',
                     'Chilled_Water_Pump', 'Condenser_Water_Pump', 'Hot_Water_Pump',
-                    'Chilled_Ceiling_Panel',
+                    'Chilled_Ceiling_Panel', 'Distribution_Header',
+                    'Radiant_Heating_Panel',
                     'Transformer', 'UPS', 'Switchgear', 'Emergency_Generator',
                     'Electrical_Equipment', 'Building_Electrical_Meter',
                     'Water_Pump', 'HVAC_Equipment', 'Controller',
@@ -1139,6 +1202,87 @@ async def get_equipment_floor_mapping() -> dict[str, str]:
     except Exception as e:
         logger.warning("장비→층 매핑 조회 실패: %s", e)
     return mapping
+
+
+async def get_fault_impact(equipment_name: str, max_depth: int = 5) -> dict[str, Any]:
+    """
+    장애 파급 효과 분석.
+    지정된 장비에서 feeds 관계를 따라 영향받는 장비와 Zone을 추적.
+    Returns: {source, affected_equipment: [...], affected_zones: [...], stats: {...}}
+    """
+    if not _driver:
+        return {"source": equipment_name, "affected_equipment": [], "affected_zones": [], "stats": {"total": 0, "direct": 0, "indirect": 0, "extended": 0}}
+
+    source_uri = f"https://example.org/gec-b#{equipment_name}"
+    max_depth = min(max_depth, 5)  # Cap at 5
+
+    try:
+        async with _driver.session() as session:
+            result = await session.run("""
+                MATCH path = (source)-[:feeds*1..5]->(affected)
+                WHERE source.uri = $source_uri
+                  AND affected.uri STARTS WITH 'https://example.org/gec-b#'
+                WITH affected, min(length(path)) AS min_depth,
+                     [n IN nodes(path) | replace(n.uri, 'https://example.org/gec-b#', '')] AS path_names,
+                     labels(affected) AS affected_labels
+                WHERE min_depth <= $max_depth
+                RETURN replace(affected.uri, 'https://example.org/gec-b#', '') AS equipment,
+                       [l IN affected_labels WHERE l <> 'Resource'] AS labels,
+                       min_depth AS depth,
+                       collect(DISTINCT path_names) AS paths
+                ORDER BY min_depth, equipment
+            """, source_uri=source_uri, max_depth=max_depth)
+
+            records = [record.data() async for record in result]
+
+            affected_equipment = []
+            affected_zones = []
+            stats = {"total": 0, "direct": 0, "indirect": 0, "extended": 0}
+
+            for rec in records:
+                name = rec["equipment"]
+                labels = rec["labels"]
+                depth = rec["depth"]
+                paths = rec.get("paths", [])
+
+                # Determine impact level
+                if depth == 1:
+                    impact_level = "direct"
+                elif depth <= 3:
+                    impact_level = "indirect"
+                else:
+                    impact_level = "extended"
+
+                # Check if it's a Zone
+                is_zone = any("Zone" in l for l in labels)
+
+                entry = {
+                    "name": name,
+                    "labels": labels,
+                    "depth": depth,
+                    "impact_level": impact_level,
+                    "paths": paths[:3],  # Limit path examples
+                }
+
+                if is_zone:
+                    entry["impact_level"] = "zone-affected"
+                    affected_zones.append(entry)
+                else:
+                    affected_equipment.append(entry)
+                    stats[impact_level] = stats.get(impact_level, 0) + 1
+
+                stats["total"] += 1
+
+            return {
+                "source": equipment_name,
+                "affected_equipment": affected_equipment,
+                "affected_zones": affected_zones,
+                "stats": stats,
+            }
+
+    except Exception as e:
+        logger.warning("장애 파급 분석 실패: %s — %s", equipment_name, e)
+        return {"source": equipment_name, "affected_equipment": [], "affected_zones": [], "stats": {"total": 0, "direct": 0, "indirect": 0, "extended": 0}}
 
 
 def _get_fallback_graph_data(

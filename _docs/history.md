@@ -3728,4 +3728,322 @@ Three.js 없이 CSS 3D 효과(perspective, conic-gradient, radial-gradient)와 S
 
 ---
 
+### 섹션 44: 토폴로지 페이지 탭 분리 + 장비 네트워크 토폴로지 (2026.02.24)
+
+**문제 인식:**
+기존 `/topology` 페이지는 "토폴로지"라는 이름이지만 실제로는 건물 단면도(Cross-Section)만 표시하고 있었음. 내부 코드도 `cs-` (cross-section) 프리픽스를 사용. 진정한 네트워크 토폴로지 (장비 간 feeds 연결 관계)가 필요.
+
+**해결책:**
+탭 2개로 분리 — "토폴로지" (신규, 기본) + "설비 계층도" (기존 단면도)
+
+**기술 선택:**
+- **Cytoscape.js** — 온톨로지 페이지(`/ontology`)에서 이미 검증 (500~2000 노드, cose-bilkent 레이아웃)
+- 순환 그래프(CHW/CW 루프) 지원, force-directed 자동 클러스터링
+- ReactFlow는 DAG에 최적화되어 순환 그래프에 부적합
+
+**신규 파일 4개:**
+| 파일 | 설명 | 줄 |
+|------|------|--:|
+| `equip-topology-data.ts` | API → Cytoscape 노드/엣지 변환, 주요 장비 필터 | 153 |
+| `equip-topology-styles.ts` | 시스템별 3D radial gradient, active/inactive/highlighted/dimmed 클래스 | 189 |
+| `equip-topology-canvas.tsx` | Cytoscape 캔버스, dynamic import, SSE 실시간 업데이트, 이벤트 핸들링 | 403 |
+| `equip-topology-controls.tsx` | 시스템 필터 토글, 레이아웃 선택, 검색 (300ms debounce) | 181 |
+
+**수정 파일 3개:**
+| 파일 | 변경 |
+|------|------|
+| `app/topology/page.tsx` | 탭 네비게이션 추가 (72줄), EquipTopologyCanvas import |
+| `messages/ko.json` | topology 섹션 18키 추가 (탭 라벨, 필터, 레이아웃, 검색) |
+| `messages/en.json` | 영문 18키 추가 |
+
+**주요 기능:**
+- **장비 네트워크 그래프**: feeds 관계 260개 기반, 주요 장비 ~120대 표시
+- **시스템 필터**: CHW/HW/CW/ELEC/AIR 5개 시스템 토글
+- **레이아웃 전환**: Force-Directed (cose-bilkent), 계층형 (breadthfirst), 원형 (circle)
+- **장비 검색**: 300ms debounce, 카메라 애니메이션으로 포커스
+- **클릭 하이라이트**: 연결 장비만 밝게, 나머지 dim
+- **더블클릭 이동**: `/monitoring/bldg:장비명` 상세 페이지로
+- **SSE 실시간**: 장비 ON/OFF 상태 클래스 토글
+
+**Agent Teams (3명 병렬):**
+- tab-ui: 페이지 탭 UI + i18n 36키
+- equip-graph: Cytoscape.js 코어 3파일 (data, styles, canvas)
+- equip-controls: 컨트롤 패널 (필터, 레이아웃, 검색)
+
+**통합 수정 (리더):**
+- prop 이름 불일치 수정: `onSearch` → `onSearchChange`
+- Controls z-index 포지셔닝: absolute top-3 z-10 래핑
+- Set 이터레이션 오류: `for...of Set` → `Array.from(set)`
+
+**검증 결과:**
+- Next.js 빌드: ✓ Compiled successfully (21개 페이지)
+- `/topology`: HTTP 200 OK
+- `/api/topology/connections`: 260개 feeds 연결
+- `/api/equipment`: 201대 장비
+- `/api/platform/health`: 4/4 서버 online
+
+---
+
+### 섹션 45: 토폴로지 공정흐름도(P&ID) 스타일 리디자인 (2026.02.24)
+
+**문제 인식:**
+섹션 44에서 구현한 Cytoscape.js 토폴로지는 force-directed 레이아웃의 원형 노드 그래프. 사용자가 공정흐름도(P&ID) 스타일의 구조적 프로세스 다이어그램을 요청. 시스템별 그룹 컨테이너, 장비 카드, 애니메이션 플로우 라인, 3D 디지털트윈 글래스모피즘 UI가 필요.
+
+**해결책:**
+Cytoscape.js → ReactFlow 기반 공정흐름도 전환. 시스템 그룹 L→R 배치 + 장비 카드 그리드 + 인터시스템 애니메이션 엣지.
+
+**기술 선택:**
+- **ReactFlow ^11.11.4** — 구조적 레이아웃 + HTML 카드 노드에 적합, 프로젝트에 이미 설치
+- `parentNode` + `extent: "parent"` 패턴으로 그룹 노드 내부 자식 배치 (ReactFlow v11)
+- CompactEquipCard (cs-nodes.tsx) 3D 글래스모피즘 스타일 참조
+
+**신규 파일 2개:**
+| 파일 | 설명 | 줄 |
+|------|------|--:|
+| `equip-topology-nodes.tsx` | SystemGroupNode (그룹 컨테이너) + FlowEquipCard (장비 카드 260×90px) | 242 |
+| `equip-topology-layout.ts` | 시스템 그룹 L→R 배치, AIR 서브그루핑, 엣지 빌더 | 326 |
+
+**리라이트 파일 2개:**
+| 파일 | 변경 | 줄 |
+|------|------|--:|
+| `equip-topology-data.ts` | Cytoscape → ReactFlow 노드/엣지 빌더, 시스템 그루핑 | 105 |
+| `equip-topology-canvas.tsx` | Cytoscape → ReactFlow 캔버스, SSE 실시간, 시스템 필터, 검색 | 360 |
+
+**수정 파일 3개:**
+| 파일 | 변경 |
+|------|------|
+| `equip-topology-controls.tsx` | 레이아웃 선택기 제거, groupCount 통계 추가 |
+| `globals.css` | `.equip-flow-canvas` 엣지 애니메이션 + 시스템별 글로우 |
+| `ko.json` / `en.json` | topoFlowDirection, topoGroupCount, 시스템명 i18n 키 추가 |
+
+**삭제 파일 1개:**
+| 파일 | 이유 |
+|------|------|
+| `equip-topology-styles.ts` | Cytoscape 전용 스타일시트 → ReactFlow 전환으로 불필요 |
+
+**주요 기능:**
+- **시스템 그룹 5개**: CW → CHW → HW → AIR → ELEC 좌→우 물질 흐름 순서
+- **SystemGroupNode**: 글래스모피즘 컨테이너, 좌측 액센트 바, 시스템명/통계/가동률 바
+- **FlowEquipCard (260×90px)**: 장비 ID + 상태 배지(NORMAL/WARNING/STOP) + 운전률 바 + 센서수
+- **AIR 서브그루핑**: AHU/FCU/VAV/DOAS/Panel/Fan 타입별 분리, 5열 배치 (~60대)
+- **인터시스템 엣지**: 3px 애니메이션 + flowLabel 라벨 (냉수/온수/냉각수/전력/공기)
+- **인트라시스템 엣지**: 2px 반투명 + 시스템 컬러 글로우
+- **SSE 실시간**: 장비 카드 isActive/operationPct/sensorCount + 그룹 통계 재계산
+- **시스템 필터**: 5개 시스템 토글 (엣지도 동시 필터)
+- **장비 검색**: 300ms debounce → fitView 포커스
+- **카드 클릭**: `/monitoring/bldg:장비명` 새 탭 열기
+
+**레이아웃 상수:**
+- CARD: 260×90px, GAP: 16×14px
+- GROUP: PAD_X=40, PAD_Y=100 (헤더), PAD_BOTTOM=30, GAP=100
+- MAX_COLS: 3 (기본), AIR_MAX_COLS: 5
+
+**Agent Teams (3명 병렬):**
+- flow-nodes: 커스텀 ReactFlow 노드 (SystemGroupNode + FlowEquipCard)
+- flow-data: 데이터 빌더 + 레이아웃 엔진
+- flow-canvas: 캔버스 리라이트 + 컨트롤 + CSS + i18n
+
+**통합 수정 (리더):**
+- 미사용 import 제거: `CATEGORY_INFO` (equip-topology-nodes.tsx)
+- equip-topology-styles.ts 삭제 확인 (참조 없음)
+
+**검증 결과:**
+- Next.js 빌드: ✓ Compiled successfully (21개 페이지)
+- `/topology`: HTTP 200 OK
+- `/api/topology/connections`: 260개 feeds 연결
+- `/api/equipment`: 201대 장비
+- `/api/platform/health`: 4/4 서버 online
+
+---
+
+### 섹션 46: 작업 Q — 토폴로지 P&ID 7가지 개선 (2026.02.24)
+
+**문제 진단**: 작업 P의 P&ID 토폴로지가 "장비를 한곳에 모아놓은 느낌"이라는 피드백.
+- feeds 260개 중 58개(22%)만 렌더링 → 77.7% 손실
+- 장비 50% 고립 (96개 중 48개가 연결 0개)
+- 그룹 내부 순서 무의미 (i%cols 그리드, 공정 흐름 방향 없음)
+- Zone/Distribution_Header 미표시 → 다단계 경로 끊김
+
+**7가지 개선 (Agent Teams 3명 병렬):**
+
+1. **Distribution_Header PRIMARY 추가** — Neo4j 라벨 리스트에 `Distribution_Header`, `Radiant_Heating_Panel` 추가. API 장비 수 201→231 (+30).
+2. **고립 장비 시각 구분** — `isIsolated: boolean` 추가, 점선 보더 + opacity 0.5 + hover 0.8 전환.
+3. **Topological Sort 레이아웃** — DAG 기반 BFS 레벨 할당. source(Chiller)→중간(Pump)→sink(Panel) 좌→우 열 배치. 기존 `i%cols` 그리드 완전 교체.
+4. **비-HVAC 장비 제외** — `EXCLUDE_RE` (elevator/escalator/sewage 등) 24개 장비 제외.
+5. **Zone 노드 표시** — 신규 Backend API `/api/topology/zone-connections` (61개 연결, 56개 Zone). ZoneNode 컴포넌트 (180×50px), 기본 숨김, 보라색 토글로 활성화.
+6. **그룹 내부 DAG 정렬** — 개선 3에 포함. 비-AIR 시스템은 DAG 레벨 기반, AIR 시스템은 기존 서브그루핑 유지.
+7. **시스템 분류 정비** — `detectSystemFromEquip()` 수정: CC/RH Distribution_Header 분류 추가, `panel`→`distribution_panel`로 한정, `radiant` hw에 추가.
+
+**Agent Teams:**
+- topo-backend: Neo4j 라벨 추가 + Zone API 엔드포인트 (neo4j_service.py, ontology.py)
+- topo-layout: DAG 엔진 리라이트 + 데이터 필터 + API 타입 (layout.ts, data.ts, cs-utils.ts, api.ts)
+- topo-ui: 노드/컨트롤/캔버스/CSS/i18n (nodes.tsx, canvas.tsx, controls.tsx, globals.css, ko/en.json)
+
+**결과 비교:**
+| 지표 | 작업 P | 작업 Q | 변화 |
+|------|:---:|:---:|:---:|
+| 렌더링 엣지 | 58 (22%) | 108 (41.5%) | +86% |
+| Zone 포함 가용 엣지 | — | 169 (65%) | 신규 |
+| 고립 장비 | 48/96 (50%) | 28/97 (28.9%) | -42% |
+| 레이아웃 | 그리드 | DAG topological sort | 신규 |
+| 비-HVAC 제외 | 미적용 | 24개 제외 | 신규 |
+| Zone 노드 | 0 | 56 (토글) | 신규 |
+
+**수정 파일 (12개):**
+- Backend: `neo4j_service.py`, `ontology.py`
+- Frontend: `equip-topology-layout.ts` (핵심 리라이트), `equip-topology-data.ts`, `equip-topology-nodes.tsx`, `equip-topology-canvas.tsx`, `equip-topology-controls.tsx`, `cs-utils.ts`, `api.ts`, `globals.css`, `ko.json`, `en.json`
+
+---
+
+## 47. 토폴로지 전면 재설계 + feeds 정합성 교정 + 전체 플랫폼 검증 (2026.02.24~27)
+
+### 개요: 작업 R 시리즈 (R → R-2 → R-3)
+
+사용자 피드백: *"장비 간의 유기적인 관계나 데이터 흐름은 전혀 보이지 않고, 단순히 장비들을 한 화면에 뭉쳐 놓은 느낌"*
+→ 토폴로지 시각화 전면 재설계 + 온톨로지 feeds 관계 표준화 + 전 플랫폼 정합성 검증
+
+### 작업 R: 토폴로지 전면 재설계 (Global DAG + 장애 파급 분석)
+
+**핵심 변경: "시스템 그룹 박스" → "Global DAG 흐름 계층도"**
+
+| 항목 | Before (작업 Q) | After (작업 R) |
+|------|:---:|:---:|
+| DAG 범위 | 시스템별 독립 DAG | 전체 장비 단일 Global DAG |
+| 그룹 박스 | 5개 시스템 parentNode 그룹 | 제거 — 카드 좌측 악센트 바로 구분 |
+| 엣지 | markerEnd 없음 | 모든 엣지에 ArrowClosed 화살표 |
+| 클릭 | elementsSelectable=false | 장비 클릭 → 장애 파급 분석 |
+| 알람 | 미표시 | 장비 카드 알람 배지 (severity별) |
+| Zone | 시스템별 우측 | 최우측 통합 열 |
+
+**레벨 구조:**
+```
+L0 Source → L1 Primary → L2 Distribution → L3 Terminal → L4 Delivery → Zone → L999 Isolated
+```
+
+**장애 파급 분석 (Fault Impact Analysis):**
+- Backend: `GET /api/topology/fault-impact?equipment=&max_depth=5`
+- Neo4j Cypher: `[:feeds*1..5]` 가변 길이 경로 매칭
+- Frontend: HighlightState (fault-source/direct/indirect/extended/zone-affected/dimmed)
+- Chiller_1 클릭 시: 직접 3 + 간접 100 + 확장 6 + Zone 73 = 182건 영향
+
+**Agent Teams (3명 병렬):**
+- topo-backend: `get_fault_impact()` Neo4j 함수 + REST 엔드포인트
+- topo-engine: `equip-topology-layout.ts` 전면 리라이트 (Global DAG + BFS 레벨)
+- topo-interact: 노드/캔버스/컨트롤 UI + SSE 알람 + Impact 모드
+
+### 작업 R-2: feeds 관계 정합성 교정 (ASHRAE/Brick Schema 표준 기반)
+
+**1단계: feeds 감사 (Agent Teams 3명)**
+
+| 문제 | 건수 | 조치 |
+|------|:---:|------|
+| skip connection (Chiller→CC_Panel 직접) | 43 | 삭제 |
+| 누락 중간 경로 (Pump→Header 등) | 35 | 추가 |
+| DAG 알고리즘 결함 (179/263 feeds 무시) | 1 | Non-primary node contraction 알고리즘 추가 |
+| 누락 feeds (AHU_UFAD_11, FCU 등) | 6 | 추가 |
+
+**2단계: HVAC 업계 표준 기반 교정**
+
+ASHRAE Handbook + Brick Schema 공식 문서 리서치 후 적용:
+
+| 교정 | 건수 | 근거 |
+|------|:---:|------|
+| `Pump_1 feeds Pump_Group` → `isPartOf/hasPart` | 3쌍 | Brick: 구성 관계 ≠ 흐름 관계 |
+| Source→PumpGroup feeds 추가 | 3쌍 | ASHRAE: Source가 Pump에 미디어 공급 |
+| Air_Curtain_1F: CHW→HW 교정 | 1건 | 에어커튼 냉수코일은 비표준, 온수 난방이 일반적 |
+| FCU_Group: feeds→hasPart 교정 | 1건 | 컨테이너는 구성 관계 사용 |
+| Zone→Exhaust_Fan_RF feeds 추가 | 2쌍 | 건물 전체 배기 경로 연결 |
+| EXCLUDE_RE 5개 패턴 추가 | 5건 | 컨테이너/컨트롤러/대표엔티티 토폴로지 제외 |
+
+**최종 결과:**
+
+| 지표 | Before | After |
+|------|:---:|:---:|
+| Primary 장비 | 97 | 92 (-5 EXCLUDE) |
+| L999 고립 | 7 | **0** |
+| feeds 트리플 | 223 | 224 |
+| 총 트리플 (TTL) | 11,488 | 11,502 |
+| Neo4j | 11,708 | 11,722 |
+
+### 작업 R-3: 전체 플랫폼 적용 검증
+
+20개 페이지 + 4개 서버 영향 분석 결과:
+
+| 영역 | 판정 | 조치 |
+|------|:---:|------|
+| 16개 페이지 (Dashboard, Monitoring 등) | 영향 없음 | — |
+| Ontology Graph, Equipment Detail | 이미 OK | 모든 관계 타입 지원 |
+| Server B/C/D | 영향 없음 | feeds 미사용 |
+| AI Chat SYSTEM_PROMPT | **수정** | 에너지 흐름 5개 루프 설명 업데이트 |
+| Cross Section 탭 | **검증 통과** | PumpGroup B_B1F 정상 배치 |
+| Fault Impact API | **검증 통과** | Chiller_1: 182건 |
+| Neo4j 캐시 | **초기화** | Server A 재시작 |
+
+**CLAUDE.md에 "온톨로지 변경 시 플랫폼 연쇄 업데이트 7단계 체크리스트" 추가** — 향후 온톨로지 변경 시 자동 인식하여 처리.
+
+### 수정 파일 (작업 R 시리즈 전체)
+
+**온톨로지:**
+- `ontology/GEC_B_Ontology.ttl` — skip connection 삭제 86 + 중간 경로 추가 78 + 표준화 교정 30 = 11,502 트리플
+
+**Backend (Server A):**
+- `neo4j_service.py` — `get_fault_impact()` 함수 추가 (feeds*1..5 Cypher)
+- `ontology.py` — `GET /api/topology/fault-impact` 엔드포인트 + 4 Pydantic 모델
+- `openai_service.py` — SYSTEM_PROMPT 에너지 흐름 설명 5개 루프 업데이트
+
+**Frontend:**
+- `equip-topology-layout.ts` — 전면 리라이트 (Global DAG + Non-primary contraction)
+- `equip-topology-canvas.tsx` — 전면 리라이트 (Impact 모드 + SSE 알람)
+- `equip-topology-nodes.tsx` — HighlightState + AlarmSeverity + LevelLabelNode
+- `equip-topology-controls.tsx` — Impact 토글 + levelCount
+- `equip-topology-data.ts` — levelCount + EXCLUDE_RE 5패턴 추가
+- `lib/api.ts` — FaultImpactResponse 타입 + getFaultImpact()
+- `app/topology/page.tsx` — alarms prop 전달
+- `globals.css` — fault-source-blink, alarm-badge-pulse 애니메이션
+- `ko.json` / `en.json` — 9개 토폴로지 i18n 키
+
+**문서:**
+- `_docs/12_토폴로지_사용_가이드.md` — 토폴로지 사용 가이드 신규 작성
+- `_docs/todo.md` — 작업 R-2, R-3 체크리스트
+- `CLAUDE.md` — feeds 규칙 + 플랫폼 연쇄 업데이트 7단계 추가
+
+---
+
+## 48. CLAUDE.md 전면 감사 및 최적화 (2026.02.27)
+
+### 배경
+매 세션 자동 로딩되는 CLAUDE.md가 169줄로 비대해짐. 불필요한 내용(완료 이력, 중복 정보, outdated 수치)이 컨텍스트 윈도우를 낭비하고, 일부 정보가 부정확한 상태.
+
+### 수행 방법
+Agent Teams (3명 병렬 분석 + 리라이트):
+- **infra-analyzer**: 온톨로지 통계, docker-compose, .env, scripts/, _docs/ 실제 상태 확인
+- **platform-analyzer**: 프론트엔드 19개 페이지, 백엔드 19개 라우터/11개 서비스, Server B/C/D 구조 확인
+- **doc-auditor**: CLAUDE.md 전 섹션 필수/축소/삭제/추가 분류, MEMORY.md 중복 6건 식별
+
+### 결과: 169줄 → 91줄 (46% 감소)
+
+**삭제 3개 섹션 (78줄 절약):**
+| 섹션 | 이유 |
+|------|------|
+| Phase 5 현재 상태 (16줄) | 완료 이력 → history.md에 기록 |
+| 프론트엔드 20개 페이지 테이블 (23줄) | Glob으로 즉시 확인 가능 + history.md 중복 |
+| 주요 기술 결정 사항 (11줄) | MEMORY.md와 6건 중복 |
+| 아키텍처 ASCII 다이어그램 (10줄) | 설계서 참조로 대체 |
+| 상세 참조 (3줄) | 핵심 파일 테이블에 통합 |
+
+**수정한 부정확 정보 5건:**
+| 항목 | Before | After |
+|------|--------|-------|
+| 페이지 수 | 20개 | 19개 |
+| TTL 라인 수 | ~14,440 하드코딩 | "검증 명령으로 확인" |
+| Server C 스택 | "FastAPI, AsyncIO" | "FastAPI" |
+| 프론트엔드 스택 | Cytoscape만 | ReactFlow + Cytoscape.js |
+| Samsung_GEC 참조 | "~12개 허용" 하드코딩 | 명령으로 확인 |
+
+**추가:** OpenAI API 키 경고를 "작업 시작 전" 섹션으로 이동
+
+**MEMORY.md 동기화:** 라인 수 ~14,440 → 14,517 수정
+
+---
+
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*

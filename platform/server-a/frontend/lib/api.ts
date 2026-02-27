@@ -243,6 +243,30 @@ export async function getTopologyConnections(): Promise<TopologyConnectionsRespo
   return fetchJSON<TopologyConnectionsResponse>("/api/topology/connections");
 }
 
+// ─── Zone 연결 정보 ───
+
+export interface ZoneInfo {
+  name: string;
+  floor: string | null;
+  labels: string[];
+  connected_equipment_count: number;
+}
+
+export interface ZoneConnectionsResponse {
+  connections: TopologyConnection[];
+  zones: ZoneInfo[];
+  count: number;
+}
+
+export async function getZoneConnections(): Promise<ZoneConnectionsResponse> {
+  try {
+    return await fetchJSON<ZoneConnectionsResponse>("/api/topology/zone-connections");
+  } catch {
+    // Graceful degradation: Zone API 미구현 시 빈 결과
+    return { connections: [], zones: [], count: 0 };
+  }
+}
+
 // ─── 온톨로지 검색 ───
 
 export interface SearchResult {
@@ -1409,4 +1433,45 @@ export interface FloorDetails {
 
 export async function getFloorDetails(floorKey: string): Promise<FloorDetails> {
   return fetchJSON<FloorDetails>(`/api/floors/${encodeURIComponent(floorKey)}/details`);
+}
+
+// ─── Fault Impact API ───
+
+export interface FaultImpactEquipment {
+  name: string;
+  labels: string[];
+  depth: number;
+  impact_level: "direct" | "indirect" | "extended";
+  paths: string[][];
+}
+
+export interface FaultImpactZone {
+  name: string;
+  labels: string[];
+  depth: number;
+  impact_level: "zone-affected";
+  paths: string[][];
+}
+
+export interface FaultImpactStats {
+  total: number;
+  direct: number;
+  indirect: number;
+  extended: number;
+}
+
+export interface FaultImpactResponse {
+  source: string;
+  affected_equipment: FaultImpactEquipment[];
+  affected_zones: FaultImpactZone[];
+  stats: FaultImpactStats;
+}
+
+export async function getFaultImpact(
+  equipment: string,
+  maxDepth: number = 5
+): Promise<FaultImpactResponse> {
+  return fetchJSON<FaultImpactResponse>(
+    `/api/topology/fault-impact?equipment=${encodeURIComponent(equipment)}&max_depth=${maxDepth}`
+  );
 }

@@ -101,3 +101,52 @@ async def get_topology_connections() -> dict[str, Any]:
         "connections": connections,
         "count": len(connections),
     }
+
+
+@router.get("/topology/zone-connections")
+async def get_zone_connections() -> dict[str, Any]:
+    """Zone과 장비 간 feeds 연결 관계."""
+    result = await neo4j_service.get_zone_feeds()
+    return result
+
+
+# ── Fault Impact Models ──
+
+class FaultImpactEquipment(BaseModel):
+    name: str
+    labels: list[str]
+    depth: int
+    impact_level: str  # "direct" | "indirect" | "extended"
+    paths: list[list[str]] = []
+
+class FaultImpactZone(BaseModel):
+    name: str
+    labels: list[str]
+    depth: int
+    impact_level: str  # "zone-affected"
+    paths: list[list[str]] = []
+
+class FaultImpactStats(BaseModel):
+    total: int
+    direct: int
+    indirect: int
+    extended: int
+
+class FaultImpactResponse(BaseModel):
+    source: str
+    affected_equipment: list[FaultImpactEquipment]
+    affected_zones: list[FaultImpactZone]
+    stats: FaultImpactStats
+
+
+@router.get("/topology/fault-impact", response_model=FaultImpactResponse)
+async def get_fault_impact(
+    equipment: str = Query(..., description="장비 이름 (예: Chiller_1)"),
+    max_depth: int = Query(5, ge=1, le=5, description="최대 추적 깊이"),
+) -> FaultImpactResponse:
+    """
+    장애 파급 효과 분석.
+    지정된 장비에서 feeds 관계를 따라 영향받는 장비와 Zone을 추적.
+    """
+    result = await neo4j_service.get_fault_impact(equipment, max_depth=max_depth)
+    return FaultImpactResponse(**result)

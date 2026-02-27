@@ -439,3 +439,95 @@ body {
     animation: none !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+ * Equipment Flow Canvas — P&ID Process Flow Diagram
+ * ═══════════════════════════════════════════════════ */
+
+.equip-flow-canvas .react-flow__node { cursor: default; }
+.equip-flow-canvas .react-flow__node.react-flow__node-flowEquipCard { cursor: pointer; }
+
+/* Inter-system edge animation (slow, grand flow) */
+.equip-flow-canvas .inter-system-edge path {
+  stroke-dasharray: 16 8;
+  animation: equip-flow-dash 2s linear infinite;
+}
+
+@keyframes equip-flow-dash {
+  to { stroke-dashoffset: -24; }
+}
+
+/* Intra-system edge animation (faster) */
+.equip-flow-canvas .intra-system-edge path {
+  stroke-dasharray: 8 4;
+  animation: flow-dash 0.8s linear infinite;
+}
+
+/* System-specific edge glow (equipment flow) */
+.equip-flow-canvas .flow-edge-chw path { filter: drop-shadow(0 0 6px rgb(34, 211, 238)); }
+.equip-flow-canvas .flow-edge-hw path { filter: drop-shadow(0 0 6px rgb(251, 113, 133)); }
+.equip-flow-canvas .flow-edge-cw path { filter: drop-shadow(0 0 6px rgb(129, 140, 248)); }
+.equip-flow-canvas .flow-edge-elec path { filter: drop-shadow(0 0 6px rgb(251, 191, 36)); }
+.equip-flow-canvas .flow-edge-air path { filter: drop-shadow(0 0 4px rgb(148, 163, 184)); }
+
+/* Inter-system edge extra glow */
+.equip-flow-canvas .inter-system-edge path {
+  filter: drop-shadow(0 0 12px var(--edge-glow, rgba(34,211,238,0.5)));
+}
+
+/* Edge labels + minimap + attribution */
+.equip-flow-canvas .react-flow__edge-text { pointer-events: none; }
+.equip-flow-canvas .react-flow__minimap { border-radius: 8px; }
+.equip-flow-canvas .react-flow__attribution { display: none; }
+
+/* Flow direction arrow animation */
+@keyframes flow-arrow-bounce {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+.flow-direction-arrow {
+  animation: flow-arrow-bounce 1.5s ease-in-out infinite;
+}
+
+/* Isolated equipment card hover */
+.equip-flow-canvas .equip-card-isolated:hover {
+  opacity: 0.8 !important;
+}
+
+/* Zone node */
+.equip-flow-canvas .react-flow__node-zoneNode {
+  cursor: default;
+}
+
+/* Zone edges - dashed animation */
+.equip-flow-canvas .zone-edge path {
+  stroke-dasharray: 8 4;
+  animation: zone-flow-dash 1.5s linear infinite;
+}
+@keyframes zone-flow-dash {
+  to { stroke-dashoffset: -12; }
+}
+
+/* Search hit glow on equipment cards */
+.equip-flow-search-hit {
+  box-shadow: 0 0 20px rgba(34,211,238,0.6), 0 0 40px rgba(34,211,238,0.3) !important;
+  border-color: rgb(34,211,238) !important;
+}
+
+/* Fault Impact — Source Blink */
+@keyframes fault-source-blink {
+  0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.3); border-color: rgba(239,68,68,0.6); }
+  50% { box-shadow: 0 0 24px rgba(239,68,68,0.8), 0 0 48px rgba(239,68,68,0.4); border-color: rgb(239,68,68); }
+}
+.fault-source-blink {
+  animation: fault-source-blink 1s ease-in-out infinite;
+}
+
+/* Alarm Badge Pulse */
+@keyframes alarm-badge-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+.alarm-badge-pulse {
+  animation: alarm-badge-pulse 1.5s ease-in-out infinite;
+}

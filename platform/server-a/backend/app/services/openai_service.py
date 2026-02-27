@@ -153,13 +153,18 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - Electrical_System: 변압기, UPS, 비상발전기, 배전반
 - Lighting_System, Fire_Safety_System, Water_System, BAS 등
 - 에너지 흐름 (feeds 관계, 정확한 구조):
-  Chiller_1 → CHW_Pump_1, AHU_UFAD_1~10, CC_Panel 20개(5F~15F, Int/West), DOAS_1~3, Cooling_Tower_1
-  Chiller_2~4 → CHW_Pump_1, Cooling_Tower
-  CHW_Pump_1 → CC_Distribution_Header 10개층(5F~15F)
-  CHW_Pump_Group → AHU_UFAD_1~10
-  DOAS_1~3 → UFAD_System
+  냉수(CHW): Chiller_1~4 → CHW_Pump_1 → CC_Distribution_Header_5F~15F → CC_Panel(층별)
+            Chiller_1 → CHW_Pump_Group → AHU_UFAD_1~11, FCU_2F/3F_1/3F_2, DOAS_1~3, PAC_Lobby_1F
+  온수(HW): Boiler_1~3 → HW_Pump_1 → RH_Distribution_Header_5F~15F → RH_Panel(층별)
+           Boiler_1 → HW_Pump_Group → Air_Curtain_1F
+  냉각수(CW): Cooling_Tower_1~4 → CW_Pump_1 → Chiller_Plant
+             Cooling_Tower_1 → CW_Pump_Group
+  공조(AIR): AHU_UFAD_1~11 → Floor_Diffuser(층별) → Zone(층별)
+  배기: Zone → Exhaust_Fan_RF_1/2 (건물 전체 배기)
+  DOAS_1~3 → UFAD_System (외기 처리)
 - CC_Panel은 CC_System 소속 (UFAD_System과 별개)
-- Distribution_Header는 CC_Panel과 같은 층에 위치하며, CHW_Pump에서 냉수를 받아 CC_Panel에 분배
+- Distribution_Header는 CC_Panel/RH_Panel과 같은 층에 위치하며, 펌프에서 냉수/온수를 받아 패널에 분배
+- PumpGroup(CHW/CW/HW)은 개별 펌프의 논리적 그룹 (Pump_1 isPartOf PumpGroup)
 - **CHW/CW/HW는 별도 시스템 노드가 아님** — get_system_info에서 '냉수','CHW','냉방' 등으로 검색 가능
 
 ## 실시간 센서 데이터

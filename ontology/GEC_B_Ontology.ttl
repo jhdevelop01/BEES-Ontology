@@ -465,7 +465,6 @@ bldg:GEC_Tower_B a brick:Building ;
     brick:hasPart bldg:B_B3F ;
     brick:hasPart bldg:B_B4F ;
     brick:hasPart bldg:B_RF ;
-    brick:isFedBy bldg:FCU_Group ;
     brick:isFedBy bldg:Rainwater_Pump ;
     brick:isFedBy bldg:Water_Supply_Pump_1 ;
     brick:isPartOf bldg:Samsung_GEC .
@@ -1773,7 +1772,6 @@ bldg:AHU_UFAD_1 a brick:AHU ;
     brick:feeds bldg:B_5F_Perimeter_West ;
     brick:hasLocation bldg:B_5F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_10 a brick:AHU ;
@@ -1788,7 +1786,6 @@ bldg:AHU_UFAD_10 a brick:AHU ;
     brick:feeds bldg:B_15F_Perimeter_West ;
     brick:hasLocation bldg:B_15F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_11 a brick:AHU ;
@@ -1814,7 +1811,6 @@ bldg:AHU_UFAD_2 a brick:AHU ;
     brick:feeds bldg:B_6F_Perimeter_West ;
     brick:hasLocation bldg:B_6F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_3 a brick:AHU ;
@@ -1829,7 +1825,6 @@ bldg:AHU_UFAD_3 a brick:AHU ;
     brick:feeds bldg:B_7F_Perimeter_West ;
     brick:hasLocation bldg:B_7F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_4 a brick:AHU ;
@@ -1844,7 +1839,6 @@ bldg:AHU_UFAD_4 a brick:AHU ;
     brick:feeds bldg:B_8F_Perimeter_West ;
     brick:hasLocation bldg:B_8F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_5 a brick:AHU ;
@@ -1859,7 +1853,6 @@ bldg:AHU_UFAD_5 a brick:AHU ;
     brick:feeds bldg:B_9F_Perimeter_West ;
     brick:hasLocation bldg:B_9F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_6 a brick:AHU ;
@@ -1874,7 +1867,6 @@ bldg:AHU_UFAD_6 a brick:AHU ;
     brick:feeds bldg:B_10F_Perimeter_West ;
     brick:hasLocation bldg:B_10F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_7 a brick:AHU ;
@@ -1889,7 +1881,6 @@ bldg:AHU_UFAD_7 a brick:AHU ;
     brick:feeds bldg:B_11F_Perimeter_West ;
     brick:hasLocation bldg:B_11F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_8 a brick:AHU ;
@@ -1904,7 +1895,6 @@ bldg:AHU_UFAD_8 a brick:AHU ;
     brick:feeds bldg:B_12F_Perimeter_West ;
     brick:hasLocation bldg:B_12F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:AHU_UFAD_9 a brick:AHU ;
@@ -1919,7 +1909,6 @@ bldg:AHU_UFAD_9 a brick:AHU ;
     brick:feeds bldg:B_14F_Perimeter_West ;
     brick:hasLocation bldg:B_14F ;
     brick:isFedBy bldg:CHW_Pump_Group ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:Air_Curtain_1F a brick:AHU ;
@@ -2263,7 +2252,6 @@ bldg:DOAS_1 a brick:AHU ;
     bees:inferenceSource "UFAD 필수 외기처리" ;
     brick:feeds bldg:UFAD_System ;
     brick:hasLocation bldg:B_RF ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:DOAS_2 a brick:AHU ;
@@ -2273,7 +2261,6 @@ bldg:DOAS_2 a brick:AHU ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:UFAD_System ;
     brick:hasLocation bldg:B_RF ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:DOAS_3 a brick:AHU ;
@@ -2283,7 +2270,6 @@ bldg:DOAS_3 a brick:AHU ;
     bees:hasConfidence "estimated" ;
     brick:feeds bldg:UFAD_System ;
     brick:hasLocation bldg:B_RF ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:UFAD_System .
 
 bldg:FCU_2F a brick:Fan_Coil_Unit ;
@@ -2316,7 +2302,6 @@ bldg:FCU_Group a brick:Fan_Coil_Unit ;
     bees:estimatedRange "10~30대" ;
     bees:hasConfidence "estimated" ;
     bees:inferenceSource "특수실 개별 제어 표준" ;
-    brick:feeds bldg:GEC_Tower_B ;
     brick:hasLocation bldg:GEC_Tower_B ;
     brick:isPartOf bldg:HVAC_System .
 
@@ -3708,14 +3693,12 @@ bldg:CC_Panel_10F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_10F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_10F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "10층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_10F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_11F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3723,14 +3706,12 @@ bldg:CC_Panel_11F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_11F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_11F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "11층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_11F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_12F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3738,14 +3719,12 @@ bldg:CC_Panel_12F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_12F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_12F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "12층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_12F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_14F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3753,14 +3732,12 @@ bldg:CC_Panel_14F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_14F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_14F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "14층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_14F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_15F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3768,14 +3745,12 @@ bldg:CC_Panel_15F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_15F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_15F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "15층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_15F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_5F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3783,14 +3758,12 @@ bldg:CC_Panel_5F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_5F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_5F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "5F 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_5F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_6F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3798,14 +3771,12 @@ bldg:CC_Panel_6F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_6F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_6F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "6층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_6F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_7F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3813,14 +3784,12 @@ bldg:CC_Panel_7F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_7F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_7F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "7층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_7F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_8F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3828,14 +3797,12 @@ bldg:CC_Panel_8F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_8F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_8F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "8층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_8F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_9F_Int a bees:Chilled_Ceiling_Panel ;
@@ -3843,14 +3810,12 @@ bldg:CC_Panel_9F_Int a bees:Chilled_Ceiling_Panel ;
     rdfs:comment "구리배관 내장 천장패널. 16도C 냉수 순환." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_9F_Interior_Zone ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:CC_Panel_9F_West a bees:Chilled_Ceiling_Panel ;
     rdfs:label "9층 서향 칠드실링 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_9F_Perimeter_West ;
-    brick:isFedBy bldg:Chiller_1 ;
     brick:isPartOf bldg:CC_System .
 
 bldg:DALI_Controller_Typical a brick:Lighting_Equipment ;
@@ -4124,35 +4089,30 @@ bldg:RH_Panel_10F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "10층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_10F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_11F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "11층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_11F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_12F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "12층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_12F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_14F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "14층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_14F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_15F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "15층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_15F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_5F_Int a bees:Radiant_Heating_Panel ;
@@ -4160,35 +4120,30 @@ bldg:RH_Panel_5F_Int a bees:Radiant_Heating_Panel ;
     rdfs:comment "온수 순환 복사난방 패널." ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_5F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_6F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "6층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_6F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_7F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "7층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_7F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_8F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "8층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_8F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:RH_Panel_9F_Int a bees:Radiant_Heating_Panel ;
     rdfs:label "9층 내주부 복사난방 패널" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:B_9F_Interior_Zone ;
-    brick:isFedBy bldg:Boiler_1 ;
     brick:isPartOf bldg:RH_System .
 
 bldg:Rainwater_Storage_Tank a brick:Equipment ;
@@ -13562,50 +13517,187 @@ bldg:AHU_UFAD_9 brick:feeds bldg:Floor_Diffuser_14F_East ,
     bldg:Floor_Diffuser_14F_South ,
     bldg:Floor_Diffuser_14F_West .
 
-bldg:Boiler_1 brick:feeds bldg:RH_Panel_10F_Int ,
-    bldg:RH_Panel_11F_Int ,
-    bldg:RH_Panel_12F_Int ,
-    bldg:RH_Panel_14F_Int ,
-    bldg:RH_Panel_15F_Int ,
-    bldg:RH_Panel_5F_Int ,
-    bldg:RH_Panel_6F_Int ,
-    bldg:RH_Panel_7F_Int ,
-    bldg:RH_Panel_8F_Int ,
-    bldg:RH_Panel_9F_Int .
+# [Removed] Chiller_1/Boiler_1 → terminal equipment skip connections (43개)
+# 올바른 경로: Chiller → CHW_Pump → CC_Distribution_Header → CC_Panel
+#              Boiler → HW_Pump → RH_Distribution_Header → RH_Panel
+#              Chiller → CHW_Pump_Group → AHU_UFAD / DOAS
 
-bldg:Chiller_1 brick:feeds bldg:AHU_UFAD_1 ,
-    bldg:AHU_UFAD_10 ,
-    bldg:AHU_UFAD_2 ,
-    bldg:AHU_UFAD_3 ,
-    bldg:AHU_UFAD_4 ,
-    bldg:AHU_UFAD_5 ,
-    bldg:AHU_UFAD_6 ,
-    bldg:AHU_UFAD_7 ,
-    bldg:AHU_UFAD_8 ,
-    bldg:AHU_UFAD_9 ,
-    bldg:CC_Panel_10F_Int ,
-    bldg:CC_Panel_10F_West ,
-    bldg:CC_Panel_11F_Int ,
-    bldg:CC_Panel_11F_West ,
-    bldg:CC_Panel_12F_Int ,
-    bldg:CC_Panel_12F_West ,
-    bldg:CC_Panel_14F_Int ,
-    bldg:CC_Panel_14F_West ,
-    bldg:CC_Panel_15F_Int ,
-    bldg:CC_Panel_15F_West ,
-    bldg:CC_Panel_5F_Int ,
-    bldg:CC_Panel_5F_West ,
-    bldg:CC_Panel_6F_Int ,
-    bldg:CC_Panel_6F_West ,
-    bldg:CC_Panel_7F_Int ,
-    bldg:CC_Panel_7F_West ,
-    bldg:CC_Panel_8F_Int ,
-    bldg:CC_Panel_8F_West ,
-    bldg:CC_Panel_9F_Int ,
-    bldg:CC_Panel_9F_West ,
-    bldg:DOAS_1 ,
+# ═══════════════════════════════════════════════════════════════
+# feeds/isFedBy 누락 보강 — Pump→Group, DOAS, 전기, Panel→Zone
+# ═══════════════════════════════════════════════════════════════
+
+# --- P1: Pump_1 → Pump_Group 연결 (isPartOf — 구성 포함 관계) ---
+bldg:CHW_Pump_1 brick:isPartOf bldg:CHW_Pump_Group .
+bldg:CHW_Pump_Group brick:hasPart bldg:CHW_Pump_1 .
+
+bldg:CW_Pump_1 brick:isPartOf bldg:CW_Pump_Group .
+bldg:CW_Pump_Group brick:hasPart bldg:CW_Pump_1 .
+
+bldg:HW_Pump_1 brick:isPartOf bldg:HW_Pump_Group .
+bldg:HW_Pump_Group brick:hasPart bldg:HW_Pump_1 .
+
+# --- P1: Source → Pump_Group 에너지 공급 ---
+bldg:Chiller_1 brick:feeds bldg:CHW_Pump_Group .
+bldg:CHW_Pump_Group brick:isFedBy bldg:Chiller_1 .
+
+bldg:Cooling_Tower_1 brick:feeds bldg:CW_Pump_Group .
+bldg:CW_Pump_Group brick:isFedBy bldg:Cooling_Tower_1 .
+
+bldg:Boiler_1 brick:feeds bldg:HW_Pump_Group .
+bldg:HW_Pump_Group brick:isFedBy bldg:Boiler_1 .
+
+# --- P1: CHW_Pump_Group → DOAS (냉수 공급) ---
+bldg:CHW_Pump_Group brick:feeds bldg:DOAS_1 ,
     bldg:DOAS_2 ,
     bldg:DOAS_3 .
+
+bldg:DOAS_1 brick:isFedBy bldg:CHW_Pump_Group .
+bldg:DOAS_2 brick:isFedBy bldg:CHW_Pump_Group .
+bldg:DOAS_3 brick:isFedBy bldg:CHW_Pump_Group .
+
+# --- P1: CHW_Pump_Group → AHU/FCU/PAC/Air_Curtain (냉수 공급 보완) ---
+bldg:CHW_Pump_Group brick:feeds bldg:AHU_UFAD_11 ,
+    bldg:FCU_2F ,
+    bldg:FCU_3F_1 ,
+    bldg:FCU_3F_2 ,
+    bldg:PAC_Lobby_1F .
+
+bldg:AHU_UFAD_11 brick:isFedBy bldg:CHW_Pump_Group .
+bldg:FCU_2F brick:isFedBy bldg:CHW_Pump_Group .
+bldg:FCU_3F_1 brick:isFedBy bldg:CHW_Pump_Group .
+bldg:FCU_3F_2 brick:isFedBy bldg:CHW_Pump_Group .
+bldg:PAC_Lobby_1F brick:isFedBy bldg:CHW_Pump_Group .
+
+# --- P1: HW_Pump_Group → Air_Curtain (온수 공급) ---
+bldg:HW_Pump_Group brick:feeds bldg:Air_Curtain_1F .
+bldg:Air_Curtain_1F brick:isFedBy bldg:HW_Pump_Group .
+
+# --- P1: 전기 계통 feeds 체인 ---
+bldg:Transformer_Group brick:feeds bldg:Main_Distribution_Panel .
+bldg:Main_Distribution_Panel brick:isFedBy bldg:Transformer_Group .
+
+bldg:Main_Distribution_Panel brick:feeds bldg:UPS_System .
+bldg:UPS_System brick:isFedBy bldg:Main_Distribution_Panel .
+
+bldg:Emergency_Generator brick:feeds bldg:UPS_System .
+bldg:UPS_System brick:isFedBy bldg:Emergency_Generator .
+
+bldg:Solar_Panel_RF brick:feeds bldg:PV_Inverter_1 .
+bldg:PV_Inverter_1 brick:isFedBy bldg:Solar_Panel_RF .
+
+bldg:PV_Inverter_1 brick:feeds bldg:Main_Distribution_Panel .
+bldg:Main_Distribution_Panel brick:isFedBy bldg:PV_Inverter_1 .
+
+bldg:Main_Distribution_Panel brick:feeds bldg:Floor_Distribution_Panel_Group .
+bldg:Floor_Distribution_Panel_Group brick:isFedBy bldg:Main_Distribution_Panel .
+
+# --- P1: 환기팬 → Zone (급기/배기) ---
+bldg:Supply_Fan_B1F brick:feeds bldg:Mechanical_Zone_B1F .
+bldg:Mechanical_Zone_B1F brick:isFedBy bldg:Supply_Fan_B1F .
+
+bldg:Mechanical_Zone_B1F brick:feeds bldg:Exhaust_Fan_B1F .
+bldg:Exhaust_Fan_B1F brick:isFedBy bldg:Mechanical_Zone_B1F .
+
+bldg:Mechanical_Zone_RF brick:feeds bldg:Exhaust_Fan_RF_1 ,
+    bldg:Exhaust_Fan_RF_2 .
+bldg:Exhaust_Fan_RF_1 brick:isFedBy bldg:Mechanical_Zone_RF .
+bldg:Exhaust_Fan_RF_2 brick:isFedBy bldg:Mechanical_Zone_RF .
+
+# --- P1: CC_Panel → HVAC_Zone (칠드실링 냉방) ---
+bldg:CC_Panel_5F_Int brick:feeds bldg:B_5F_Interior_Zone .
+bldg:B_5F_Interior_Zone brick:isFedBy bldg:CC_Panel_5F_Int .
+bldg:CC_Panel_5F_West brick:feeds bldg:B_5F_Perimeter_West .
+bldg:B_5F_Perimeter_West brick:isFedBy bldg:CC_Panel_5F_West .
+
+bldg:CC_Panel_6F_Int brick:feeds bldg:B_6F_Interior_Zone .
+bldg:B_6F_Interior_Zone brick:isFedBy bldg:CC_Panel_6F_Int .
+bldg:CC_Panel_6F_West brick:feeds bldg:B_6F_Perimeter_West .
+bldg:B_6F_Perimeter_West brick:isFedBy bldg:CC_Panel_6F_West .
+
+bldg:CC_Panel_7F_Int brick:feeds bldg:B_7F_Interior_Zone .
+bldg:B_7F_Interior_Zone brick:isFedBy bldg:CC_Panel_7F_Int .
+bldg:CC_Panel_7F_West brick:feeds bldg:B_7F_Perimeter_West .
+bldg:B_7F_Perimeter_West brick:isFedBy bldg:CC_Panel_7F_West .
+
+bldg:CC_Panel_8F_Int brick:feeds bldg:B_8F_Interior_Zone .
+bldg:B_8F_Interior_Zone brick:isFedBy bldg:CC_Panel_8F_Int .
+bldg:CC_Panel_8F_West brick:feeds bldg:B_8F_Perimeter_West .
+bldg:B_8F_Perimeter_West brick:isFedBy bldg:CC_Panel_8F_West .
+
+bldg:CC_Panel_9F_Int brick:feeds bldg:B_9F_Interior_Zone .
+bldg:B_9F_Interior_Zone brick:isFedBy bldg:CC_Panel_9F_Int .
+bldg:CC_Panel_9F_West brick:feeds bldg:B_9F_Perimeter_West .
+bldg:B_9F_Perimeter_West brick:isFedBy bldg:CC_Panel_9F_West .
+
+bldg:CC_Panel_10F_Int brick:feeds bldg:B_10F_Interior_Zone .
+bldg:B_10F_Interior_Zone brick:isFedBy bldg:CC_Panel_10F_Int .
+bldg:CC_Panel_10F_West brick:feeds bldg:B_10F_Perimeter_West .
+bldg:B_10F_Perimeter_West brick:isFedBy bldg:CC_Panel_10F_West .
+
+bldg:CC_Panel_11F_Int brick:feeds bldg:B_11F_Interior_Zone .
+bldg:B_11F_Interior_Zone brick:isFedBy bldg:CC_Panel_11F_Int .
+bldg:CC_Panel_11F_West brick:feeds bldg:B_11F_Perimeter_West .
+bldg:B_11F_Perimeter_West brick:isFedBy bldg:CC_Panel_11F_West .
+
+bldg:CC_Panel_12F_Int brick:feeds bldg:B_12F_Interior_Zone .
+bldg:B_12F_Interior_Zone brick:isFedBy bldg:CC_Panel_12F_Int .
+bldg:CC_Panel_12F_West brick:feeds bldg:B_12F_Perimeter_West .
+bldg:B_12F_Perimeter_West brick:isFedBy bldg:CC_Panel_12F_West .
+
+bldg:CC_Panel_14F_Int brick:feeds bldg:B_14F_Interior_Zone .
+bldg:B_14F_Interior_Zone brick:isFedBy bldg:CC_Panel_14F_Int .
+bldg:CC_Panel_14F_West brick:feeds bldg:B_14F_Perimeter_West .
+bldg:B_14F_Perimeter_West brick:isFedBy bldg:CC_Panel_14F_West .
+
+bldg:CC_Panel_15F_Int brick:feeds bldg:B_15F_Interior_Zone .
+bldg:B_15F_Interior_Zone brick:isFedBy bldg:CC_Panel_15F_Int .
+bldg:CC_Panel_15F_West brick:feeds bldg:B_15F_Perimeter_West .
+bldg:B_15F_Perimeter_West brick:isFedBy bldg:CC_Panel_15F_West .
+
+# --- P1: RH_Panel → HVAC_Zone (복사난방) ---
+bldg:RH_Panel_5F_Int brick:feeds bldg:B_5F_Interior_Zone .
+bldg:B_5F_Interior_Zone brick:isFedBy bldg:RH_Panel_5F_Int .
+
+bldg:RH_Panel_6F_Int brick:feeds bldg:B_6F_Interior_Zone .
+bldg:B_6F_Interior_Zone brick:isFedBy bldg:RH_Panel_6F_Int .
+
+bldg:RH_Panel_7F_Int brick:feeds bldg:B_7F_Interior_Zone .
+bldg:B_7F_Interior_Zone brick:isFedBy bldg:RH_Panel_7F_Int .
+
+bldg:RH_Panel_8F_Int brick:feeds bldg:B_8F_Interior_Zone .
+bldg:B_8F_Interior_Zone brick:isFedBy bldg:RH_Panel_8F_Int .
+
+bldg:RH_Panel_9F_Int brick:feeds bldg:B_9F_Interior_Zone .
+bldg:B_9F_Interior_Zone brick:isFedBy bldg:RH_Panel_9F_Int .
+
+bldg:RH_Panel_10F_Int brick:feeds bldg:B_10F_Interior_Zone .
+bldg:B_10F_Interior_Zone brick:isFedBy bldg:RH_Panel_10F_Int .
+
+bldg:RH_Panel_11F_Int brick:feeds bldg:B_11F_Interior_Zone .
+bldg:B_11F_Interior_Zone brick:isFedBy bldg:RH_Panel_11F_Int .
+
+bldg:RH_Panel_12F_Int brick:feeds bldg:B_12F_Interior_Zone .
+bldg:B_12F_Interior_Zone brick:isFedBy bldg:RH_Panel_12F_Int .
+
+bldg:RH_Panel_14F_Int brick:feeds bldg:B_14F_Interior_Zone .
+bldg:B_14F_Interior_Zone brick:isFedBy bldg:RH_Panel_14F_Int .
+
+bldg:RH_Panel_15F_Int brick:feeds bldg:B_15F_Interior_Zone .
+bldg:B_15F_Interior_Zone brick:isFedBy bldg:RH_Panel_15F_Int .
+
+# --- P1: FCU_Group → hasPart (구성 포함 관계) ---
+bldg:FCU_Group brick:hasPart bldg:FCU_2F ,
+    bldg:FCU_3F_1 ,
+    bldg:FCU_3F_2 .
+bldg:FCU_2F brick:isPartOf bldg:FCU_Group .
+bldg:FCU_3F_1 brick:isPartOf bldg:FCU_Group .
+bldg:FCU_3F_2 brick:isPartOf bldg:FCU_Group .
+
+# --- P1: Zone → Exhaust_Fan feeds (실내공기→배기) ---
+bldg:B_5F_Interior_Zone brick:feeds bldg:Exhaust_Fan_RF_1 .
+bldg:Exhaust_Fan_RF_1 brick:isFedBy bldg:B_5F_Interior_Zone .
+bldg:B_10F_Interior_Zone brick:feeds bldg:Exhaust_Fan_RF_2 .
+bldg:Exhaust_Fan_RF_2 brick:isFedBy bldg:B_10F_Interior_Zone .
 
 
 # ═══════════════════════════════════════════════════════════════
