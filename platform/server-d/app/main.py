@@ -22,7 +22,7 @@ from .database import close_influxdb, close_postgres, init_influxdb, init_postgr
 from .downsampling import ensure_downsampling_tasks
 from .mqtt_worker import mqtt_worker
 from .retention import ensure_buckets
-from .routers import admin, health, points, export
+from .routers import admin, devices, health, points, export
 from .routers.health import set_start_time
 
 # ─────────────────────────────────────────────
@@ -139,6 +139,7 @@ app.add_middleware(
 
 # ── 라우터 등록 ──
 app.include_router(points.router)
+app.include_router(devices.router)
 app.include_router(admin.router)
 app.include_router(health.router)
 app.include_router(export.router)

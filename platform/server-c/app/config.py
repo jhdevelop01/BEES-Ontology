@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     MQTT_CLIENT_ID: str = "server-c-emulator"
 
     # 시뮬레이션 설정
-    SIMULATION_INTERVAL: float = 5.0  # 초
+    SIMULATION_INTERVAL: float = 1.0  # 초
     AUTO_START_SIMULATION: bool = True
     LOG_DIR: str = "/app/logs"
 

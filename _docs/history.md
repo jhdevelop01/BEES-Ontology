@@ -4046,4 +4046,42 @@ Agent Teams (3명 병렬 분석 + 리라이트):
 
 ---
 
+## 49. 4서버 병렬 최적화 분석 + 시뮬레이션 주기 1초 확정 + Server D 보강 (2026-06-30)
+
+### 배경
+4개 서버(A/B/C/D) 코드를 **병렬 에이전트(Agent Teams, tmux pane)**로 동시 분석하여 서버별 최적화 방향을 도출. 각 teammate가 담당 서버를 정독 후 `_docs/optimization/server-{a,b,c,d}_optimization.md`를 작성하고, 메인 세션이 교차 대조하여 통합 로드맵(`_docs/optimization/00_통합_최적화_로드맵.md`)을 생성.
+
+### 횡단(cross-cutting) 발견 4종
+| ID | 패턴 | 영향 서버 |
+|----|------|-----------|
+| CC-1 | 인증/인가 부재 (제어 평면·감사 로그 무인증) | A·B·D |
+| CC-2 | `async def` 내부 동기 I/O로 이벤트 루프 블로킹 | C·D |
+| CC-3 | 시뮬레이션 발행 주기 5배 증폭(C→A·D) | C·A·D |
+| CC-4 | CORS 와일드카드 + credentials | A·D |
+
+### CC-3 결정: 시뮬레이션 주기 1초 확정
+- `platform/server-c/app/config.py:23` `SIMULATION_INTERVAL` 5.0 → **1.0초** (사용자 의도 확정).
+- 한 틱 발행량 ≈ 954건(670 포인트 + 284 장비) → 초당 ~191건 → **~954건(5배)**.
+- drift/fault_drift는 `interval_seconds/3600` 기반이라 주기 변경에도 **물리적 시간당 변화율 보존**(원복 불필요).
+- 문서 동기화: CLAUDE.md 데이터 흐름 "5초 주기"→"1초 주기", MEMORY.md 동일 갱신. (본 history.md의 과거 섹션은 당시 기록이므로 소급 수정하지 않음.)
+
+### Server D 보강 (1초 확정에 따른 다운스트림 대응, CC-2 + 데이터 유실 방지)
+1초 체제에서 D의 동기 I/O 블로킹이 P0로 승격(초당 ~954건 ÷ batch 100 = 초당 ~10회 동기 write). 수정:
+| 파일 | 변경 |
+|------|------|
+| `app/config.py` | `batch_flush_size` 100→**500**(왕복 초당 ~10회→~2회), `max_buffer_size=50000` 신규 |
+| `app/database.py` | 공용 async 헬퍼 `run_influx_query()` 추가 — `query_api.query()`를 `run_in_executor`로 오프로드 |
+| `app/routers/points.py` | 동기 쿼리 4곳 → 헬퍼 경유 |
+| `app/routers/devices.py` | 동기 쿼리 2곳 → 헬퍼 경유 |
+| `app/routers/export.py` | 동기 쿼리 1곳 → 헬퍼 경유 |
+| `app/mqtt_worker.py` | `_flush_buffer` write 실패 시 `_requeue()`로 재큐잉(오래된 데이터 우선, 상한 초과 시 폐기), `_periodic_flush`를 `run_in_executor`로 오프로드 |
+
+**동시성 안전성**: `_flush_buffer`가 MQTT 콜백 스레드·executor 스레드 양쪽에서 호출되나, 버퍼 copy/clear/재큐잉이 모두 `_buffer_lock` 안에서 원자적으로 처리되어 각 호출이 서로소 포인트 집합을 가져감 → 별도 플러시 플래그 불필요.
+
+**검증**: 자동 테스트 부재로 `py_compile`(6파일 OK) + 라우터 잔여 동기 호출 0건 확인. 런타임 실측(부하 하 응답성·재큐잉 동작)은 컨테이너 미기동으로 미수행 — 기동 후 확인 필요.
+
+**미적용(범위 한정)**: 인증(CC-1, Phase 1 4서버 원자적), Flux 인젝션 방어(D-P1-2), 무제한 `/history` 응답(D-P1-1)은 후속 과제로 로드맵에 유지.
+
+---
+
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*

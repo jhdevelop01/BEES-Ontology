@@ -172,8 +172,9 @@ class MQTTWorker:
             self._mqtt_connected = True
             # 토픽 구독
             client.subscribe(settings.mqtt_topic, qos=1)
+            client.subscribe("bees/devices/#", qos=1)
             client.subscribe("bees/alarms/#", qos=1)
-            logger.info("MQTT 연결 성공 — 구독: %s, bees/alarms/#", settings.mqtt_topic)
+            logger.info("MQTT 연결 성공 — 구독: %s, bees/devices/#, bees/alarms/#", settings.mqtt_topic)
         else:
             self._mqtt_connected = False
             logger.error("MQTT 연결 실패 — rc=%d", rc)
@@ -209,6 +210,11 @@ class MQTTWorker:
             # 알람 토픽 분기 처리 (Phase 3)
             if msg.topic.startswith("bees/alarms/"):
                 self._handle_alarm_message(msg)
+                return
+
+            # 장비 상태 토픽 분기 처리
+            if msg.topic.startswith("bees/devices/"):
+                self._handle_device_message(msg)
                 return
 
             # 토픽에서 point_id 추출
@@ -267,6 +273,52 @@ class MQTTWorker:
             self._errors += 1
         except Exception as e:
             logger.error("메시지 처리 오류 (토픽=%s): %s", msg.topic, e)
+            self._errors += 1
+
+    # ─────────────────────────────────────────────
+    # 장비 상태 처리
+    # ─────────────────────────────────────────────
+
+    def _handle_device_message(self, msg: mqtt.MQTTMessage) -> None:
+        """장비 상태 MQTT 메시지를 파싱하여 InfluxDB에 저장.
+
+        토픽: bees/devices/{device_id}/state
+        페이로드: {"is_active": true, "mode": "auto", "ts": "..."}
+        """
+        try:
+            payload = json.loads(msg.payload.decode("utf-8"))
+
+            # 토픽에서 device_id 추출: bees/devices/bldg:AHU_1/state → bldg:AHU_1
+            parts = msg.topic.split("/")
+            if len(parts) < 3:
+                return
+            device_id = parts[2]
+
+            # 통신 단절 메시지는 별도 상태로 저장
+            comm_loss = payload.get("comm_loss", False)
+            is_active = 0.0 if comm_loss else (1.0 if payload.get("is_active", False) else 0.0)
+            mode = payload.get("mode", "unknown")
+
+            # 타임스탬프 파싱
+            ts_str = payload.get("ts")
+            if ts_str:
+                ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            else:
+                ts = datetime.now(timezone.utc)
+
+            point = (
+                Point("device_state")
+                .tag("device_id", device_id)
+                .tag("mode", mode)
+                .field("is_active", is_active)
+                .time(ts, WritePrecision.NS)
+            )
+
+            with self._buffer_lock:
+                self._buffer.append(point)
+
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            logger.error("장비 상태 메시지 파싱 실패 (%s): %s", msg.topic, e)
             self._errors += 1
 
     # ─────────────────────────────────────────────
@@ -389,8 +441,31 @@ class MQTTWorker:
     # 배치 플러시
     # ─────────────────────────────────────────────
 
+    def _requeue(self, points: list) -> None:
+        """쓰기 실패한 포인트를 버퍼 앞쪽에 되돌려 다음 플러시에서 재시도한다.
+
+        버퍼 앞쪽(오래된 데이터)에 삽입하고, `max_buffer_size` 를 넘으면
+        가장 오래된 포인트부터 폐기하여 InfluxDB 장기 장애 시 메모리 무한 증가를 막는다.
+        """
+        with self._buffer_lock:
+            self._buffer[:0] = points  # prepend — 재시도 대상(오래된 데이터)을 앞으로
+            overflow = len(self._buffer) - settings.max_buffer_size
+            if overflow > 0:
+                del self._buffer[:overflow]
+                logger.error(
+                    "버퍼 상한(%d) 초과 — 가장 오래된 %d 포인트 폐기",
+                    settings.max_buffer_size,
+                    overflow,
+                )
+                self._errors += 1
+
     def _flush_buffer(self) -> None:
-        """버퍼의 포인트를 InfluxDB에 배치 쓰기"""
+        """버퍼의 포인트를 InfluxDB에 배치 쓰기.
+
+        주의: 동기(blocking) write 이므로 이벤트 루프에서 직접 호출하지 말고
+        `_periodic_flush` 처럼 `run_in_executor` 로 오프로드하거나
+        MQTT 콜백 스레드에서 호출한다.
+        """
         with self._buffer_lock:
             if not self._buffer:
                 return
@@ -398,7 +473,11 @@ class MQTTWorker:
             self._buffer.clear()
 
         if not self._write_api:
-            logger.error("InfluxDB write_api 미초기화 — %d 포인트 유실", len(points_to_write))
+            # 유실 대신 재큐잉 — write_api 초기화 후 다음 플러시에서 재시도
+            self._requeue(points_to_write)
+            logger.error(
+                "InfluxDB write_api 미초기화 — %d 포인트 재큐잉", len(points_to_write)
+            )
             self._errors += 1
             return
 
@@ -416,19 +495,26 @@ class MQTTWorker:
                 self._points_written,
             )
         except Exception as e:
+            # 일시적 네트워크 오류 등에서 데이터 유실 방지 — 재큐잉 후 다음 플러시에서 재시도
+            self._requeue(points_to_write)
             logger.error(
-                "InfluxDB 배치 쓰기 실패: %s (%d 포인트 유실)",
+                "InfluxDB 배치 쓰기 실패: %s (%d 포인트 재큐잉, 다음 플러시에서 재시도)",
                 e,
                 len(points_to_write),
             )
             self._errors += 1
 
     async def _periodic_flush(self) -> None:
-        """주기적 배치 플러시 (batch_flush_interval 간격)"""
+        """주기적 배치 플러시 (batch_flush_interval 간격).
+
+        동기 write 를 `run_in_executor` 로 오프로드하여 플러시 중에도
+        이벤트 루프(FastAPI 조회/헬스체크)가 멈추지 않게 한다.
+        """
+        loop = asyncio.get_running_loop()
         while self._running:
             try:
                 await asyncio.sleep(settings.batch_flush_interval)
-                self._flush_buffer()
+                await loop.run_in_executor(None, self._flush_buffer)
                 await self._flush_alarms_async()
             except asyncio.CancelledError:
                 break

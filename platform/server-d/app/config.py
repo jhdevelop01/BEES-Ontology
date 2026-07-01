@@ -58,8 +58,16 @@ class Settings(BaseSettings):
         description="InfluxDB 배치 플러시 간격 (초)",
     )
     batch_flush_size: int = Field(
-        default=100,
+        default=500,
+        # 1초 발행 주기(약 954건/초)에서 100이면 초당 ~10회 write 왕복이 발생하므로
+        # 500으로 상향하여 왕복 횟수를 초당 ~2회로 줄인다.
         description="InfluxDB 배치 플러시 크기 (포인트 수)",
+    )
+    max_buffer_size: int = Field(
+        default=50000,
+        # write 실패 시 재큐잉으로 버퍼가 무한 증가하는 것을 방지하는 상한.
+        # 초과 시 가장 오래된 포인트부터 폐기(50000 ≈ 1초 주기로 약 52초분).
+        description="쓰기 실패 재시도 시 버퍼 상한 (초과 시 오래된 포인트 폐기)",
     )
 
     # ── 서버 ──

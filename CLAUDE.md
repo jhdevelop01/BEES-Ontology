@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # BEES Ontology — 삼성물산 GEC B동 Brick Schema 온톨로지
 
 ## 프로젝트 개요
@@ -89,3 +93,40 @@ docker compose up -d                                    # 전체 기동 (9서비
 curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (670포인트)
 open http://localhost:3000                               # 프론트엔드
 ```
+
+### 데이터 흐름 아키텍처 (서버 간 연동 — 핵심)
+플랫폼은 단방향 시뮬레이션 파이프라인 + 그래프 조회의 2개 경로로 동작한다:
+
+1. **시뮬레이션 경로 (1초 주기)**: Server C(에뮬레이터, `engine.py`+`thermodynamics.py`)가 284장비/670포인트 값을 생성 →
+   MQTT(`bees/points/*`, `bees/devices/*/state`, `bees/alarms/*`)로 발행 →
+   **Server A**(`mqtt_service.py`)가 메모리 캐시(`_point_cache`/`_device_cache`/`_alarm_cache`)에 수집하고 SSE(0.5초 배치)로 프론트엔드에 푸시,
+   동시에 **Server D**(`mqtt_worker.py`)가 InfluxDB에 시계열로 영속화(배치 write, `batch_flush_size=500`).
+2. **그래프 조회 경로**: 프론트엔드 → Server A REST → `neo4j_service.py`(`_graph_cache` 5분 TTL) → Neo4j(`neo4j-bees`).
+   토폴로지·Fault Impact·온톨로지 그래프·장비 상세가 이 경로를 사용.
+3. **AI 채팅**: 프론트엔드 → `routers/chat.py` → `openai_service.py`(SYSTEM_PROMPT에 에너지 흐름 **하드코딩**, Neo4j 교차 조회) → OpenAI.
+4. **제어/BAS**: Server B(`bacnet_adapter.py`)는 BACnet 프로토콜 게이트웨이(`command_queue.py`로 명령 큐잉). 현재 시뮬레이션은 Server C가 담당.
+
+**Server A 백엔드 구조**: `routers/`(19개 엔드포인트 그룹) + `services/`(11개 통합 서비스)로 분리.
+온톨로지 변경의 파급 지점은 거의 항상 `neo4j_service.py`(그래프), `openai_service.py`(LLM 프롬프트), 프론트엔드 토폴로지 3곳 — 위 "연쇄 업데이트" 체크리스트 참조.
+
+## 개발 명령
+```bash
+# 프론트엔드 (server-a/frontend) — 로컬 개발
+cd platform/server-a/frontend && npm install
+npm run dev            # 개발 서버 (next dev)
+npm run lint           # ESLint (next lint)
+npm run build          # 프로덕션 빌드 — 타입 오류 사전 검증용으로 활용
+
+# 백엔드 단일 서버 로컬 실행 (예: Server A) — uvicorn 직접 기동
+cd platform/server-a/backend && pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8010
+
+# Docker — 단일 서비스 재빌드/재시작/로그 (전체 재기동 불필요)
+docker compose up -d --build server-a-frontend
+docker compose restart server-a-backend     # Neo4j _graph_cache 초기화 시 필수
+docker compose logs -f server-c              # 특정 서버 로그 추적
+
+# 온톨로지 품질 종합 점검 (orphan/asymmetry/confidence)
+python3 scripts/ontology_quality_check.py
+```
+> 자동화 테스트 스위트는 아직 없음 — 검증은 위 `검증 명령`(TTL/SHACL/Neo4j) + `npm run build`(프론트 타입) + API 수동 curl로 수행.

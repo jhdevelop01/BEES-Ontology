@@ -15,7 +15,7 @@ from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
 from ..config import settings
-from ..database import get_influx_query_api
+from ..database import get_influx_query_api, run_influx_query
 
 logger = logging.getLogger("server-d.export")
 router = APIRouter(prefix="/export", tags=["데이터 내보내기"])
@@ -78,7 +78,7 @@ async def export_data(
     '''
 
     try:
-        tables = query_api.query(flux_query, org=settings.influxdb_org)
+        tables = await run_influx_query(query_api, flux_query)
     except Exception as e:
         logger.error("InfluxDB 내보내기 쿼리 실패: %s", e)
         raise HTTPException(status_code=500, detail=f"데이터 조회 실패: {e}")

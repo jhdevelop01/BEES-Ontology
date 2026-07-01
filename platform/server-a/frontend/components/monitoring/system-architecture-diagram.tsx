@@ -64,9 +64,10 @@ export function SystemArchitectureDiagram() {
     []
   );
 
-  // Summary counts
+  // Summary counts (frontend is always online if this code is running)
   const allStatuses = [...servers, ...infrastructure];
-  const onlineCount = allStatuses.filter((s) => s.status === "online").length;
+  const onlineCount = allStatuses.filter((s) => s.status === "online").length
+    + (!loading && servers.length > 0 ? 1 : 0); // +1 for frontend
   const totalCount = ARCH_NODES.length;
 
   // Convert percentage position to pixel position for SVG

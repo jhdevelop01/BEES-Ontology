@@ -3,6 +3,7 @@ BEES Platform — Server D 데이터베이스 연결 관리
 InfluxDB (시계열) + PostgreSQL (관리 데이터)
 """
 
+import asyncio
 import logging
 from typing import Optional
 
@@ -96,3 +97,17 @@ def get_influx_client() -> Optional[InfluxDBClient]:
 def get_influx_query_api() -> Optional[QueryApi]:
     """현재 InfluxDB 쿼리 API 반환"""
     return _influx_query_api
+
+
+async def run_influx_query(query_api: QueryApi, flux_query: str):
+    """InfluxDB Flux 쿼리를 스레드풀에서 실행한다.
+
+    influxdb-client 의 `query_api.query()` 는 동기(blocking) HTTP 호출이므로
+    `async def` 핸들러에서 직접 호출하면 이벤트 루프가 응답 동안 정지한다.
+    `run_in_executor` 로 오프로드하여 조회 중에도 다른 요청/헬스체크가 진행되게 한다.
+    """
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(
+        None,
+        lambda: query_api.query(flux_query, org=settings.influxdb_org),
+    )

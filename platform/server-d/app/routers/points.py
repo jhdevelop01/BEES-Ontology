@@ -17,7 +17,7 @@ from influxdb_client import Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
 
 from ..config import settings
-from ..database import get_influx_client, get_influx_query_api
+from ..database import get_influx_client, get_influx_query_api, run_influx_query
 from ..models import (
     PointHistory,
     PointLatest,
@@ -63,7 +63,7 @@ async def get_points_summary():
           |> sum()
         '''
 
-        tables = query_api.query(flux_query, org=settings.influxdb_org)
+        tables = await run_influx_query(query_api, flux_query)
 
         points: list[PointSummaryItem] = []
         for table in tables:
@@ -81,7 +81,7 @@ async def get_points_summary():
         # 전체 레코드 수 집계
         total_records = 0
         try:
-            count_tables = query_api.query(count_flux, org=settings.influxdb_org)
+            count_tables = await run_influx_query(query_api, count_flux)
             for table in count_tables:
                 for record in table.records:
                     total_records = int(record.get_value())
@@ -115,7 +115,7 @@ async def get_point_latest(point_id: str):
                             and r.point_id == "{point_id}")
           |> last()
         '''
-        tables = query_api.query(flux_query, org=settings.influxdb_org)
+        tables = await run_influx_query(query_api, flux_query)
 
         for table in tables:
             for record in table.records:
@@ -195,7 +195,7 @@ async def get_point_history(
               |> yield(name: "raw")
             '''
 
-        tables = query_api.query(flux_query, org=settings.influxdb_org)
+        tables = await run_influx_query(query_api, flux_query)
 
         records: list[PointRecord] = []
         for table in tables:

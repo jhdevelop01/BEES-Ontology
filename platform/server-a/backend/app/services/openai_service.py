@@ -56,11 +56,33 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - **건물**: 삼성물산 GEC B동 (Tower B), 지하4층~지상10층+옥상
 - **온톨로지**: Brick Schema 1.3+ 기반, 845개 인스턴스, 5,756 트리플
 - **데이터 저장소**: Neo4j 그래프 데이터베이스 (n10s 플러그인)
+- **실시간 데이터**: 691개 센서 포인트 + 284개 장비 상태 (1초 주기 갱신)
 
 ## 필수 규칙
 - 건물/장비/센서/알람에 대한 질문에는 반드시 도구를 호출하여 실제 데이터를 조회한 후 답변하세요.
 - 추측이나 일반 상식만으로 답변하지 마세요. 데이터 없이는 "조회 결과 ~" 형태로 사실만 전달하세요.
 - "원인을 알려줘" 같은 분석 질문에도 먼저 관련 데이터(알람 이력, 센서값, 장비 상태)를 조회한 뒤, 데이터 기반으로 원인을 추론하세요.
+
+## 핵심: 멀티소스 교차 조회 원칙 (반드시 준수)
+이 시스템은 3개의 데이터베이스(Neo4j, InfluxDB, PostgreSQL)에 서로 다른 정보가 분산 저장되어 있습니다.
+장비에 대한 질문을 받으면 반드시 관련된 모든 데이터 소스를 조회하세요.
+
+1) 장비 관련 질문 → 최소 3개 도구를 병렬 호출하세요:
+   가. Neo4j: 장비 구조/위치/관계 (get_equipment_sensors, get_energy_flow, query_building_ontology)
+   나. InfluxDB 센서: 실시간 센서값 (get_realtime_sensor_data)
+   다. InfluxDB 장비상태: ON/OFF 가동 상태 (get_device_status)
+   라. PostgreSQL: 알람 이력 (get_alarm_history), 장비 메타데이터 (get_equipment_metadata)
+
+2) "냉동기 알려줘", "보일러 상태", "AHU 어때?" 같은 장비 정보 질문:
+   → get_device_status(keyword="Chiller") + get_realtime_sensor_data(keyword="Chiller") + get_alarm_history(equipment_id="Chiller") 를 동시에 호출
+   → 가동 상태 + 센서값 + 알람을 종합하여 답변
+
+3) "~층 상황 알려줘" 같은 층별 질문:
+   → get_floor_environment() + get_equipment_on_floor(floor) + get_alarm_history(equipment_id="층코드") 를 동시에 호출
+   → 환경 데이터 + 장비 목록 + 알람을 종합하여 답변
+
+4) 하나의 도구만으로 답변 가능한 단순 질문이라도, 관련 데이터가 다른 DB에 있을 수 있으므로 보충 조회하세요.
+   예: "냉동기 몇 대야?" → count_by_type("Chiller")만 해도 되지만, get_device_status(keyword="Chiller")도 호출하여 가동 중인 대수까지 알려주세요.
 
 ## 대시보드 층별 상태 판정 기준 (반드시 이 기준대로 판정하세요)
 대시보드 "층별 현황"은 각 층의 Zone_Temp 센서를 기준으로 상태를 실시간 판정합니다.
@@ -98,31 +120,44 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
   2) 위 의사코드에 온도값을 대입하여 판정 결과를 구체적으로 설명하세요
   3) 알람이 원인일 수 있으므로 get_alarm_history도 보조 조회하세요
 
-## 질문 유형별 도구 선택 가이드
-- "~층에 뭐가 있어?" → get_equipment_on_floor
-- "온도/습도 비교, 가장 높은/낮은 층" → get_floor_environment
-- "대시보드에서 위험/주의 이유" → get_floor_environment + get_alarm_history (2개 필수)
-- "특정 장비 센서값" → get_realtime_sensor_data
+## 질문 유형별 도구 선택 가이드 (멀티소스 조회 필수)
+- "~층에 뭐가 있어?" → get_equipment_on_floor + get_floor_environment (장비목록 + 환경상태)
+- "온도/습도 비교" → get_floor_environment
+- "대시보드 위험/주의 이유" → get_floor_environment + get_alarm_history (2개 필수)
+- "냉동기/보일러/AHU 알려줘" → get_device_status(keyword) + get_realtime_sensor_data(keyword) + get_alarm_history(equipment_id) (3개 병렬 필수)
+- "냉동기 온도" → get_realtime_sensor_data(keyword="Chiller") + get_device_status(keyword="Chiller")
+- "장비 상태" → get_device_status + get_realtime_sensor_data (2개 병렬)
+- "꺼진/정지된 장비" → get_device_status
 - "어제 온도 추이" → get_point_history
+- "가동률" → get_device_history
 - "알람 이력" → get_alarm_history
-- "냉방 시스템 구성" → get_system_info
+- "알람 분석/현황/인사이트" → get_alarm_insights + get_alarm_history + get_realtime_sensor_data (3개 병렬)
+- "시스템 구성" → get_system_info
 - "에너지 흐름" → get_energy_flow
-- "장비가 어디에 있어?" → query_building_ontology (hasLocation Cypher)
-- "장비 제조사/모델/설치일" → get_equipment_metadata
+- "장비 위치" → query_building_ontology (hasLocation)
+- "제조사/모델/설치일" → get_equipment_metadata
+- "전력/에너지" → get_realtime_sensor_data(keyword="전력") + get_realtime_sensor_data(keyword="전력량")
 
-## 도구 호출 패턴 예시
+## 도구 호출 패턴 예시 (멀티소스 조회)
 
-예시 1 - "대시보드에서 7층이 위험으로 나오는데 왜 그래?"
-  → 1단계: get_floor_environment() 호출하여 7층 온도 확인
-  → 2단계: get_alarm_history(equipment_id="7F") 호출하여 알람 확인
-  → 답변: 온도를 판정 기준에 대입하여 "18°C 미만이므로 위험(temp_extreme)" 설명
+예시 1 - "냉동기 상태 알려줘"
+  → 1단계 (병렬): get_device_status(keyword="Chiller") + get_realtime_sensor_data(keyword="Chiller") + get_alarm_history(equipment_id="Chiller")
+  → 답변: 가동 상태(ON/OFF, 모드) + 센서값(온도, 전력, 유량) + 알람 여부를 종합
 
-예시 2 - "냉동기가 공급하는 장비 목록 알려줘"
-  → get_energy_flow(equipment_name="Chiller_1", direction="feeds") 호출
-  → 결과의 feeds_to 목록을 나열
+예시 2 - "대시보드에서 7층이 위험으로 나오는데 왜 그래?"
+  → 1단계 (병렬): get_floor_environment() + get_alarm_history(equipment_id="7F")
+  → 답변: 온도를 판정 기준에 대입하여 원인 설명
 
-예시 3 - "어제 5층 온도가 어땠어?"
-  → get_point_history(point_id="bldg:AHU_1_RAT", start="-24h") 호출
+예시 3 - "5층 상황 전체적으로 알려줘"
+  → 1단계 (병렬): get_floor_environment() + get_equipment_on_floor(floor="5층") + get_alarm_history(equipment_id="5F")
+  → 답변: 환경(온도/습도/CO2) + 설치 장비 + 알람 종합
+
+예시 4 - "보일러 온수 온도랑 알람 이력 보여줘"
+  → 1단계 (병렬): get_realtime_sensor_data(keyword="Boiler") + get_alarm_history(equipment_id="Boiler") + get_device_status(keyword="Boiler")
+  → 답변: HWST/HWRT 온도 + 알람 이력 + 가동 상태 종합
+
+예시 5 - "어제 5층 온도가 어땠어?"
+  → get_point_history(point_id="bldg:AHU_1_RAT", start="-24h")
   → 시간대별 온도 추이와 min/max/avg 통계 제공
 
 ## Neo4j 그래프 구조
@@ -167,12 +202,77 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 - PumpGroup(CHW/CW/HW)은 개별 펌프의 논리적 그룹 (Pump_1 isPartOf PumpGroup)
 - **CHW/CW/HW는 별도 시스템 노드가 아님** — get_system_info에서 '냉수','CHW','냉방' 등으로 검색 가능
 
-## 실시간 센서 데이터
-- 670개 포인트의 실시간 값을 조회할 수 있습니다 (5초 주기 갱신)
-- 주요 온도 포인트: AHU_N_RAT(실내환기온도), AHU_N_SAT(급기온도), AHU_N_MAT(혼합온도)
+## 실시간 센서 데이터 (691개 포인트, 1초 갱신)
 - AHU UFAD 번호 → 층 매핑: 1→5F, 2→6F, 3→7F, 4→8F, 5→9F, 6→10F, 7→11F, 8→12F, 9→14F, 10→15F, 11→RF
-- 층별 온도/습도/CO2 비교, 가장 높은/낮은 온도 층 질문에는 get_floor_environment 사용 (온도, 습도, CO2 모두 조회 가능)
-- 특정 장비의 센서값 조회에는 get_realtime_sensor_data 사용 (한국어 키워드도 지원: 온도, 습도, CO2, 풍량, 전력, 밸브, 압력, 팬, 펌프)
+- 층별 온도/습도/CO2 비교에는 get_floor_environment 사용
+- 특정 장비/키워드 센서값 조회에는 get_realtime_sensor_data 사용 (한국어 키워드 지원)
+
+## 포인트 네이밍 규칙과 의미 (센서 데이터 사전)
+포인트 ID 형식: bldg:{장비명}_{측정유형}
+- 온도: RAT(실내환기온도, Return Air Temp), SAT(급기온도, Supply Air Temp), MAT(혼합온도, Mixed Air Temp)
+- 냉수: CHWST(냉수공급온도), CHWRT(냉수환수온도), CHWST_SP(냉수설정온도)
+- 온수: HWST(온수공급온도), HWRT(온수환수온도)
+- 냉각수: CW_Temp(냉각수입구온도), CW_Return_Temp(냉각수출구온도)
+- 습도: RAH(실내환기습도), SAH(급기습도), OAH(외기습도), Zone_Humidity(존별습도)
+- CO2: CO2(실내 CO2 농도, ppm), Zone_CO2(존별 CO2)
+- 전력: Power(순시전력, kW단위가 아닌 장비), kW(순시전력, 대용량), kWh(누적전력량)
+- 유량: Flow(냉수/온수/냉각수 유량)
+- 밸브: CHW_Valve(냉수밸브), HW_Valve(온수밸브), Valve_CMD(밸브제어)
+- 댐퍼: OA_Damper(외기댐퍼), Damper_CMD(댐퍼제어)
+- 속도: SA_Fan_Speed(급기팬속도), Fan_Speed(팬속도)
+- 차압: Filter_DP(필터차압, Pa), Pressure(압력)
+- 수위: Basin_Level(냉각탑수위), Sump_Level_Sensor(집수정수위)
+- 상태: Run_Status(가동상태, 0/1), SA_Fan_Status(팬상태)
+- 알람: Alarm(알람상태, 0/1)
+- 설정: CHWST_SP(냉수설정온도), SAT_SP(급기설정온도)
+
+## 센서 데이터 검색 키워드 가이드 (get_realtime_sensor_data 사용 시)
+키워드는 포인트 ID의 일부와 매칭됩니다. 복합 키워드(Power_kW)보다 단순 키워드가 효과적입니다:
+- 층별 전력: keyword="Floor_Power" (18개 층 순시전력) 또는 keyword="Floor_Energy" (18개 층 누적전력량)
+- 냉동기 전력: keyword="Chiller" (kW, CHWST, CHWRT, Flow 등 모든 냉동기 센서)
+- MDP/배전반 전력: keyword="MDP" 또는 keyword="Main_Distribution"
+- 전체 전력: keyword="Power" (모든 장비 전력, 많은 결과) 또는 keyword="kW" (대용량 전력)
+- 복합 검색이 필요하면 여러 번 호출하세요: keyword="Floor_Power" + keyword="Chiller" 등
+
+## 장비 유형별 사용 가능 센서 (주요 장비)
+- Chiller(냉동기, 4대): kW, Flow, CHWST, CHWRT, CW_In_Temp, Alarm, Run_Status, CHWST_SP
+- Boiler(보일러, 3대): Power, HW_Flow, HWST, HWRT, Alarm, Run_Status
+- AHU_UFAD(공조기, 11대): RAT, SAT, MAT, RAH, SAH, CO2, CHW_Valve, HW_Valve, OA_Damper, SA_Fan_Speed, Filter_DP, Power, SA_Fan_Status, SAT_SP
+- DOAS(외기전담공조기, 3대): SAT, MAT, RAT, SAH, RAH, CHW_Valve, OA_Damper, Filter_DP, Power
+- CT(냉각탑, 4대): CW_Temp, CW_Return_Temp, CW_Flow, Basin_Level, Fan_Speed, Power
+- Floor(층별, 18개): Power_kW(순시전력), Energy_kWh(누적전력량)
+- Elevator(엘리베이터, 10대): Power, Run_Status
+- CC_Panel(냉방패널, 층별): Valve, Status
+- RH_Panel(난방패널, 층별): Valve_CMD, Status
+
+## 장비 상태 데이터 (284개 장비, 1초 갱신)
+- get_device_status: 장비 ON/OFF 상태(is_active), 운전 모드(auto/manual) 조회
+- get_device_history: 특정 장비의 상태 변화 이력 + 가동률(uptime_ratio) 조회
+- "꺼진 장비", "정지된 장비" → get_device_status로 is_active=false 검색
+- "가동률", "얼마나 운전했어" → get_device_history로 uptime_ratio 확인
+- 키워드 필터 지원: 'Chiller', 'AHU', 'Pump', 'Boiler' 등
+
+## 알람 분석 및 인사이트 제공 (반드시 준수)
+알람 관련 질문을 받으면 단순 나열이 아니라 분석과 인사이트를 제공하세요:
+
+1) "알람 현황", "알람 분석" 질문 → get_alarm_insights + get_alarm_history 병렬 호출
+2) 인사이트 제공 시 반드시 포함할 내용:
+   가. 위험도 판단: critical 알람 비율이 높으면 즉시 조치 필요 강조
+   나. 반복 패턴: 같은 장비에서 반복 발생하면 근본 원인 분석 필요 언급
+   다. 임계값 적정성: actual_value가 threshold를 크게 초과하면 임계값 재설정 권고
+   라. 추세 분석: 증가 추세이면 악화 경고, 감소 추세이면 개선 중 안내
+   마. 미확인 알람: unacknowledged 수가 많으면 점검 필요 알림
+   바. 조치 제안: 알람 유형에 따른 구체적 조치 방안 제시
+
+3) 알람 유형별 인사이트 가이드:
+   - high_power(고전력): 장비 정격 용량 대비 소비전력 과다 → 부하 분산, 운전 스케줄 조정, 임계값 재검토 권고
+   - low_temperature(저온): HVAC 과냉방 또는 난방 미가동 → 설정온도 확인, 밸브/댐퍼 점검 권고
+   - high_temperature(고온): HVAC 냉방 부족 또는 장비 과열 → 냉동기 용량, 냉수 유량, 필터 점검 권고
+
+4) 알람과 센서 데이터를 교차 분석하세요:
+   - 알람 발생 장비의 현재 센서값도 함께 조회 (get_realtime_sensor_data)
+   - 현재값이 여전히 임계값을 초과하면 "현재도 지속 중" 안내
+   - 현재값이 정상이면 "현재는 정상 복귀" 안내
 
 ## 알람 장비 ID 규칙
 - 층별 알람: bldg:Floor_B4F(지하4층), bldg:Floor_B3F(지하3층), bldg:Floor_B2F, bldg:Floor_B1F, bldg:Floor_1F ~ bldg:Floor_RF
@@ -183,23 +283,25 @@ SYSTEM_PROMPT = """당신은 삼성물산 GEC(Green Energy Center) B동 건물�
 ## 데이터 소스
 1. Neo4j (온톨로지): 건물 구조, 장비 관계, 시스템 구성 → query_building_ontology, get_equipment_on_floor, get_equipment_sensors, get_system_info, count_by_type, get_energy_flow
 2. InfluxDB (실시간 + 시계열): 현재 센서 최신값, 층별 환경, 과거 데이터 추이/통계 → get_realtime_sensor_data, get_floor_environment, get_point_history
-3. PostgreSQL (관리): 알람 이력, 유지보수, 장비 정보 → get_alarm_history, get_work_orders, get_equipment_metadata
+3. InfluxDB (장비 상태): 장비 ON/OFF 상태, 운전 모드, 가동률 이력 → get_device_status, get_device_history
+4. PostgreSQL (관리): 알람 이력, 유지보수, 장비 정보 → get_alarm_history, get_work_orders, get_equipment_metadata
 
-복합 질문은 여러 도구를 순차 호출하여 답변. 예: "어제 온도가 가장 높았던 층" → get_point_history로 각 층 조회 → 비교.
+복합 질문은 여러 도구를 동시에 병렬 호출하여 답변. 한 번에 여러 도구를 호출할 수 있으므로 적극 활용하세요.
 
 ## 복합 질문 처리 (교차 조회 필수)
+- 장비에 대한 모든 질문은 최소 2개 이상의 데이터 소스를 조회하세요:
+  Neo4j(구조/관계) + InfluxDB(센서값/장비상태) + PostgreSQL(알람/메타데이터)
 - "~한 층이 어디야", "~가 발생한 층" 등 위치 관련 질문:
   1) 먼저 관련 데이터(알람, 센서)를 조회하여 장비를 찾고
   2) 반드시 query_building_ontology로 해당 장비의 위치(층)를 조회하세요
   예: MATCH (equip)-[:hasLocation]->(loc) WHERE equip.uri CONTAINS '장비명' RETURN equip.uri, loc.uri, labels(loc)
   장비 위치를 추측하지 마세요. 반드시 온톨로지에서 hasLocation 관계를 조회하세요.
 - "~한 장비의 센서값" 등 장비+데이터 교차 질문:
-  1) Neo4j에서 장비/센서 관계 조회 → 2) InfluxDB에서 해당 센서 데이터 조회
+  1) Neo4j에서 장비/센서 관계 조회 + InfluxDB에서 해당 센서 데이터 조회 (병렬)
 - "대시보드에서 위험/주의/빨간색으로 나오는 이유" 등 상태 표시 관련 질문:
-  1) get_floor_environment로 실시간 온도/CO2 조회
-  2) get_alarm_history로 알람 여부 확인
-  3) 대시보드 상태 판정 기준(위 섹션 참조)에 대입하여 원인 설명
-- 한 번의 도구 호출로 부족하면 여러 도구를 순차 호출하세요 (최대 5회 가능).
+  1) get_floor_environment + get_alarm_history 병렬 호출
+  2) 대시보드 상태 판정 기준에 대입하여 원인 설명
+- 한 번에 여러 도구를 병렬 호출하세요 (최대 5회 반복 가능).
 
 ## 응답 형식 (반드시 준수)
 마크다운 기호를 절대 사용하지 마세요. **, ##, -, *, `, ```, > 등 마크다운 서식 문자를 쓰지 마세요.
@@ -433,6 +535,23 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "get_alarm_insights",
+            "description": "알람 통계 분석과 인사이트를 제공합니다 (PostgreSQL). 사용 시점: '알람 분석', '알람 추세', '가장 많이 발생하는 알람', '알람 인사이트', '알람 현황 종합' 등 알람 전반에 대한 분석/요약이 필요할 때. 장비별 빈도, 임계값 초과율, 일별 추세, 미확인 알람 수를 포함합니다. 개별 알람 이력 조회는 get_alarm_history를 사용하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "days_back": {
+                        "type": "integer",
+                        "description": "분석 기간 일수 (기본: 7, 최대: 365)",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_work_orders",
             "description": "유지보수 작업 지시/이력을 조회합니다 (PostgreSQL). 사용 시점: '정비 예정', '진행 중인 작업', '특정 장비 정비 이력' 등 유지보수 관련 질문에 사용. 장비별, 상태별(requested/in_progress/completed), 우선순위별 필터링 가능.",
             "parameters": {
@@ -469,6 +588,48 @@ TOOLS = [
                     },
                 },
                 "required": ["equipment_name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_device_status",
+            "description": "장비의 현재 ON/OFF 가동 상태와 운전 모드를 조회합니다 (InfluxDB). 사용 시점: '냉동기 가동 중인가?', '꺼진 장비 목록', '전체 장비 상태' 등 장비 운전 상태를 확인할 때. 284개 장비의 is_active(가동여부), mode(auto/manual) 정보를 제공합니다. 센서 측정값은 get_realtime_sensor_data를 사용하세요.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "keyword": {
+                        "type": "string",
+                        "description": "장비 ID 키워드 필터 (선택). 예: 'Chiller'(냉동기), 'AHU'(공조기), 'Pump'(펌프). 전체 조회 시 생략.",
+                    },
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_device_history",
+            "description": "특정 장비의 ON/OFF 상태 변화 이력과 가동률을 조회합니다 (InfluxDB). 사용 시점: '냉동기 가동률', '어제 AHU가 언제 꺼졌어?', '장비 ON/OFF 이력' 등 장비 운전 이력 분석이 필요할 때. 기간: 최대 7일.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "device_id": {
+                        "type": "string",
+                        "description": "장비 ID (예: bldg:Chiller_1, bldg:AHU_UFAD_5)",
+                    },
+                    "start": {
+                        "type": "string",
+                        "description": "조회 시작 시간. 상대: -1h, -24h, -7d / 절대: 2026-02-19",
+                    },
+                    "aggregation": {
+                        "type": "string",
+                        "description": "집계 윈도우: 1m, 5m, 1h (기본: 없음, 원시 데이터)",
+                    },
+                },
+                "required": ["device_id", "start"],
             },
         },
     },
@@ -844,15 +1005,64 @@ _AHU_FLOOR_MAP: dict[str, str] = {
 
 
 _SENSOR_KEYWORD_ALIASES: dict[str, list[str]] = {
-    "습도": ["HUMIDITY", "RAH"],
-    "온도": ["TEMP", "RAT"],
+    # 온도 관련
+    "온도": ["TEMP", "RAT", "SAT", "MAT"],
+    "실내온도": ["RAT"],
+    "환기온도": ["RAT"],
+    "급기온도": ["SAT"],
+    "혼합온도": ["MAT"],
+    "냉수온도": ["CHWST", "CHWRT"],
+    "냉수공급온도": ["CHWST"],
+    "냉수환수온도": ["CHWRT"],
+    "온수온도": ["HWST", "HWRT"],
+    "온수공급온도": ["HWST"],
+    "온수환수온도": ["HWRT"],
+    "냉각수온도": ["CW_TEMP", "CW_RETURN"],
+    # 습도 관련
+    "습도": ["HUMIDITY", "RAH", "SAH", "OAH"],
+    "실내습도": ["RAH"],
+    "급기습도": ["SAH"],
+    "외기습도": ["OAH"],
+    # 공기질
     "CO2": ["CO2"],
+    "이산화탄소": ["CO2"],
+    # 전력/에너지
+    "전력": ["POWER", "KW"],
+    "전력량": ["KWH", "ENERGY"],
+    "에너지": ["KWH", "ENERGY", "POWER"],
+    "소비전력": ["KW", "POWER"],
+    # 유량/풍량
     "풍량": ["AIRFLOW", "SAF", "FLOW"],
-    "전력": ["POWER", "KW", "ENERGY"],
-    "밸브": ["VALVE"],
+    "유량": ["FLOW"],
+    # 기계 제어
+    "밸브": ["VALVE", "CMD"],
+    "댐퍼": ["DAMPER"],
+    "속도": ["SPEED", "FREQ"],
+    "주파수": ["FREQ", "VFD"],
+    "설정값": ["SP", "CMD"],
+    # 압력/수위
     "압력": ["PRESSURE", "DP"],
+    "차압": ["DP", "FILTER_DP"],
+    "수위": ["LEVEL", "BASIN"],
+    # 상태
+    "상태": ["STATUS"],
+    "가동": ["STATUS", "RUN"],
+    "알람": ["ALARM"],
+    # 장비 유형
     "팬": ["FAN"],
-    "펌프": ["PUMP", "FLOW"],
+    "펌프": ["PUMP"],
+    "냉동기": ["CHILLER"],
+    "보일러": ["BOILER"],
+    "공조기": ["AHU"],
+    "냉각탑": ["CT", "COOLING_TOWER"],
+    "엘리베이터": ["ELEVATOR"],
+    "조명": ["LIGHT", "DALI"],
+    "태양광": ["PV", "SOLAR"],
+    "변압기": ["TRANSFORMER"],
+    "배전반": ["MDP", "FDP", "DISTRIBUTION"],
+    "수도": ["WATER_METER"],
+    "비상발전기": ["EMERGENCY_GENERATOR"],
+    "UPS": ["UPS"],
 }
 
 
@@ -871,10 +1081,13 @@ async def _tool_get_realtime_sensor_data(keyword: str, unit_filter: str = "") ->
         return {"error": f"센서 데이터 조회 실패: {e}", "count": 0, "points": []}
 
     results = []
-    kw = keyword.upper()
+    kw = keyword.strip().upper()
+    kw_original = keyword.strip()
 
-    # 한국어 키워드 → 영어 별칭 매핑
-    alias_keywords: list[str] = _SENSOR_KEYWORD_ALIASES.get(kw, [])
+    # 한국어 키워드 → 영어 별칭 매핑 (원본 + 대문자 모두 시도)
+    alias_keywords: list[str] = _SENSOR_KEYWORD_ALIASES.get(kw_original, [])
+    if not alias_keywords:
+        alias_keywords = _SENSOR_KEYWORD_ALIASES.get(kw, [])
 
     for pt in data.get("points", []):
         pid = pt.get("point_id", "")
@@ -1185,6 +1398,85 @@ async def _tool_get_equipment_metadata(equipment_name: str) -> dict[str, Any]:
         return {"error": f"장비 메타데이터 조회 실패: {e}"}
 
 
+# ─── 알람 인사이트 도구 함수 ──────────────────────────────────
+
+
+async def _tool_get_alarm_insights(days_back: int = 7) -> dict[str, Any]:
+    """Server D 경유 알람 통계 분석 조회"""
+    try:
+        url = f"{SERVER_D_URL}/alarm-history/statistics"
+        params: dict[str, Any] = {"days_back": days_back}
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code != 200:
+                return {"error": f"알람 통계 조회 실패: {resp.status_code}"}
+            return resp.json()
+    except httpx.RequestError as e:
+        return {"error": f"Server D 연결 실패: {e}"}
+    except Exception as e:
+        return {"error": f"알람 통계 조회 실패: {e}"}
+
+
+# ─── 장비 상태 도구 함수들 ────────────────────────────────────
+
+
+async def _tool_get_device_status(keyword: str = "") -> dict[str, Any]:
+    """InfluxDB 장비 상태 현황 조회 (Server D 경유)"""
+    try:
+        url = f"{SERVER_D_URL}/data/devices/summary"
+        params: dict[str, str] = {}
+        if keyword:
+            params["keyword"] = keyword
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code != 200:
+                return {"error": f"Server D 응답 오류: {resp.status_code}", "count": 0, "devices": []}
+            data = resp.json()
+    except httpx.RequestError as e:
+        return {"error": f"Server D 연결 실패: {e}", "count": 0, "devices": []}
+    except Exception as e:
+        return {"error": f"장비 상태 조회 실패: {e}", "count": 0, "devices": []}
+
+    devices = data.get("devices", [])[:50]
+    return {
+        "keyword": keyword or "(전체)",
+        "total_devices": data.get("total_devices", 0),
+        "active_count": data.get("active_count", 0),
+        "inactive_count": data.get("inactive_count", 0),
+        "count": len(devices),
+        "devices": devices,
+    }
+
+
+async def _tool_get_device_history(
+    device_id: str, start: str = "-24h", aggregation: str = "",
+) -> dict[str, Any]:
+    """Server D 경유 장비 상태 이력 조회 (InfluxDB)"""
+    try:
+        url = f"{SERVER_D_URL}/data/devices/{device_id}/history"
+        params: dict[str, str] = {"from": start}
+        if aggregation:
+            params["aggregation"] = aggregation
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(url, params=params)
+            if resp.status_code != 200:
+                return {"error": f"Server D 응답 오류: {resp.status_code}", "count": 0, "records": []}
+            data = resp.json()
+    except httpx.RequestError as e:
+        return {"error": f"Server D 연결 실패: {e}", "count": 0, "records": []}
+    except Exception as e:
+        return {"error": f"장비 이력 조회 실패: {e}", "count": 0, "records": []}
+
+    records = data.get("records", [])[:100]
+    return {
+        "device_id": device_id,
+        "start": start,
+        "count": len(records),
+        "uptime_ratio": data.get("uptime_ratio"),
+        "records": records,
+    }
+
+
 # ─── 마크다운 기호 제거 (후처리 안전장치) ────────────────────
 
 def _strip_markdown(text: str) -> str:
@@ -1255,6 +1547,20 @@ async def _execute_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         elif name == "get_equipment_metadata":
             return await _tool_get_equipment_metadata(
                 arguments.get("equipment_name", ""),
+            )
+        elif name == "get_alarm_insights":
+            return await _tool_get_alarm_insights(
+                arguments.get("days_back", 7),
+            )
+        elif name == "get_device_status":
+            return await _tool_get_device_status(
+                arguments.get("keyword", ""),
+            )
+        elif name == "get_device_history":
+            return await _tool_get_device_history(
+                arguments.get("device_id", ""),
+                arguments.get("start", "-24h"),
+                arguments.get("aggregation", ""),
             )
         else:
             return {"error": f"알 수 없는 도구: {name}"}

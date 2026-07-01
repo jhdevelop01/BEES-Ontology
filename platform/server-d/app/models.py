@@ -69,6 +69,40 @@ class PointSummary(BaseModel):
 
 
 # ─────────────────────────────────────────────
+# 장비 상태 데이터 모델
+# ─────────────────────────────────────────────
+
+class DeviceStateItem(BaseModel):
+    """개별 장비 상태"""
+    device_id: str
+    is_active: bool = False
+    mode: str = "unknown"
+    last_time: Optional[str] = None
+
+
+class DeviceStateSummary(BaseModel):
+    """전체 장비 상태 현황 응답"""
+    total_devices: int
+    active_count: int = 0
+    inactive_count: int = 0
+    devices: list[DeviceStateItem]
+
+
+class DeviceStateRecord(BaseModel):
+    """장비 상태 이력 레코드"""
+    time: str
+    is_active: bool
+
+
+class DeviceStateHistory(BaseModel):
+    """장비 상태 이력 응답"""
+    device_id: str
+    records: list[DeviceStateRecord]
+    count: int
+    uptime_ratio: Optional[float] = None
+
+
+# ─────────────────────────────────────────────
 # PostgreSQL 관리 데이터 모델
 # ─────────────────────────────────────────────
 

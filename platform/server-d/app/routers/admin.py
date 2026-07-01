@@ -117,6 +117,129 @@ async def get_alarm_history(
 
 
 # ─────────────────────────────────────────────
+# GET /alarm-history/statistics — 알람 통계 분석
+# ─────────────────────────────────────────────
+
+@router.get("/alarm-history/statistics")
+async def get_alarm_statistics(
+    days_back: int = Query(7, ge=1, le=365, description="분석 기간 (일)"),
+):
+    """
+    알람 통계 분석 — 장비별 빈도, 심각도 분포, 추세, 미확인 알람 등 인사이트 제공
+    """
+    pool = get_pg_pool()
+    if not pool:
+        raise HTTPException(status_code=503, detail="PostgreSQL 미연결")
+
+    try:
+        async with pool.acquire() as conn:
+            # 1) 전체 요약
+            summary = await conn.fetchrow(f"""
+                SELECT
+                    COUNT(*) as total,
+                    COUNT(CASE WHEN severity = 'critical' THEN 1 END) as critical_count,
+                    COUNT(CASE WHEN severity = 'warning' THEN 1 END) as warning_count,
+                    COUNT(CASE WHEN acknowledged_at IS NULL THEN 1 END) as unacknowledged,
+                    COUNT(CASE WHEN cleared_at IS NULL THEN 1 END) as uncleared
+                FROM alarm_history
+                WHERE onset_at > NOW() - INTERVAL '{days_back} days'
+            """)
+
+            # 2) 장비별 빈도 (Top 10)
+            top_equipment = await conn.fetch(f"""
+                SELECT equipment_id, alarm_type, severity,
+                       COUNT(*) as count,
+                       ROUND(AVG(actual_value)::numeric, 1) as avg_value,
+                       ROUND(MIN(threshold_value)::numeric, 1) as threshold,
+                       ROUND((AVG(actual_value) / NULLIF(MIN(threshold_value), 0) * 100)::numeric, 0) as exceed_pct
+                FROM alarm_history
+                WHERE onset_at > NOW() - INTERVAL '{days_back} days'
+                GROUP BY equipment_id, alarm_type, severity
+                ORDER BY count DESC
+                LIMIT 10
+            """)
+
+            # 3) 일별 추세
+            daily_trend = await conn.fetch(f"""
+                SELECT DATE(onset_at) as date,
+                       COUNT(*) as count,
+                       COUNT(CASE WHEN severity = 'critical' THEN 1 END) as critical,
+                       COUNT(CASE WHEN severity = 'warning' THEN 1 END) as warning
+                FROM alarm_history
+                WHERE onset_at > NOW() - INTERVAL '{days_back} days'
+                GROUP BY DATE(onset_at)
+                ORDER BY date DESC
+                LIMIT 30
+            """)
+
+            # 4) 최근 1시간 vs 이전 1시간 비교 (추세 판단)
+            recent_1h = await conn.fetchval("""
+                SELECT COUNT(*) FROM alarm_history
+                WHERE onset_at > NOW() - INTERVAL '1 hour'
+            """)
+            prev_1h = await conn.fetchval("""
+                SELECT COUNT(*) FROM alarm_history
+                WHERE onset_at > NOW() - INTERVAL '2 hours'
+                  AND onset_at <= NOW() - INTERVAL '1 hour'
+            """)
+
+            # 추세 판단
+            if recent_1h > prev_1h * 1.2:
+                trend = "increasing"
+                trend_desc = f"최근 1시간({recent_1h}건)이 이전 1시간({prev_1h}건)보다 증가 추세"
+            elif recent_1h < prev_1h * 0.8:
+                trend = "decreasing"
+                trend_desc = f"최근 1시간({recent_1h}건)이 이전 1시간({prev_1h}건)보다 감소 추세"
+            else:
+                trend = "stable"
+                trend_desc = f"최근 1시간({recent_1h}건)과 이전 1시간({prev_1h}건) 유사한 수준"
+
+            return {
+                "period_days": days_back,
+                "summary": {
+                    "total": summary["total"],
+                    "critical": summary["critical_count"],
+                    "warning": summary["warning_count"],
+                    "unacknowledged": summary["unacknowledged"],
+                    "uncleared": summary["uncleared"],
+                },
+                "trend": {
+                    "direction": trend,
+                    "description": trend_desc,
+                    "recent_1h": recent_1h,
+                    "previous_1h": prev_1h,
+                },
+                "top_equipment": [
+                    {
+                        "equipment_id": row["equipment_id"],
+                        "alarm_type": row["alarm_type"],
+                        "severity": row["severity"],
+                        "count": row["count"],
+                        "avg_value": float(row["avg_value"]) if row["avg_value"] else None,
+                        "threshold": float(row["threshold"]) if row["threshold"] else None,
+                        "exceed_pct": float(row["exceed_pct"]) if row["exceed_pct"] else None,
+                    }
+                    for row in top_equipment
+                ],
+                "daily_trend": [
+                    {
+                        "date": row["date"].isoformat(),
+                        "total": row["count"],
+                        "critical": row["critical"],
+                        "warning": row["warning"],
+                    }
+                    for row in daily_trend
+                ],
+            }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error("알람 통계 조회 실패: %s", e)
+        raise HTTPException(status_code=500, detail=f"알람 통계 조회 실패: {e}")
+
+
+# ─────────────────────────────────────────────
 # POST /alarm-history/{id}/acknowledge — 알람 확인 처리
 # ─────────────────────────────────────────────
 
