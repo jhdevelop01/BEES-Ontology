@@ -81,7 +81,7 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
 | Server A Backend | REST API, SSE, Neo4j 연동 (FastAPI) | 8010 |
 | Server A Frontend | 19개 페이지 UI (Next.js 14, Tailwind, shadcn/ui, ReactFlow, Cytoscape.js) | 3000 |
 | Server B | BAS Adapter — 프로토콜 게이트웨이 (FastAPI) | 8011 |
-| Server C | 가상 건물 에뮬레이터 — 284장비, 670포인트 시뮬레이션 (FastAPI) | 8012 |
+| Server C | 가상 건물 에뮬레이터 — 284장비, 691포인트 시뮬레이션 (FastAPI) | 8012 |
 | Server D | Data Historian — 시계열 수집/조회 (FastAPI, InfluxDB) | 8013 |
 
 **인프라**: Mosquitto(:1885), InfluxDB(:8088), PostgreSQL(:5434), Grafana(:3001), Neo4j(외부 :7476/:7689)
@@ -90,14 +90,14 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
 ```bash
 docker start neo4j-bees                                 # Neo4j 시작
 docker compose up -d                                    # 전체 기동 (9서비스)
-curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (670포인트)
+curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (691포인트)
 open http://localhost:3000                               # 프론트엔드
 ```
 
 ### 데이터 흐름 아키텍처 (서버 간 연동 — 핵심)
 플랫폼은 단방향 시뮬레이션 파이프라인 + 그래프 조회의 2개 경로로 동작한다:
 
-1. **시뮬레이션 경로 (1초 주기)**: Server C(에뮬레이터, `engine.py`+`thermodynamics.py`)가 284장비/670포인트 값을 생성 →
+1. **시뮬레이션 경로 (1초 주기)**: Server C(에뮬레이터, `engine.py`+`thermodynamics.py`)가 284장비/691포인트 값을 생성 →
    MQTT(`bees/points/*`, `bees/devices/*/state`, `bees/alarms/*`)로 발행 →
    **Server A**(`mqtt_service.py`)가 메모리 캐시(`_point_cache`/`_device_cache`/`_alarm_cache`)에 수집하고 SSE(0.5초 배치)로 프론트엔드에 푸시,
    동시에 **Server D**(`mqtt_worker.py`)가 InfluxDB에 시계열로 영속화(배치 write, `batch_flush_size=500`).
