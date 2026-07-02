@@ -258,6 +258,19 @@ class EmulatorEngine:
                 self._register_profile(temp_profile)
                 count += 1
 
+                # Phase 4: 가상 Zone 온도 포인트에도 열역학 모델 초기화
+                # (Neo4j 경로 engine.py:196~201과 동일 — 온도 포인트에만 적용)
+                # zone_id는 층 노드로 지정해 _guess_zone_type이 층 유형(기계실/로비/사무)을 추정,
+                # initial_temp는 층별 base_temp로 시작 (주차장 18°C, 로비 22°C 등)
+                if temp_id not in self._thermal_models:
+                    zone_id = f"bldg:Floor_{floor_code}"
+                    self._thermal_models[temp_id] = ThermalModel(
+                        zone_id=zone_id, initial_temp=base_temp
+                    )
+                    logger.debug(
+                        f"열역학 모델 초기화(가상 Zone): {temp_id} (zone: {zone_id})"
+                    )
+
             # Zone_Humidity_{floor}
             hum_id = f"bldg:Zone_Humidity_{floor_code}"
             if hum_id not in self._profiles:

@@ -90,6 +90,8 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
 ```bash
 docker start neo4j-bees                                 # Neo4j 시작
 docker compose up -d                                    # 전체 기동 (9서비스)
+curl -s http://localhost:8010/health                     # Server A 헬스 확인 (경로: /health, NOT /api/health)
+curl -s http://localhost:8010/api/platform/health        # 플랫폼 통합 상태 (Server A~D + 인프라 집계)
 curl -s http://localhost:8010/api/stream/snapshot        # 데이터 확인 (691포인트)
 open http://localhost:3000                               # 프론트엔드
 ```

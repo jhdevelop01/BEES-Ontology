@@ -53,40 +53,45 @@ async def get_points_summary():
           |> last()
         '''
 
-        # 전체 레코드 수 집계 (개별 포인트별 카운트 대신 한 번만 쿼리)
+        # 포인트별 레코드 수 집계 (point_id로 그룹핑한 단일 쿼리 — N+1 방지)
         count_flux = f'''
         from(bucket: "{settings.influxdb_bucket}")
           |> range(start: -7d)
           |> filter(fn: (r) => r._measurement == "sensor_data" and r._field == "value")
+          |> group(columns: ["point_id"])
           |> count()
-          |> group()
-          |> sum()
         '''
 
         tables = await run_influx_query(query_api, flux_query)
 
-        points: list[PointSummaryItem] = []
-        for table in tables:
-            for record in table.records:
-                points.append(
-                    PointSummaryItem(
-                        point_id=record.values.get("point_id", "unknown"),
-                        last_value=record.get_value(),
-                        last_time=record.get_time().isoformat() if record.get_time() else None,
-                        unit=record.values.get("unit", ""),
-                        record_count=0,  # 개별 카운트는 비용이 크므로 생략
-                    )
-                )
-
-        # 전체 레코드 수 집계
+        # 포인트별 카운트 맵 구성 (단일 grouped 쿼리 결과 → dict)
+        # 실패 시 빈 맵으로 폴백 → record_count는 0으로 유지 (안전)
+        count_map: dict[str, int] = {}
         total_records = 0
         try:
             count_tables = await run_influx_query(query_api, count_flux)
             for table in count_tables:
                 for record in table.records:
-                    total_records = int(record.get_value())
+                    pid = record.values.get("point_id", "unknown")
+                    cnt = int(record.get_value())
+                    count_map[pid] = cnt
+                    total_records += cnt
         except Exception as e:
-            logger.warning("전체 레코드 수 집계 실패 (무시): %s", e)
+            logger.warning("포인트별 레코드 수 집계 실패 (무시): %s", e)
+
+        points: list[PointSummaryItem] = []
+        for table in tables:
+            for record in table.records:
+                pid = record.values.get("point_id", "unknown")
+                points.append(
+                    PointSummaryItem(
+                        point_id=pid,
+                        last_value=record.get_value(),
+                        last_time=record.get_time().isoformat() if record.get_time() else None,
+                        unit=record.values.get("unit", ""),
+                        record_count=count_map.get(pid, 0),
+                    )
+                )
 
         return PointSummary(total_points=len(points), total_records=total_records, points=points)
 

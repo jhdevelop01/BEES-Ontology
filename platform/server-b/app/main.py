@@ -130,12 +130,14 @@ class AuditLogResponse(BaseModel):
 
 
 class CommandQueueStatus(BaseModel):
-    """명령 큐 상태 응답."""
-    pending: int = Field(0, description="대기 중 명령 수")
-    processing: int = Field(0, description="처리 중 명령 수")
-    completed: int = Field(0, description="완료 명령 수")
-    failed: int = Field(0, description="실패 명령 수")
-    total: int = Field(0, description="전체 명령 수")
+    """명령 큐 상태 응답 (command_queue.get_status() 계약과 일치)."""
+    queue_size: int = Field(0, description="현재 큐에 대기 중인 명령 수")
+    enqueued: int = Field(0, description="누적 큐 추가 건수")
+    succeeded: int = Field(0, description="전송 성공 건수")
+    expired: int = Field(0, description="TTL 만료 건수")
+    failed: int = Field(0, description="재시도 초과 실패 건수")
+    max_retries: int = Field(0, description="최대 재시도 횟수")
+    ttl_seconds: int = Field(0, description="명령 TTL (초)")
 
 
 class BACnetDeviceListResponse(BaseModel):
@@ -691,9 +693,20 @@ async def get_audit_log(limit: int = 100) -> dict[str, Any]:
 
 # ── GET /command-queue ─────────────────────────────────────────────────────
 @app.get("/command-queue", response_model=CommandQueueStatus, tags=["명령"])
-async def get_command_queue_status() -> dict[str, Any]:
+async def get_command_queue_status() -> CommandQueueStatus:
     """명령 재시도 큐 상태를 조회한다."""
-    return command_queue.get_status()
+    status = command_queue.get_status()
+    stats = status.get("stats", {})
+    # 중첩 stats를 최상위로 평탄화하여 응답모델 필드와 일치시킨다.
+    return CommandQueueStatus(
+        queue_size=status.get("queue_size", 0),
+        enqueued=stats.get("enqueued", 0),
+        succeeded=stats.get("succeeded", 0),
+        expired=stats.get("expired", 0),
+        failed=stats.get("failed", 0),
+        max_retries=status.get("max_retries", 0),
+        ttl_seconds=status.get("ttl_seconds", 0),
+    )
 
 
 # ---------------------------------------------------------------------------
