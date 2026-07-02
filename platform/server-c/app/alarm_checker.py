@@ -29,8 +29,14 @@ ALARM_THRESHOLDS: dict[str, AlarmThreshold] = {
     "Humidity":               AlarmThreshold(high=70.0, low=25.0),
     "CO2":                    AlarmThreshold(high=1000.0),
     "Differential_Pressure":  AlarmThreshold(high=450.0),
+    # 전력은 장비별 규모(수 W~수 MW)가 달라 절대 임계가 무의미 → check()에서
+    # 각 장비의 설계 정격(max_value) 대비 비율로 판정한다. high 값은 게이트/폴백용.
     "Power":                  AlarmThreshold(high=100.0),
 }
+
+# 전력 알람 비율 임계 (각 장비 설계 정격 max_value 대비)
+_POWER_WARN_RATIO = 0.85   # 정격 85% 초과 → warning
+_POWER_CRIT_RATIO = 0.95   # 정격 95% 초과 → critical
 
 # Brick 포인트 클래스 → 알람 카테고리 매핑
 # 수온 센서(Chilled/Hot/Condenser Water)는 운전 범위가 완전히 달라 제외
@@ -110,6 +116,7 @@ class AlarmChecker:
         brick_class: str,
         equipment_id: str,
         now: Optional[datetime] = None,
+        ref_value: Optional[float] = None,
     ) -> list[dict]:
         """
         센서값을 임계값과 비교하여 알람 생성.
@@ -120,6 +127,8 @@ class AlarmChecker:
             brick_class: Brick 포인트 클래스 (예: 'brick:Zone_Air_Temperature_Sensor')
             equipment_id: 장비 ID (예: 'bldg:AHU_5F')
             now: 현재 시각 (None이면 UTC now)
+            ref_value: 전력 알람용 설계 정격(각 장비 max_value). Power 카테고리는
+                       이 값 대비 비율로 판정. 미상/0이면 전력 알람은 생성하지 않음.
 
         Returns:
             알람 딕셔너리 리스트. 비어있으면 정상 범위.
@@ -139,7 +148,17 @@ class AlarmChecker:
 
         # ── High 임계값 체크 ──
         if threshold.high is not None:
-            sev = self._severity_high(value, threshold.high)
+            eff_threshold = threshold.high
+            if category == "Power":
+                # 전력: 절대 임계 대신 각 장비 설계 정격(ref_value) 대비 비율로 판정.
+                # 정격 미상/무전력(0) 장비는 판정 불가 → 알람 없음(오탐 방지).
+                if ref_value and ref_value > 0:
+                    sev = self._severity_high_ratio(value, ref_value)
+                    eff_threshold = round(ref_value * _POWER_WARN_RATIO, 1)
+                else:
+                    sev = None
+            else:
+                sev = self._severity_high(value, threshold.high)
             if sev:
                 alarm_type = f"high_{category.lower()}"
                 if self._is_suppressed(point_id, alarm_type, now):
@@ -149,7 +168,7 @@ class AlarmChecker:
                     self.total_alarms += 1
                     alarms.append(self._make_alarm(
                         equipment_id, point_id, alarm_type,
-                        sev, value, threshold.high, now,
+                        sev, value, eff_threshold, now,
                     ))
 
         # ── Low 임계값 체크 ──
@@ -177,6 +196,19 @@ class AlarmChecker:
         if value >= threshold * 1.2:
             return "critical"
         if value >= threshold * 1.1:
+            return "warning"
+        return None
+
+    @staticmethod
+    def _severity_high_ratio(value: float, ceiling: float) -> Optional[str]:
+        """전력용: 설계 정격(ceiling) 대비 비율로 severity 판정.
+        정격 95% 초과→critical, 85% 초과→warning."""
+        if ceiling <= 0:
+            return None
+        ratio = value / ceiling
+        if ratio >= _POWER_CRIT_RATIO:
+            return "critical"
+        if ratio >= _POWER_WARN_RATIO:
             return "warning"
         return None
 

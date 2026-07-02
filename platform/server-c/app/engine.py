@@ -654,6 +654,7 @@ class EmulatorEngine:
                         brick_class=profile.brick_class,
                         equipment_id=profile.equipment_dependency,
                         now=now,
+                        ref_value=profile.max_value,  # 전력 알람: 설계 정격 대비 비율 판정용
                     )
                     for alarm in alarms:
                         alarm_topic = f"bees/alarms/{alarm['severity']}"
