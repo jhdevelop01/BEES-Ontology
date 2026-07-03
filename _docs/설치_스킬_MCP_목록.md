@@ -2,7 +2,7 @@
 
 > 작성: 2026-07-03 · 기준: `~/.claude/skills/`, `claude plugin list`, `claude mcp list` **실측**
 > 범위: 전역(user scope) 설치 — 모든 프로젝트에서 사용 가능
-> "유료여부"는 **도구/스킬 자체의 비용** 기준. 연결 대상 서비스(GitHub·Figma 등)의 계정·플랜은 별도.
+> "유료여부"는 **도구/스킬 자체의 비용** 기준. 연결 대상 서비스(Figma·Context7 등)의 계정·플랜은 별도.
 
 ---
 
@@ -48,14 +48,12 @@
 | **Playwright** | 무료 | ✔ Connected | 불필요 | accessibility snapshot 기반 웹 탐색·클릭·입력. UI 테스트, 로그인 플로우, 회귀 테스트, 화면 QA. |
 | **Context7** | 무료² | ✔ Connected | 선택(API키) | React/Next.js/Tailwind/FastAPI 등 **최신 공식 문서를 프롬프트에 주입** → 오래된 API 사용·hallucination 감소. |
 | **Chrome DevTools** | 무료 | ✔ Connected | 불필요³ | 실제 브라우저의 DOM·콘솔·네트워크·성능 trace·접근성 문제를 직접 확인·해석. |
-| **GitHub** | 무료⁴ | ⏳ 인증 대기 | OAuth 필요 | repo·PR·issue·branch·file 컨텍스트 연결. PR 리뷰, 이슈 추적, 변경 이력. **`/mcp`로 OAuth 로그인 필요.** |
-| **Google Drive** (기존) | 무료 | ! 인증 필요 | OAuth 필요 | Google Drive 파일 접근/검색. (이전부터 등록됨) |
+| **Sequential Thinking** | 무료 | ✔ Connected | 불필요 | 복잡한 문제를 **단계적 사고(순차 추론)**로 분해하고, 필요 시 이전 단계를 수정·분기하며 해결. 계획 수립·다단계 추론·구조화된 문제해결 보조. Anthropic 공식 reference 서버. |
 
 **유료여부 각주:**
 1. Figma MCP 자체는 무료. 단 **Figma 계정 필요**, Dev Mode 고급 기능은 유료 좌석(Dev/Full seat)이 필요할 수 있음.
 2. Context7 기본 사용 무료. **사용량 한도 확장 시** Upstash API 키(유료 플랜 옵션) 필요.
 3. Chrome DevTools MCP 무료. Node.js + Chrome(stable/for-testing) 필요. 라이브 Chrome 세션을 제어하므로 브라우저 콘텐츠 노출에 주의.
-4. GitHub MCP 무료. GitHub 계정 필요, 원격 OAuth 방식. 일부 고급 기능은 GitHub 플랜에 따라 다를 수 있음.
 
 ---
 
