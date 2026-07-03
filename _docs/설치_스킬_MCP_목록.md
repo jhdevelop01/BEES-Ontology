@@ -70,3 +70,18 @@
 | VS Code (+ `code` CLI) | 무료 | 코드 에디터 |
 
 *모든 항목 전역(user) 설치 — 컴퓨터 내 모든 프로젝트에서 사용 가능.*
+
+---
+
+## 4. 새 컴퓨터에서 재현 (Setup 스크립트)
+
+다른 맥/우분투에서 위 환경을 그대로 구성하려면 아래 스크립트를 1회 실행(재실행 안전):
+
+| OS | 스크립트 | 실행 |
+|----|----------|------|
+| macOS | [`scripts/setup-dev-env-macos.sh`](../scripts/setup-dev-env-macos.sh) | `bash scripts/setup-dev-env-macos.sh` |
+| Ubuntu 20.04+ | [`scripts/setup-dev-env-ubuntu.sh`](../scripts/setup-dev-env-ubuntu.sh) | `bash scripts/setup-dev-env-ubuntu.sh` |
+
+- 구성: nvm+node(default 고정) · npm CLI 6종 · Playwright 브라우저 · VS Code · MCP 4종(user 스코프) · frontend-design 플러그인 · Vercel 스킬 7종 · 커스텀 스킬 4종(파일 임베드).
+- **전제**: Claude Code(`claude`) 사전 설치 필요(미설치 시 MCP/스킬 단계는 자동 건너뜀, 안내 출력).
+- **범위 밖**: 계정 연동 MCP(Figma/Google Drive)는 claude.ai 로그인으로 자동 연결되므로 스크립트가 다루지 않음.
