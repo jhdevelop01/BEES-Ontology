@@ -55,6 +55,11 @@
 2. Context7 기본 사용 무료. **사용량 한도 확장 시** Upstash API 키(유료 플랜 옵션) 필요.
 3. Chrome DevTools MCP 무료. Node.js + Chrome(stable/for-testing) 필요. 라이브 Chrome 세션을 제어하므로 브라우저 콘텐츠 노출에 주의.
 
+> **변경 이력 / 참고 (제거·추가):**
+> - **GitHub MCP** → 제거됨 (`claude mcp remove github`, user config에서 삭제).
+> - **Google Drive** → CLI로 제거 불가(claude.ai 계정 레벨 연동). **현재도 연결 상태이며, 완전 해제는 claude.ai → Settings → Connectors에서 수동 진행 필요.**
+> - **Sequential Thinking** → 신규 추가 (Anthropic 공식 reference 서버).
+
 ---
 
 ## 3. 기타 설치한 개발 도구 (전역 CLI)
