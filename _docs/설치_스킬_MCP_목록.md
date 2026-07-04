@@ -4,7 +4,7 @@
 > 범위: 전역(user scope) 설치 — 모든 프로젝트에서 사용 가능
 > "유료여부"는 **도구/스킬 자체의 비용** 기준. 연결 대상 서비스(Figma·Context7 등)의 계정·플랜은 별도.
 >
-> **갱신 2026-07-04** — ① LLM/Agent 엔지니어링 스킬 스위트 **10종 직접 저작·전역 설치**(§1 B-2). ② 스킬을 **출처별(A. 설치 / B. 직접 작성)로 분리** 재편. ③ 추가 요청(20종 통합 목록) 분석 → 8종 기존·React/Next는 설치본(A-1)으로 커버·LLMOps는 기존 유지, **신규 10종 더 저작**(§1 B-3, 연구·학습·데이터·안전·비용 계열). ④ 외부 공식 마켓(Anthropic/MLflow/Vercel)에서 **신규 17종 clone·설치**(§1 A-3; Orchestra·중복 15종은 트리거 충돌 방지 위해 보류). 이번 세션 스킬/MCP **삭제 없음**. 기존 MCP 삭제 이력(GitHub·Google Drive)은 §2 그대로.
+> **갱신 2026-07-04** — ① LLM/Agent 엔지니어링 스킬 스위트 **10종 직접 저작·전역 설치**(§1 B-2). ② 스킬을 **출처별(A. 설치 / B. 직접 작성)로 분리** 재편. ③ 추가 요청(20종 통합 목록) 분석 → 8종 기존·React/Next는 설치본(A-1)으로 커버·LLMOps는 기존 유지, **신규 10종 더 저작**(§1 B-3, 연구·학습·데이터·안전·비용 계열). ④ 외부 공식 마켓(Anthropic/MLflow/Vercel)에서 **신규 17종 clone·설치**(§1 A-3). ⑤ Orchestra Research(커뮤니티)에서 **비충돌 38종 선별 설치**(§1 A-4); Orchestra 중복 60종·저작 중복 15종은 트리거 충돌 방지 위해 제외. 이번 세션 스킬/MCP **삭제 없음**. 기존 MCP 삭제 이력(GitHub·Google Drive)은 §2 그대로.
 
 ---
 
@@ -54,6 +54,23 @@
 | **vercel-optimize** | Vercel | 무료 | Vercel 비용·성능 최적화(캐싱·Core Web Vitals·번들) |
 
 > MLflow `agent-evaluation`은 제 `agent-evaluation-harness`와, Vercel `react-best-practices`/`composition-patterns`/`web-design-guidelines`는 A-1 기존 설치와 중복이라 제외.
+
+#### A-4. Orchestra Research 연구 스킬 (2026-07-04 · 커뮤니티, 비충돌 38종)
+
+> `github.com/Orchestra-Research/AI-Research-SKILLs`(총 98종·도구 단위)에서 **제 저작 스위트와 충돌하지 않는 38종만** 선별 설치. 나머지 60종(fine-tuning/rag/inference/agents/evaluation/observability/safety/tokenization/optimization/post-training/prompt-engineering/distributed/data-processing/research-ideation/autoresearch 15개 카테고리)은 제 검증 스킬과 도메인 중복이라 **트리거 충돌 방지** 위해 제외.
+
+| 카테고리 | 종수 | 스킬 |
+|------|:--:|------|
+| Model Architecture | 5 | litgpt · mamba · rwkv · nanogpt · torchtitan |
+| Mechanistic Interpretability | 4 | nnsight · transformer-lens · pyvene · saelens |
+| Infrastructure | 3 | lambda-labs · skypilot · modal |
+| MLOps (실험추적) | 3 | weights-and-biases · tensorboard · swanlab (mlflow은 A-3 중복 제외) |
+| Multimodal | 10 | clip · whisper · llava · blip-2 · segment-anything · stable-diffusion · audiocraft · cosmos-policy · openvla-oft · openpi |
+| Emerging Techniques | 6 | moe-training · knowledge-distillation · model-pruning · speculative-decoding · model-merging · long-context |
+| ML Paper Writing | 4 | ml-paper-writing · systems-paper-writing · academic-plotting · presenting-conference-talks |
+| Agent-native Research | 3 | research-manager · compiler · rigor-reviewer |
+
+> ⚠️ Orchestra는 **커뮤니티 저장소**(공식 Anthropic/Vercel/MLflow와 신뢰 수준 상이) — 사용 전 개별 스킬 내용 확인 권장.
 
 ### B. 직접 작성 (authored — 이 프로젝트에서 저작)
 
