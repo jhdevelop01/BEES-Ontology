@@ -4,7 +4,7 @@
 > 범위: 전역(user scope) 설치 — 모든 프로젝트에서 사용 가능
 > "유료여부"는 **도구/스킬 자체의 비용** 기준. 연결 대상 서비스(Figma·Context7 등)의 계정·플랜은 별도.
 >
-> **갱신 2026-07-04** — ① LLM/Agent 엔지니어링 스킬 스위트 **10종 직접 저작·전역 설치**(§1 B-2). ② 스킬을 **출처별(A. 설치 / B. 직접 작성)로 분리** 재편. ③ 추가 요청(20종 통합 목록) 분석 → 8종 기존·React/Next는 설치본(A-1)으로 커버·LLMOps는 기존 유지, **신규 10종 더 저작**(§1 B-3, 연구·학습·데이터·안전·비용 계열). 이번 세션 스킬/MCP **삭제 없음**. 기존 MCP 삭제 이력(GitHub·Google Drive)은 §2 그대로.
+> **갱신 2026-07-04** — ① LLM/Agent 엔지니어링 스킬 스위트 **10종 직접 저작·전역 설치**(§1 B-2). ② 스킬을 **출처별(A. 설치 / B. 직접 작성)로 분리** 재편. ③ 추가 요청(20종 통합 목록) 분석 → 8종 기존·React/Next는 설치본(A-1)으로 커버·LLMOps는 기존 유지, **신규 10종 더 저작**(§1 B-3, 연구·학습·데이터·안전·비용 계열). ④ 외부 공식 마켓(Anthropic/MLflow/Vercel)에서 **신규 17종 clone·설치**(§1 A-3; Orchestra·중복 15종은 트리거 충돌 방지 위해 보류). 이번 세션 스킬/MCP **삭제 없음**. 기존 MCP 삭제 이력(GitHub·Google Drive)은 §2 그대로.
 
 ---
 
@@ -34,6 +34,26 @@
 | **skill-creator** (Anthropic 공식) | 무료 | 커스텀 스킬 작성 지원 플러그인. (B-2 스위트를 이 플러그인 형식으로 저작함) |
 
 > **그 외(이번 설치·작성 아님)**: `evaluating-llms-harness`, `find-skills`는 이전부터 있던 외부 제공 스킬 — A/B 어느 쪽도 아니므로 별도 표기.
+
+#### A-3. 외부 공식 마켓 설치 (2026-07-04 · git clone→copy, 17종)
+
+> Anthropic/MLflow/Vercel **공식 저장소**에서 clone해 설치. 소스: `github.com/anthropics/skills`, `mlflow/skills`, `vercel-labs/agent-skills`.
+> **보류(미설치)**: Orchestra Research(커뮤니티·대규모) 및 제 저작 20종과 중복되는 15종(Fine-Tuning/RAG/Inference/Agent/Safety 등)은 **트리거 충돌 방지** 위해 설치하지 않음 — 사용자 확인 후 결정.
+
+| 이름 | 소스 | 유료 | 용도 |
+|------|------|:----:|------|
+| **pdf** · **docx** · **pptx** · **xlsx** | Anthropic | 무료 | 문서 처리 — PDF/Word/PowerPoint/Excel 생성·편집·추출·변환(document-skills) |
+| **instrumenting-with-mlflow-tracing** | MLflow | 무료 | Python/TS LLM 앱에 MLflow Tracing 계측(LangGraph/LangChain/OpenAI 등) |
+| **analyze-mlflow-trace** · **analyze-mlflow-chat-session** | MLflow | 무료 | 단일 trace / 멀티턴 세션 실패 원인 분석·디버깅 |
+| **retrieving-mlflow-traces** · **querying-mlflow-metrics** | MLflow | 무료 | trace 검색·필터 / 토큰·지연·비용 메트릭 집계 |
+| **mlflow-onboarding** · **searching-mlflow-docs** | MLflow | 무료 | MLflow 도입 안내 / 공식 문서 검색 |
+| **writing-guidelines** | Vercel | 무료 | 문서·프로즈 작성 품질 검토(voice/tone/structure) |
+| **react-view-transitions** | Vercel | 무료 | React View Transition API·라우트 전환 애니메이션 구현 |
+| **react-native-skills** | Vercel | 무료 | React Native/Expo 앱 성능·레이아웃·네이티브 모듈 |
+| **deploy-to-vercel** · **vercel-cli-with-tokens** | Vercel | 무료 | Vercel 배포 / 토큰 기반 CLI 배포·환경변수 |
+| **vercel-optimize** | Vercel | 무료 | Vercel 비용·성능 최적화(캐싱·Core Web Vitals·번들) |
+
+> MLflow `agent-evaluation`은 제 `agent-evaluation-harness`와, Vercel `react-best-practices`/`composition-patterns`/`web-design-guidelines`는 A-1 기존 설치와 중복이라 제외.
 
 ### B. 직접 작성 (authored — 이 프로젝트에서 저작)
 
