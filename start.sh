@@ -21,7 +21,7 @@ fi
 
 # 2. Docker Compose 서비스
 echo ""
-echo "[2/4] Docker Compose 서비스 시작 (8개)..."
+echo "[2/4] Docker Compose 서비스 시작 (9개)..."
 docker compose up -d
 
 # 3. Neo4j 준비 대기

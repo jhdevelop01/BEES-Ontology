@@ -35,7 +35,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 온톨로지 규칙
 - **Brick Schema 1.3+** 준수: Location → System → Equipment → Point 위계
-- **네임스페이스**: `brick:` (스키마), `bldg:` (인스턴스), `bees:` (커스텀 28클래스+45속성)
+- **네임스페이스**: `brick:` (스키마), `bldg:` (인스턴스), `bees:` (커스텀 40클래스+73속성)
 - **신뢰도 태깅 필수**: `bees:hasConfidence` — "confirmed" / "estimated" / "inferred"
 - **추정 범위**: `bees:estimatedRange` — 정밀 수량 미확정 시 사용
 - **TTL 수정 후 반드시 rdflib 파싱 검증** (구문 오류 방지)
@@ -79,7 +79,7 @@ grep -c "Samsung_GEC" ontology/GEC_B_Ontology.ttl
 | 서버 | 역할 | 포트 |
 |------|------|:----:|
 | Server A Backend | REST API, SSE, Neo4j 연동 (FastAPI) | 8010 |
-| Server A Frontend | 19개 페이지 UI (Next.js 14, Tailwind, shadcn/ui, ReactFlow, Cytoscape.js) | 3000 |
+| Server A Frontend | 20개 페이지 UI (19 라우트 + 404) (Next.js 14, Tailwind, shadcn/ui, ReactFlow, Cytoscape.js) | 3000 |
 | Server B | BAS Adapter — 프로토콜 게이트웨이 (FastAPI) | 8011 |
 | Server C | 가상 건물 에뮬레이터 — 284장비, 691포인트 시뮬레이션 (FastAPI) | 8012 |
 | Server D | Data Historian — 시계열 수집/조회 (FastAPI, InfluxDB) | 8013 |
@@ -130,5 +130,10 @@ docker compose logs -f server-c              # 특정 서버 로그 추적
 
 # 온톨로지 품질 종합 점검 (orphan/asymmetry/confidence)
 python3 scripts/ontology_quality_check.py
+
+# 07 통계 문서 자동 갱신 (TTL 실측값 → _docs/07 의 AUTOGEN 마커 블록·파생행 갱신)
+python3 scripts/gen_stats_doc.py            # 문서 갱신
+python3 scripts/gen_stats_doc.py --check    # drift 검출만(CI용, stale 있으면 exit 1)
 ```
+> **온톨로지 변경 후엔 `gen_stats_doc.py`를 실행**해 `_docs/07_온톨로지_통계_요약.md`의 canonical 수치(트리플/클래스/속성/인스턴스/관계 카운트)를 재생성한다. 이 값들은 수동 수정 대상이 아니다(§1·§7 AUTOGEN 마커 블록 + §11 파생행).
 > 자동화 테스트 스위트는 아직 없음 — 검증은 위 `검증 명령`(TTL/SHACL/Neo4j) + `npm run build`(프론트 타입) + API 수동 curl로 수행.

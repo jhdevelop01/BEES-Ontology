@@ -87,47 +87,50 @@ docker exec neo4j-bees cypher-shell -u neo4j -p bees2024 "MATCH (n) RETURN count
 | 항목 | 값 |
 |------|-----|
 | terminationStatus | OK |
-| triplesLoaded | 5,756 |
-| triplesParsed | 5,756 |
-| 전체 노드 | 969 |
-| 한글 라벨 노드 | 951 |
+| triplesLoaded | 5,756 (최초 임포트 기준) |
+| triplesParsed | 5,756 (최초 임포트 기준) |
+| 전체 노드 | 1,732 |
+| 한글 라벨 노드 | 1,711 |
+
+> 노드/관계 수치는 2026-07-09 라이브 `neo4j-bees` cypher-shell 직접 실측. `triplesLoaded/triplesParsed`(5,756)는 최초 n10s 임포트 시점 값으로, 이후 증분 임포트가 반영된 현재 노드/관계 수와는 별개다.
 
 ### 관계별 수 (TTL과 완전 일치)
 
 | 관계 | 수량 |
 |------|:----:|
-| feeds | 169 |
-| isFedBy | 172 |
-| hasPart | 258 |
-| isPartOf | 418 |
-| hasLocation | 391 |
-| isPointOf | 425 |
-| subClassOf | 39 |
+| feeds | 272 |
+| isFedBy | 272 |
+| hasPart | 844 |
+| isPartOf | 844 |
+| hasLocation | 644 |
+| isPointOf | 996 |
+| hasPoint | 304 |
+| subClassOf | 40 |
 
 ### 주요 노드 라벨 (상위 20)
 
 | 라벨 | 수량 |
 |------|:----:|
-| Resource | 967 |
-| DatatypeProperty | 63 |
+| Resource | 1,731 |
+| On_Off_Status | 246 |
+| Room | 169 |
+| Electrical_Power_Sensor | 89 |
+| DatatypeProperty | 73 |
 | HVAC_Zone | 60 |
+| Valve_Command | 51 |
 | Floor_Diffuser | 48 |
-| Valve_Command | 42 |
-| Class | 39 |
+| Class | 40 |
 | Equipment | 27 |
+| Fan_Speed_Command | 25 |
 | Zone_Air_Temperature_Sensor | 25 |
+| CO2_Sensor | 25 |
 | Zone_Air_Humidity_Sensor | 25 |
+| Energy_Sensor | 24 |
+| Water_Flow_Sensor | 24 |
 | Valve | 22 |
+| Duct_Static_Pressure_Sensor | 21 |
+| On_Off_Command | 21 |
 | Distribution_Header | 20 |
-| Chilled_Ceiling_Panel | 20 |
-| Floor | 18 |
-| AHU | 16 |
-| Occupancy_Sensor | 15 |
-| On_Off_Status | 15 |
-| Fan_Speed_Command | 15 |
-| Office_Space | 14 |
-| Supply_Air_Temperature_Sensor | 14 |
-| Filter_Differential_Pressure_Sensor | 14 |
 
 ---
 

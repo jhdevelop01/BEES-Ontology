@@ -83,7 +83,7 @@ app = FastAPI(
     title="BEES Server C — 가상 건물 에뮬레이터",
     description=(
         "삼성물산 GEC B동 가상 건물 에뮬레이터. "
-        "Brick Schema 온톨로지 기반 84개 장비 + 164개 센서 시뮬레이션 및 MQTT 데이터 발행. "
+        "Brick Schema 온톨로지 기반 284개 장비 + 691개 센서 시뮬레이션 및 MQTT 데이터 발행. "
         "시나리오 관리, 고장 주입, HVAC 열역학 모델링 지원."
     ),
     version="2.0.0",

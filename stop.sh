@@ -12,7 +12,7 @@ curl -s -X POST http://localhost:8012/simulation/stop >/dev/null 2>&1 && echo " 
 
 # 2. Docker Compose 서비스
 echo ""
-echo "[2/3] Docker Compose 서비스 중지 (8개)..."
+echo "[2/3] Docker Compose 서비스 중지 (9개)..."
 docker compose down
 
 # 3. Neo4j
