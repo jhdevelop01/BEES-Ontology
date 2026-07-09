@@ -1,6 +1,7 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026.02.24 (시스템 아키텍처 다이어그램 3D 시각 효과 강화)
+> **최종 업데이트:** 2026-07-06 (문서 정합성 일괄 정정 + SHACL 위반 3건 해소 + hasPart/isPartOf 대칭 완성 → 트리플 11,502→**11,527**, Conforms **True**. FCU_Group feeds·B동 GHG reportingEntity·Floor_Power_Meter 18건 hasPart 보강. Neo4j 재임포트·Server A 재시작 완료)
+> **이전 업데이트:** 2026.02.24 (시스템 아키텍처 다이어그램 3D 시각 효과 강화)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
