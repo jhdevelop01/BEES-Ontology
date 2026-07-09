@@ -15,7 +15,7 @@
 # =============================================================================
 # 프로젝트: 삼성물산 GEC B동 Brick Schema 기반 빌딩 온톨로지
 # 작성일: 2026-02-11
-# 버전: 2.0 (Phase 8 — 에너지 흐름 완성 + 구조적 정합성 강화)
+# 버전: 2.2.2 (Phase 8 — 에너지 흐름 완성 + 구조적 정합성 강화)
 # 기반: Brick Schema 1.3+
 # 범위: GEC B동 전용 — Location, Equipment, Point, System 전체 모델링
 # =============================================================================
@@ -28,7 +28,7 @@
 bees:Ontology a owl:Ontology ;
     rdfs:label "BEES - Building Energy & Environment Schema for Samsung GEC B-dong" ;
     rdfs:comment "삼성물산 GEC B동의 Brick Schema 기반 빌딩 온톨로지. 가압식 UFAD + 칠드실링 + 복사난방 3중 복합 시스템을 모델링." ;
-    owl:versionInfo "1.9" .
+    owl:versionInfo "2.2.2" .
 
 bees:BAS_Network_Layer a owl:Class ;
     rdfs:label "BAS Network Layer" ;
@@ -14515,3 +14515,42 @@ bldg:Light_Shelf_West brick:hasPoint bldg:Light_Shelf_West_Status .
 bldg:Lightning_Protection_System brick:hasPoint bldg:Lightning_Protection_Status .
 bldg:Lightning_Rod_RF brick:hasPoint bldg:Lightning_Rod_RF_Status .
 bldg:Ground_Electrode brick:hasPoint bldg:Ground_Electrode_Status .
+
+
+# =============================================================================
+# SECTION: 정합성 보강 (2026-07-06)
+#   - SHACL 위반 3건 해소: FCU_Group feeds 누락, B동 GHG reportingEntity 누락
+#   - hasPart/isPartOf 대칭 완성: Floor → Floor_Power_Meter 18건
+#   ※ 기존 subject 블록에 술어만 추가 (인스턴스 수 불변, +25 트리플)
+# =============================================================================
+
+# --- SHACL: FCU_Group feeds 보강 (멤버 FCU가 서빙하는 존으로 집계 흐름 + 대칭 isFedBy) ---
+bldg:FCU_Group brick:feeds bldg:Lounge_Zone_2F ,
+                           bldg:Conference_Zone_3F .
+bldg:Lounge_Zone_2F brick:isFedBy bldg:FCU_Group .
+bldg:Conference_Zone_3F brick:isFedBy bldg:FCU_Group .
+
+# --- SHACL: B동 GHG 데이터 reportingEntity 보강 (in-scope B동 배출 데이터) ---
+bldg:GHG_Scope1_2024 bees:reportingEntity "삼성E&A" .
+bldg:GHG_Scope2_2024 bees:reportingEntity "삼성E&A" .
+bldg:GHG_Total_2024 bees:reportingEntity "삼성E&A" .
+
+# --- hasPart/isPartOf 대칭 완성: Floor hasPart Floor_Power_Meter (18건) ---
+bldg:B_1F brick:hasPart bldg:Floor_Power_Meter_1F .
+bldg:B_2F brick:hasPart bldg:Floor_Power_Meter_2F .
+bldg:B_3F brick:hasPart bldg:Floor_Power_Meter_3F .
+bldg:B_5F brick:hasPart bldg:Floor_Power_Meter_5F .
+bldg:B_6F brick:hasPart bldg:Floor_Power_Meter_6F .
+bldg:B_7F brick:hasPart bldg:Floor_Power_Meter_7F .
+bldg:B_8F brick:hasPart bldg:Floor_Power_Meter_8F .
+bldg:B_9F brick:hasPart bldg:Floor_Power_Meter_9F .
+bldg:B_10F brick:hasPart bldg:Floor_Power_Meter_10F .
+bldg:B_11F brick:hasPart bldg:Floor_Power_Meter_11F .
+bldg:B_12F brick:hasPart bldg:Floor_Power_Meter_12F .
+bldg:B_14F brick:hasPart bldg:Floor_Power_Meter_14F .
+bldg:B_15F brick:hasPart bldg:Floor_Power_Meter_15F .
+bldg:B_B1F brick:hasPart bldg:Floor_Power_Meter_B1F .
+bldg:B_B2F brick:hasPart bldg:Floor_Power_Meter_B2F .
+bldg:B_B3F brick:hasPart bldg:Floor_Power_Meter_B3F .
+bldg:B_B4F brick:hasPart bldg:Floor_Power_Meter_B4F .
+bldg:B_RF brick:hasPart bldg:Floor_Power_Meter_RF .
