@@ -6,14 +6,14 @@ import { Network, Layers } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { useSSE } from "@/lib/sse";
 import { CsCanvas } from "@/components/topology/cs-canvas";
-import { EquipTopologyCanvas } from "@/components/topology/equip-topology-canvas";
+import { BrickTopologyLiveCanvas } from "@/components/topology/brick-topology-live-canvas";
 
 type TabKey = "topology" | "cross-section";
 
 export default function TopologyPage() {
   const t = useTranslations("topology");
   const [activeTab, setActiveTab] = useState<TabKey>("topology");
-  const { points, devices, connected, alarms } = useSSE();
+  const { points, devices, connected } = useSSE();
 
   /* Device status map: bldg:Name → boolean + shortName → boolean */
   const deviceStatusMap: Record<string, boolean> = {};
@@ -53,13 +53,7 @@ export default function TopologyPage() {
 
       {/* Tab content */}
       {activeTab === "topology" ? (
-        <EquipTopologyCanvas
-          points={points}
-          devices={devices}
-          deviceStatusMap={deviceStatusMap}
-          connected={connected}
-          alarms={alarms}
-        />
+        <BrickTopologyLiveCanvas />
       ) : (
         <CsCanvas
           points={points}
