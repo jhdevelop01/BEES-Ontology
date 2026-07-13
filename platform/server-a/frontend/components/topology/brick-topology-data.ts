@@ -433,6 +433,21 @@ export interface BrickFloorHeaderData {
  *   건물 ⊃ 층 ⊃ 공간 ⊃ 설비 ⊃ 센서.
  *   DataTree(brick-ontology-tree.ts)와 NestedUI(brick-nested-cards.tsx)의 공유 계약.
  * ═══════════════════════════════════════════════════════════ */
+/** 카드 하위 구성의 카테고리별 개수(재귀 누적). space+equipment+point 합 = count. */
+export interface BrickCategoryBreakdown {
+  space: number; // 하위 공간 수
+  equipment: number; // 하위 설비 수
+  point: number; // 하위 센서/포인트 수
+}
+
+/** 노드에 걸린 흐름·제어 관계 — 계층 트리(hasPart/hasLocation/hasPoint)엔 안 나오는
+ *  feeds/isFedBy/controls 를 카드에 노출하기 위한 표시용 상대 노드 한글 라벨 목록. */
+export interface BrickNodeRelations {
+  feeds: string[]; // 이 노드가 공급하는 하류 대상(labelKo)
+  isFedBy: string[]; // 이 노드에 공급하는 상류 소스(labelKo)
+  controls: string[]; // 이 노드가 제어하는 대상(labelKo) — 현재 데이터엔 없어 보통 빈 배열
+}
+
 export interface BrickTreeCardNode {
   id: string;
   labelKo: string;
@@ -442,5 +457,7 @@ export interface BrickTreeCardNode {
   icon: string; // lucide 아이콘명
   isCommon?: boolean; // 합성 "층 공용" 그룹 카드 여부
   count: number; // 하위 총 노드 수(뱃지용)
+  breakdown?: BrickCategoryBreakdown; // 하위 카테고리별 개수(재귀) — tree 빌더가 채움
+  relations?: BrickNodeRelations; // 흐름/제어 관계(있을 때만) — 설비/포인트 카드용
   children: BrickTreeCardNode[]; // 직속 하위 카드들(중첩)
 }

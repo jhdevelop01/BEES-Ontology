@@ -33,6 +33,8 @@ import {
   categoryOfType,
   iconForNode,
   type BrickCategory,
+  type BrickCategoryBreakdown,
+  type BrickNodeRelations,
   type BrickTreeCardNode,
 } from "./brick-topology-data";
 
@@ -265,8 +267,44 @@ function buildTree(graph: GraphResponse): BrickTreeCardNode | null {
     linkChild(ensureFloorCommon(anchor), id);
   });
 
-  // 5) 카드 트리 재귀 조립. count = 하위 총 노드 수(재귀).
+  // 5) 흐름/제어 관계 인덱스 (feeds/isFedBy/controls) — 계층 트리엔 안 나오는 관계를 카드에 노출.
+  //    feeds↔isFedBy 대칭: "feeds" 엣지 하나로 양방향(공급/공급받음) 모두 채우고, 별도 "isFedBy"
+  //    엣지가 있으면 합쳐서 dedupe(Set). 상대 노드는 분류된 실노드(nodeById)만 수집.
+  const feedsOut = new Map<string, Set<string>>(); // id → 하류(공급 대상)
+  const fedByIn = new Map<string, Set<string>>(); // id → 상류(공급 소스)
+  const controlsOut = new Map<string, Set<string>>(); // id → 제어 대상
+  for (const e of edges) {
+    const { source, target, type } = e.data;
+    if (type === "feeds") {
+      if (nodeById.has(source) && nodeById.has(target)) {
+        addToSetMap(feedsOut, source, target); // source가 target에 공급
+        addToSetMap(fedByIn, target, source); // target은 source로부터 공급받음
+      }
+    } else if (type === "isFedBy") {
+      // "source isFedBy target" = source가 target으로부터 공급받음 → 대칭 feeds 채움
+      if (nodeById.has(source) && nodeById.has(target)) {
+        addToSetMap(fedByIn, source, target);
+        addToSetMap(feedsOut, target, source);
+      }
+    } else if (type === "controls") {
+      if (nodeById.has(source) && nodeById.has(target)) {
+        addToSetMap(controlsOut, source, target);
+      }
+    }
+  }
+
+  // 6) 카드 트리 재귀 조립. count = 하위 총 노드 수(재귀).
   const labelOf = (n: GraphNode) => n.data.rdfsLabel || n.data.label || n.data.id;
+  /** 상대 노드 id Set → 한글 라벨 배열(분류된 실노드만, dedupe는 Set으로 이미 보장). */
+  const labelsOfSet = (ids: Set<string> | undefined): string[] => {
+    if (!ids) return [];
+    const out: string[] = [];
+    for (const rid of Array.from(ids)) {
+      const rn = nodeById.get(rid);
+      if (rn) out.push(labelOf(rn));
+    }
+    return out;
+  };
   const displayLabel = (id: string): string => {
     const sm = synthMeta.get(id);
     if (sm) return sm.labelKo;
@@ -288,7 +326,18 @@ function buildTree(graph: GraphResponse): BrickTreeCardNode | null {
     const children = kidIds.map(buildCard);
     const count = children.reduce((s, c) => s + 1 + c.count, 0);
 
+    // breakdown(모든 노드): 하위 REAL 노드를 카테고리별 재귀 누적. 합성 자식 자체는 세지 않되,
+    //   합성 노드가 감싼 실 하위(그 breakdown)는 포함 → '층 공용' 카드도 내부 설비/센서 분해가 보임.
+    const breakdown: BrickCategoryBreakdown = { space: 0, equipment: 0, point: 0 };
+    for (const c of children) {
+      if (!c.isCommon) breakdown[c.category] += 1; // 실 자식 자체 +1
+      breakdown.space += c.breakdown?.space ?? 0;
+      breakdown.equipment += c.breakdown?.equipment ?? 0;
+      breakdown.point += c.breakdown?.point ?? 0;
+    }
+
     if (sm) {
+      // 합성 '층 공용/공용' — relations 없음, breakdown만.
       return {
         id,
         labelKo: sm.labelKo,
@@ -298,6 +347,7 @@ function buildTree(graph: GraphResponse): BrickTreeCardNode | null {
         icon: sm.icon,
         isCommon: true,
         count,
+        breakdown,
         children,
       };
     }
@@ -305,6 +355,16 @@ function buildTree(graph: GraphResponse): BrickTreeCardNode | null {
     const labels = n.data.labels ?? [];
     const lastLabel = labels.length ? labels[labels.length - 1] : n.data.type || "Thing";
     const category = categoryOf.get(id)!;
+
+    // relations(실 노드만, 하나라도 비지 않을 때만 부착)
+    const feeds = labelsOfSet(feedsOut.get(id));
+    const isFedBy = labelsOfSet(fedByIn.get(id));
+    const controls = labelsOfSet(controlsOut.get(id));
+    const relations: BrickNodeRelations | undefined =
+      feeds.length || isFedBy.length || controls.length
+        ? { feeds, isFedBy, controls }
+        : undefined;
+
     return {
       id,
       labelKo: labelOf(n),
@@ -314,6 +374,8 @@ function buildTree(graph: GraphResponse): BrickTreeCardNode | null {
       icon: iconForNode(labels, category),
       isCommon: false,
       count,
+      breakdown,
+      ...(relations ? { relations } : {}),
       children,
     };
   };

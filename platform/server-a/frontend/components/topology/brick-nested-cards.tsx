@@ -53,11 +53,14 @@ import {
   RefreshCw,
   Maximize2,
   Minimize2,
+  ArrowRight,
+  ArrowLeft,
   type LucideIcon,
 } from "lucide-react";
 import {
   CATEGORY_META,
   LEGEND_CATEGORY_ORDER,
+  RELATION_META,
   type BrickCategory,
   type BrickTreeCardNode,
 } from "./brick-topology-data";
@@ -133,6 +136,111 @@ function collectInitialExpanded(node: BrickTreeCardNode, acc: Set<string>): Set<
 
 /* depth(중첩 깊이) 별 좌측 들여쓰기(px) — 물리적 포함을 강조 */
 const INDENT_PER_DEPTH = 14;
+
+/* 카테고리 분해 칩용 짧은 라벨 (범례 labelKo 는 "공간/구조" 등으로 길어 축약) */
+const CATEGORY_SHORT_LABEL: Record<BrickCategory, string> = {
+  space: "공간",
+  equipment: "설비",
+  point: "센서",
+};
+
+/* ────────────────────────────────────────────────────────────
+ * 카테고리 분해 칩 (breakdown) — 컨테이너 카드의 하위 구성 요약
+ *   예: 공간 12 · 설비 20 · 센서 63  (0 항목은 생략)
+ * ──────────────────────────────────────────────────────────── */
+function BreakdownChips({
+  breakdown,
+}: {
+  breakdown: BrickTreeCardNode["breakdown"];
+}) {
+  if (!breakdown) return null;
+  const items = LEGEND_CATEGORY_ORDER.filter(
+    (key) => (breakdown[key] ?? 0) > 0
+  );
+  if (items.length === 0) return null;
+
+  return (
+    <span className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+      {items.map((key, i) => {
+        const accent = CATEGORY_META[key].accent;
+        return (
+          <span key={key} className="flex items-center">
+            {i > 0 && <span className="mr-1.5 text-slate-600">·</span>}
+            <span
+              className="inline-block h-1.5 w-1.5 rounded-full"
+              style={{ background: accent }}
+            />
+            <span className="ml-1 text-[10px] font-medium" style={{ color: accent }}>
+              {CATEGORY_SHORT_LABEL[key]}
+            </span>
+            <span className="ml-0.5 text-[10px] font-mono text-slate-400">
+              {breakdown[key]}
+            </span>
+          </span>
+        );
+      })}
+    </span>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────
+ * 관계 배지 (relations) — 노드 자신의 에너지/제어 흐름
+ *   헤더 바로 아래 항상 표시(접혀 있어도 노드 자신의 관계라 노출).
+ *   feeds→ / ←공급받음 / 제어. 많으면 앞 3개 + "+N".
+ * ──────────────────────────────────────────────────────────── */
+const MAX_TARGETS = 3; // 배지당 상대 라벨 표시 최대치
+
+function RelationBadge({
+  relKey,
+  targets,
+}: {
+  relKey: "feeds" | "isFedBy" | "controls";
+  targets: string[];
+}) {
+  if (!targets || targets.length === 0) return null;
+  const meta = RELATION_META[relKey];
+  const shown = targets.slice(0, MAX_TARGETS);
+  const extra = targets.length - shown.length;
+  const DirIcon = relKey === "isFedBy" ? ArrowLeft : ArrowRight;
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] leading-none"
+      style={{
+        background: `${meta.color}14`,
+        border: `1px ${meta.dashed ? "dashed" : "solid"} ${meta.color}66`,
+        color: meta.color,
+      }}
+      title={`${meta.labelKo}: ${targets.join(", ")}`}
+    >
+      <DirIcon size={11} strokeWidth={2.5} />
+      <span className="font-semibold">{meta.labelKo}</span>
+      <span className="font-mono text-slate-300">{shown.join(", ")}</span>
+      {extra > 0 && <span className="text-slate-400">+{extra}</span>}
+    </span>
+  );
+}
+
+function RelationStrip({
+  relations,
+}: {
+  relations: BrickTreeCardNode["relations"];
+}) {
+  if (!relations) return null;
+  const hasAny =
+    (relations.feeds?.length ?? 0) > 0 ||
+    (relations.isFedBy?.length ?? 0) > 0 ||
+    (relations.controls?.length ?? 0) > 0;
+  if (!hasAny) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 px-3 pb-2.5 pt-0">
+      <RelationBadge relKey="feeds" targets={relations.feeds ?? []} />
+      <RelationBadge relKey="isFedBy" targets={relations.isFedBy ?? []} />
+      <RelationBadge relKey="controls" targets={relations.controls ?? []} />
+    </div>
+  );
+}
 
 /* ────────────────────────────────────────────────────────────
  * 재귀 카드 <NestedCard>
@@ -227,6 +335,8 @@ const NestedCard = memo(function NestedCard({
           <span className="truncate text-[10px] font-mono text-slate-500">
             {node.brickClass}
           </span>
+          {/* 카테고리 분해 칩 — 컨테이너 카드만 (하위 구성 요약) */}
+          {hasChildren && <BreakdownChips breakdown={node.breakdown} />}
         </span>
 
         {/* 우측: count 뱃지 + 셰브론 */}
@@ -251,6 +361,9 @@ const NestedCard = memo(function NestedCard({
             ))}
         </span>
       </button>
+
+      {/* ── 관계 스트립 (노드 자신의 feeds/isFedBy/controls — 접혀도 항상 표시) ── */}
+      <RelationStrip relations={node.relations} />
 
       {/* ── 중첩 children (펼침 시 카드 내부에 재귀 렌더) ── */}
       {isOpen && (
@@ -297,6 +410,23 @@ function CategoryLegend() {
               }}
             />
             <span className="text-[11px] text-slate-400">{m.labelKo}</span>
+          </span>
+        );
+      })}
+      {/* 관계색 (에너지 흐름) 구분 */}
+      <span className="mx-1 h-3 w-px bg-white/10" />
+      {(["feeds", "isFedBy"] as const).map((key) => {
+        const r = RELATION_META[key];
+        return (
+          <span key={key} className="flex items-center gap-1.5">
+            <span
+              className="inline-block h-3 w-3 rounded-sm"
+              style={{
+                background: `${r.color}22`,
+                border: `1px ${r.dashed ? "dashed" : "solid"} ${r.color}`,
+              }}
+            />
+            <span className="text-[11px] text-slate-400">{r.labelKo}</span>
           </span>
         );
       })}
