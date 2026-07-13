@@ -1,7 +1,8 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026-07-06 (문서 정합성 일괄 정정 + SHACL 위반 3건 해소 + hasPart/isPartOf 대칭 완성 → 트리플 11,502→**11,527**, Conforms **True**. FCU_Group feeds·B동 GHG reportingEntity·Floor_Power_Meter 18건 hasPart 보강. Neo4j 재임포트·Server A 재시작 완료)
-> **이전 업데이트:** 2026.02.24 (시스템 아키텍처 다이어그램 3D 시각 효과 강화)
+> **최종 업데이트:** 2026-07-13 (토폴로지 탭을 **중첩 포함 카드 UI**로 교체 — 상위 카드가 하위를 물리적으로 포함하는 재귀 아코디언(건물⊃층⊃공간⊃설비⊃센서). 데이터 완전성 감사로 "빈약"=표현 문제 규명(누락 0) + 카테고리 개수 배지·feeds 관계 배지 보강. 커밋 46cd4ee)
+> **이전 업데이트:** 2026-07-13 (온톨로지 토폴로지 탭 전면 재구축 — 실제 Neo4j 기반 **좌→우 엄격 계층 드릴다운**(건물→층→공간→설비→센서) + **디지털 다크 테마** + **원격접속(비-localhost) 대응**. 계층 매핑 버그 3종 정정. 커밋 13aa11d·d6178bd)
+> **이전 업데이트:** 2026-07-06 (문서 정합성 일괄 정정 + SHACL 위반 3건 해소 → 트리플 **11,527**, Conforms True)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -4082,6 +4083,99 @@ Agent Teams (3명 병렬 분석 + 리라이트):
 **검증**: 자동 테스트 부재로 `py_compile`(6파일 OK) + 라우터 잔여 동기 호출 0건 확인. 런타임 실측(부하 하 응답성·재큐잉 동작)은 컨테이너 미기동으로 미수행 — 기동 후 확인 필요.
 
 **미적용(범위 한정)**: 인증(CC-1, Phase 1 4서버 원자적), Flux 인젝션 방어(D-P1-2), 무제한 `/history` 응답(D-P1-1)은 후속 과제로 로드맵에 유지.
+
+---
+
+## 50. 온톨로지 토폴로지 탭 전면 재구축 — 좌→우 엄격 계층 드릴다운 + 디지털 다크 (2026-07-13)
+
+### 배경 / 요구
+`/topology`의 "토폴로지" 탭(기존 라이브 장비 DAG)을 **실제 Neo4j 온톨로지 기반**의 Brick 계층 뷰로 교체. 사용자가 준 개념도(`_imgs/온톨로지_토폴로지.png`)에서 출발해 여러 차례 방향을 조정하며 수렴:
+정적 개념도 재현 → 라이브 전체 표시 → 드릴다운(클릭 전개) → 층 수직 밴드 → **최종: 좌→우 컬럼 엄격 계층 드릴다운 + '설비 계층도'풍 디지털 다크 디자인**.
+
+### 최종 동작
+- **좌→우 컬럼**: 건물(L0) → 층(L1) → 공간/방/룸/존(L2) → 설비/장비(L3) → 센서/포인트(L4). 각 Brick 레벨이 고정 컬럼(x=level*340).
+- **드릴다운**: 첫 화면은 건물+18층(+합성 "공용")만. 카드 클릭 시 **직계 하위 한 레벨만** 오른쪽 컬럼에 전개. 각 단계 접기/펴기 + "모두 펼치기/접기" 버튼.
+- **디자인(디지털 다크)**: 다크 글래스 카드(카테고리색 액센트 보더 + 발광 아이콘), 네이비 그라디언트 캔버스, 다크 범례/관계설명 패널, 확장 인디케이터(▶/▼ + childCount).
+- 데이터: `GET /api/ontology/graph`(노드 1,594/엣지 4,176), dagre 미사용(전량) → 타입레벨 고정 컬럼 배치.
+
+### 계층 매핑 버그 3종 정정 (사용자 지적 "층/공간 섞임" 근본 원인 — 실데이터 분석으로)
+1. **hasLocation 방향 반전**: "X hasLocation Y = Y가 컨테이너(부모)"인데 코드가 source(X)를 부모로 취급 → 센서·설비가 층/공간의 부모가 되어 계층 전복. target을 부모로 정정.
+2. **타입 오분류**: 백엔드 coarse `type="Zone"`이 `HVAC_Zone`(공간, 60)과 `Zone_Air_*_Sensor/Setpoint`(센서, 60)를 뭉갬 → 센서가 공간(L2)에 섞임. **카테고리/레벨을 coarse type이 아닌 실제 Brick 클래스(labels 마지막)로 판정**(`/Sensor|Setpoint|Command|Status|Alarm/` → point L4)하여 해소.
+3. **고아 노드가 건물 직계로**: 레벨-1 컨테이너·소속 층이 없는 노드(시스템·층없는 설비/센서 ~89)를 폴백으로 건물에 매달아 초기 화면이 107로 오염 → 합성 **"공용"(건물 하위)·"공용 공간(L2)"·"공용 설비(L3)"** 노드로 격리해 초기 ≈21(건물+18층+공용)로 정상화. 부모 = 정확히 한 레벨 위.
+
+### 검증 (도구 기반, DOM 컬럼 순도)
+헤드리스 브라우저 + `page.evaluate`로 각 react-flow 노드의 카테고리(클래스)·x컬럼을 덤프해 **컬럼별 타입 순도**를 확인. 클릭 통과 결과:
+초기=층만 → 층 클릭=**공간만(센서 유출 0)** → 공간 클릭=**설비만** → 설비 클릭=**센서만**. (시각 추측 아닌 데이터 검증)
+
+### 원격/타기기 접속 대응 (별도 버그)
+접속 증상 "범례·관계설명만 보이고 다이어그램 비어있음" 분석 → API가 브라우저에서 실패.
+- **원인**: 프론트 `API_BASE`가 `http://localhost:8010` 하드코딩 → IP·타기기 접속 시 그 기기의 localhost엔 백엔드 없음.
+- **정정**: `lib/api.ts`에서 브라우저는 `window.location.hostname` 기준으로 API_BASE 동적 결정. `backend/app/main.py` CORS에 `allow_origin_regex`(임의 호스트:3000) 추가. → LAN IP·타기기 접속에서 그래프 정상 로드(실측 검증).
+
+### 인프라 이슈 (세션 중 발견)
+API가 7노드만 반환 → **neo4j-bees 컨테이너 중지(exited)** 발견. `docker start neo4j-bees` + `server-a-backend` 재시작(그래프 캐시 초기화)으로 1,594노드 복구. (neo4j-bees는 compose 밖 외부 컨테이너 — 재부팅/장기 미사용 시 재기동 필요.)
+
+### 수정 파일 (커밋 13aa11d 드릴다운 초판, d6178bd 최종)
+| 파일 | 변경 |
+|------|------|
+| `components/topology/brick-ontology-graph.ts` | 데이터 fetch + Brick클래스 기반 레벨/카테고리 판정 + 부모=레벨-1 + 합성 공용노드 + 타입레벨 컬럼 배치 (핵심 계층 로직) |
+| `components/topology/brick-topology-data.ts` | 카테고리/관계 메타 + 매핑 + 계약 타입(BrickTreeNodeData/FloorHeaderData 등) |
+| `components/topology/brick-topology-live-canvas.tsx` | ReactFlow 캔버스 + 클릭 드릴다운 + 컨트롤 + 다크 테마 |
+| `components/topology/brick-topology-nodes.tsx` | 카테고리별 디지털 다크 카드 + 확장 인디케이터 |
+| `components/topology/brick-topology-panels.tsx` | 범례/관계설명 다크 패널 |
+| `app/topology/page.tsx` | topology 탭 → BrickTopologyLiveCanvas (단면도 탭 유지) — 13aa11d |
+| `lib/api.ts` | API_BASE 동적화(window.location.hostname) |
+| `backend/app/main.py` | CORS allow_origin_regex(:3000) |
+
+### 실행 방식
+Claude Code Agent Teams(tmux split panes) 병렬 — DataLayer/CanvasUI/LayoutTeam/DesignTeam teammate가 disjoint 파일(graph.ts vs nodes/live-canvas/panels)을 나눠 구현, lead가 계약 정의·조립·헤드리스 검증. 방향 전환 시 idle teammate 재활용.
+
+---
+
+## 51. 토폴로지 탭 → 중첩 포함 카드 UI 전환 + 데이터 완전성 감사 (2026-07-13)
+
+### 배경 / 요구
+섹션 50의 **좌→우 ReactFlow 계층 드릴다운**(설비 계층도)이 시각적으로 "빈약"하다는 피드백을 받아, 상위 카드가 하위 카드를 **물리적으로 포함**하는 재귀 아코디언 중첩 카드로 표현 방식을 전환. 계층은 동일한 5단계: **건물 ⊃ 층 ⊃ 공간 ⊃ 설비 ⊃ 센서**.
+
+### 최종 동작
+- **중첩 포함 카드**: 부모 카드 안에 자식 카드가 물리적으로 들어가는 재귀 아코디언. 각 단계 펼치기/접기.
+- **계층 판정 로직(섹션 50 정정본 재사용)**: 레벨은 Brick 클래스(labels 마지막)를 우선 판정(`/Sensor|Setpoint|Command|Status|Alarm/` → 포인트 L4), 컨테이너 방향 정정(`hasLocation`의 target이 부모), 부모는 레벨이 정확히 (자기−1)인 컨테이너.
+- **사용자 확정 옵션**:
+  - **Q1** — 설비/센서가 없는 빈 공간 카드도 전부 표시.
+  - **Q2** — 특정 공간에 속하지 않고 층에 직속된 설비/센서는 각 층 아래 합성 **"층 공용"** 그룹으로 집계.
+- 데이터: `GET /api/ontology/graph`(노드 1,594/엣지 4,176) 재사용. 단면도 탭(`CsCanvas`)은 그대로 유지.
+
+### "빈약" 피드백에 대한 데이터 완전성 감사 (교차검증)
+피드백이 데이터 누락인지 표현 문제인지 규명하기 위해, `/api/ontology/graph`(1,594노드/4,176엣지)를 tree 빌드 로직으로 **Python 재현**해 buildingRoot 도달 노드를 카테고리별로 대조.
+- **결과: 계층 데이터 100% 완전 — 누락 0.** 층 18 / 공간 277 / 설비 284 / 센서·포인트 965 전부(합계 **1,545 실노드**)가 트리에 도달·렌더됨.
+- 제외된 것은 오직 `Other` **48개**(ESG/에너지 회계: Monthly(Energy)Profile 24 · GSEED 7 · LEED 6 · EnergyBreakdown 5 · BAS_Network_Layer 3 · GHG 3)와 `Site`(Samsung_GEC) **1개** — 물리 설비 계층 대상이 아니라 제외가 정당.
+- 결론: **"빈약"은 데이터 누락이 아니라 표현 문제**로 규명.
+
+### 표현 보강
+- **카테고리별 개수 분해 배지**: 카드에 공간 N · 설비 M · 센서 K 개수를 배지로 표시.
+- **에너지 흐름 관계 배지**: 계층 트리엔 안 나오던 `feeds`/`isFedBy`(각 272쌍)를 설비 카드에 배지로 노출(공급→ / ←공급받음). `controls`는 현재 데이터 0건이라 보통 빈 값.
+
+### 미사용 ReactFlow 파일 제거
+중첩 카드 전환으로 섹션 50의 ReactFlow 파일 4종이 서로만 참조하는 **닫힌 클러스터**가 됨 → 외부 참조 0건 확인 후 삭제, `tsc` 통과.
+- 제거: `brick-topology-live-canvas.tsx`, `brick-ontology-graph.ts`, `brick-topology-nodes.tsx`, `brick-topology-panels.tsx`.
+
+### 수정 파일
+**(A) 중첩 카드 초판 — 커밋 46cd4ee, master push 완료**
+| 파일 | 변경 |
+|------|------|
+| `components/topology/brick-ontology-tree.ts` | **신규** — 중첩 트리 데이터 빌더 훅 `useBrickOntologyTree` |
+| `components/topology/brick-nested-cards.tsx` | **신규** — 재귀 `NestedCard` UI + `BrickNestedTopology` |
+| `components/topology/brick-topology-data.ts` | 계약에 `BrickTreeCardNode` 추가 |
+| `app/topology/page.tsx` | 토폴로지 탭 렌더를 `BrickNestedTopology`로 배선 (단면도 탭 `CsCanvas` 유지) |
+| (제거) `brick-topology-live-canvas.tsx` · `brick-ontology-graph.ts` · `brick-topology-nodes.tsx` · `brick-topology-panels.tsx` | 미사용 ReactFlow 4종 삭제(참조 0건, tsc 통과) |
+
+**(B) 데이터 완전성 감사 + 표현 보강 — 후속 커밋**
+| 파일 | 변경 |
+|------|------|
+| `components/topology/brick-topology-data.ts` | `BrickTreeCardNode`에 `breakdown?`(카테고리 개수 분해)·`relations?`(feeds/isFedBy) 필드 확장 + 타입 추가 |
+| `components/topology/brick-ontology-tree.ts` | 각 노드에 breakdown(재귀 카테고리 개수)·relations(feeds/isFedBy 상대 라벨, 232노드) 채움 |
+| `components/topology/brick-nested-cards.tsx` | 분해 칩(공간/설비/센서 개수) + 관계 배지(공급→/←공급받음) 렌더 |
+| `_docs/history.md` | 본 섹션 50·51 기록 |
 
 ---
 
