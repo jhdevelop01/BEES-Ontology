@@ -6,7 +6,7 @@ import { Network, Layers } from "lucide-react";
 import { Header } from "@/components/layout/header";
 import { useSSE } from "@/lib/sse";
 import { CsCanvas } from "@/components/topology/cs-canvas";
-import { BrickTopologyLiveCanvas } from "@/components/topology/brick-topology-live-canvas";
+import { BrickNestedTopology } from "@/components/topology/brick-nested-cards";
 
 type TabKey = "topology" | "cross-section";
 
@@ -53,7 +53,7 @@ export default function TopologyPage() {
 
       {/* Tab content */}
       {activeTab === "topology" ? (
-        <BrickTopologyLiveCanvas />
+        <BrickNestedTopology />
       ) : (
         <CsCanvas
           points={points}

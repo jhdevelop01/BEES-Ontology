@@ -426,3 +426,21 @@ export interface BrickFloorHeaderData {
   count: number; // 이 층 밴드에 속한 노드 수
   accent: string; // 층 라벨/액센트 색 (hex)
 }
+
+/* ═══════════════════════════════════════════════════════════
+ * 중첩 포함 카드(nested containment) 계약
+ *   상위 카드가 하위 카드를 물리적으로 감싸는 트리:
+ *   건물 ⊃ 층 ⊃ 공간 ⊃ 설비 ⊃ 센서.
+ *   DataTree(brick-ontology-tree.ts)와 NestedUI(brick-nested-cards.tsx)의 공유 계약.
+ * ═══════════════════════════════════════════════════════════ */
+export interface BrickTreeCardNode {
+  id: string;
+  labelKo: string;
+  brickClass: string; // "brick:HVAC_Zone" 등 표시용
+  category: BrickCategory; // space | equipment | point (카드 색)
+  level: number; // 0 건물 · 1 층 · 2 공간 · 3 설비 · 4 센서
+  icon: string; // lucide 아이콘명
+  isCommon?: boolean; // 합성 "층 공용" 그룹 카드 여부
+  count: number; // 하위 총 노드 수(뱃지용)
+  children: BrickTreeCardNode[]; // 직속 하위 카드들(중첩)
+}
