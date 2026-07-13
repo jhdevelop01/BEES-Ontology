@@ -171,6 +171,8 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "http://server-a-frontend:3000",  # Docker
     ],
+    # 임의 호스트의 :3000(프론트) 접속 허용 — LAN IP·다른 기기에서도 접근 가능하게.
+    allow_origin_regex=r"https?://[^/]+:3000",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

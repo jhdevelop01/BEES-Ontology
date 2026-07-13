@@ -1,8 +1,8 @@
 /**
  * Brick Schema 라이브 토폴로지 — 점진적 드릴다운(트리) 캔버스
  *
- * 처음엔 건물만 → 노드 클릭 시 직계 자식 전개(건물→층→존/설비→포인트).
- * 다시 클릭하면 접힘. 확장 상태는 펼쳐진 노드 id 집합(Set)으로 관리한다.
+ * 초기엔 전체 토폴로지(건물+층+존+설비+포인트)를 펼쳐서 표시 → 노드 클릭으로 개별 접기/펼치기.
+ * "모두 펼치기/모두 접기" 버튼으로 일괄 전환. 확장 상태는 펼쳐진 노드 id 집합(Set)으로 관리한다.
  *
  * 데이터: useBrickOntologyGraph(expanded) [DataLayer: brick-ontology-graph.ts]
  *   반환 rfNodes.data = BrickTreeNodeData(labelKo,brickClass,icon,category,expandable,expanded,childCount).
@@ -12,7 +12,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ReactFlow, {
   Controls,
   Background,
@@ -29,6 +29,7 @@ import {
   AlertTriangle,
   RotateCcw,
   Maximize2,
+  ListTree,
   ListCollapse,
   MousePointerClick,
 } from "lucide-react";
@@ -41,38 +42,51 @@ import { useBrickOntologyGraph } from "./brick-ontology-graph";
 function ControlBar({
   shown,
   total,
+  onExpandAll,
   onCollapseAll,
   onFit,
 }: {
   shown: number;
   total: number;
+  onExpandAll: () => void;
   onCollapseAll: () => void;
   onFit: () => void;
 }) {
   return (
-    <div className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white/95 px-3 py-2 shadow-sm backdrop-blur">
+    <div className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center gap-2 rounded-xl border border-white/10 bg-slate-950/80 px-3 py-2 shadow-xl backdrop-blur-xl">
       {/* ④ 안내 */}
-      <span className="flex items-center gap-1.5 text-[12px] text-slate-500">
-        <MousePointerClick size={13} className="text-slate-400" />
-        노드를 클릭해 하위를 펼치세요
+      <span className="flex items-center gap-1.5 text-[12px] text-slate-400">
+        <MousePointerClick size={13} className="text-slate-500" />
+        노드 클릭으로 접기/펼치기 · 버튼으로 모두 펼치기/접기
       </span>
 
-      <div className="h-5 w-px bg-slate-200" />
+      <div className="h-5 w-px bg-white/10" />
+
+      {/* ① 모두 펼치기 */}
+      <button
+        type="button"
+        onClick={onExpandAll}
+        title="모두 펼치기 (전체 토폴로지 표시)"
+        className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] font-medium text-slate-300 transition-colors hover:bg-white/10"
+      >
+        <ListTree size={13} />
+        <span>모두 펼치기</span>
+      </button>
 
       {/* ① 모두 접기 */}
       <button
         type="button"
         onClick={onCollapseAll}
         title="모두 접기 (건물만 표시)"
-        className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[12px] font-medium text-slate-600 transition-colors hover:bg-slate-50"
+        className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] font-medium text-slate-300 transition-colors hover:bg-white/10"
       >
         <ListCollapse size={13} />
         <span>모두 접기</span>
       </button>
 
       {/* ② 표시 노드 수 */}
-      <span className="text-[12px] text-slate-500">
-        표시 <span className="font-semibold text-slate-700">{shown.toLocaleString()}</span>
+      <span className="text-[12px] text-slate-400 font-mono">
+        표시 <span className="font-semibold text-cyan-300">{shown.toLocaleString()}</span>
         {" / "}
         {total.toLocaleString()}
       </span>
@@ -82,7 +96,7 @@ function ControlBar({
         type="button"
         onClick={onFit}
         title="화면 맞춤 (fit view)"
-        className="flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[12px] font-medium text-slate-600 transition-colors hover:bg-slate-50"
+        className="flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[12px] font-medium text-slate-300 transition-colors hover:bg-white/10"
       >
         <Maximize2 size={13} />
         <span>맞춤</span>
@@ -103,21 +117,21 @@ function StatusOverlay({
 }) {
   if (!loading && !error) return null;
   return (
-    <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-sm">
+    <div className="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm">
       {loading ? (
-        <div className="flex items-center gap-2 text-slate-600">
-          <Loader2 className="h-5 w-5 animate-spin" />
+        <div className="flex items-center gap-2 text-slate-300">
+          <Loader2 className="h-5 w-5 animate-spin text-cyan-400" />
           <span className="text-sm font-medium">온톨로지 그래프 불러오는 중…</span>
         </div>
       ) : (
-        <div className="flex max-w-sm flex-col items-center gap-3 rounded-xl border border-rose-200 bg-white px-6 py-5 text-center shadow-sm">
-          <AlertTriangle className="h-6 w-6 text-rose-500" />
-          <div className="text-sm font-medium text-slate-700">그래프를 불러오지 못했습니다</div>
-          <div className="text-[12px] text-slate-500">{error}</div>
+        <div className="flex max-w-sm flex-col items-center gap-3 rounded-xl border border-rose-500/30 bg-slate-900/90 px-6 py-5 text-center shadow-xl backdrop-blur-xl">
+          <AlertTriangle className="h-6 w-6 text-rose-400" />
+          <div className="text-sm font-medium text-slate-200">그래프를 불러오지 못했습니다</div>
+          <div className="text-[12px] text-slate-400">{error}</div>
           <button
             type="button"
             onClick={onRetry}
-            className="flex items-center gap-1.5 rounded-md bg-slate-800 px-3 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-slate-700"
+            className="flex items-center gap-1.5 rounded-md bg-white/10 border border-white/10 px-3 py-1.5 text-[12px] font-medium text-slate-100 transition-colors hover:bg-white/20"
           >
             <RotateCcw size={13} />
             재시도
@@ -130,9 +144,27 @@ function StatusOverlay({
 
 /* ── 다이어그램 본체 (ReactFlowProvider 내부) ── */
 function LiveCanvasInner() {
-  // 확장 상태 = 펼쳐진 노드 id 집합. 빈 집합 = 루트(건물)만.
+  // 확장 상태 = 펼쳐진 노드 id 집합.
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  const { rfNodes, rfEdges, stats, loading, error } = useBrickOntologyGraph(expanded);
+  const { rfNodes, rfEdges, rootIds, allExpandableIds, stats, loading, error } =
+    useBrickOntologyGraph(expanded);
+
+  // 초기 진입: 좌→우 드릴다운 트리에서 건물(root)만 펼쳐 **건물 + 층(레벨1-2)만** 표시.
+  // 층 카드를 클릭하면 그 층의 하위(공간→설비→센서)가 오른쪽으로 전개된다.
+  // rootIds(Building/Site)만 초기 펼침 → 그 직계 자식인 층까지 노출. 최초 1회.
+  // 이후엔 사용자의 펼침/접기 조작을 유지한다.
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (
+      !initializedRef.current &&
+      !loading &&
+      rootIds &&
+      rootIds.length > 0
+    ) {
+      initializedRef.current = true;
+      setExpanded(new Set(rootIds));
+    }
+  }, [loading, rootIds]);
 
   const { fitView } = useReactFlow();
 
@@ -174,6 +206,10 @@ function LiveCanvasInner() {
     [fitView],
   );
   const handleCollapseAll = useCallback(() => setExpanded(new Set()), []);
+  const handleExpandAll = useCallback(
+    () => setExpanded(new Set(allExpandableIds ?? [])),
+    [allExpandableIds],
+  );
   const handleRetry = useCallback(
     () => setExpanded((prev) => new Set(prev)), // 참조 변경으로 훅 재실행 유도
     [],
@@ -187,6 +223,7 @@ function LiveCanvasInner() {
       <ControlBar
         shown={shown}
         total={total}
+        onExpandAll={handleExpandAll}
         onCollapseAll={handleCollapseAll}
         onFit={handleFit}
       />
@@ -205,16 +242,26 @@ function LiveCanvasInner() {
         nodesConnectable={false}
         elementsSelectable
         proOptions={{ hideAttribution: true }}
-        style={{ background: "#F8FAFC" }}
+        className="brick-dark-canvas"
+        style={{
+          background:
+            "radial-gradient(ellipse at 50% 0%, #0f1e33 0%, #0a1220 55%, #060a14 100%)",
+        }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={28} size={1} color="#CBD5E1" />
+        <Background
+          variant={BackgroundVariant.Dots}
+          gap={28}
+          size={1}
+          color="rgba(56,189,248,0.06)"
+        />
         <Controls
           showInteractive={false}
+          className="[&>button]:!bg-transparent [&>button]:!border-white/10 [&>button]:!fill-slate-200 [&>button:hover]:!bg-white/10"
           style={{
-            background: "#FFFFFF",
+            background: "rgba(15,23,42,0.90)",
             borderRadius: 8,
-            border: "1px solid #E2E8F0",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
           }}
         />
       </ReactFlow>
@@ -228,7 +275,7 @@ export function BrickTopologyLiveCanvas() {
     <div className="p-3 md:p-6 space-y-4">
       {/* 다이어그램(flex-1) + 범례(우측 고정 컬럼) */}
       <div className="flex flex-col lg:flex-row gap-4">
-        <div className="relative flex-1 min-w-0 rounded-xl border border-slate-200 bg-[#F8FAFC] overflow-hidden h-[520px] lg:h-[70vh]">
+        <div className="relative flex-1 min-w-0 rounded-xl border border-white/10 bg-slate-950 overflow-hidden h-[520px] lg:h-[70vh]">
           <ReactFlowProvider>
             <LiveCanvasInner />
           </ReactFlowProvider>

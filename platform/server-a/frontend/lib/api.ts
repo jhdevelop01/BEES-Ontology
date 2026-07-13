@@ -3,7 +3,23 @@
  * 모든 API 요청을 중앙에서 관리한다.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
+/**
+ * API_BASE 결정.
+ * 브라우저에서는 "접속한 그 호스트:8010"으로 호출한다(하드코딩 localhost 제거).
+ * → localhost·127.0.0.1·LAN IP·다른 기기 어디서 접속해도 백엔드에 도달한다.
+ * 명시적 커스텀 URL(비 localhost)이 env로 주어지면 그것을 우선한다.
+ * SSR(Node)에서는 env 또는 localhost 폴백.
+ */
+function resolveApiBase(): string {
+  const env = process.env.NEXT_PUBLIC_API_URL;
+  if (typeof window !== "undefined") {
+    if (env && !/localhost|127\.0\.0\.1/.test(env)) return env;
+    return `${window.location.protocol}//${window.location.hostname}:8010`;
+  }
+  return env || "http://localhost:8010";
+}
+
+const API_BASE = resolveApiBase();
 
 /**
  * localStorage에서 JWT 토큰 가져오기

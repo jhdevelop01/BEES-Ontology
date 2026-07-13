@@ -50,6 +50,7 @@ import {
   CATEGORY_META,
   type BrickCategory,
   type BrickTreeNodeData,
+  type BrickFloorHeaderData,
 } from "./brick-topology-data";
 
 /* ── 아이콘 매핑 (데이터의 icon 문자열 → lucide 컴포넌트) ──
@@ -137,7 +138,7 @@ function BrickCard({ data }: NodeProps<BrickTreeNodeData>) {
 
   return (
     <div
-      className={`relative flex items-center gap-2.5 rounded-lg px-3 py-2 shadow-sm select-none ${
+      className={`brick-node-card group relative flex items-center gap-2.5 rounded-lg px-3 py-2 select-none transition-all duration-200 hover:scale-[1.02] ${
         expandable ? "cursor-pointer" : "cursor-default"
       }`}
       title={
@@ -150,11 +151,16 @@ function BrickCard({ data }: NodeProps<BrickTreeNodeData>) {
       style={{
         minWidth: 148,
         maxWidth: 240, // 라이브 라벨이 길 때 노드 폭 폭주 방지
-        background: meta.fill,
-        border: `1.5px solid ${meta.border}`,
-        color: meta.text,
-        // 접힌(펼칠 수 있는) 노드는 링으로 "열 수 있음" 강조
-        boxShadow: collapsedHint ? `0 0 0 2px ${meta.accent}55` : undefined,
+        // ── cs-nodes 다크 글래스 카드 ──
+        background: "rgba(255,255,255,0.04)",
+        backdropFilter: "blur(12px)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderLeft: `4px solid ${meta.accent}`,
+        color: "#E2E8F0",
+        // 접힌(펼칠 수 있는) 노드는 accent 글로우로 "열 수 있음" 강조
+        boxShadow: collapsedHint
+          ? `0 0 0 1px ${meta.accent}55, 0 0 16px ${meta.accent}30`
+          : "0 4px 12px rgba(0,0,0,0.35)",
       }}
     >
       <EdgeHandles />
@@ -163,23 +169,22 @@ function BrickCard({ data }: NodeProps<BrickTreeNodeData>) {
         style={{
           width: 30,
           height: 30,
-          background: "rgba(255,255,255,0.6)",
+          background: `radial-gradient(circle at 35% 30%, ${meta.accent}22, rgba(8,12,24,0.85) 75%)`,
+          border: `1px solid ${meta.accent}30`,
           color: meta.accent,
         }}
       >
-        <Icon size={18} strokeWidth={2} />
+        <Icon
+          size={18}
+          strokeWidth={2}
+          style={{ filter: `drop-shadow(0 0 5px ${meta.accent}80)` }}
+        />
       </div>
       <div className="flex min-w-0 flex-col leading-tight">
-        <span
-          className="truncate text-[13px] font-bold"
-          style={{ color: meta.text }}
-        >
+        <span className="truncate text-[13px] font-bold text-slate-100">
           {data.labelKo}
         </span>
-        <span
-          className="truncate text-[10px] font-mono"
-          style={{ color: `${meta.text}99` }}
-        >
+        <span className="truncate text-[10px] font-mono text-slate-500">
           {data.brickClass}
         </span>
       </div>
@@ -191,9 +196,9 @@ function BrickCard({ data }: NodeProps<BrickTreeNodeData>) {
             <span
               className="rounded-full px-1.5 py-px text-[10px] font-semibold leading-none"
               style={{
-                background: "rgba(255,255,255,0.7)",
+                background: `${meta.accent}22`,
                 color: meta.accent,
-                border: `1px solid ${meta.border}66`,
+                border: `1px solid ${meta.accent}55`,
               }}
             >
               {childCount}
@@ -210,6 +215,36 @@ function BrickCard({ data }: NodeProps<BrickTreeNodeData>) {
   );
 }
 
+/* ── 층 헤더 노드 (cs FloorBandNode 헤더 스타일) ──
+ * 수직 층 밴드 좌측에 큰 mono 층 라벨 + 개수. node.type = "floorHeader". */
+function FloorHeaderNode({ data }: NodeProps<BrickFloorHeaderData>) {
+  const accent = data.accent || "#38BDF8";
+  return (
+    <div
+      className="relative flex flex-col justify-center rounded-xl px-5 py-4 select-none overflow-hidden"
+      style={{
+        minWidth: 168,
+        background: "rgba(15,23,42,0.60)",
+        backdropFilter: "blur(24px)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        borderLeft: `5px solid ${accent}`,
+        boxShadow: "0 6px 20px rgba(0,0,0,0.4)",
+      }}
+    >
+      <EdgeHandles />
+      <div
+        className="text-[32px] font-black font-mono tracking-tight leading-none"
+        style={{ color: accent, textShadow: `0 0 18px ${accent}55` }}
+      >
+        {data.floorLabel}
+      </div>
+      <div className="mt-2 text-[13px] font-mono text-slate-500">
+        <span className="text-slate-300">{data.count}</span> nodes
+      </div>
+    </div>
+  );
+}
+
 /* 카테고리별 노드 — 동일 렌더러(색은 data.category 로 결정) */
 const SpaceNode = memo(function SpaceNode(props: NodeProps<BrickTreeNodeData>) {
   return <BrickCard {...props} />;
@@ -220,10 +255,12 @@ const EquipmentNode = memo(function EquipmentNode(props: NodeProps<BrickTreeNode
 const PointNode = memo(function PointNode(props: NodeProps<BrickTreeNodeData>) {
   return <BrickCard {...props} />;
 });
+const FloorHeaderNodeMemo = memo(FloorHeaderNode);
 
 /* ── Export Node Types ── */
 export const brickNodeTypes = {
   space: SpaceNode,
   equipment: EquipmentNode,
   point: PointNode,
+  floorHeader: FloorHeaderNodeMemo,
 };

@@ -418,3 +418,11 @@ export interface BrickTreeNodeData {
 
 /** 확장(펼침) 상태 = 펼쳐진 노드 id 집합. 빈 집합 = 루트(건물)만 표시. */
 export type BrickExpandedSet = Set<string>;
+
+/** 수직 층 밴드의 좌측 "층 헤더" 노드 data. node.type = "floorHeader".
+ *  cs-canvas의 FloorBandNode 헤더처럼 큰 층 라벨 + 개수를 표시한다. */
+export interface BrickFloorHeaderData {
+  floorLabel: string; // "5F", "RF", "건물·공용" 등 표시 라벨
+  count: number; // 이 층 밴드에 속한 노드 수
+  accent: string; // 층 라벨/액센트 색 (hex)
+}

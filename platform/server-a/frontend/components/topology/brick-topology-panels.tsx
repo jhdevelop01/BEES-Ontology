@@ -27,9 +27,9 @@ function PanelCard({
 }) {
   return (
     <div
-      className={`rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm ${className}`}
+      className={`rounded-xl border border-white/10 bg-slate-900/60 px-4 py-3 shadow-xl backdrop-blur-xl ${className}`}
     >
-      <h3 className="mb-2.5 text-[13px] font-bold text-slate-800">{title}</h3>
+      <h3 className="mb-2.5 text-[13px] font-bold text-slate-100">{title}</h3>
       {children}
     </div>
   );
@@ -65,9 +65,9 @@ export function BrickLegend() {
             <div key={catKey} className="flex items-center gap-2">
               <span
                 className="h-3.5 w-3.5 flex-shrink-0 rounded-[4px]"
-                style={{ background: meta.fill, border: `1.5px solid ${meta.border}` }}
+                style={{ background: meta.accent, border: `1.5px solid ${meta.accent}` }}
               />
-              <span className="text-[12px] text-slate-700">
+              <span className="text-[12px] text-slate-300">
                 {meta.labelKo} ({meta.labelEn})
               </span>
             </div>
@@ -75,17 +75,17 @@ export function BrickLegend() {
         })}
       </div>
 
-      <div className="my-2 h-px bg-slate-200" />
+      <div className="my-2 h-px bg-white/10" />
 
       {/* 관계 8종 */}
-      <div className="mb-1 text-[12px] font-semibold text-slate-600">관계 (Relationships)</div>
+      <div className="mb-1 text-[12px] font-semibold text-slate-400">관계 (Relationships)</div>
       <div className="flex flex-col gap-1.5">
         {RELATION_ORDER.map((relKey) => {
           const meta = RELATION_META[relKey];
           return (
             <div key={relKey} className="flex items-center gap-2">
               <RelationLineSample color={meta.color} dashed={meta.dashed} />
-              <span className="text-[12px] text-slate-700">
+              <span className="text-[12px] text-slate-300">
                 {meta.labelEn} / {meta.labelKo}
               </span>
             </div>
@@ -105,7 +105,7 @@ export function BrickExamplePaths() {
       <div className="flex flex-col gap-2.5">
         {EXAMPLE_PATHS.map((path, i) => (
           <div key={path.no} className="flex flex-wrap items-center gap-1.5 text-[12px]">
-            <span className="mr-0.5 font-bold text-slate-700">
+            <span className="mr-0.5 font-bold text-slate-300">
               {CIRCLED_NUMBERS[i] ?? `${path.no}.`}
             </span>
             {path.steps.map((step, j) => {
@@ -126,7 +126,7 @@ export function BrickExamplePaths() {
                       className="h-2 w-2 flex-shrink-0 rounded-full"
                       style={{ background: meta.accent }}
                     />
-                    <span className="text-slate-700">{step.labelKo}</span>
+                    <span className="text-slate-300">{step.labelKo}</span>
                   </span>
                 </span>
               );
@@ -150,7 +150,7 @@ export function BrickRelationReference() {
               <span className="font-semibold" style={{ color: meta.color }}>
                 {meta.labelEn} / {meta.labelKo}
               </span>
-              <span className="text-slate-500"> : {meta.desc}</span>
+              <span className="text-slate-400"> : {meta.desc}</span>
             </div>
           );
         })}
