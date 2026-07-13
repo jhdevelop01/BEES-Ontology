@@ -15,7 +15,7 @@
 # =============================================================================
 # 프로젝트: 삼성물산 GEC B동 Brick Schema 기반 빌딩 온톨로지
 # 작성일: 2026-02-11
-# 버전: 2.2.2 (Phase 8 — 에너지 흐름 완성 + 구조적 정합성 강화)
+# 버전: 2.3.0 (Phase 9 — 실별 조명·재실감지 보충: 169개 Room 전체에 Lighting/Occupancy/On_Off_Status 개별 매칭)
 # 기반: Brick Schema 1.3+
 # 범위: GEC B동 전용 — Location, Equipment, Point, System 전체 모델링
 # =============================================================================
@@ -28,7 +28,7 @@
 bees:Ontology a owl:Ontology ;
     rdfs:label "BEES - Building Energy & Environment Schema for Samsung GEC B-dong" ;
     rdfs:comment "삼성물산 GEC B동의 Brick Schema 기반 빌딩 온톨로지. 가압식 UFAD + 칠드실링 + 복사난방 3중 복합 시스템을 모델링." ;
-    owl:versionInfo "2.2.2" .
+    owl:versionInfo "2.3.0" .
 
 bees:BAS_Network_Layer a owl:Class ;
     rdfs:label "BAS Network Layer" ;
@@ -14554,3 +14554,3392 @@ bldg:B_B2F brick:hasPart bldg:Floor_Power_Meter_B2F .
 bldg:B_B3F brick:hasPart bldg:Floor_Power_Meter_B3F .
 bldg:B_B4F brick:hasPart bldg:Floor_Power_Meter_B4F .
 bldg:B_RF brick:hasPart bldg:Floor_Power_Meter_RF .
+
+
+#############################################################################
+# SECTION 20: 실별 조명·재실감지 보충 (Per-Room Lighting & Occupancy)
+# 169개 Room 전체에 조명(Lighting_Equipment)·재실센서(Occupancy_Sensor)·
+# 점등상태(On_Off_Status)를 개별 매칭. hasLocation→방 / isPartOf→Lighting_System /
+# hasPoint↔isPointOf 대칭. 신뢰도: 조명 estimated, 센서·상태 inferred.
+# (자동 생성 — gen_room_lighting.py)
+#############################################################################
+
+bldg:Lighting_B_B1F_Mechanical_Room a brick:Lighting_Equipment ;
+    rdfs:label "B1F 기계실 조명" ;
+    brick:hasLocation bldg:B_B1F_Mechanical_Room ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_B_B1F_Mechanical_Room , bldg:LightSts_B_B1F_Mechanical_Room ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_B_B1F_Mechanical_Room .
+bldg:Occ_B_B1F_Mechanical_Room a brick:Occupancy_Sensor ;
+    rdfs:label "B1F 기계실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_B_B1F_Mechanical_Room ;
+    brick:hasLocation bldg:B_B1F_Mechanical_Room ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_B_B1F_Mechanical_Room a brick:On_Off_Status ;
+    rdfs:label "B1F 기계실 점등상태" ;
+    brick:isPointOf bldg:Lighting_B_B1F_Mechanical_Room ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_B_B2F_Mechanical_Room a brick:Lighting_Equipment ;
+    rdfs:label "B2F 전기실/수변전실 조명" ;
+    brick:hasLocation bldg:B_B2F_Mechanical_Room ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_B_B2F_Mechanical_Room , bldg:LightSts_B_B2F_Mechanical_Room ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_B_B2F_Mechanical_Room .
+bldg:Occ_B_B2F_Mechanical_Room a brick:Occupancy_Sensor ;
+    rdfs:label "B2F 전기실/수변전실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_B_B2F_Mechanical_Room ;
+    brick:hasLocation bldg:B_B2F_Mechanical_Room ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_B_B2F_Mechanical_Room a brick:On_Off_Status ;
+    rdfs:label "B2F 전기실/수변전실 점등상태" ;
+    brick:isPointOf bldg:Lighting_B_B2F_Mechanical_Room ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Cafeteria_B1F a brick:Lighting_Equipment ;
+    rdfs:label "지하1층 구내식당 조명" ;
+    brick:hasLocation bldg:Cafeteria_B1F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Cafeteria_B1F , bldg:LightSts_Cafeteria_B1F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Cafeteria_B1F .
+bldg:Occ_Cafeteria_B1F a brick:Occupancy_Sensor ;
+    rdfs:label "지하1층 구내식당 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Cafeteria_B1F ;
+    brick:hasLocation bldg:Cafeteria_B1F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Cafeteria_B1F a brick:On_Off_Status ;
+    rdfs:label "지하1층 구내식당 점등상태" ;
+    brick:isPointOf bldg:Lighting_Cafeteria_B1F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Conference_Center_3F a brick:Lighting_Equipment ;
+    rdfs:label "3층 회의/컨퍼런스 공간 조명" ;
+    brick:hasLocation bldg:Conference_Center_3F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Conference_Center_3F , bldg:LightSts_Conference_Center_3F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Conference_Center_3F .
+bldg:Occ_Conference_Center_3F a brick:Occupancy_Sensor ;
+    rdfs:label "3층 회의/컨퍼런스 공간 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Conference_Center_3F ;
+    brick:hasLocation bldg:Conference_Center_3F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Conference_Center_3F a brick:On_Off_Status ;
+    rdfs:label "3층 회의/컨퍼런스 공간 점등상태" ;
+    brick:isPointOf bldg:Lighting_Conference_Center_3F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Lounge_2F a brick:Lighting_Equipment ;
+    rdfs:label "2층 라운지/공용 공간 조명" ;
+    brick:hasLocation bldg:Lounge_2F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Lounge_2F , bldg:LightSts_Lounge_2F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Lounge_2F .
+bldg:Occ_Lounge_2F a brick:Occupancy_Sensor ;
+    rdfs:label "2층 라운지/공용 공간 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Lounge_2F ;
+    brick:hasLocation bldg:Lounge_2F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Lounge_2F a brick:On_Off_Status ;
+    rdfs:label "2층 라운지/공용 공간 점등상태" ;
+    brick:isPointOf bldg:Lighting_Lounge_2F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Main_Lobby_1F a brick:Lighting_Equipment ;
+    rdfs:label "1층 메인 로비 조명" ;
+    brick:hasLocation bldg:Main_Lobby_1F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Main_Lobby_1F , bldg:LightSts_Main_Lobby_1F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Main_Lobby_1F .
+bldg:Occ_Main_Lobby_1F a brick:Occupancy_Sensor ;
+    rdfs:label "1층 메인 로비 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Main_Lobby_1F ;
+    brick:hasLocation bldg:Main_Lobby_1F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Main_Lobby_1F a brick:On_Off_Status ;
+    rdfs:label "1층 메인 로비 점등상태" ;
+    brick:isPointOf bldg:Lighting_Main_Lobby_1F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Parking_B2F a brick:Lighting_Equipment ;
+    rdfs:label "지하2층 주차장 조명" ;
+    brick:hasLocation bldg:Parking_B2F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Parking_B2F , bldg:LightSts_Parking_B2F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Parking_B2F .
+bldg:Occ_Parking_B2F a brick:Occupancy_Sensor ;
+    rdfs:label "지하2층 주차장 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Parking_B2F ;
+    brick:hasLocation bldg:Parking_B2F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Parking_B2F a brick:On_Off_Status ;
+    rdfs:label "지하2층 주차장 점등상태" ;
+    brick:isPointOf bldg:Lighting_Parking_B2F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Parking_B3F a brick:Lighting_Equipment ;
+    rdfs:label "지하3층 주차장 조명" ;
+    brick:hasLocation bldg:Parking_B3F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Parking_B3F , bldg:LightSts_Parking_B3F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Parking_B3F .
+bldg:Occ_Parking_B3F a brick:Occupancy_Sensor ;
+    rdfs:label "지하3층 주차장 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Parking_B3F ;
+    brick:hasLocation bldg:Parking_B3F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Parking_B3F a brick:On_Off_Status ;
+    rdfs:label "지하3층 주차장 점등상태" ;
+    brick:isPointOf bldg:Lighting_Parking_B3F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Parking_B4F a brick:Lighting_Equipment ;
+    rdfs:label "지하4층 주차장 조명" ;
+    brick:hasLocation bldg:Parking_B4F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Parking_B4F , bldg:LightSts_Parking_B4F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Parking_B4F .
+bldg:Occ_Parking_B4F a brick:Occupancy_Sensor ;
+    rdfs:label "지하4층 주차장 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Parking_B4F ;
+    brick:hasLocation bldg:Parking_B4F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Parking_B4F a brick:On_Off_Status ;
+    rdfs:label "지하4층 주차장 점등상태" ;
+    brick:isPointOf bldg:Lighting_Parking_B4F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 대회의실 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_L01 , bldg:LightSts_Room_10F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_L01 .
+bldg:Occ_Room_10F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_10F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_M01 , bldg:LightSts_Room_10F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_M01 .
+bldg:Occ_Room_10F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_10F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_M02 , bldg:LightSts_Room_10F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_M02 .
+bldg:Occ_Room_10F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_10F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_M03 , bldg:LightSts_Room_10F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_M03 .
+bldg:Occ_Room_10F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_10F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_S01 , bldg:LightSts_Room_10F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_S01 .
+bldg:Occ_Room_10F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_10F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_S02 , bldg:LightSts_Room_10F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_S02 .
+bldg:Occ_Room_10F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_10F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_S03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 소회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_S03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_S03 , bldg:LightSts_Room_10F_Mtg_S03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_S03 .
+bldg:Occ_Room_10F_Mtg_S03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 소회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S03 ;
+    brick:hasLocation bldg:Room_10F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_S03 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 소회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_S04 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 소회의실 #4 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_S04 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_S04 , bldg:LightSts_Room_10F_Mtg_S04 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_S04 .
+bldg:Occ_Room_10F_Mtg_S04 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 소회의실 #4 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S04 ;
+    brick:hasLocation bldg:Room_10F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_S04 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 소회의실 #4 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Mtg_S05 a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 소회의실 #5 조명" ;
+    brick:hasLocation bldg:Room_10F_Mtg_S05 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Mtg_S05 , bldg:LightSts_Room_10F_Mtg_S05 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Mtg_S05 .
+bldg:Occ_Room_10F_Mtg_S05 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 소회의실 #5 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S05 ;
+    brick:hasLocation bldg:Room_10F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Mtg_S05 a brick:On_Off_Status ;
+    rdfs:label "B동 10층 소회의실 #5 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_10F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Pantry , bldg:LightSts_Room_10F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Pantry .
+bldg:Occ_Room_10F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Pantry ;
+    brick:hasLocation bldg:Room_10F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 10층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_10F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Print , bldg:LightSts_Room_10F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Print .
+bldg:Occ_Room_10F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Print ;
+    brick:hasLocation bldg:Room_10F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 10층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_10F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_Storage , bldg:LightSts_Room_10F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_Storage .
+bldg:Occ_Room_10F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Storage ;
+    brick:hasLocation bldg:Room_10F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 10층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_10F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_WC_F , bldg:LightSts_Room_10F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_WC_F .
+bldg:Occ_Room_10F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_WC_F ;
+    brick:hasLocation bldg:Room_10F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 10층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_10F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 10층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_10F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_10F_WC_M , bldg:LightSts_Room_10F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_10F_WC_M .
+bldg:Occ_Room_10F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 10층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_10F_WC_M ;
+    brick:hasLocation bldg:Room_10F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_10F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 10층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_10F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 대회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_11F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Mtg_L01 , bldg:LightSts_Room_11F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Mtg_L01 .
+bldg:Occ_Room_11F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 대회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_11F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 11층 대회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Mtg_L02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 대회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_11F_Mtg_L02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Mtg_L02 , bldg:LightSts_Room_11F_Mtg_L02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Mtg_L02 .
+bldg:Occ_Room_11F_Mtg_L02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 대회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_L02 ;
+    brick:hasLocation bldg:Room_11F_Mtg_L02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Mtg_L02 a brick:On_Off_Status ;
+    rdfs:label "B동 11층 대회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_L02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_11F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Mtg_M01 , bldg:LightSts_Room_11F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Mtg_M01 .
+bldg:Occ_Room_11F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_11F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 11층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_11F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Mtg_M02 , bldg:LightSts_Room_11F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Mtg_M02 .
+bldg:Occ_Room_11F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_11F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 11층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_11F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Mtg_M03 , bldg:LightSts_Room_11F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Mtg_M03 .
+bldg:Occ_Room_11F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_11F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 11층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_11F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Mtg_S01 , bldg:LightSts_Room_11F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Mtg_S01 .
+bldg:Occ_Room_11F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_11F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 11층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_11F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Mtg_S02 , bldg:LightSts_Room_11F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Mtg_S02 .
+bldg:Occ_Room_11F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_11F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 11층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_11F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Pantry , bldg:LightSts_Room_11F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Pantry .
+bldg:Occ_Room_11F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Pantry ;
+    brick:hasLocation bldg:Room_11F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 11층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_11F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Print , bldg:LightSts_Room_11F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Print .
+bldg:Occ_Room_11F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Print ;
+    brick:hasLocation bldg:Room_11F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 11층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_11F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_Storage , bldg:LightSts_Room_11F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_Storage .
+bldg:Occ_Room_11F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Storage ;
+    brick:hasLocation bldg:Room_11F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 11층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_11F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_WC_F , bldg:LightSts_Room_11F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_WC_F .
+bldg:Occ_Room_11F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_WC_F ;
+    brick:hasLocation bldg:Room_11F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 11층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_11F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 11층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_11F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_11F_WC_M , bldg:LightSts_Room_11F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_11F_WC_M .
+bldg:Occ_Room_11F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 11층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_11F_WC_M ;
+    brick:hasLocation bldg:Room_11F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_11F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 11층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_11F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 대회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_12F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Mtg_L01 , bldg:LightSts_Room_12F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Mtg_L01 .
+bldg:Occ_Room_12F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 대회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_12F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 12층 대회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Mtg_L02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 대회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_12F_Mtg_L02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Mtg_L02 , bldg:LightSts_Room_12F_Mtg_L02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Mtg_L02 .
+bldg:Occ_Room_12F_Mtg_L02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 대회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_L02 ;
+    brick:hasLocation bldg:Room_12F_Mtg_L02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Mtg_L02 a brick:On_Off_Status ;
+    rdfs:label "B동 12층 대회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_L02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_12F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Mtg_M01 , bldg:LightSts_Room_12F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Mtg_M01 .
+bldg:Occ_Room_12F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_12F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 12층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_12F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Mtg_M02 , bldg:LightSts_Room_12F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Mtg_M02 .
+bldg:Occ_Room_12F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_12F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 12층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_12F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Mtg_M03 , bldg:LightSts_Room_12F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Mtg_M03 .
+bldg:Occ_Room_12F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_12F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 12층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_12F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Mtg_S01 , bldg:LightSts_Room_12F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Mtg_S01 .
+bldg:Occ_Room_12F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_12F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 12층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_12F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Mtg_S02 , bldg:LightSts_Room_12F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Mtg_S02 .
+bldg:Occ_Room_12F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_12F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 12층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_12F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Pantry , bldg:LightSts_Room_12F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Pantry .
+bldg:Occ_Room_12F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Pantry ;
+    brick:hasLocation bldg:Room_12F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 12층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_12F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Print , bldg:LightSts_Room_12F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Print .
+bldg:Occ_Room_12F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Print ;
+    brick:hasLocation bldg:Room_12F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 12층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_12F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_Storage , bldg:LightSts_Room_12F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_Storage .
+bldg:Occ_Room_12F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Storage ;
+    brick:hasLocation bldg:Room_12F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 12층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_12F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_WC_F , bldg:LightSts_Room_12F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_WC_F .
+bldg:Occ_Room_12F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_WC_F ;
+    brick:hasLocation bldg:Room_12F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 12층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_12F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 12층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_12F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_12F_WC_M , bldg:LightSts_Room_12F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_12F_WC_M .
+bldg:Occ_Room_12F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 12층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_12F_WC_M ;
+    brick:hasLocation bldg:Room_12F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_12F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 12층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_12F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_14F_Exec_Lounge a brick:Lighting_Equipment ;
+    rdfs:label "B동 14층 임원 라운지 조명" ;
+    brick:hasLocation bldg:Room_14F_Exec_Lounge ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_14F_Exec_Lounge , bldg:LightSts_Room_14F_Exec_Lounge ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_14F_Exec_Lounge .
+bldg:Occ_Room_14F_Exec_Lounge a brick:Occupancy_Sensor ;
+    rdfs:label "B동 14층 임원 라운지 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_14F_Exec_Lounge ;
+    brick:hasLocation bldg:Room_14F_Exec_Lounge ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_14F_Exec_Lounge a brick:On_Off_Status ;
+    rdfs:label "B동 14층 임원 라운지 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_14F_Exec_Lounge ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_14F_VIP_Conf_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 14층 VIP 대회의실 조명" ;
+    brick:hasLocation bldg:Room_14F_VIP_Conf_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_14F_VIP_Conf_L01 , bldg:LightSts_Room_14F_VIP_Conf_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_14F_VIP_Conf_L01 .
+bldg:Occ_Room_14F_VIP_Conf_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 14층 VIP 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_14F_VIP_Conf_L01 ;
+    brick:hasLocation bldg:Room_14F_VIP_Conf_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_14F_VIP_Conf_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 14층 VIP 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_14F_VIP_Conf_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_14F_VIP_Recep_01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 14층 VIP 접견실 #1 조명" ;
+    brick:hasLocation bldg:Room_14F_VIP_Recep_01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_14F_VIP_Recep_01 , bldg:LightSts_Room_14F_VIP_Recep_01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_14F_VIP_Recep_01 .
+bldg:Occ_Room_14F_VIP_Recep_01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 14층 VIP 접견실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_14F_VIP_Recep_01 ;
+    brick:hasLocation bldg:Room_14F_VIP_Recep_01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_14F_VIP_Recep_01 a brick:On_Off_Status ;
+    rdfs:label "B동 14층 VIP 접견실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_14F_VIP_Recep_01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_14F_VIP_Recep_02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 14층 VIP 접견실 #2 조명" ;
+    brick:hasLocation bldg:Room_14F_VIP_Recep_02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_14F_VIP_Recep_02 , bldg:LightSts_Room_14F_VIP_Recep_02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_14F_VIP_Recep_02 .
+bldg:Occ_Room_14F_VIP_Recep_02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 14층 VIP 접견실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_14F_VIP_Recep_02 ;
+    brick:hasLocation bldg:Room_14F_VIP_Recep_02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_14F_VIP_Recep_02 a brick:On_Off_Status ;
+    rdfs:label "B동 14층 VIP 접견실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_14F_VIP_Recep_02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_14F_WC_Exec a brick:Lighting_Equipment ;
+    rdfs:label "B동 14층 임원 전용 화장실 조명" ;
+    brick:hasLocation bldg:Room_14F_WC_Exec ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_14F_WC_Exec , bldg:LightSts_Room_14F_WC_Exec ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_14F_WC_Exec .
+bldg:Occ_Room_14F_WC_Exec a brick:Occupancy_Sensor ;
+    rdfs:label "B동 14층 임원 전용 화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_14F_WC_Exec ;
+    brick:hasLocation bldg:Room_14F_WC_Exec ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_14F_WC_Exec a brick:On_Off_Status ;
+    rdfs:label "B동 14층 임원 전용 화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_14F_WC_Exec ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_14F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 14층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_14F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_14F_WC_F , bldg:LightSts_Room_14F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_14F_WC_F .
+bldg:Occ_Room_14F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 14층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_14F_WC_F ;
+    brick:hasLocation bldg:Room_14F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_14F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 14층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_14F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_14F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 14층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_14F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_14F_WC_M , bldg:LightSts_Room_14F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_14F_WC_M .
+bldg:Occ_Room_14F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 14층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_14F_WC_M ;
+    brick:hasLocation bldg:Room_14F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_14F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 14층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_14F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_15F_Exec_Lounge a brick:Lighting_Equipment ;
+    rdfs:label "B동 15층 임원 라운지 조명" ;
+    brick:hasLocation bldg:Room_15F_Exec_Lounge ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_15F_Exec_Lounge , bldg:LightSts_Room_15F_Exec_Lounge ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_15F_Exec_Lounge .
+bldg:Occ_Room_15F_Exec_Lounge a brick:Occupancy_Sensor ;
+    rdfs:label "B동 15층 임원 라운지 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_15F_Exec_Lounge ;
+    brick:hasLocation bldg:Room_15F_Exec_Lounge ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_15F_Exec_Lounge a brick:On_Off_Status ;
+    rdfs:label "B동 15층 임원 라운지 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_15F_Exec_Lounge ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_15F_VIP_Conf_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 15층 VIP 대회의실 조명" ;
+    brick:hasLocation bldg:Room_15F_VIP_Conf_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_15F_VIP_Conf_L01 , bldg:LightSts_Room_15F_VIP_Conf_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_15F_VIP_Conf_L01 .
+bldg:Occ_Room_15F_VIP_Conf_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 15층 VIP 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_15F_VIP_Conf_L01 ;
+    brick:hasLocation bldg:Room_15F_VIP_Conf_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_15F_VIP_Conf_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 15층 VIP 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_15F_VIP_Conf_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_15F_VIP_Recep_01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 15층 VIP 접견실 #1 조명" ;
+    brick:hasLocation bldg:Room_15F_VIP_Recep_01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_15F_VIP_Recep_01 , bldg:LightSts_Room_15F_VIP_Recep_01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_15F_VIP_Recep_01 .
+bldg:Occ_Room_15F_VIP_Recep_01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 15층 VIP 접견실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_15F_VIP_Recep_01 ;
+    brick:hasLocation bldg:Room_15F_VIP_Recep_01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_15F_VIP_Recep_01 a brick:On_Off_Status ;
+    rdfs:label "B동 15층 VIP 접견실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_15F_VIP_Recep_01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_15F_VIP_Recep_02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 15층 VIP 접견실 #2 조명" ;
+    brick:hasLocation bldg:Room_15F_VIP_Recep_02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_15F_VIP_Recep_02 , bldg:LightSts_Room_15F_VIP_Recep_02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_15F_VIP_Recep_02 .
+bldg:Occ_Room_15F_VIP_Recep_02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 15층 VIP 접견실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_15F_VIP_Recep_02 ;
+    brick:hasLocation bldg:Room_15F_VIP_Recep_02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_15F_VIP_Recep_02 a brick:On_Off_Status ;
+    rdfs:label "B동 15층 VIP 접견실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_15F_VIP_Recep_02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_15F_WC_Exec a brick:Lighting_Equipment ;
+    rdfs:label "B동 15층 임원 전용 화장실 조명" ;
+    brick:hasLocation bldg:Room_15F_WC_Exec ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_15F_WC_Exec , bldg:LightSts_Room_15F_WC_Exec ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_15F_WC_Exec .
+bldg:Occ_Room_15F_WC_Exec a brick:Occupancy_Sensor ;
+    rdfs:label "B동 15층 임원 전용 화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_15F_WC_Exec ;
+    brick:hasLocation bldg:Room_15F_WC_Exec ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_15F_WC_Exec a brick:On_Off_Status ;
+    rdfs:label "B동 15층 임원 전용 화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_15F_WC_Exec ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_15F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 15층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_15F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_15F_WC_F , bldg:LightSts_Room_15F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_15F_WC_F .
+bldg:Occ_Room_15F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 15층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_15F_WC_F ;
+    brick:hasLocation bldg:Room_15F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_15F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 15층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_15F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_15F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 15층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_15F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_15F_WC_M , bldg:LightSts_Room_15F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_15F_WC_M .
+bldg:Occ_Room_15F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 15층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_15F_WC_M ;
+    brick:hasLocation bldg:Room_15F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_15F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 15층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_15F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_1F_Cafe a brick:Lighting_Equipment ;
+    rdfs:label "B동 1층 카페 조명" ;
+    brick:hasLocation bldg:Room_1F_Cafe ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_1F_Cafe , bldg:LightSts_Room_1F_Cafe ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_1F_Cafe .
+bldg:Occ_Room_1F_Cafe a brick:Occupancy_Sensor ;
+    rdfs:label "B동 1층 카페 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Cafe ;
+    brick:hasLocation bldg:Room_1F_Cafe ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_1F_Cafe a brick:On_Off_Status ;
+    rdfs:label "B동 1층 카페 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Cafe ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_1F_Mailroom a brick:Lighting_Equipment ;
+    rdfs:label "B동 1층 우편실 조명" ;
+    brick:hasLocation bldg:Room_1F_Mailroom ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_1F_Mailroom , bldg:LightSts_Room_1F_Mailroom ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_1F_Mailroom .
+bldg:Occ_Room_1F_Mailroom a brick:Occupancy_Sensor ;
+    rdfs:label "B동 1층 우편실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Mailroom ;
+    brick:hasLocation bldg:Room_1F_Mailroom ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_1F_Mailroom a brick:On_Off_Status ;
+    rdfs:label "B동 1층 우편실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Mailroom ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_1F_Reception a brick:Lighting_Equipment ;
+    rdfs:label "B동 1층 안내데스크 조명" ;
+    brick:hasLocation bldg:Room_1F_Reception ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_1F_Reception , bldg:LightSts_Room_1F_Reception ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_1F_Reception .
+bldg:Occ_Room_1F_Reception a brick:Occupancy_Sensor ;
+    rdfs:label "B동 1층 안내데스크 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Reception ;
+    brick:hasLocation bldg:Room_1F_Reception ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_1F_Reception a brick:On_Off_Status ;
+    rdfs:label "B동 1층 안내데스크 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Reception ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_1F_Security a brick:Lighting_Equipment ;
+    rdfs:label "B동 1층 보안실 조명" ;
+    brick:hasLocation bldg:Room_1F_Security ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_1F_Security , bldg:LightSts_Room_1F_Security ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_1F_Security .
+bldg:Occ_Room_1F_Security a brick:Occupancy_Sensor ;
+    rdfs:label "B동 1층 보안실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Security ;
+    brick:hasLocation bldg:Room_1F_Security ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_1F_Security a brick:On_Off_Status ;
+    rdfs:label "B동 1층 보안실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_1F_Security ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_1F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 1층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_1F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_1F_WC_F , bldg:LightSts_Room_1F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_1F_WC_F .
+bldg:Occ_Room_1F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 1층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_1F_WC_F ;
+    brick:hasLocation bldg:Room_1F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_1F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 1층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_1F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_1F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 1층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_1F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_1F_WC_M , bldg:LightSts_Room_1F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_1F_WC_M .
+bldg:Occ_Room_1F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 1층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_1F_WC_M ;
+    brick:hasLocation bldg:Room_1F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_1F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 1층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_1F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_2F_Lounge_East a brick:Lighting_Equipment ;
+    rdfs:label "B동 2층 라운지 동측 조명" ;
+    brick:hasLocation bldg:Room_2F_Lounge_East ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_2F_Lounge_East , bldg:LightSts_Room_2F_Lounge_East ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_2F_Lounge_East .
+bldg:Occ_Room_2F_Lounge_East a brick:Occupancy_Sensor ;
+    rdfs:label "B동 2층 라운지 동측 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_2F_Lounge_East ;
+    brick:hasLocation bldg:Room_2F_Lounge_East ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_2F_Lounge_East a brick:On_Off_Status ;
+    rdfs:label "B동 2층 라운지 동측 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_2F_Lounge_East ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_2F_Lounge_West a brick:Lighting_Equipment ;
+    rdfs:label "B동 2층 라운지 서측 조명" ;
+    brick:hasLocation bldg:Room_2F_Lounge_West ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_2F_Lounge_West , bldg:LightSts_Room_2F_Lounge_West ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_2F_Lounge_West .
+bldg:Occ_Room_2F_Lounge_West a brick:Occupancy_Sensor ;
+    rdfs:label "B동 2층 라운지 서측 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_2F_Lounge_West ;
+    brick:hasLocation bldg:Room_2F_Lounge_West ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_2F_Lounge_West a brick:On_Off_Status ;
+    rdfs:label "B동 2층 라운지 서측 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_2F_Lounge_West ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_2F_Mtg_01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 2층 회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_2F_Mtg_01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_2F_Mtg_01 , bldg:LightSts_Room_2F_Mtg_01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_2F_Mtg_01 .
+bldg:Occ_Room_2F_Mtg_01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 2층 회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_2F_Mtg_01 ;
+    brick:hasLocation bldg:Room_2F_Mtg_01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_2F_Mtg_01 a brick:On_Off_Status ;
+    rdfs:label "B동 2층 회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_2F_Mtg_01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_2F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 2층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_2F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_2F_WC_F , bldg:LightSts_Room_2F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_2F_WC_F .
+bldg:Occ_Room_2F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 2층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_2F_WC_F ;
+    brick:hasLocation bldg:Room_2F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_2F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 2층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_2F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_2F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 2층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_2F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_2F_WC_M , bldg:LightSts_Room_2F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_2F_WC_M .
+bldg:Occ_Room_2F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 2층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_2F_WC_M ;
+    brick:hasLocation bldg:Room_2F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_2F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 2층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_2F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_3F_Conf_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 3층 대회의실 조명" ;
+    brick:hasLocation bldg:Room_3F_Conf_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_3F_Conf_L01 , bldg:LightSts_Room_3F_Conf_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_3F_Conf_L01 .
+bldg:Occ_Room_3F_Conf_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_L01 ;
+    brick:hasLocation bldg:Room_3F_Conf_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_3F_Conf_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 3층 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_3F_Conf_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 3층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_3F_Conf_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_3F_Conf_M01 , bldg:LightSts_Room_3F_Conf_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_3F_Conf_M01 .
+bldg:Occ_Room_3F_Conf_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_M01 ;
+    brick:hasLocation bldg:Room_3F_Conf_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_3F_Conf_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 3층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_3F_Conf_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 3층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_3F_Conf_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_3F_Conf_M02 , bldg:LightSts_Room_3F_Conf_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_3F_Conf_M02 .
+bldg:Occ_Room_3F_Conf_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_M02 ;
+    brick:hasLocation bldg:Room_3F_Conf_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_3F_Conf_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 3층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_3F_Conf_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 3층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_3F_Conf_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_3F_Conf_S01 , bldg:LightSts_Room_3F_Conf_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_3F_Conf_S01 .
+bldg:Occ_Room_3F_Conf_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_S01 ;
+    brick:hasLocation bldg:Room_3F_Conf_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_3F_Conf_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 3층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_3F_Conf_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 3층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_3F_Conf_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_3F_Conf_S02 , bldg:LightSts_Room_3F_Conf_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_3F_Conf_S02 .
+bldg:Occ_Room_3F_Conf_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_S02 ;
+    brick:hasLocation bldg:Room_3F_Conf_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_3F_Conf_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 3층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_3F_Conf_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_3F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 3층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_3F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_3F_WC_F , bldg:LightSts_Room_3F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_3F_WC_F .
+bldg:Occ_Room_3F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_3F_WC_F ;
+    brick:hasLocation bldg:Room_3F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_3F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 3층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_3F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_3F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 3층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_3F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_3F_WC_M , bldg:LightSts_Room_3F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_3F_WC_M .
+bldg:Occ_Room_3F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 3층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_3F_WC_M ;
+    brick:hasLocation bldg:Room_3F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_3F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 3층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_3F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 대회의실 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_L01 , bldg:LightSts_Room_5F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_L01 .
+bldg:Occ_Room_5F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_5F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_M01 , bldg:LightSts_Room_5F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_M01 .
+bldg:Occ_Room_5F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_5F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_M02 , bldg:LightSts_Room_5F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_M02 .
+bldg:Occ_Room_5F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_5F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_M03 , bldg:LightSts_Room_5F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_M03 .
+bldg:Occ_Room_5F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_5F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_S01 , bldg:LightSts_Room_5F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_S01 .
+bldg:Occ_Room_5F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_5F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_S02 , bldg:LightSts_Room_5F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_S02 .
+bldg:Occ_Room_5F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_5F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_S03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 소회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_S03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_S03 , bldg:LightSts_Room_5F_Mtg_S03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_S03 .
+bldg:Occ_Room_5F_Mtg_S03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 소회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S03 ;
+    brick:hasLocation bldg:Room_5F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_S03 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 소회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_S04 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 소회의실 #4 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_S04 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_S04 , bldg:LightSts_Room_5F_Mtg_S04 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_S04 .
+bldg:Occ_Room_5F_Mtg_S04 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 소회의실 #4 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S04 ;
+    brick:hasLocation bldg:Room_5F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_S04 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 소회의실 #4 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Mtg_S05 a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 소회의실 #5 조명" ;
+    brick:hasLocation bldg:Room_5F_Mtg_S05 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Mtg_S05 , bldg:LightSts_Room_5F_Mtg_S05 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Mtg_S05 .
+bldg:Occ_Room_5F_Mtg_S05 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 소회의실 #5 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S05 ;
+    brick:hasLocation bldg:Room_5F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Mtg_S05 a brick:On_Off_Status ;
+    rdfs:label "B동 5층 소회의실 #5 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_5F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Pantry , bldg:LightSts_Room_5F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Pantry .
+bldg:Occ_Room_5F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Pantry ;
+    brick:hasLocation bldg:Room_5F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 5층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_5F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Print , bldg:LightSts_Room_5F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Print .
+bldg:Occ_Room_5F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Print ;
+    brick:hasLocation bldg:Room_5F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 5층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_5F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_Storage , bldg:LightSts_Room_5F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_Storage .
+bldg:Occ_Room_5F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Storage ;
+    brick:hasLocation bldg:Room_5F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 5층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_5F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_WC_F , bldg:LightSts_Room_5F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_WC_F .
+bldg:Occ_Room_5F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_WC_F ;
+    brick:hasLocation bldg:Room_5F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 5층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_5F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 5층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_5F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_5F_WC_M , bldg:LightSts_Room_5F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_5F_WC_M .
+bldg:Occ_Room_5F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 5층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_5F_WC_M ;
+    brick:hasLocation bldg:Room_5F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_5F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 5층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_5F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 대회의실 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_L01 , bldg:LightSts_Room_6F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_L01 .
+bldg:Occ_Room_6F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_6F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_M01 , bldg:LightSts_Room_6F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_M01 .
+bldg:Occ_Room_6F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_6F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_M02 , bldg:LightSts_Room_6F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_M02 .
+bldg:Occ_Room_6F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_6F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_M03 , bldg:LightSts_Room_6F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_M03 .
+bldg:Occ_Room_6F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_6F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_S01 , bldg:LightSts_Room_6F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_S01 .
+bldg:Occ_Room_6F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_6F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_S02 , bldg:LightSts_Room_6F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_S02 .
+bldg:Occ_Room_6F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_6F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_S03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 소회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_S03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_S03 , bldg:LightSts_Room_6F_Mtg_S03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_S03 .
+bldg:Occ_Room_6F_Mtg_S03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 소회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S03 ;
+    brick:hasLocation bldg:Room_6F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_S03 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 소회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_S04 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 소회의실 #4 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_S04 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_S04 , bldg:LightSts_Room_6F_Mtg_S04 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_S04 .
+bldg:Occ_Room_6F_Mtg_S04 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 소회의실 #4 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S04 ;
+    brick:hasLocation bldg:Room_6F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_S04 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 소회의실 #4 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Mtg_S05 a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 소회의실 #5 조명" ;
+    brick:hasLocation bldg:Room_6F_Mtg_S05 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Mtg_S05 , bldg:LightSts_Room_6F_Mtg_S05 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Mtg_S05 .
+bldg:Occ_Room_6F_Mtg_S05 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 소회의실 #5 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S05 ;
+    brick:hasLocation bldg:Room_6F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Mtg_S05 a brick:On_Off_Status ;
+    rdfs:label "B동 6층 소회의실 #5 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_6F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Pantry , bldg:LightSts_Room_6F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Pantry .
+bldg:Occ_Room_6F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Pantry ;
+    brick:hasLocation bldg:Room_6F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 6층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_6F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Print , bldg:LightSts_Room_6F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Print .
+bldg:Occ_Room_6F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Print ;
+    brick:hasLocation bldg:Room_6F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 6층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_6F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_Storage , bldg:LightSts_Room_6F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_Storage .
+bldg:Occ_Room_6F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Storage ;
+    brick:hasLocation bldg:Room_6F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 6층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_6F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_WC_F , bldg:LightSts_Room_6F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_WC_F .
+bldg:Occ_Room_6F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_WC_F ;
+    brick:hasLocation bldg:Room_6F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 6층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_6F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 6층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_6F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_6F_WC_M , bldg:LightSts_Room_6F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_6F_WC_M .
+bldg:Occ_Room_6F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 6층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_6F_WC_M ;
+    brick:hasLocation bldg:Room_6F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_6F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 6층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_6F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 대회의실 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_L01 , bldg:LightSts_Room_7F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_L01 .
+bldg:Occ_Room_7F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_7F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_M01 , bldg:LightSts_Room_7F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_M01 .
+bldg:Occ_Room_7F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_7F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_M02 , bldg:LightSts_Room_7F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_M02 .
+bldg:Occ_Room_7F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_7F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_M03 , bldg:LightSts_Room_7F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_M03 .
+bldg:Occ_Room_7F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_7F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_S01 , bldg:LightSts_Room_7F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_S01 .
+bldg:Occ_Room_7F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_7F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_S02 , bldg:LightSts_Room_7F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_S02 .
+bldg:Occ_Room_7F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_7F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_S03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 소회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_S03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_S03 , bldg:LightSts_Room_7F_Mtg_S03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_S03 .
+bldg:Occ_Room_7F_Mtg_S03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 소회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S03 ;
+    brick:hasLocation bldg:Room_7F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_S03 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 소회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_S04 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 소회의실 #4 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_S04 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_S04 , bldg:LightSts_Room_7F_Mtg_S04 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_S04 .
+bldg:Occ_Room_7F_Mtg_S04 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 소회의실 #4 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S04 ;
+    brick:hasLocation bldg:Room_7F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_S04 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 소회의실 #4 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Mtg_S05 a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 소회의실 #5 조명" ;
+    brick:hasLocation bldg:Room_7F_Mtg_S05 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Mtg_S05 , bldg:LightSts_Room_7F_Mtg_S05 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Mtg_S05 .
+bldg:Occ_Room_7F_Mtg_S05 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 소회의실 #5 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S05 ;
+    brick:hasLocation bldg:Room_7F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Mtg_S05 a brick:On_Off_Status ;
+    rdfs:label "B동 7층 소회의실 #5 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_7F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Pantry , bldg:LightSts_Room_7F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Pantry .
+bldg:Occ_Room_7F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Pantry ;
+    brick:hasLocation bldg:Room_7F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 7층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_7F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Print , bldg:LightSts_Room_7F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Print .
+bldg:Occ_Room_7F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Print ;
+    brick:hasLocation bldg:Room_7F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 7층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_7F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_Storage , bldg:LightSts_Room_7F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_Storage .
+bldg:Occ_Room_7F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Storage ;
+    brick:hasLocation bldg:Room_7F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 7층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_7F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_WC_F , bldg:LightSts_Room_7F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_WC_F .
+bldg:Occ_Room_7F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_WC_F ;
+    brick:hasLocation bldg:Room_7F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 7층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_7F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 7층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_7F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_7F_WC_M , bldg:LightSts_Room_7F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_7F_WC_M .
+bldg:Occ_Room_7F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 7층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_7F_WC_M ;
+    brick:hasLocation bldg:Room_7F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_7F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 7층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_7F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 대회의실 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_L01 , bldg:LightSts_Room_8F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_L01 .
+bldg:Occ_Room_8F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_8F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_M01 , bldg:LightSts_Room_8F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_M01 .
+bldg:Occ_Room_8F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_8F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_M02 , bldg:LightSts_Room_8F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_M02 .
+bldg:Occ_Room_8F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_8F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_M03 , bldg:LightSts_Room_8F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_M03 .
+bldg:Occ_Room_8F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_8F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_S01 , bldg:LightSts_Room_8F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_S01 .
+bldg:Occ_Room_8F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_8F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_S02 , bldg:LightSts_Room_8F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_S02 .
+bldg:Occ_Room_8F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_8F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_S03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 소회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_S03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_S03 , bldg:LightSts_Room_8F_Mtg_S03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_S03 .
+bldg:Occ_Room_8F_Mtg_S03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 소회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S03 ;
+    brick:hasLocation bldg:Room_8F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_S03 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 소회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_S04 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 소회의실 #4 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_S04 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_S04 , bldg:LightSts_Room_8F_Mtg_S04 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_S04 .
+bldg:Occ_Room_8F_Mtg_S04 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 소회의실 #4 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S04 ;
+    brick:hasLocation bldg:Room_8F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_S04 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 소회의실 #4 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Mtg_S05 a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 소회의실 #5 조명" ;
+    brick:hasLocation bldg:Room_8F_Mtg_S05 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Mtg_S05 , bldg:LightSts_Room_8F_Mtg_S05 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Mtg_S05 .
+bldg:Occ_Room_8F_Mtg_S05 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 소회의실 #5 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S05 ;
+    brick:hasLocation bldg:Room_8F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Mtg_S05 a brick:On_Off_Status ;
+    rdfs:label "B동 8층 소회의실 #5 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_8F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Pantry , bldg:LightSts_Room_8F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Pantry .
+bldg:Occ_Room_8F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Pantry ;
+    brick:hasLocation bldg:Room_8F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 8층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_8F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Print , bldg:LightSts_Room_8F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Print .
+bldg:Occ_Room_8F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Print ;
+    brick:hasLocation bldg:Room_8F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 8층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_8F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_Storage , bldg:LightSts_Room_8F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_Storage .
+bldg:Occ_Room_8F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Storage ;
+    brick:hasLocation bldg:Room_8F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 8층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_8F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_WC_F , bldg:LightSts_Room_8F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_WC_F .
+bldg:Occ_Room_8F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_WC_F ;
+    brick:hasLocation bldg:Room_8F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 8층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_8F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 8층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_8F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_8F_WC_M , bldg:LightSts_Room_8F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_8F_WC_M .
+bldg:Occ_Room_8F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 8층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_8F_WC_M ;
+    brick:hasLocation bldg:Room_8F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_8F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 8층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_8F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_L01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 대회의실 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_L01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_L01 , bldg:LightSts_Room_9F_Mtg_L01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_L01 .
+bldg:Occ_Room_9F_Mtg_L01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 대회의실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_L01 ;
+    brick:hasLocation bldg:Room_9F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_L01 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 대회의실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_L01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_M01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 중회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_M01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_M01 , bldg:LightSts_Room_9F_Mtg_M01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_M01 .
+bldg:Occ_Room_9F_Mtg_M01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 중회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_M01 ;
+    brick:hasLocation bldg:Room_9F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_M01 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 중회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_M01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_M02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 중회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_M02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_M02 , bldg:LightSts_Room_9F_Mtg_M02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_M02 .
+bldg:Occ_Room_9F_Mtg_M02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 중회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_M02 ;
+    brick:hasLocation bldg:Room_9F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_M02 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 중회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_M02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_M03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 중회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_M03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_M03 , bldg:LightSts_Room_9F_Mtg_M03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_M03 .
+bldg:Occ_Room_9F_Mtg_M03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 중회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_M03 ;
+    brick:hasLocation bldg:Room_9F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_M03 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 중회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_M03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_S01 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 소회의실 #1 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_S01 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_S01 , bldg:LightSts_Room_9F_Mtg_S01 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_S01 .
+bldg:Occ_Room_9F_Mtg_S01 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 소회의실 #1 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S01 ;
+    brick:hasLocation bldg:Room_9F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_S01 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 소회의실 #1 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S01 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_S02 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 소회의실 #2 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_S02 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_S02 , bldg:LightSts_Room_9F_Mtg_S02 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_S02 .
+bldg:Occ_Room_9F_Mtg_S02 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 소회의실 #2 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S02 ;
+    brick:hasLocation bldg:Room_9F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_S02 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 소회의실 #2 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S02 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_S03 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 소회의실 #3 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_S03 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_S03 , bldg:LightSts_Room_9F_Mtg_S03 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_S03 .
+bldg:Occ_Room_9F_Mtg_S03 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 소회의실 #3 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S03 ;
+    brick:hasLocation bldg:Room_9F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_S03 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 소회의실 #3 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S03 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_S04 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 소회의실 #4 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_S04 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_S04 , bldg:LightSts_Room_9F_Mtg_S04 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_S04 .
+bldg:Occ_Room_9F_Mtg_S04 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 소회의실 #4 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S04 ;
+    brick:hasLocation bldg:Room_9F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_S04 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 소회의실 #4 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S04 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Mtg_S05 a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 소회의실 #5 조명" ;
+    brick:hasLocation bldg:Room_9F_Mtg_S05 ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Mtg_S05 , bldg:LightSts_Room_9F_Mtg_S05 ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Mtg_S05 .
+bldg:Occ_Room_9F_Mtg_S05 a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 소회의실 #5 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S05 ;
+    brick:hasLocation bldg:Room_9F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Mtg_S05 a brick:On_Off_Status ;
+    rdfs:label "B동 9층 소회의실 #5 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Mtg_S05 ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Pantry a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 탕비실 조명" ;
+    brick:hasLocation bldg:Room_9F_Pantry ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Pantry , bldg:LightSts_Room_9F_Pantry ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Pantry .
+bldg:Occ_Room_9F_Pantry a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 탕비실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Pantry ;
+    brick:hasLocation bldg:Room_9F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Pantry a brick:On_Off_Status ;
+    rdfs:label "B동 9층 탕비실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Pantry ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Print a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 인쇄실 조명" ;
+    brick:hasLocation bldg:Room_9F_Print ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Print , bldg:LightSts_Room_9F_Print ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Print .
+bldg:Occ_Room_9F_Print a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 인쇄실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Print ;
+    brick:hasLocation bldg:Room_9F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Print a brick:On_Off_Status ;
+    rdfs:label "B동 9층 인쇄실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Print ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 창고/유틸리티 조명" ;
+    brick:hasLocation bldg:Room_9F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_Storage , bldg:LightSts_Room_9F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_Storage .
+bldg:Occ_Room_9F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 창고/유틸리티 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Storage ;
+    brick:hasLocation bldg:Room_9F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 9층 창고/유틸리티 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_WC_F a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 여자화장실 조명" ;
+    brick:hasLocation bldg:Room_9F_WC_F ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_WC_F , bldg:LightSts_Room_9F_WC_F ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_WC_F .
+bldg:Occ_Room_9F_WC_F a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 여자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_WC_F ;
+    brick:hasLocation bldg:Room_9F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_WC_F a brick:On_Off_Status ;
+    rdfs:label "B동 9층 여자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_WC_F ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_9F_WC_M a brick:Lighting_Equipment ;
+    rdfs:label "B동 9층 남자화장실 조명" ;
+    brick:hasLocation bldg:Room_9F_WC_M ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_9F_WC_M , bldg:LightSts_Room_9F_WC_M ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_9F_WC_M .
+bldg:Occ_Room_9F_WC_M a brick:Occupancy_Sensor ;
+    rdfs:label "B동 9층 남자화장실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_9F_WC_M ;
+    brick:hasLocation bldg:Room_9F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_9F_WC_M a brick:On_Off_Status ;
+    rdfs:label "B동 9층 남자화장실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_9F_WC_M ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B1F_Boiler a brick:Lighting_Equipment ;
+    rdfs:label "B동 B1F 보일러실 조명" ;
+    brick:hasLocation bldg:Room_B1F_Boiler ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B1F_Boiler , bldg:LightSts_Room_B1F_Boiler ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B1F_Boiler .
+bldg:Occ_Room_B1F_Boiler a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B1F 보일러실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Boiler ;
+    brick:hasLocation bldg:Room_B1F_Boiler ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B1F_Boiler a brick:On_Off_Status ;
+    rdfs:label "B동 B1F 보일러실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Boiler ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B1F_Cafeteria_Dining a brick:Lighting_Equipment ;
+    rdfs:label "B동 B1F 구내식당 식사공간 조명" ;
+    brick:hasLocation bldg:Room_B1F_Cafeteria_Dining ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B1F_Cafeteria_Dining , bldg:LightSts_Room_B1F_Cafeteria_Dining ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B1F_Cafeteria_Dining .
+bldg:Occ_Room_B1F_Cafeteria_Dining a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B1F 구내식당 식사공간 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Cafeteria_Dining ;
+    brick:hasLocation bldg:Room_B1F_Cafeteria_Dining ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B1F_Cafeteria_Dining a brick:On_Off_Status ;
+    rdfs:label "B동 B1F 구내식당 식사공간 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Cafeteria_Dining ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B1F_Cafeteria_Kitchen a brick:Lighting_Equipment ;
+    rdfs:label "B동 B1F 구내식당 주방 조명" ;
+    brick:hasLocation bldg:Room_B1F_Cafeteria_Kitchen ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B1F_Cafeteria_Kitchen , bldg:LightSts_Room_B1F_Cafeteria_Kitchen ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B1F_Cafeteria_Kitchen .
+bldg:Occ_Room_B1F_Cafeteria_Kitchen a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B1F 구내식당 주방 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Cafeteria_Kitchen ;
+    brick:hasLocation bldg:Room_B1F_Cafeteria_Kitchen ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B1F_Cafeteria_Kitchen a brick:On_Off_Status ;
+    rdfs:label "B동 B1F 구내식당 주방 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Cafeteria_Kitchen ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B1F_Electrical a brick:Lighting_Equipment ;
+    rdfs:label "B동 B1F 전기실 조명" ;
+    brick:hasLocation bldg:Room_B1F_Electrical ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B1F_Electrical , bldg:LightSts_Room_B1F_Electrical ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B1F_Electrical .
+bldg:Occ_Room_B1F_Electrical a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B1F 전기실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Electrical ;
+    brick:hasLocation bldg:Room_B1F_Electrical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B1F_Electrical a brick:On_Off_Status ;
+    rdfs:label "B동 B1F 전기실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Electrical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B1F_Pump a brick:Lighting_Equipment ;
+    rdfs:label "B동 B1F 펌프실 조명" ;
+    brick:hasLocation bldg:Room_B1F_Pump ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B1F_Pump , bldg:LightSts_Room_B1F_Pump ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B1F_Pump .
+bldg:Occ_Room_B1F_Pump a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B1F 펌프실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Pump ;
+    brick:hasLocation bldg:Room_B1F_Pump ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B1F_Pump a brick:On_Off_Status ;
+    rdfs:label "B동 B1F 펌프실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Pump ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B1F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 B1F 창고 조명" ;
+    brick:hasLocation bldg:Room_B1F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B1F_Storage , bldg:LightSts_Room_B1F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B1F_Storage .
+bldg:Occ_Room_B1F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B1F 창고 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Storage ;
+    brick:hasLocation bldg:Room_B1F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B1F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 B1F 창고 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B1F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B2F_Electrical a brick:Lighting_Equipment ;
+    rdfs:label "B동 B2F 전기실 조명" ;
+    brick:hasLocation bldg:Room_B2F_Electrical ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B2F_Electrical , bldg:LightSts_Room_B2F_Electrical ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B2F_Electrical .
+bldg:Occ_Room_B2F_Electrical a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B2F 전기실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Electrical ;
+    brick:hasLocation bldg:Room_B2F_Electrical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B2F_Electrical a brick:On_Off_Status ;
+    rdfs:label "B동 B2F 전기실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Electrical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B2F_Parking_A a brick:Lighting_Equipment ;
+    rdfs:label "B동 B2F 주차구역 A 조명" ;
+    brick:hasLocation bldg:Room_B2F_Parking_A ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B2F_Parking_A , bldg:LightSts_Room_B2F_Parking_A ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B2F_Parking_A .
+bldg:Occ_Room_B2F_Parking_A a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B2F 주차구역 A 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Parking_A ;
+    brick:hasLocation bldg:Room_B2F_Parking_A ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B2F_Parking_A a brick:On_Off_Status ;
+    rdfs:label "B동 B2F 주차구역 A 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Parking_A ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B2F_Parking_B a brick:Lighting_Equipment ;
+    rdfs:label "B동 B2F 주차구역 B 조명" ;
+    brick:hasLocation bldg:Room_B2F_Parking_B ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B2F_Parking_B , bldg:LightSts_Room_B2F_Parking_B ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B2F_Parking_B .
+bldg:Occ_Room_B2F_Parking_B a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B2F 주차구역 B 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Parking_B ;
+    brick:hasLocation bldg:Room_B2F_Parking_B ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B2F_Parking_B a brick:On_Off_Status ;
+    rdfs:label "B동 B2F 주차구역 B 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Parking_B ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B2F_Storage a brick:Lighting_Equipment ;
+    rdfs:label "B동 B2F 창고 조명" ;
+    brick:hasLocation bldg:Room_B2F_Storage ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B2F_Storage , bldg:LightSts_Room_B2F_Storage ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B2F_Storage .
+bldg:Occ_Room_B2F_Storage a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B2F 창고 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Storage ;
+    brick:hasLocation bldg:Room_B2F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B2F_Storage a brick:On_Off_Status ;
+    rdfs:label "B동 B2F 창고 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B2F_Storage ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B3F_Mechanical a brick:Lighting_Equipment ;
+    rdfs:label "B동 B3F 기계실 조명" ;
+    brick:hasLocation bldg:Room_B3F_Mechanical ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B3F_Mechanical , bldg:LightSts_Room_B3F_Mechanical ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B3F_Mechanical .
+bldg:Occ_Room_B3F_Mechanical a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B3F 기계실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Mechanical ;
+    brick:hasLocation bldg:Room_B3F_Mechanical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B3F_Mechanical a brick:On_Off_Status ;
+    rdfs:label "B동 B3F 기계실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Mechanical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B3F_Parking_A a brick:Lighting_Equipment ;
+    rdfs:label "B동 B3F 주차구역 A 조명" ;
+    brick:hasLocation bldg:Room_B3F_Parking_A ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B3F_Parking_A , bldg:LightSts_Room_B3F_Parking_A ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B3F_Parking_A .
+bldg:Occ_Room_B3F_Parking_A a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B3F 주차구역 A 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Parking_A ;
+    brick:hasLocation bldg:Room_B3F_Parking_A ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B3F_Parking_A a brick:On_Off_Status ;
+    rdfs:label "B동 B3F 주차구역 A 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Parking_A ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B3F_Parking_B a brick:Lighting_Equipment ;
+    rdfs:label "B동 B3F 주차구역 B 조명" ;
+    brick:hasLocation bldg:Room_B3F_Parking_B ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B3F_Parking_B , bldg:LightSts_Room_B3F_Parking_B ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B3F_Parking_B .
+bldg:Occ_Room_B3F_Parking_B a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B3F 주차구역 B 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Parking_B ;
+    brick:hasLocation bldg:Room_B3F_Parking_B ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B3F_Parking_B a brick:On_Off_Status ;
+    rdfs:label "B동 B3F 주차구역 B 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Parking_B ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B3F_Parking_C a brick:Lighting_Equipment ;
+    rdfs:label "B동 B3F 주차구역 C 조명" ;
+    brick:hasLocation bldg:Room_B3F_Parking_C ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B3F_Parking_C , bldg:LightSts_Room_B3F_Parking_C ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B3F_Parking_C .
+bldg:Occ_Room_B3F_Parking_C a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B3F 주차구역 C 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Parking_C ;
+    brick:hasLocation bldg:Room_B3F_Parking_C ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B3F_Parking_C a brick:On_Off_Status ;
+    rdfs:label "B동 B3F 주차구역 C 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B3F_Parking_C ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B4F_Mechanical a brick:Lighting_Equipment ;
+    rdfs:label "B동 B4F 기계실 조명" ;
+    brick:hasLocation bldg:Room_B4F_Mechanical ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B4F_Mechanical , bldg:LightSts_Room_B4F_Mechanical ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B4F_Mechanical .
+bldg:Occ_Room_B4F_Mechanical a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B4F 기계실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Mechanical ;
+    brick:hasLocation bldg:Room_B4F_Mechanical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B4F_Mechanical a brick:On_Off_Status ;
+    rdfs:label "B동 B4F 기계실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Mechanical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B4F_Parking_A a brick:Lighting_Equipment ;
+    rdfs:label "B동 B4F 주차구역 A 조명" ;
+    brick:hasLocation bldg:Room_B4F_Parking_A ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B4F_Parking_A , bldg:LightSts_Room_B4F_Parking_A ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B4F_Parking_A .
+bldg:Occ_Room_B4F_Parking_A a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B4F 주차구역 A 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Parking_A ;
+    brick:hasLocation bldg:Room_B4F_Parking_A ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B4F_Parking_A a brick:On_Off_Status ;
+    rdfs:label "B동 B4F 주차구역 A 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Parking_A ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B4F_Parking_B a brick:Lighting_Equipment ;
+    rdfs:label "B동 B4F 주차구역 B 조명" ;
+    brick:hasLocation bldg:Room_B4F_Parking_B ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B4F_Parking_B , bldg:LightSts_Room_B4F_Parking_B ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B4F_Parking_B .
+bldg:Occ_Room_B4F_Parking_B a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B4F 주차구역 B 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Parking_B ;
+    brick:hasLocation bldg:Room_B4F_Parking_B ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B4F_Parking_B a brick:On_Off_Status ;
+    rdfs:label "B동 B4F 주차구역 B 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Parking_B ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_B4F_Parking_C a brick:Lighting_Equipment ;
+    rdfs:label "B동 B4F 주차구역 C 조명" ;
+    brick:hasLocation bldg:Room_B4F_Parking_C ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_B4F_Parking_C , bldg:LightSts_Room_B4F_Parking_C ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_B4F_Parking_C .
+bldg:Occ_Room_B4F_Parking_C a brick:Occupancy_Sensor ;
+    rdfs:label "B동 B4F 주차구역 C 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Parking_C ;
+    brick:hasLocation bldg:Room_B4F_Parking_C ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_B4F_Parking_C a brick:On_Off_Status ;
+    rdfs:label "B동 B4F 주차구역 C 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_B4F_Parking_C ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_RF_Cooling_Tower a brick:Lighting_Equipment ;
+    rdfs:label "B동 옥상 냉각탑 구역 조명" ;
+    brick:hasLocation bldg:Room_RF_Cooling_Tower ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_RF_Cooling_Tower , bldg:LightSts_Room_RF_Cooling_Tower ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_RF_Cooling_Tower .
+bldg:Occ_Room_RF_Cooling_Tower a brick:Occupancy_Sensor ;
+    rdfs:label "B동 옥상 냉각탑 구역 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_RF_Cooling_Tower ;
+    brick:hasLocation bldg:Room_RF_Cooling_Tower ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_RF_Cooling_Tower a brick:On_Off_Status ;
+    rdfs:label "B동 옥상 냉각탑 구역 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_RF_Cooling_Tower ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .
+
+bldg:Lighting_Room_RF_Electrical a brick:Lighting_Equipment ;
+    rdfs:label "B동 옥상 전기실 조명" ;
+    brick:hasLocation bldg:Room_RF_Electrical ;
+    brick:isPartOf bldg:Lighting_System ;
+    brick:hasPoint bldg:Occ_Room_RF_Electrical , bldg:LightSts_Room_RF_Electrical ;
+    bees:hasConfidence "estimated" ;
+    bees:inferenceSource "실별 조명 표준 — 모든 실 조명 설치 (건축 조명설비 기준)" .
+bldg:Lighting_System brick:hasPart bldg:Lighting_Room_RF_Electrical .
+bldg:Occ_Room_RF_Electrical a brick:Occupancy_Sensor ;
+    rdfs:label "B동 옥상 전기실 재실감지 센서" ;
+    brick:isPointOf bldg:Lighting_Room_RF_Electrical ;
+    brick:hasLocation bldg:Room_RF_Electrical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "재실감지 자동소등 (LEED IEQc6.1 조명제어 / DALI 재실연동)" .
+bldg:LightSts_Room_RF_Electrical a brick:On_Off_Status ;
+    rdfs:label "B동 옥상 전기실 점등상태" ;
+    brick:isPointOf bldg:Lighting_Room_RF_Electrical ;
+    bees:hasConfidence "inferred" ;
+    bees:inferenceSource "조명 On/Off 상태점 (BAS 표준)" .

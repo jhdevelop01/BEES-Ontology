@@ -19,7 +19,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 핵심 파일
 | 파일 | 위치 | 설명 |
 |------|------|------|
-| GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (Brick 1.3+, v2.2.2) — 통계는 검증 명령으로 확인 |
+| GEC_B_Ontology.ttl | `ontology/` | 메인 온톨로지 (Brick 1.3+, v2.3.0) — 통계는 검증 명령으로 확인 |
 | GEC_B_SHACL.ttl | `ontology/` | SHACL 검증 Shape (v2.0, 24개) |
 | docker-compose.yml | 루트 | 디지털 트윈 플랫폼 9서비스 Docker 오케스트레이션 |
 | .env | 루트 | 환경변수 — Neo4j, MQTT, InfluxDB, PostgreSQL, OpenAI, 서버 간 URL |

@@ -48,7 +48,7 @@ export interface UseBrickOntologyTreeResult {
 
 /* ── 상수 ── */
 
-const GRAPH_LIMIT = 2000;
+const GRAPH_LIMIT = 3000;
 
 /** Brick 타입 → 고정 레벨. 0 건물 · 1 층 · 2 공간 · 3 설비 · 4 센서. (graph.ts와 동일) */
 const LEVEL_OF_TYPE: Record<string, number> = {

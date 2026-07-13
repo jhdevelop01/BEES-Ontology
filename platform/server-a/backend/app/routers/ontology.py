@@ -38,7 +38,7 @@ async def search_ontology(
 async def get_ontology_graph(
     node_type: str | None = Query(None, description="노드 타입 필터 (Equipment, Point, System 등)"),
     floor: str | None = Query(None, description="층 필터 (예: 5F, B1F)"),
-    limit: int = Query(1500, ge=1, le=2000, description="최대 노드 수"),
+    limit: int = Query(3000, ge=1, le=5000, description="최대 노드 수"),
 ) -> dict[str, Any]:
     """
     Cytoscape.js 호환 그래프 데이터 반환.

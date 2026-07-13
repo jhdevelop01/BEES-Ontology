@@ -1,8 +1,8 @@
 # BEES Ontology 프로젝트 히스토리
 
-> **최종 업데이트:** 2026-07-13 (토폴로지 탭을 **중첩 포함 카드 UI**로 교체 — 상위 카드가 하위를 물리적으로 포함하는 재귀 아코디언(건물⊃층⊃공간⊃설비⊃센서). 데이터 완전성 감사로 "빈약"=표현 문제 규명(누락 0) + 카테고리 개수 배지·feeds 관계 배지 보강. 커밋 46cd4ee)
-> **이전 업데이트:** 2026-07-13 (온톨로지 토폴로지 탭 전면 재구축 — 실제 Neo4j 기반 **좌→우 엄격 계층 드릴다운**(건물→층→공간→설비→센서) + **디지털 다크 테마** + **원격접속(비-localhost) 대응**. 계층 매핑 버그 3종 정정. 커밋 13aa11d·d6178bd)
-> **이전 업데이트:** 2026-07-06 (문서 정합성 일괄 정정 + SHACL 위반 3건 해소 → 트리플 **11,527**, Conforms True)
+> **최종 업데이트:** 2026-07-13 (실별 조명·재실감지 보충 — 169개 Room 전체에 **Lighting_Equipment·Occupancy_Sensor·On_Off_Status 개별 매칭**. 트리플 11,527→**14,907**, gec-b 노드 1,594→**2,101**. API 노드 limit 상한 2000→5000·프론트 2000→3000. **v2.3.0**, SHACL Conforms True)
+> **이전 업데이트:** 2026-07-13 (토폴로지 탭을 **중첩 포함 카드 UI**로 교체 + 데이터 완전성 감사(누락 0) + 카테고리 개수 배지·feeds 관계 배지 보강. 커밋 46cd4ee·ab90a94)
+> **이전 업데이트:** 2026-07-13 (온톨로지 토폴로지 탭 전면 재구축 — 좌→우 엄격 계층 드릴다운 + 디지털 다크 + 원격접속 대응. 커밋 13aa11d·d6178bd)
 > **목적:** `/clear` 후에도 작업을 이어갈 수 있도록 전체 프로젝트 맥락을 보존
 
 ---
@@ -4176,6 +4176,40 @@ Claude Code Agent Teams(tmux split panes) 병렬 — DataLayer/CanvasUI/LayoutTe
 | `components/topology/brick-ontology-tree.ts` | 각 노드에 breakdown(재귀 카테고리 개수)·relations(feeds/isFedBy 상대 라벨, 232노드) 채움 |
 | `components/topology/brick-nested-cards.tsx` | 분해 칩(공간/설비/센서 개수) + 관계 배지(공급→/←공급받음) 렌더 |
 | `_docs/history.md` | 본 섹션 50·51 기록 |
+
+---
+
+## 52. 실별 조명·재실감지 센서 보충 — 169개 Room 전체 개별 매칭 (2026-07-13)
+
+### 배경 / 질문
+사용자가 "화장실·대회의실·소회의실 등에 전등(조명)이나 센서가 매칭된 게 없는지" 팩트체크 요청. 3가지 가설을 구분: (H1) 온톨로지에 정보 없음 / (H2) DB에 센서 없음 / (H3) 센서는 있는데 온톨로지 매칭 안 됨.
+
+### 팩트체크 결과 (Neo4j·TTL 교차 실측)
+- **대상 공간은 존재**: 화장실 28(`Room_XXF_WC_M/F/Exec`) + 회의실류 80(`Mtg_L/M/S`·`Conf`·`Recep`) = 108, 전체 Room 169. TTL=Neo4j 수치 일치(169) → **H2 반증**.
+- **하지만 매칭은 전무**: 108개 화장실/회의실 전부 `hasPoint=0, 조명=0, 장비=0`. 조명은 건물/외주부/시스템 레벨(DALI_System·Emergency_Lighting·Light_Shelf)에만, Illuminance는 외주부 서측, Occupancy는 Interior Zone·일부 로비/회의존에만.
+- **근본 원인 = H3 + 설계 granularity**: 이 온톨로지는 포인트를 **"방(Room)"이 아니라 "장비/존"에 붙이는 관례**로 설계됨(169개 Room 중 hasPoint 보유 0). 개별 방 레벨 조명·센서를 처음부터 모델링하지 않았음.
+
+### 보충 (사용자 확정: 전체 169방 · 개별 방마다 정밀 매칭)
+결정론적 생성 스크립트(`scratchpad/gen_room_lighting.py`, rdflib **파싱만**·serialize 금지)로 방마다 3인스턴스 생성 후 TTL append(SECTION 20):
+- `Lighting_<Room>` a `brick:Lighting_Equipment` — `hasLocation`→방, `isPartOf`→`Lighting_System`(+역방향 `hasPart` 대칭), `hasPoint`→재실·상태, confidence **estimated**.
+- `Occ_<Room>` a `brick:Occupancy_Sensor` — `isPointOf`→조명, `hasLocation`→방, confidence **inferred**.
+- `LightSts_<Room>` a `brick:On_Off_Status` — `isPointOf`→조명, confidence **inferred**.
+- 결과: 트리플 **11,527→14,907(+3,380)**, Lighting_Equipment 7→**176**, Occupancy_Sensor 15→**184**, On_Off_Status 246→**415**. 커버리지 169방 **100%**(조명·재실 각 169).
+
+### API 노드 limit 상한 버그 (보충으로 드러남)
+gec-b 노드가 1,594→2,101로 늘며 `/api/ontology/graph`의 `limit` 상한 **le=2000**에 걸림 → 저차수(degree 1~3)인 신규 조명이 `ORDER BY degree DESC LIMIT` 컷에서 가장 먼저 잘림. 정정: 라우터 `Query(3000, le=5000)`, 프론트 `GRAPH_LIMIT 2000→3000`. → 전체 2,101노드 반환 확인.
+
+### 연쇄 업데이트 (CLAUDE.md 체크리스트)
+rdflib 파싱 ✓ · **SHACL Conforms True** ✓ · 품질검사(orphan/asymmetry/confidence) 신규이슈 0 ✓ · Neo4j 재임포트(1,594→2,101) ✓ · Server A 재시작 ✓ · 백엔드/프론트 재빌드 ✓ · 07 통계 재생성 ✓ · 버전 **v2.2.2→v2.3.0** ✓ · 헤드리스 검증(카드 1,565→2,072, 화장실/대회의실 아래 조명·점등상태 중첩) ✓.
+
+### 수정 파일
+| 파일 | 변경 |
+|------|------|
+| `ontology/GEC_B_Ontology.ttl` | SECTION 20 신설 — 169방 × (조명+재실+상태) 507인스턴스, 버전 2.3.0 |
+| `platform/server-a/backend/app/routers/ontology.py` | 그래프 limit `Query(1500, le=2000)`→`Query(3000, le=5000)` |
+| `platform/server-a/frontend/components/topology/brick-ontology-tree.ts` | `GRAPH_LIMIT 2000→3000` |
+| `_docs/07_온톨로지_통계_요약.md` | 자동 재생성(트리플/인스턴스/관계) + 버전 |
+| `_docs/11_프로젝트_결과물_요약.md` · `CLAUDE.md` | 버전·수치 표기 갱신 |
 
 ---
 
