@@ -4006,7 +4006,7 @@ ASHRAE Handbook + Brick Schema 공식 문서 리서치 후 적용:
 
 **문서:**
 - `_docs/12_토폴로지_사용_가이드.md` — 토폴로지 사용 가이드 신규 작성
-- `_docs/todo.md` — 작업 R-2, R-3 체크리스트
+- `_docs/todo.md` — 작업 R-2, R-3 체크리스트 *(당시 생성됨(8086bf7). 이후 `92b6d90`(2026-07-01)에서 삭제 — 현재 저장소에 없음)*
 - `CLAUDE.md` — feeds 규칙 + 플랫폼 연쇄 업데이트 7단계 추가
 
 ---
@@ -4210,6 +4210,66 @@ rdflib 파싱 ✓ · **SHACL Conforms True** ✓ · 품질검사(orphan/asymmetr
 | `platform/server-a/frontend/components/topology/brick-ontology-tree.ts` | `GRAPH_LIMIT 2000→3000` |
 | `_docs/07_온톨로지_통계_요약.md` | 자동 재생성(트리플/인스턴스/관계) + 버전 |
 | `_docs/11_프로젝트_결과물_요약.md` · `CLAUDE.md` | 버전·수치 표기 갱신 |
+
+---
+
+## 53. 07 통계 문서 stale 표 자동화 — gen_stats_doc AUTOGEN 범위 확장 (2026-07-14)
+
+### 배경 / 문제 — "`--check` 통과"가 정합을 보증하지 못했다
+섹션 52(v2.3.0, +507 인스턴스) 이후 `_docs/07`의 canonical 수치는 갱신됐으나, **인스턴스 대분류 표**는 합계가 **1,597**(= v2.2.2 시절 값)로, **§11 주요 수치 표**의 세부 파생행(`Room/Space 10`·`HVAC Zone 50`·`센서 43` 등)도 낡은 채 남아 있었다. 그런데도 `python3 scripts/gen_stats_doc.py --check`는 **exit 0 "drift 없음"**으로 통과했다.
+
+원인은 스크립트의 **AUTOGEN 관리 범위**가 §1 overview 블록과 §7 relationships 블록 **둘뿐**이었다는 것. 두 표는 마커 밖(또는 라벨 앵커 미등록)이라 검사 대상이 아니었고, 결과적으로 **"검증을 통과했는데 문서는 틀린"** 사각지대가 생겼다. `--check` 통과 ≠ 문서 정합.
+
+### 해결 — 파생 가능한 표를 전부 AUTOGEN으로 편입
+- `classify()` / `build_instances()` 신설 + **`AUTOGEN:instances` 마커** 도입. 대분류 10버킷을 TTL `rdf:type` **실측**으로 산출.
+- 버킷 규칙은 Brick 클래스명 접미사/열거 기반 **우선순위 판정**이며, 마지막 `Equipment/기타`가 **잔여(residual) 버킷**이다. 따라서 분류가 항상 전수 파티션이 되어 **합계가 canonical 인스턴스 수와 필연적으로 일치**(미분류 버킷이 생길 수 없음).
+- **§11 파생행 12개도 같은 집계에서 유도** → §1 대분류와 §11이 서로 다른 출처를 갖지 못하게 하여 **모순을 구조적으로 차단**.
+
+### 발견·수정한 버그 2건 (자동화하며 드러남)
+1. **`replace_row()` count=1 → §11이 조용히 갱신 실패**
+   `replace_row`는 첫 매치 1건만 치환하는데 문서 전체를 스코프로 걸면 **§1 대분류 표의 동명 행**(`HVAC Zone`, `Room/Space`)을 먼저 잡는다. 그 결과 §11의 같은 이름 행은 **영원히 갱신되지 않고**, 심지어 §1 표가 오염될 수 있었다(재현 확인: 전체 스코프 치환 시 §1 32행이 변경됨). → 치환 스코프를 **`## 11.` 헤딩 이후 구간**으로 축소해 해소.
+2. **`cls_counts` 복수 `rdf:type` 이중계상**
+   복수 타입 인스턴스의 두 클래스가 같은 버킷으로 떨어지면 양쪽에 계상되어 세부 카운트가 부풀었다(Room/Space 계열 합 **221** vs 실제 버킷 **219**). → `buckets`/`cls_counts`를 **동일한 대표 클래스 1개**로 세도록 통일하고, `sum(cls_counts) == instances` **assert**를 추가해 이중계상 경로를 봉쇄.
+
+### 역설계 발견 — 구 표는 "규칙"이 아니라 손으로 쓴 근사치였다
+낡은 표를 그대로 재현할지 판단하려 구 수치의 산출 규칙을 역추적했으나, **일관된 규칙이 존재하지 않았다**:
+- `Room/Space 193` = Room 169 + Office 14 + Meeting 10 으로, **Server_Room 10·Mechanical_Room 3을 임의 누락**한 값.
+- `System 27`도 실측 **26**에 대한 off-by-one.
+
+즉 구 표는 기계 산출물이 아니라 **수기 근사치**였다. → 낡은 값을 재현하지 않고, **의미론적으로 일관된 분류 규칙을 신설**해 대체하기로 결정.
+
+### 인스턴스 수 2,104의 정의 (혼동 방지)
+- `rdf:type`을 보유한 **고유 subject 2,218** − **스키마 선언 114**(커스텀 클래스 40 + 커스텀 속성 73 + 온톨로지 헤더 1) = **2,104**.
+- **`rdf:type` 트리플 수(2,221)가 아니다.** 복수 `rdf:type` 인스턴스 3건(`B_B1F_Mechanical_Room`·`B_B2F_Mechanical_Room` = Mechanical_Room+Room, `BMS_Server` = Controller+Server)이 존재하기 때문. 이들은 **대표 클래스 1개에만 계상**된다.
+
+### 새 canonical 대분류 (v2.3.0 실측)
+| 대분류 | 수 | | 대분류 | 수 |
+|---|---:|---|---|---:|
+| Sensor | 683 | | HVAC Zone | 60 |
+| Status (상태점) | 434 | | Profile (에너지/ESG) | 48 |
+| Equipment/기타 | 434 | | System | 26 |
+| Room/Space | 219 | | Alarm | 18 |
+| Command/Setpoint | 164 | | Floor | 18 |
+| | | | **합계** | **2,104** |
+
+### 부수 정리 2건
+- **`.gitignore`에 `.playwright-mcp/` 추가** — 기존엔 `*.log` 규칙에 콘솔 로그만 *우연히* 걸리고, 페이지 스냅샷 `.yml`은 그대로 새고 있었다.
+- **`_imgs/온톨로지_토폴로지.png` 추적 시작** — `brick-topology-data.ts:4`와 본 파일 §50(`history.md:4092`)이 참조하는 **설계 원본**인데 미추적 상태여서, 클론 시 깨진 참조였다.
+
+### 검증 (3중 교차)
+1. **작성자 자체 검증** — `--check` exit 0, 2회 실행 idempotent.
+2. **lead 독립 재계산** — 스크립트를 import하지 않고 **rdflib로 직접** `rdf:type`을 세어 10개 버킷 전수 대조 → 전항 일치(순환논리 차단).
+3. **적대적 반증 시도** — 위 두 결과를 깨려는 독립 검증관 투입 → 반증 실패, 주장 지지.
+
+부가: SHACL **Conforms True** 유지 / 손글씨 도메인 스펙 표(§2~§10) **무변경** 확인.
+
+### 수정 파일 (커밋 31d977f)
+| 파일 | 변경 |
+|------|------|
+| `scripts/gen_stats_doc.py` | `classify()`·`build_instances()` 신설, `AUTOGEN:instances` 마커 도입, `replace_row` 스코프를 `## 11.` 이후로 축소, 대표 클래스 1개 계상 + `sum(cls_counts)==instances` assert (+163/−8) |
+| `_docs/07_온톨로지_통계_요약.md` | 인스턴스 대분류 표(합계 1,597→**2,104**) + §11 파생행 12개 자동 재생성 (+44/−25) |
+| `.gitignore` | `.playwright-mcp/` 추가 (스냅샷 `.yml` 누출 차단) |
+| `_imgs/온톨로지_토폴로지.png` | 신규 추적 — §50 설계 원본, 미추적으로 인한 깨진 참조 해소 |
 
 ---
 
