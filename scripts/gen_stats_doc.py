@@ -10,9 +10,10 @@ GEC_B_Ontology.ttl / GEC_B_SHACL.ttl 실측값으로 자동 갱신한다.
 
 자동 관리 대상:
   1) §1 전체 요약 표          → <!-- AUTOGEN:overview --> 마커 블록 전체 재생성
-  2) §7 관계 통계 표          → <!-- AUTOGEN:relationships --> 마커 블록 전체 재생성
-  3) §11 주요 수치 표의 파생행 → 라벨 앵커(행 라벨 고정)로 숫자 셀만 치환
-  4) 헤더 TTL 라인 수 / 푸터 트리플 검증값 → 앵커 치환
+  2) §1 인스턴스 대분류 표     → <!-- AUTOGEN:instances --> 마커 블록 전체 재생성
+  3) §7 관계 통계 표          → <!-- AUTOGEN:relationships --> 마커 블록 전체 재생성
+  4) §11 주요 수치 표의 파생행 → 라벨 앵커(행 라벨 고정)로 숫자 셀만 치환
+  5) 헤더 TTL 라인 수 / 푸터 트리플 검증값 → 앵커 치환
 
 사용법:
   python3 scripts/gen_stats_doc.py            # 문서 갱신(write)
@@ -47,6 +48,66 @@ REL_ROWS = [
     ("hasPoint", "장비/시스템→포인트 연결"),
 ]
 
+# ── 인스턴스 대분류(§1) ─────────────────────────────────────────────────────
+# 규칙은 Brick 클래스명 접미사/열거 기반. 우선순위 순서대로 첫 매치 버킷에 배정하며,
+# 마지막 "Equipment/기타"가 잔여(residual) 버킷이라 분류는 항상 전수 파티션이 된다
+# (= 합계가 canonical 인스턴스 수와 필연적으로 일치. 미분류 버킷이 생길 수 없음).
+#
+# 복수 rdf:type 인스턴스(현재 3건: Mechanical_Room+Room ×2, Controller+Server ×1)는
+# 우선순위가 앞선 버킷 하나에만 계상해 중복 집계를 막는다.
+#
+# 위치 계열(Location) 열거 — Brick 계층을 TTL이 import 하지 않아 이름 기반으로 명시
+LOCATION_CLASSES = {
+    "Room", "Office_Space", "Meeting_Room", "Server_Room", "Support_Space",
+    "Mechanical_Room", "Location", "Building", "Site",
+}
+# 에너지/ESG 프로파일 계열 — 시계열/집계 데이터 노드
+PROFILE_CLASSES = {"EnergyBreakdown"}
+# 시스템 계열 중 접미사 규칙(_System)으로 잡히지 않는 것
+SYSTEM_EXTRA = {"Chiller_Plant", "BAS_Network_Layer"}
+
+# 표에 노출할 버킷 라벨 (우선순위 = 판정 순서. Equipment/기타는 반드시 마지막)
+BUCKETS = [
+    "Alarm",
+    "Floor",
+    "HVAC Zone",
+    "Status (상태점)",
+    "Command/Setpoint",
+    "Sensor",
+    "System",
+    "Room/Space",
+    "Profile (에너지/ESG)",
+    "Equipment/기타",
+]
+
+
+def classify(cls: str) -> str:
+    """Brick 클래스명 → §1 대분류 버킷. 어떤 이름이든 반드시 하나의 버킷을 반환."""
+    if cls == "Alarm" or cls.endswith("_Alarm"):
+        return "Alarm"
+    if cls == "Floor":
+        return "Floor"
+    if cls == "HVAC_Zone":
+        return "HVAC Zone"
+    if cls.endswith("_Status"):
+        return "Status (상태점)"
+    if cls.endswith("_Command") or cls.endswith("_Setpoint"):
+        return "Command/Setpoint"
+    if cls == "Sensor" or cls.endswith("_Sensor"):
+        return "Sensor"
+    if cls.endswith("_System") or cls in SYSTEM_EXTRA:
+        return "System"
+    if cls in LOCATION_CLASSES:
+        return "Room/Space"
+    if (
+        "Profile" in cls
+        or cls.startswith("GHG_")
+        or cls.endswith("_Category_Score")
+        or cls in PROFILE_CLASSES
+    ):
+        return "Profile (에너지/ESG)"
+    return "Equipment/기타"  # 잔여 버킷 (장비 + 미분류 전부)
+
 
 def measure() -> dict:
     """TTL/SHACL 을 파싱해 canonical 수치를 실측한다."""
@@ -73,9 +134,45 @@ def measure() -> dict:
         OWL.NamedIndividual,
         RDF.Property,
     }
-    instances = len(
-        {s for s, _, o in g.triples((None, RDF.type, None)) if o not in schema_types}
-    )
+    # 인스턴스 → 보유 클래스명 집합 (복수 rdf:type 대응)
+    inst_types: dict = {}
+    for s, _, o in g.triples((None, RDF.type, None)):
+        if o in schema_types:
+            continue
+        inst_types.setdefault(s, set()).add(str(o).split("#")[-1])
+    instances = len(inst_types)
+
+    # 대분류 집계 — 복수 rdf:type 인스턴스는 대표 클래스 1개만 뽑아 계상.
+    # buckets 와 cls_counts 를 같은 대표 클래스로 세야 §1(대분류)과 §11(파생행)이
+    # 구조적으로 정합한다. 클래스별로 따로 세면 같은 버킷에 속한 두 타입이 이중계상됨.
+    buckets = {b: 0 for b in BUCKETS}
+    cls_counts: dict = {}  # 세부 클래스 카운트(§11 파생행용)
+    for _s, types in inst_types.items():
+        winner = min(types, key=lambda c: (BUCKETS.index(classify(c)), c))
+        buckets[classify(winner)] += 1
+        cls_counts[winner] = cls_counts.get(winner, 0) + 1
+
+    bsum = sum(buckets.values())
+    if bsum != instances:  # 잔여 버킷 구조상 발생 불가 — 방어적 assert
+        raise SystemExit(
+            f"[ERROR] 대분류 합계({bsum}) != 인스턴스 수({instances}). classify() 규칙 점검 필요"
+        )
+    if sum(cls_counts.values()) != instances:
+        raise SystemExit(
+            f"[ERROR] 세부 클래스 합계({sum(cls_counts.values())}) != 인스턴스 수({instances})."
+            " 인스턴스당 대표 클래스 1개 계상 규칙이 깨졌음"
+        )
+
+    # §11 파생행용 세부 카운트 (§1 대분류와 필연적으로 정합)
+    def csum(pred) -> int:
+        return sum(v for k, v in cls_counts.items() if pred(k))
+
+    commands = csum(lambda c: c.endswith("_Command"))
+    setpoints = csum(lambda c: c.endswith("_Setpoint"))
+    cert = csum(lambda c: c.endswith("_Category_Score"))  # LEED/G-SEED 인증 데이터
+    energy_model = buckets["Profile (에너지/ESG)"] - cert  # 나머지 = 에너지/GHG 모델
+
+    confidence = len(list(g.triples((None, URIRef(bees + "hasConfidence"), None))))
 
     rel_counts = {
         name: len(list(g.triples((None, brick[name], None)))) for name, _ in REL_ROWS
@@ -97,6 +194,12 @@ def measure() -> dict:
         "classes": classes,
         "props": props,
         "instances": instances,
+        "buckets": buckets,
+        "commands": commands,
+        "setpoints": setpoints,
+        "cert": cert,
+        "energy_model": energy_model,
+        "confidence": confidence,
         "rel_counts": rel_counts,
         "rel_total": rel_total,
         "rel_pct": rel_pct,
@@ -145,6 +248,20 @@ def build_overview(m: dict) -> str:
     )
 
 
+def build_instances(m: dict) -> str:
+    total = m["instances"]
+    # 수치 내림차순, 동수는 BUCKETS 우선순위 순서로 안정 정렬(재실행 idempotent 보장)
+    rows = sorted(
+        m["buckets"].items(), key=lambda kv: (-kv[1], BUCKETS.index(kv[0]))
+    )
+    lines = ["| 대분류 | 인스턴스 수 | 비율 |", "|--------|:----------:|:----:|"]
+    for name, n in rows:
+        pct = n / total * 100 if total else 0.0
+        lines.append(f"| {name} | {fmt(n)} | {pct:.1f}% |")
+    lines.append(f"| **합계** | **{fmt(total)}** | **100%** |")
+    return "\n".join(lines)
+
+
 def build_relationships(m: dict) -> str:
     lines = ["| 관계 속성 | 트리플 수 | 설명 |", "|-----------|:---------:|------|"]
     for name, desc in REL_ROWS:
@@ -181,25 +298,50 @@ def apply(m: dict, text: str) -> tuple[str, list[str]]:
     text, ch = replace_marker(text, "overview", build_overview(m))
     if ch:
         changes.append("§1 전체 요약 표 (AUTOGEN:overview)")
+    text, ch = replace_marker(text, "instances", build_instances(m))
+    if ch:
+        changes.append("§1 인스턴스 대분류 표 (AUTOGEN:instances)")
     text, ch = replace_marker(text, "relationships", build_relationships(m))
     if ch:
         changes.append("§7 관계 통계 표 (AUTOGEN:relationships)")
 
-    # §11 주요 수치 표 — 파생 가능한 행만 라벨 앵커로 갱신
+    # §11 주요 수치 표 — 파생 가능한 행만 라벨 앵커로 갱신.
+    # 값은 전부 §1 대분류(m["buckets"])에서 파생시켜 §1↔§11 모순을 구조적으로 차단한다.
+    b = m["buckets"]
     row_updates = {
         "총 트리플": fmt(m["triples"]),
         "총 인스턴스": fmt(m["instances"]),
         "커스텀 클래스": str(m["classes"]),
         "커스텀 속성": str(m["props"]),
+        "Floor (층)": fmt(b["Floor"]),
+        "HVAC Zone": fmt(b["HVAC Zone"]),
+        "Room/Space": fmt(b["Room/Space"]),
+        "**시스템**": f"**{fmt(b['System'])}**",
+        "**장비 인스턴스**": f"**{fmt(b['Equipment/기타'])}**",
+        "**센서**": f"**{fmt(b['Sensor'])}**",
+        "**명령**": f"**{fmt(m['commands'])}**",
+        "**설정값**": f"**{fmt(m['setpoints'])}**",
+        "**상태/알람**": f"**{fmt(b['Status (상태점)'] + b['Alarm'])}**",
+        "**인증 데이터**": f"**{fmt(m['cert'])}**",
+        "**에너지 모델**": f"**{fmt(m['energy_model'])}**",
         "**관계 트리플**": f"**{fmt(m['rel_total'])}**",
+        "**신뢰도 태깅**": f"**{fmt(m['confidence'])}**",
         "feeds 관계": fmt(m["rel_counts"]["feeds"]),
         "isPartOf 관계": fmt(m["rel_counts"]["isPartOf"]),
         "isPointOf 관계": fmt(m["rel_counts"]["isPointOf"]),
     }
+    # ⚠ replace_row 는 count=1(첫 매치)이라 문서 전체에 걸면 §1 대분류 표의 동명 행
+    #   ('HVAC Zone', 'Room/Space' 등)을 먼저 잡아 §11 이 영원히 갱신되지 않는다.
+    #   → §11 헤딩 이후 구간으로 스코프를 좁혀서 치환한다.
+    split = re.search(r"^## 11\.", text, re.MULTILINE)
+    if not split:
+        raise SystemExit("[ERROR] '## 11.' 섹션을 찾지 못함 — §11 파생행 갱신 불가")
+    head, tail = text[: split.start()], text[split.start() :]
     for label, val in row_updates.items():
-        text, ch = replace_row(text, label, val)
+        tail, ch = replace_row(tail, label, val)
         if ch:
             changes.append(f"§11 행 '{label}' → {val}")
+    text = head + tail
 
     # 헤더 TTL 라인 수: '(~14,556줄)' 형태
     new = re.sub(r"\(~[\d,]+줄\)", f"(~{fmt(m['ttl_lines'])}줄)", text)
@@ -228,6 +370,11 @@ def main() -> int:
     print("=== 실측 canonical 수치 ===")
     print(f"  트리플 {fmt(m['triples'])} | 클래스 {m['classes']} | 속성 {m['props']} | 인스턴스 {fmt(m['instances'])}")
     print(f"  SHACL {m['shapes']} shapes, Conforms={m['conforms']}")
+    print(
+        "  대분류: "
+        + ", ".join(f"{k} {v}" for k, v in m["buckets"].items() if v)
+        + f" | 합계 {fmt(sum(m['buckets'].values()))}"
+    )
     print(f"  관계: " + ", ".join(f"{k} {v}" for k, v in m["rel_counts"].items()) + f" | 합계 {fmt(m['rel_total'])} ({m['rel_pct']:.1f}%)")
 
     if args.check:

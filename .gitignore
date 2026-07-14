@@ -24,6 +24,9 @@ venv/
 # 스크립트 생성물
 scripts/quality_check_results.json
 
+# 브라우저 자동화 캐시 (Playwright MCP 자동 생성 — 페이지 스냅샷/콘솔 로그)
+.playwright-mcp/
+
 # Node.js
 node_modules/
 .next/
