@@ -1517,7 +1517,7 @@ bldg:Domestic_Water_System a brick:Water_System ;
     brick:hasPart bldg:Water_Meter_Main ;
     brick:hasPart bldg:Water_Supply_Pump_1 ;
     brick:hasPart bldg:Water_Supply_Pump_2 ;
-    brick:isPartOf bldg:BAS .
+    brick:isPartOf bldg:Water_System .
 
 bldg:Drainage_System a brick:Water_System ;
     rdfs:label "오배수 시스템" ;
@@ -1528,7 +1528,7 @@ bldg:Drainage_System a brick:Water_System ;
     brick:hasPart bldg:Grease_Trap_B1F ;
     brick:hasPart bldg:Sewage_Pump_1 ;
     brick:hasPart bldg:Sewage_Pump_2 ;
-    brick:isPartOf bldg:BAS .
+    brick:isPartOf bldg:Water_System .
 
 bldg:Electrical_System a brick:Electrical_System ;
     rdfs:label "GEC B동 전기 시스템" ;
@@ -1747,6 +1747,8 @@ bldg:Water_System a brick:Water_System ;
     rdfs:comment "급배수 시스템. 상수도 급수, 오배수 처리, 우수 재활용, 중수도 시스템 통합 관리" ;
     bees:hasConfidence "estimated" ;
     brick:hasLocation bldg:GEC_Tower_B ;
+    brick:hasPart bldg:Domestic_Water_System ;
+    brick:hasPart bldg:Drainage_System ;
     brick:hasPart bldg:Rainwater_System ;
     brick:hasPart bldg:Wastewater_Treatment ;
     brick:isPartOf bldg:BAS .
@@ -12773,8 +12775,6 @@ bldg:BAS brick:hasPart bldg:BAS_Network_Automation ,
     bldg:DDC_AHU_Controller_Group ,
     bldg:DDC_Plant_Controller_Group ,
     bldg:DDC_Zone_Controller_Group ,
-    bldg:Domestic_Water_System ,
-    bldg:Drainage_System ,
     bldg:Electrical_System ,
     bldg:Exhaust_Ventilation_System ,
     bldg:Fire_Safety_System ,
@@ -14151,11 +14151,6 @@ bldg:DSF_System_Status a brick:On_Off_Status ;
     bees:hasConfidence "estimated" ;
     brick:isPointOf bldg:DSF_System .
 
-bldg:Exhaust_Vent_System_Status a brick:On_Off_Status ;
-    rdfs:label "배기환기 시스템 상태" ;
-    bees:hasConfidence "estimated" ;
-    brick:isPointOf bldg:Exhaust_Ventilation_System .
-
 bldg:Fire_Safety_System_Status a brick:On_Off_Status ;
     rdfs:label "소방안전 시스템 상태" ;
     bees:hasConfidence "estimated" ;
@@ -14215,11 +14210,6 @@ bldg:Wastewater_System_Status a brick:On_Off_Status ;
     rdfs:label "오수처리 시스템 상태" ;
     bees:hasConfidence "estimated" ;
     brick:isPointOf bldg:Wastewater_Treatment .
-
-bldg:Vertical_Transport_Status a brick:On_Off_Status ;
-    rdfs:label "수직이동 시스템 상태" ;
-    bees:hasConfidence "estimated" ;
-    brick:isPointOf bldg:Vertical_Transport_System .
 
 bldg:DDC_Controller_Group_Status a brick:On_Off_Status ;
     rdfs:label "DDC 컨트롤러 그룹 상태" ;
@@ -14468,7 +14458,6 @@ bldg:Intercom_B4F brick:hasPoint bldg:Intercom_B4F_Status .
 bldg:CC_System brick:hasPoint bldg:CC_System_Status .
 bldg:DALI_System brick:hasPoint bldg:DALI_System_Status .
 bldg:DSF_System brick:hasPoint bldg:DSF_System_Status .
-bldg:Exhaust_Ventilation_System brick:hasPoint bldg:Exhaust_Vent_System_Status .
 bldg:Fire_Safety_System brick:hasPoint bldg:Fire_Safety_System_Status .
 bldg:HVAC_System brick:hasPoint bldg:HVAC_System_Status .
 bldg:LS_System brick:hasPoint bldg:LS_System_Status .
@@ -14481,7 +14470,6 @@ bldg:Security_System brick:hasPoint bldg:Security_System_Status .
 bldg:Solar_PV_System brick:hasPoint bldg:Solar_PV_System_Status .
 bldg:UFAD_System brick:hasPoint bldg:UFAD_System_Status .
 bldg:Wastewater_Treatment brick:hasPoint bldg:Wastewater_System_Status .
-bldg:Vertical_Transport_System brick:hasPoint bldg:Vertical_Transport_Status .
 
 bldg:DDC_Controller_Group brick:hasPoint bldg:DDC_Controller_Group_Status .
 bldg:DDC_AHU_Controller_Group brick:hasPoint bldg:DDC_AHU_Controller_Status .

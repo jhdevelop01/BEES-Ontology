@@ -4273,4 +4273,45 @@ rdflib 파싱 ✓ · **SHACL Conforms True** ✓ · 품질검사(orphan/asymmetr
 
 ---
 
+## 54. 미해결 TTL 이상 2건 처리 — 중복 상태점 제거 + 수처리 계층 정규화 (2026-07-15)
+
+### 배경
+2026-07-14 §53 작업 중 실측으로 드러났으나 **사용자 지시 대기로 미수정 상태로 남겨둔** TTL 결함 2건을 처리. 둘 다 `isPointOf`/`hasPoint` 대칭이 정상이고 클래스도 유효해 **SHACL·`ontology_quality_check.py`를 통과하는** 종류의 결함이라, 사람이 TTL을 읽어야만 보이는 것이었다.
+
+### 이상 1 — 중복 상태점 2쌍 제거
+한 시스템이 의미가 같은 `brick:On_Off_Status`를 서로 다른 URI로 2개 보유하던 문제. 원인은 상태점이 **두 배치**로 선언된 것: `~11860`행 "시스템 노드" 블록(정식 full-name) + `~14150`행에 나중에 추가된 전체 시스템 상태 배치. 후자에서 두 시스템만 **축약 URI**로 재선언돼 진짜 중복 인스턴스가 됐다.
+- 삭제: `Exhaust_Vent_System_Status`(축약) → 정식 `Exhaust_Ventilation_System_Status` 유지
+- 삭제: `Vertical_Transport_Status`(축약) → 정식 `Vertical_Transport_System_Status` 유지
+- 정식판을 남긴 근거: 나머지 모든 시스템 상태의 명명 관례(`<System>_Status` full-name)와 일치. 축약 URI는 플랫폼 코드 참조 0건 확인 후 삭제(정의 4트리플 + hasPoint 1트리플 = 쌍당 5, 총 −10트리플).
+
+### 이상 2 — 수처리 시스템 상위관계 정규화
+`Water_System` 우산 노드의 주석은 "상수도 급수·오배수 처리·우수 재활용·중수도 시스템 **통합 관리**"라고 명시하는데, 실제로는 우수(`Rainwater_System`)·중수도(`Wastewater_Treatment`)만 `isPartOf Water_System`이고 급수(`Domestic_Water_System`)·오배수(`Drainage_System`)는 `isPartOf BAS` 직속이었다.
+- **정규화 방향**: 우산 노드의 설계 의도대로 4개 하위를 모두 `Water_System` 밑으로 통일 → **BAS ⊃ Water_System ⊃ {Domestic_Water, Drainage, Rainwater, Wastewater}**. (Rainwater/Wastewater가 이미 BAS 직속 목록에 없던 패턴과 일치)
+- 대칭 규칙 준수: `Domestic_Water_System`·`Drainage_System`의 `isPartOf BAS`→`isPartOf Water_System`, `Water_System`에 `hasPart` 2건 추가, `BAS`의 `hasPart` 목록에서 2건 제거. hasPart↔isPartOf 전수 대칭 유지.
+
+### 검증 (도구 기반)
+- **rdflib 파싱**: 14,907 → **14,897** 트리플(정확히 −10 = 중복 인스턴스 2×5).
+- **잔여 중복 URI**: 0건. 각 시스템 정식 상태점 1개씩만 보유(isPointOf+hasPoint).
+- **수처리 계층**: 4개 하위 모두 isPartOf Water_System, Water_System hasPart 4건, BAS엔 Water_System만 잔존. **hasPart↔isPartOf 비대칭 0**.
+- **SHACL**: `Conforms: True` 유지. **feeds↔isFedBy 비대칭 0** 유지.
+- **품질 종합 점검**: 잔여 4건(hasLocation 미보유 장비)은 이번 변경과 무관한 기존 항목.
+- **통계 자동 재생성**(`gen_stats_doc.py`): 인스턴스 **2,104→2,102**, Status(상태점) **434→432**. `--check` exit 0(drift 없음).
+
+### 파급 지점 점검
+- **플랫폼 코드**: 삭제 URI가 `platform/`·`scripts/`·`_docs/`에 잔존 0건.
+- **LLM 프롬프트**(`openai_service.py`): 837~838행은 키워드→엔티티 **조회 매핑**(계층 주장 아님)이라 이번 isPartOf 변경과 무관 — 갱신 불필요. 189행은 시스템 나열이라 무영향.
+- **Neo4j/Server A/프론트 재빌드**: 작업 시점 플랫폼 정지 상태(neo4j-bees exited). **플랫폼 재기동 시 Neo4j를 갱신 TTL로 재동기화 필요**(docker cp + n10s.rdf.import.fetch → server-a-backend 재시작).
+
+### 부수 발견 (범위 외, 미수정 — 사용자 판단 대기)
+`HVAC_System_Status`·`Lighting_System_Status`는 **같은 URI가 두 배치에 모두 선언**돼 `rdfs:label`이 2개씩 붙어 있다(예: "HVAC 시스템 운전 상태" + "공조 시스템 상태"). 동일 URI라 중복 인스턴스는 아니고 인스턴스 수에 영향 없으나, 라벨 중복이라 정리 여지가 있음.
+
+### 수정 파일
+| 파일 | 변경 |
+|------|------|
+| `ontology/GEC_B_Ontology.ttl` | 중복 상태점 2쌍(정의+hasPoint) 삭제, 수처리 4시스템 isPartOf/hasPart 정규화 (−10트리플) |
+| `_docs/07_온톨로지_통계_요약.md` | AUTOGEN 재생성 (인스턴스 2,102, Status 432, 관계 카운트) |
+| `_docs/history.md` | 본 섹션 54 기록 |
+
+---
+
 *이 파일은 프로젝트 컨텍스트 보존을 위해 생성되었습니다. `/clear` 후 이 파일을 읽으면 전체 맥락을 복원할 수 있습니다.*
