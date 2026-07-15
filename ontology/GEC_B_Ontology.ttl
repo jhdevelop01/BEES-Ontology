@@ -14156,20 +14156,10 @@ bldg:Fire_Safety_System_Status a brick:On_Off_Status ;
     bees:hasConfidence "estimated" ;
     brick:isPointOf bldg:Fire_Safety_System .
 
-bldg:HVAC_System_Status a brick:On_Off_Status ;
-    rdfs:label "공조 시스템 상태" ;
-    bees:hasConfidence "estimated" ;
-    brick:isPointOf bldg:HVAC_System .
-
 bldg:LS_System_Status a brick:On_Off_Status ;
     rdfs:label "라이트셀프 시스템 상태" ;
     bees:hasConfidence "estimated" ;
     brick:isPointOf bldg:LS_System .
-
-bldg:Lighting_System_Status a brick:On_Off_Status ;
-    rdfs:label "조명 시스템 상태" ;
-    bees:hasConfidence "estimated" ;
-    brick:isPointOf bldg:Lighting_System .
 
 bldg:NP_System_Status a brick:On_Off_Status ;
     rdfs:label "나이트퍼지 시스템 상태" ;

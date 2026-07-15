@@ -4302,8 +4302,11 @@ rdflib 파싱 ✓ · **SHACL Conforms True** ✓ · 품질검사(orphan/asymmetr
 - **LLM 프롬프트**(`openai_service.py`): 837~838행은 키워드→엔티티 **조회 매핑**(계층 주장 아님)이라 이번 isPartOf 변경과 무관 — 갱신 불필요. 189행은 시스템 나열이라 무영향.
 - **Neo4j/Server A/프론트 재빌드**: 작업 시점 플랫폼 정지 상태(neo4j-bees exited). **플랫폼 재기동 시 Neo4j를 갱신 TTL로 재동기화 필요**(docker cp + n10s.rdf.import.fetch → server-a-backend 재시작).
 
-### 부수 발견 (범위 외, 미수정 — 사용자 판단 대기)
-`HVAC_System_Status`·`Lighting_System_Status`는 **같은 URI가 두 배치에 모두 선언**돼 `rdfs:label`이 2개씩 붙어 있다(예: "HVAC 시스템 운전 상태" + "공조 시스템 상태"). 동일 URI라 중복 인스턴스는 아니고 인스턴스 수에 영향 없으나, 라벨 중복이라 정리 여지가 있음.
+### 부수 발견 → 후속 해소 (라벨 중복 정리)
+`HVAC_System_Status`·`Lighting_System_Status`는 **같은 URI가 두 배치에 모두 선언**돼 `rdfs:label`이 2개씩 붙어 있었다(예: "HVAC 시스템 운전 상태" + "공조 시스템 상태"). 동일 URI라 중복 인스턴스는 아니고 인스턴스 수에 영향 없으나, 라벨 중복이라 정리 여지가 있어 **사용자 지시로 후속 처리**:
+- 배치2 중복 정의 블록(라벨 "공조 시스템 상태"·"조명 시스템 상태")을 삭제하고, `<System>_Status` 명명 관례에 맞는 배치1 정식판("...운전 상태")을 유지. hasPoint/isPointOf 링크는 동일 URI라 그대로 보존.
+- 검증: 트리플 14,897→**14,895**(−2, 라벨 각 1개 제거) / 각 노드 `rdfs:label` 1개 / SHACL Conforms True / 인스턴스 2,102 불변(노드 증감 없음). Neo4j 클린 재동기화(노드 2,099 유지, `label` 프로퍼티 단일 원소 배열 확인) + server-a-backend 재시작으로 `_graph_cache` 초기화. Server A 그래프 API 2,099노드/5,524엣지 정합.
+- 커밋: 이상 2건(§54 본문)은 별도 커밋, 본 라벨 정리는 후속 커밋으로 분리.
 
 ### 수정 파일
 | 파일 | 변경 |
